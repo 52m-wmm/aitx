@@ -1,0 +1,167 @@
+[
+  {
+    "id": "PRAC-AGXT-c33dup",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "AGXT",
+          "transcript": "NM_000030.3",
+          "variant_cdna": "c.33dup",
+          "variant_protein": "p.(Lys12GlnfsTer156)",
+          "zygosity": "homozygous"
+        }
+      ],
+      "clinical_context": "7-year-old with recurrent nephrocalcinosis and chronic kidney disease"
+    }
+  },
+  {
+    "id": "PRAC-AGXT-c508GA",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "AGXT",
+          "transcript": "NM_000030.3",
+          "variant_cdna": "c.508G>A",
+          "variant_protein": "p.(Gly170Arg)",
+          "zygosity": "homozygous"
+        }
+      ],
+      "clinical_context": "Recurrent nephrocalcinosis and chronic kidney disease"
+    }
+  },
+  {
+    "id": "PRAC-CFTR-F508del",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "CFTR",
+          "transcript": "NM_000492.4",
+          "variant_cdna": "c.1521_1523del",
+          "variant_protein": "p.Phe508del",
+          "zygosity": "homozygous"
+        }
+      ],
+      "clinical_context": "15-year-old male with cystic fibrosis"
+    }
+  },
+  {
+    "id": "PRAC-DMD-del",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "DMD",
+          "transcript": "NM_004006.2",
+          "variant_cdna": "c.7544_9286del",
+          "variant_protein": "p.(Thr2516_Ala3096del)",
+          "zygosity": "hemizygous"
+        }
+      ],
+      "clinical_context": "Progressive muscle weakness"
+    }
+  },
+  {
+    "id": "PRAC-COL1A1",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "COL1A1",
+          "transcript": "NM_000088.4",
+          "variant_cdna": "c.1678G>A",
+          "variant_protein": "p.(Gly560Ser)",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "Joint hypermobility, skin hyperextensibility, and easy bruising."
+    }
+  },
+  {
+    "id": "PRAC-OTC",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "OTC",
+          "transcript": "NM_000531.5",
+          "variant_cdna": "c.386G>A",
+          "variant_protein": "p.Arg129His",
+          "zygosity": "hemizygous"
+        }
+      ],
+      "clinical_context": "3-month-old male infant with hyperammonemia"
+    }
+  },
+  {
+    "id": "PRAC-SLC35A2",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "SLC35A2",
+          "transcript": "NM_005660.3",
+          "variant_cdna": "c.3G>A",
+          "variant_protein": "p.Met1Ile",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "seizures and global developmental delay"
+    }
+  },
+  {
+    "id": "PRAC-GRIN2B",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "GRIN2B",
+          "transcript": "NM_000834.5",
+          "variant_cdna": "c.2755C>T",
+          "variant_protein": "p.Gln919Ter",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "intellectual disability, seizures, and developmental delays"
+    }
+  },
+  {
+    "id": "PRAC-ANO10",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "ANO10",
+          "transcript": "NM_018075.5",
+          "variant_cdna": "c.289del",
+          "variant_protein": "p.(Met97Ter)",
+          "zygosity": "homozygous"
+        }
+      ],
+      "clinical_context": "progressive cerebellar ataxia and peripheral neuropathy"
+    }
+  },
+  {
+    "id": "PRAC-KMT2B",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "KMT2B",
+          "transcript": "NM_014727.3",
+          "variant_cdna": "c.8079delC",
+          "variant_protein": "p.(Ile2694SerfsTer44)",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "childhood-onset generalized dystonia"
+    }
+  },
+  {
+    "id": "PRAC-NF1",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "NF1",
+          "transcript": "NM_001042492.3",
+          "variant_cdna": "c.3728T>C",
+          "variant_protein": "p.(Leu1243Pro)",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+    }
+  }
+]
