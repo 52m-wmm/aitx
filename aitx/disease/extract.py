@@ -1,16 +1,18 @@
-"""Contract 4a + 7: LLM extracts phenotypes (HPO) and patient facts; code verifies.
+"""Contract 4a + 7: LLM extracts phenotypes and patient facts; code assigns HPO ids.
 
-The LLM only proposes. Every item is checked deterministically and dropped
-(with the reason recorded) if it fails:
-  - the quote must occur verbatim in clinical_context
-  - the HPO id must exist, be current (alt ids / replaced terms are followed)
-    and sit under Phenotypic abnormality (HP:0000118)
-  - the quote and the term's label/synonyms must share a content word
-  - "excluded" needs a negation cue in or just before the quote
+Same principle as disease selection: the LLM never writes an identifier.
+  Stage 1  LLM returns each clinical feature as (verbatim quote, short medical
+           description, present/excluded, optional onset), plus patient facts.
+  Mapping  code matches the description, then the quote, against HPO labels,
+           synonyms and former names (older releases); a unique exact match is used.
+  Stage 2  otherwise code retrieves the closest candidate terms (up to 10) and the
+           LLM picks one of them by number, or none. Only code-listed ids can be chosen.
+Deterministic checks: quote verbatim in clinical_context; "excluded" needs a
+negation cue in or just before the quote.
 
-Each case is sampled N_SAMPLES times (temperature 0, separate cache entries).
-A term is kept if it appears with the same status in a majority of samples;
-facts likewise. Disagreements are reported for prompt tuning.
+Each case is sampled N_SAMPLES times. Votes are merged along the HPO hierarchy:
+a term is kept when it or a more specific term below it appears in a majority
+of samples, at the most specific level the majority supports.
 """
 from __future__ import annotations
 
@@ -24,19 +26,24 @@ from collections import Counter
 from pathlib import Path
 
 from aitx import llm
-from aitx.disease.hpo import Ontology, lexical_overlap
+from aitx.disease.hpo import Ontology
 
 N_SAMPLES = 3
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
-PROMPT_VERSION = "step2-extract-v2"
+PROMPT_VERSION = "step2-extract-v4"
+N_CANDIDATES = 10
 
 SYSTEM = """You extract structured facts from a short clinical description of a patient with a rare genetic disease.
 Return only a JSON object with this shape:
 {
   "phenotypes": [
     {"quote": "<shortest exact span from the text naming one clinical feature>",
-     "hpo_id": "HP:nnnnnnn", "hpo_label": "<exact HPO term label>",
+     "description": "<the feature as a standard English clinical term, e.g. 'Hypotonia', 'Weight loss',
+                     'Distal sensory impairment'; no onset, age or frequency words>",
+     "alternatives": ["<up to 3 other standard clinical names for the same feature, e.g. a broader or
+                      lay-to-medical rewording>"],
      "status": "present" | "excluded",
+     "presenting": <true if the text describes this as the presenting / first symptom, e.g. "presented with">,
      "onset": null | {"min": <number or null>, "max": <number or null>, "unit": "day"|"week"|"month"|"year"|null,
                       "approximate": <true|false>, "quote": <exact span>}}
   ],
@@ -50,23 +57,30 @@ Return only a JSON object with this shape:
   }
 }
 Rules:
-- phenotypes: every sign, symptom, clinical finding or tumour mentioned (one entry per feature). Do not list
-  disease or syndrome names, genes, variants, test methods, ages or sex. Choose the most specific HPO
-  Phenotypic abnormality term the text supports; do not add features that are not stated.
+- phenotypes: every sign, symptom, clinical finding, abnormal laboratory value or tumour mentioned, one entry per
+  feature. Do not list disease or syndrome names, genes, variants, test methods, normal findings, ages or sex.
+  Do not add features that are not stated. Do not give any ontology identifiers.
 - "excluded" only when the text explicitly says the feature is absent (e.g. "without seizures").
 - Every quote must be copied character-for-character from the text.
 - facts.onset: age at onset of the DISEASE as a whole, filled ONLY when the text explicitly dates the disease
-  or its main presentation (e.g. "presented at 8 months of age", "symptoms since birth", or the onset of the
-  feature the description is centred on). "first months of life" -> min 0, max 6, unit month, approximate true.
-  A single age -> min = max.
-- If the text dates only one particular symptom (e.g. "around 10 years of age began losing weight"), put that
-  timing in the "onset" of that phenotype entry and leave facts.onset null. Otherwise a phenotype's onset is null.
+  or its main presentation (e.g. "presented at 8 months of age", "symptoms since birth").
+  "first months of life" -> min 0, max 6, unit month, approximate true. A single age -> min = max.
+- If the text dates one particular symptom (e.g. "around 10 years of age began losing weight"), put that timing in
+  the "onset" of that phenotype entry; put it in facts.onset only if that symptom is the presenting one.
 - Anything the text does not state is null / "unknown". Never guess."""
+
+PICK_SYSTEM = """You map clinical features of a patient to Human Phenotype Ontology terms.
+For each numbered feature you get the exact text and a numbered list of candidate terms.
+Pick the candidate that names the feature the text describes, at the most specific level the text supports
+(do not pick a narrower term than the text states). A feature the text states as absent (e.g. "without seizures")
+is still mapped to the feature itself. If no candidate fits, answer null.
+Return only JSON: {"choices": [{"feature": <feature number>, "candidate": <candidate number or null>}]}"""
 
 
 # ------------------------------------------------------------------ LLM call
 
 def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
+    """One chat completion, cached per (model, prompt version, messages, sample index)."""
     cfg = llm.config()
     key = hashlib.sha256(json.dumps([cfg["model"], cfg["base_url"], PROMPT_VERSION, messages, k],
                                     sort_keys=True).encode()).hexdigest()
@@ -97,72 +111,121 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
     return out
 
 
+def _parse(r: dict) -> dict:
+    try:
+        r["parsed"] = json.loads(r["content"])
+    except json.JSONDecodeError as e:
+        r["parsed"], r["error"] = {}, f"invalid JSON: {e}"
+    return r
+
+
 def llm_samples(context: str, *, use_cache: bool = True, n: int = N_SAMPLES) -> list[dict]:
     messages = [{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": f"Clinical description:\n{context}"}]
-    out = []
-    for k in range(n):
-        r = _cached_chat(messages, k, use_cache)
-        try:
-            r["parsed"] = json.loads(r["content"])
-        except json.JSONDecodeError as e:
-            r["parsed"], r["error"] = {}, f"invalid JSON: {e}"
-        out.append(r)
-    return out
+    return [_parse(_cached_chat(messages, k, use_cache)) for k in range(n)]
 
 
 # ------------------------------------------------------------- verification
 
 _NEG = re.compile(r"\b(without|no|not|absence of|absent|denies|negative for|free of)\b", re.I)
+_PRESENTING = re.compile(r"\b(present(ed|s|ing)|first (sign|symptom|noticed)s?|initial(ly)? (sign|symptom|present)\w*)\b", re.I)
 
 
-def verify_phenotype(item: dict, context: str, ont: Ontology) -> dict:
+def check_item(item: dict, context: str) -> dict:
+    """Deterministic checks on a stage-1 item (no ids involved)."""
     quote = str(item.get("quote") or "")
     status = item.get("status")
-    raw_id = str(item.get("hpo_id") or "")
-    out = {"quote": quote, "status": status, "proposed_id": raw_id, "proposed_label": item.get("hpo_label"),
-           "hpo_id": None, "label": None, "valid": False, "reasons": []}
+    alts = item.get("alternatives") if isinstance(item.get("alternatives"), list) else []
+    out = {"quote": quote, "description": str(item.get("description") or ""),
+           "alternatives": [str(a) for a in alts if a][:3], "status": status,
+           "presenting": bool(item.get("presenting")), "hpo_id": None, "label": None, "valid": False, "reasons": []}
     if not quote or quote not in context:
         out["reasons"].append("quote not found verbatim in clinical_context")
         return out
     if status not in ("present", "excluded"):
         out["reasons"].append(f"bad status {status!r}")
         return out
-    cur, note = ont.resolve(raw_id)
-    if note:
-        out["reasons"].append(note)
-    if cur and not ont.is_phenotype(cur):
-        out["reasons"].append(f"{cur} is not under Phenotypic abnormality")
-        cur = None
-    if cur and not lexical_overlap(quote, ont.names(cur)):
-        out["reasons"].append(f"no word overlap between quote and {cur} '{ont.terms[cur].label}'")
-        cur = None
-    if cur is None:
-        # Proposed ids are often wrong while the label is right: fall back to an
-        # exact HPO name match of the proposed label, then of the quote itself,
-        # still requiring word overlap with the quote.
-        for name, what in ((str(item.get("hpo_label") or ""), "proposed label"), (quote, "quote")):
-            exact = sorted({t for t in ont.exact_lookup(name) if lexical_overlap(quote, ont.names(t))}) if name else []
-            if len(exact) == 1:
-                cur = exact[0]
-                out["reasons"].append(f"used exact HPO name match of the {what}: {cur}")
-                break
-        else:
-            return out
     start = context.find(quote)
-    window = context[max(0, start - 30):start] + quote
-    negated = bool(_NEG.search(window))
+    negated = bool(_NEG.search(context[max(0, start - 30):start] + quote))
     if status == "excluded" and not negated:
         out["reasons"].append("marked excluded but no negation cue in text")
         return out
     if status == "present" and _NEG.search(quote):
         out["reasons"].append("marked present but the quote itself is negated")
         return out
-    out.update(hpo_id=cur, label=ont.terms[cur].label, valid=True,
-               lexical_overlap=lexical_overlap(quote, ont.names(cur)))
+    if out["presenting"]:
+        sentence = context[context.rfind(".", 0, start) + 1:start + len(quote)]
+        if not _PRESENTING.search(sentence):
+            out["presenting"] = False
+            out["reasons"].append("marked presenting but no 'presented with'-type cue in the sentence")
     if item.get("onset"):
-        out["onset"] = verify_onset(item["onset"], context)   # symptom-specific timing, not the overall onset
+        out["onset"] = verify_onset(item["onset"], context)
+    out["checked"] = True
     return out
+
+
+def candidates_for(item: dict, ont: Ontology) -> tuple[str | None, list[dict], str]:
+    """(exact id or None, retrieval candidates, how).
+
+    Exact = unique HPO name match of the verbatim quote, then the description, then each alternative name.
+    Otherwise retrieval over the description, alternatives and quote (query expansion), up to N_CANDIDATES.
+    """
+    texts = [(item["quote"], "quote"), (item["description"], "description")] + [
+        (a, "alternative name") for a in item.get("alternatives", [])]
+    for text, what in texts:
+        hits = ont.exact_lookup(text) if text else []
+        if len(hits) == 1:
+            return hits[0], [], f"exact HPO name match of the {what}"
+        if len(hits) > 1:
+            return None, [{"hpo_id": h, "label": ont.terms[h].label} for h in hits], f"several terms share the name '{text}'"
+    seen, cands = set(), []
+    queries = [(item["description"], 5)] + [(a, 3) for a in item.get("alternatives", [])] + [(item["quote"], 3)]
+    for text, k in queries:
+        for c in ont.search(text, k) if text else []:
+            if c["hpo_id"] not in seen and len(cands) < N_CANDIDATES:
+                seen.add(c["hpo_id"])
+                cands.append(c)
+    return None, cands, "retrieved candidates"
+
+
+def map_items(items: list[dict], context: str, ont: Ontology, k: int, use_cache: bool) -> list[dict]:
+    """Assign HPO ids to checked items: exact match in code, else LLM picks from code-listed candidates."""
+    pending = []
+    for it in items:
+        if not it.get("checked"):
+            continue
+        tid, cands, how = candidates_for(it, ont)
+        if tid:
+            it.update(hpo_id=tid, label=ont.terms[tid].label, valid=True, mapping=how)
+        elif cands:
+            it["candidates"] = cands
+            pending.append(it)
+        else:
+            it["reasons"].append("no candidate HPO term found")
+    if not pending:
+        return items
+    lines = [f"Clinical description: {context}", ""]
+    for i, it in enumerate(pending, 1):
+        lines.append(f"Feature {i}: text \"{it['quote']}\" (described as: {it['description']})")
+        for j, c in enumerate(it["candidates"], 1):
+            syn = [n for n in ont.names(c["hpo_id"])[1:4]]
+            lines.append(f"  {j}. {c['label']}" + (f" (also: {'; '.join(syn)})" if syn else ""))
+    r = _parse(_cached_chat([{"role": "system", "content": PICK_SYSTEM},
+                             {"role": "user", "content": "\n".join(lines)}], k, use_cache))
+    picks = {}
+    for ch in (r["parsed"].get("choices") or []):
+        try:
+            picks[int(ch.get("feature"))] = ch.get("candidate")
+        except (TypeError, ValueError):
+            continue
+    for i, it in enumerate(pending, 1):
+        j = picks.get(i)
+        if isinstance(j, int) and 1 <= j <= len(it["candidates"]):
+            tid = it["candidates"][j - 1]["hpo_id"]
+            it.update(hpo_id=tid, label=ont.terms[tid].label, valid=True, mapping="LLM pick from retrieved candidates")
+        else:
+            it["reasons"].append("LLM picked none of the candidates" if i in picks else "no pick returned")
+    return items
 
 
 _UNIT_MONTHS = {"day": 1 / 30.4375, "week": 7 / 30.4375, "month": 1.0, "year": 12.0}
@@ -261,31 +324,66 @@ def _fact_key(name: str, f: dict):
     return f.get("value")
 
 
+def vote_terms(per_sample: list[list[dict]], ont: Ontology, n: int) -> tuple[list[dict], list[dict]]:
+    """Majority vote merged along the HPO hierarchy.
+
+    support(t) = number of samples with t itself or a more specific term below t (same status).
+    Terms with support >= majority are kept, except those that have a more specific kept term
+    below them, so the result is the most specific level a majority of samples agrees on.
+    Returns (kept, unstable).
+    """
+    need = n // 2 + 1
+    kept, unstable = [], []
+    for status in ("present", "excluded"):
+        by_sample = [{it["hpo_id"]: it for it in items if it["valid"] and it["status"] == status} for items in per_sample]
+        terms = sorted({t for smp in by_sample for t in smp})
+        support = {t: sum(any(u == t or t in ont.ancestors(u) for u in smp) for smp in by_sample) for t in terms}
+        ok = [t for t in terms if support[t] >= need]
+        top = [t for t in ok if not any(u != t and t in ont.ancestors(u) for u in ok)]
+        for t in top:
+            src = next((smp[t] for smp in by_sample if t in smp), None)
+            kept.append(dict(src, votes=support[t],
+                             merged_from=sorted({u for smp in by_sample for u in smp if u != t and t in ont.ancestors(u)})))
+        covered = {u for t in top for u in terms if u == t or t in ont.ancestors(u) or u in ont.ancestors(t)}
+        for t in terms:
+            if t not in covered:
+                unstable.append(dict(next(smp[t] for smp in by_sample if t in smp), votes=support[t]))
+    return kept, unstable
+
+
+def presenting_onset(items: list[dict]) -> dict | None:
+    """Rule v2.4: the onset of a verified presenting symptom counts as the overall onset."""
+    ons = [it["onset"] for it in items if it.get("valid") and it.get("presenting")
+           and it.get("onset", {}).get("months_min") is not None]
+    if not ons:
+        return None
+    lo = min(o["months_min"] for o in ons)
+    hi = max(o["months_max"] for o in ons)
+    return {"months_min": lo, "months_max": hi, "approximate": any(o.get("approximate") for o in ons) or lo != hi,
+            "quote": ons[0]["quote"], "verified": True, "source": "presenting symptom"}
+
+
 def extract(context: str, ont: Ontology, *, use_cache: bool = True, n: int = N_SAMPLES) -> dict:
     samples = llm_samples(context, use_cache=use_cache, n=n)
     per_sample = []
-    for s in samples:
-        items = [verify_phenotype(p, context, ont) for p in (s["parsed"].get("phenotypes") or [])]
-        per_sample.append({"phenotypes": items, "facts": verify_facts(s["parsed"].get("facts") or {}, context),
+    for k, s in enumerate(samples):
+        items = [check_item(p, context) for p in (s["parsed"].get("phenotypes") or [])]
+        items = map_items(items, context, ont, k, use_cache)
+        facts = verify_facts(s["parsed"].get("facts") or {}, context)
+        if facts["onset"].get("months_min") is None:
+            po = presenting_onset(items)
+            if po:
+                facts["onset"] = po
+        per_sample.append({"phenotypes": items, "facts": facts,
                            "served_model": s["served_model"], "error": s.get("error")})
 
-    votes: Counter = Counter()
-    first: dict = {}
-    for ps in per_sample:
-        seen = set()
-        for p in ps["phenotypes"]:
-            if p["valid"] and (p["hpo_id"], p["status"]) not in seen:
-                seen.add((p["hpo_id"], p["status"]))
-                votes[(p["hpo_id"], p["status"])] += 1
-                first.setdefault((p["hpo_id"], p["status"]), p)
+    kept, unstable = vote_terms([ps["phenotypes"] for ps in per_sample], ont, n)
     need = n // 2 + 1
-    kept = [dict(first[k], votes=c) for k, c in sorted(votes.items()) if c >= need]
     ids_present = {p["hpo_id"] for p in kept if p["status"] == "present"}
     conflicts = [p for p in kept if p["status"] == "excluded" and p["hpo_id"] in ids_present]
     if conflicts:
         bad = {p["hpo_id"] for p in conflicts}
         kept = [p for p in kept if p["hpo_id"] not in bad]
-    unstable = [dict(first[k], votes=c) for k, c in sorted(votes.items()) if c < need]
     rejected = [p for ps in per_sample for p in ps["phenotypes"] if not p["valid"]]
 
     facts, fact_notes = {}, []
@@ -298,7 +396,7 @@ def extract(context: str, ont: Ontology, *, use_cache: bool = True, n: int = N_S
             facts[name] = {"value": "unknown", "verified": True, "reasons": ["samples disagree"]}
             fact_notes.append(f"{name}: samples disagree {dict(keys)}")
     return {
-        "phenotypes": kept,
+        "phenotypes": sorted(kept, key=lambda p: (p["status"], p["hpo_id"])),
         "phenotype_conflicts": conflicts,
         "unstable_phenotypes": unstable,
         "rejected_phenotypes": rejected,

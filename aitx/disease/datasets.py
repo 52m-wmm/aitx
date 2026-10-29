@@ -57,6 +57,13 @@ DATASETS = {d.name: d for d in [
             "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/phenotype.hpoa",
             "phenotype.hpoa", "tsv", 100000),
     Dataset("hpo_ontology", "https://purl.obolibrary.org/obo/hp.json", "hp.json", "json_obo", 15000),
+    # Older HPO releases (immutable): source of former labels/synonyms of renamed terms.
+    Dataset("hpo_ontology_2022",
+            "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2022-10-05/hp.json",
+            "hp.json", "json_obo", 15000),
+    Dataset("hpo_ontology_2024",
+            "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-04-26/hp.json",
+            "hp.json", "json_obo", 15000),
     Dataset("mondo_sssom", "https://purl.obolibrary.org/obo/mondo/mappings/mondo.sssom.tsv",
             "mondo.sssom.tsv", "tsv", 50000),
     Dataset("orphanet_genes", "https://www.orphadata.com/data/xml/en_product6.xml",

@@ -61,6 +61,7 @@ def ont(tmp_path_factory):
     }, {}, {}, "2026-10-28")
     o.build_ic(ann)
     o.test_ann = ann
+    o.test_path = p
     return o
 
 
@@ -95,11 +96,30 @@ def test_score_penalises_explicitly_absent_frequent_feature(ont):
     assert with_seizure["score"] < without["score"]
 
 
-def test_lexical_overlap():
-    assert H.lexical_overlap("ophthalmic abnormalities", ["Abnormality of the eye"]) == ["ophthalmic"]
-    assert H.lexical_overlap("positive Gower sign", ["Gowers sign"]) == ["gower"]
-    assert H.lexical_overlap("very thin", ["Fetal akinesia sequence"]) == []
-    assert H.lexical_overlap("caloric intake is poor", ["Small for gestational age", "Birth weight < 10th"]) == []
+def test_former_names_from_older_release(ont, tmp_path):
+    o = H.Ontology(LocalFile("hpo_ontology", ont.test_path, "", "x", 0, 0, "", 0))
+    # the obsolete "Old seizure term" was replaced by Seizure: its name points there already
+    assert o.exact_lookup("Old seizure term") == ["HP:0001250"]
+    legacy = {"graphs": [{"nodes": [node("0001263", "Developmental retardation", syn=["Global developmental delay"]),
+                                     node("0001275", "Seizure disorder")], "edges": []}]}
+    lp = tmp_path / "old.json"
+    lp.write_text(json.dumps(legacy))
+    added = o.add_former_names(LocalFile("hpo_ontology_2022", lp, "", "x", 0, 0, "", 0))
+    assert added == 2                                         # current names are not duplicated
+    assert o.exact_lookup("developmental retardation") == ["HP:0001263"]
+    assert o.exact_lookup("Seizure disorder") == ["HP:0001250"]   # alt id followed to the current term
+
+
+def test_exact_lookup_accepts_plural(ont):
+    assert ont.exact_lookup("Seizures") == ["HP:0001250"]
+    assert ont.exact_lookup("global developmental delays") == ["HP:0001263"]
+    assert ont.exact_lookup("Mode of inheritance") == []          # not a phenotype term
+
+
+def test_search_returns_phenotype_terms_only(ont):
+    hits = [h["hpo_id"] for h in ont.search("focal seizures in infancy", 5)]
+    assert hits[0] == "HP:0007359" and "HP:0001250" in hits
+    assert all(ont.is_phenotype(h) for h in hits)
 
 
 # ---------------------------------------------------------------- extraction
@@ -107,39 +127,107 @@ def test_lexical_overlap():
 CTX = "18-month-old female with hypotonia, developmental delay, EEG abnormalities (without overt seizures) and a de novo variant."
 
 
-def test_quote_must_be_verbatim(ont):
-    r = X.verify_phenotype({"quote": "developmental delays", "hpo_id": "HP:0001263", "status": "present"}, CTX, ont)
-    assert not r["valid"] and "verbatim" in r["reasons"][0]
+def item(quote, desc="", status="present", **kw):
+    return {"quote": quote, "description": desc, "status": status, **kw}
 
 
-def test_wrong_id_falls_back_to_label(ont):
-    r = X.verify_phenotype({"quote": "developmental delay", "hpo_id": "HP:0001987",
-                            "hpo_label": "Global developmental delay", "status": "present"}, CTX, ont)
-    assert r["valid"] and r["hpo_id"] == "HP:0001263"
+def test_quote_must_be_verbatim():
+    r = X.check_item(item("developmental delays"), CTX)
+    assert not r.get("checked") and "verbatim" in r["reasons"][0]
 
 
-def test_wrong_id_without_overlap_dropped(ont):
-    r = X.verify_phenotype({"quote": "hypotonia", "hpo_id": "HP:0001987",
-                            "hpo_label": "Hyperammonemia", "status": "present"}, CTX, ont)
-    assert not r["valid"]
-    # but a quote that is itself an exact HPO name is recovered
-    r = X.verify_phenotype({"quote": "developmental delay", "hpo_id": "HP:0001987",
-                            "hpo_label": "Hyperammonemia", "status": "present"}, CTX, ont)
-    assert r["valid"] and r["hpo_id"] == "HP:0001263"
+def test_negation():
+    assert X.check_item(item("without overt seizures", "Seizure", "excluded"), CTX).get("checked")
+    assert not X.check_item(item("without overt seizures", "Seizure", "present"), CTX).get("checked")
+    assert not X.check_item(item("developmental delay", "Global developmental delay", "excluded"), CTX).get("checked")
 
 
-def test_negation(ont):
-    ok = X.verify_phenotype({"quote": "without overt seizures", "hpo_id": "HP:0001250", "status": "excluded"}, CTX, ont)
-    assert ok["valid"] and ok["status"] == "excluded"
-    bad = X.verify_phenotype({"quote": "without overt seizures", "hpo_id": "HP:0001250", "status": "present"}, CTX, ont)
-    assert not bad["valid"]
-    bad2 = X.verify_phenotype({"quote": "developmental delay", "hpo_id": "HP:0001263", "status": "excluded"}, CTX, ont)
-    assert not bad2["valid"]
+def test_presenting_needs_a_cue():
+    ctx = "Presented at 8 months of age with hypotonia. Later developed seizures."
+    assert X.check_item(item("hypotonia", presenting=True), ctx)["presenting"] is True
+    r = X.check_item(item("seizures", presenting=True), ctx)
+    assert r["presenting"] is False and "no 'presented with'" in r["reasons"][0]
 
 
-def test_non_phenotype_term_rejected(ont):
-    r = X.verify_phenotype({"quote": "de novo", "hpo_id": "HP:0000005", "status": "present"}, CTX, ont)
-    assert not r["valid"]
+def test_code_assigns_ids_by_exact_name(ont, monkeypatch):
+    monkeypatch.setattr(X, "_cached_chat", lambda *a, **k: pytest.fail("no LLM call expected"))
+    ctx = "Child with focal seizures, hypotonia, developmental delay and eye trouble."
+    its = [X.check_item(item("focal seizures", "Seizure"), ctx),                 # verbatim quote is tried first
+           X.check_item(item("developmental delay", "Global developmental delay"), ctx),
+           X.check_item(item("eye trouble", "Ocular problem", alternatives=["Eye abnormality"]), ctx)]
+    out = X.map_items(its, ctx, ont, 0, True)
+    assert [o["hpo_id"] for o in out] == ["HP:0007359", "HP:0001263", "HP:0000478"]
+    assert out[0]["mapping"].endswith("quote") and out[2]["mapping"].endswith("alternative name")
+
+
+def test_alternatives_widen_retrieval(ont):
+    plain = X.candidates_for({"quote": "odd look", "description": "Ocular oddity", "alternatives": []}, ont)[1]
+    wide = X.candidates_for({"quote": "odd look", "description": "Ocular oddity",
+                             "alternatives": ["Abnormality of the eye region"]}, ont)[1]
+    assert "HP:0000478" not in [c["hpo_id"] for c in plain]
+    assert "HP:0000478" in [c["hpo_id"] for c in wide]
+
+
+def test_llm_only_picks_from_code_listed_candidates(ont, monkeypatch):
+    seen = {}
+
+    def fake_chat(messages, k, use_cache):
+        seen["prompt"] = messages[1]["content"]
+        return {"content": json.dumps({"choices": [{"feature": 1, "candidate": 1}, {"feature": 2, "candidate": 99}]}),
+                "served_model": "fake"}
+    monkeypatch.setattr(X, "_cached_chat", fake_chat)
+    ctx = "Child with focal seizures in infancy and eye findings."
+    its = [X.check_item(item("focal seizures in infancy", "Focal seizures in infancy"), ctx),
+           X.check_item(item("eye findings", "Ocular finding"), ctx)]
+    out = X.map_items(its, ctx, ont, 0, True)
+    assert out[0]["valid"] and out[0]["hpo_id"] == out[0]["candidates"][0]["hpo_id"]
+    assert out[0]["mapping"] == "LLM pick from retrieved candidates"
+    assert not out[1]["valid"]                         # candidate 99 is not on the list -> rejected
+    assert "HP:" not in seen["prompt"]                  # ids are never shown to (or taken from) the LLM
+
+
+def test_llm_can_answer_none(ont, monkeypatch):
+    monkeypatch.setattr(X, "_cached_chat", lambda *a, **k: {
+        "content": json.dumps({"choices": [{"feature": 1, "candidate": None}]}), "served_model": "fake"})
+    ctx = "Child with focal seizures in infancy."
+    out = X.map_items([X.check_item(item("focal seizures in infancy", "Focal seizures in infancy"), ctx)], ctx, ont, 0, True)
+    assert not out[0]["valid"] and "none of the candidates" in out[0]["reasons"][-1]
+
+
+def V(tid, status="present"):
+    return {"hpo_id": tid, "status": status, "valid": True, "quote": tid}
+
+
+def test_vote_merges_along_hierarchy(ont):
+    # Seizure / Focal-onset seizure / Seizure: the majority level is Seizure
+    kept, unstable = X.vote_terms([[V("HP:0001250")], [V("HP:0007359")], [V("HP:0001250")]], ont, 3)
+    assert [k["hpo_id"] for k in kept] == ["HP:0001250"] and kept[0]["merged_from"] == ["HP:0007359"]
+    assert unstable == []
+
+
+def test_vote_keeps_specific_level_when_majority_agrees(ont):
+    kept, _ = X.vote_terms([[V("HP:0007359")], [V("HP:0007359")], [V("HP:0001250")]], ont, 3)
+    assert [k["hpo_id"] for k in kept] == ["HP:0007359"]
+
+
+def test_vote_drops_minority_and_separates_status(ont):
+    kept, unstable = X.vote_terms([[V("HP:0001987"), V("HP:0001250", "excluded")],
+                                   [V("HP:0001250", "excluded")], [V("HP:0001263")]], ont, 3)
+    assert [(k["hpo_id"], k["status"]) for k in kept] == [("HP:0001250", "excluded")]
+    assert {u["hpo_id"] for u in unstable} == {"HP:0001987", "HP:0001263"}
+
+
+def test_presenting_symptom_onset_becomes_overall_onset():
+    ctx = "A 3-year-old who presented with seizure onset in the first months of life and developmental delay."
+    seiz = X.check_item(item("seizure onset", "Seizure", presenting=True,
+                             onset={"min": 0, "max": 6, "unit": "month", "approximate": True,
+                                    "quote": "first months of life"}), ctx)
+    seiz.update(valid=True, hpo_id="HP:0001250")
+    po = X.presenting_onset([seiz])
+    assert (po["months_min"], po["months_max"], po["source"]) == (0, 6, "presenting symptom")
+    # a dated symptom that is not the presenting one does not set the overall onset
+    seiz["presenting"] = False
+    assert X.presenting_onset([seiz]) is None
 
 
 @pytest.mark.parametrize("v,u,m", [(3, "year", 36), (18, "month", 18), (3, "months", 3), (2, "week", 0.5),
@@ -174,15 +262,14 @@ def test_symptom_specific_timing_stays_on_the_symptom():
     assert (o["months_min"], o["months_max"]) == (120, 120)
 
 
-def test_phenotype_onset_quote_must_be_verbatim(ont):
-    p = X.verify_phenotype({"quote": "developmental delay", "hpo_id": "HP:0001263", "status": "present",
-                            "onset": {"min": 8, "max": 8, "unit": "month", "quote": "at 9 months"}}, CTX, ont)
-    assert p["valid"] and p["onset"]["months_min"] is None and not p["onset"]["verified"]
+def test_phenotype_onset_quote_must_be_verbatim():
+    p = X.check_item(item("developmental delay", onset={"min": 8, "max": 8, "unit": "month", "quote": "at 9 months"}), CTX)
+    assert p["checked"] and p["onset"]["months_min"] is None and not p["onset"]["verified"]
 
 
-def test_prompt_separates_overall_and_symptom_onset():
+def test_prompt_never_asks_for_ids():
+    assert "Do not give any ontology identifiers" in X.SYSTEM and "hpo_id" not in X.SYSTEM
     assert "ONLY when the text explicitly dates the disease" in X.SYSTEM
-    assert "timing in the \"onset\" of that phenotype entry" in X.SYSTEM
 
 
 def test_facts_age_number_must_match_quote():

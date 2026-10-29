@@ -39,6 +39,8 @@ class Resources:
 def load_resources(genes: set[str], *, use_cache: bool = True) -> Resources:
     files = D.ensure_all()
     ont = Ontology(files["hpo_ontology"])
+    for legacy in ("hpo_ontology_2022", "hpo_ontology_2024"):
+        ont.add_former_names(files[legacy])
     hpoa = S.load_hpoa(files["hpo_annotations"])
     ont.build_ic(hpoa)
     by_gene: dict[str, list[S.Assoc]] = defaultdict(list)

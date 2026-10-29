@@ -23,6 +23,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx.disease import extract, pipeline, resolve  # noqa: E402
 
@@ -143,6 +144,14 @@ def main() -> int:
         else:
             print("  [INFO] " + line)
 
+    print("\n== symptom extraction test set (practice contexts only) ==")
+    import eval_extraction as EV
+    gold = json.loads(EV.GOLD.read_text())
+    bad = EV.check_gold(gold, res.ont)
+    hard(not bad, "gold HPO ids exist in hp.json and quotes are verbatim" + (f" -> {bad}" if bad else ""))
+    ev = EV.evaluate(gold, res.ont)
+    EV.report(ev)
+
     print("\n== to check by hand (SOFT) ==")
     for cid, note in SOFT.items():
         p = results[cid]["primary"]
@@ -154,7 +163,7 @@ def main() -> int:
 
     out = ROOT / "out" / "acceptance_step2.json"
     out.parent.mkdir(exist_ok=True)
-    out.write_text(json.dumps({"failed": fails, "results": results}, indent=2, ensure_ascii=False))
+    out.write_text(json.dumps({"failed": fails, "extraction_eval": ev, "results": results}, indent=2, ensure_ascii=False))
     print(f"\n{'ALL HARD CHECKS PASSED' if not fails else f'{len(fails)} HARD CHECK(S) FAILED'}  (details: {out})")
     return 1 if fails else 0
 

@@ -95,6 +95,11 @@ class Ontology:
         self.ic: dict[str, float] = {}
         self._max_ic = 0.0
         self._index: dict[str, list[str]] | None = None
+        self._search: dict | None = None
+        self.former: dict[str, list[str]] = defaultdict(list)   # former labels/synonyms of current terms
+        for t in self.terms.values():                             # "obsolete X" replaced by Y -> X is a name of Y
+            if t.obsolete and t.replaced_by in self.terms and t.label.lower().startswith("obsolete "):
+                self._add_former(t.replaced_by, t.label[9:])
 
     # ---- lookup
     def resolve(self, tid: str) -> tuple[str | None, str]:
@@ -124,19 +129,79 @@ class Ontology:
     def is_phenotype(self, tid: str) -> bool:
         return PHENOTYPIC_ABNORMALITY in self.ancestors(tid) and tid != PHENOTYPIC_ABNORMALITY
 
+    def _add_former(self, tid: str, name: str) -> None:
+        current = {normalize(n) for n in [self.terms[tid].label, *self.terms[tid].synonyms, *self.former[tid]]}
+        if name and normalize(name) not in current:
+            self.former[tid].append(name)
+            self._index = self._search = None
+
+    def add_former_names(self, lf: LocalFile) -> int:
+        """Labels/synonyms an older HPO release used for terms that still exist (renamed terms)."""
+        g = json.loads(lf.path.read_text(encoding="utf-8"))["graphs"][0]
+        before = sum(len(v) for v in self.former.values())
+        for n in g["nodes"]:
+            if not n["id"].startswith("http://purl.obolibrary.org/obo/HP_"):
+                continue
+            cur, _ = self.resolve(_curie(n["id"]))
+            if not cur:
+                continue
+            for name in [n.get("lbl", ""), *(x["val"] for x in n.get("meta", {}).get("synonyms", []))]:
+                self._add_former(cur, name[9:] if name.lower().startswith("obsolete ") else name)
+        return sum(len(v) for v in self.former.values()) - before
+
     def names(self, tid: str) -> list[str]:
         t = self.terms[tid]
-        return [t.label, *t.synonyms]
+        return [t.label, *t.synonyms, *self.former.get(tid, [])]
 
     def exact_lookup(self, text: str) -> list[str]:
-        """Current phenotype terms whose label or synonym equals `text` (case/punctuation-insensitive)."""
+        """Current phenotype terms whose label, synonym or former name equals `text`.
+
+        Case/punctuation-insensitive; a plural form ("Seizures", "developmental delays") also matches.
+        """
         if self._index is None:
             self._index = defaultdict(list)
             for t in self.terms.values():
                 if not t.obsolete:
-                    for n in [t.label, *t.synonyms]:
+                    for n in self.names(t.id):
                         self._index[normalize(n)].append(t.id)
-        return [t for t in self._index.get(normalize(text), []) if self.is_phenotype(t)]
+        out: list[str] = []
+        for key in (normalize(text), " ".join(_singular(w) for w in normalize(text).split())):
+            out += [t for t in self._index.get(key, []) if self.is_phenotype(t) and t not in out]
+            if out:
+                break
+        return out
+
+    def search(self, text: str, k: int = 10) -> list[dict]:
+        """Lexical retrieval (BM25 over all names) of the k closest phenotype terms."""
+        if self._search is None:
+            docs, df = [], defaultdict(int)
+            for t in self.terms.values():
+                if t.obsolete or not self.is_phenotype(t.id):
+                    continue
+                for n in self.names(t.id):
+                    toks = _tokens(n)
+                    if toks:
+                        docs.append((t.id, n, toks))
+                        for w in set(toks):
+                            df[w] += 1
+            avg = sum(len(d[2]) for d in docs) / len(docs)
+            self._search = {"docs": docs, "df": df, "n": len(docs), "avg": avg}
+        ix = self._search
+        q = set(_tokens(text))
+        best: dict[str, tuple[float, str]] = {}
+        for tid, name, toks in ix["docs"]:
+            hit = q.intersection(toks)
+            if not hit:
+                continue
+            sc = 0.0
+            for w in hit:
+                idf = math.log(1 + (ix["n"] - ix["df"][w] + 0.5) / (ix["df"][w] + 0.5))
+                sc += idf * 2.2 / (1 + 1.2 * (0.25 + 0.75 * len(toks) / ix["avg"]))
+            if sc > best.get(tid, (0.0, ""))[0]:
+                best[tid] = (sc, name)
+        ranked = sorted(best.items(), key=lambda x: (-x[1][0], x[0]))[:k]
+        return [{"hpo_id": tid, "label": self.terms[tid].label, "matched_name": name, "score": round(sc, 3)}
+                for tid, (sc, name) in ranked]
 
     # ---- information content
     def build_ic(self, ann: HpoAnnotations) -> None:
@@ -251,52 +316,22 @@ def onset_fit(ont: Ontology, patient: dict, disease_clinical: list[tuple[str, in
     return out
 
 
-# ----------------------------------------------------------- lexical checks
-
-_STOP = {"of", "the", "and", "or", "with", "without", "in", "a", "an", "to", "at", "on", "by", "for",
-         "abnormal", "abnormality", "abnormalities", "increased", "decreased", "reduced", "impaired",
-         "mild", "severe", "progressive", "recurrent", "episodes", "episode", "episodic", "history",
-         "positive", "chronic", "early", "onset", "overt", "type", "finding", "findings", "signs", "sign"}
-# A few lay / adjective forms that share no prefix with the HPO wording.
-_EQUIV = [{"ophthalmic", "ocular", "eye", "eyes", "ophthalmologic", "visual"},
-          {"renal", "kidney", "nephro"}, {"hepatic", "liver"}, {"cardiac", "heart"},
-          {"cerebral", "brain"}, {"cutaneous", "skin", "dermal"}, {"thin", "underweight", "cachexia", "cachectic", "emaciat"},
-          {"intellectual", "cognitive", "mental"}, {"motor", "movement"}]
-
+# ------------------------------------------------------------- text helpers
 
 def normalize(s: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", s.lower()).split())
 
 
-def _stem(w: str) -> str:
-    for suf in ("ies", "es", "s"):
-        if w.endswith(suf) and len(w) - len(suf) >= 4:
-            return w[: -len(suf)]
+_SEARCH_STOP = {"of", "the", "and", "or", "in", "a", "an", "to", "at", "on", "by", "for", "with", "is", "are", "their"}
+
+
+def _singular(w: str) -> str:
+    if w.endswith("ies") and len(w) > 4:
+        return w[:-3] + "y"
+    if w.endswith("s") and not w.endswith(("ss", "is", "us")) and len(w) > 3:
+        return w[:-1]
     return w
 
 
-def content_words(s: str) -> set[str]:
-    return {_stem(w) for w in normalize(s).split() if w not in _STOP and len(w) > 1}
-
-
-def _related(a: str, b: str) -> bool:
-    if a == b:
-        return True
-    k = 0
-    for x, y in zip(a, b):
-        if x != y:
-            break
-        k += 1
-    if k >= 5:
-        return True
-    return any(any(a.startswith(e) for e in g) and any(b.startswith(e) for e in g) for g in _EQUIV)
-
-
-def lexical_overlap(quote: str, names: list[str]) -> list[str]:
-    """Content words of `quote` that also appear (loosely) in any of the term names."""
-    q = content_words(quote)
-    hits = set()
-    for n in names:
-        for w in content_words(n):
-            hits |= {x for x in q if _related(x, w)}
-    return sorted(hits)
+def _tokens(s: str) -> list[str]:
+    return [_singular(w) for w in normalize(s).split() if w not in _SEARCH_STOP]

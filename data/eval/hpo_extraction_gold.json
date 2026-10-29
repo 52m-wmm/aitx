@@ -1,0 +1,306 @@
+{
+ "description": "Symptom extraction gold set (step 2). Clinical descriptions from the official Phase 0 practice examples and the Phase 1 HF validator cases, excluding the four evaluation cases and the clean validation case AITX-00007 (DDC). 'acceptable' lists every HPO id counted as correct for the span; 'negatives' are spans that must NOT produce a phenotype term.",
+ "contexts": [
+  {
+   "id": "PRAC-AGXT-c33dup",
+   "context": "7-year-old with recurrent nephrocalcinosis and chronic kidney disease",
+   "annotations": [
+    {
+     "quote": "recurrent nephrocalcinosis",
+     "status": "present",
+     "acceptable": [
+      "HP:0000121"
+     ]
+    },
+    {
+     "quote": "chronic kidney disease",
+     "status": "present",
+     "acceptable": [
+      "HP:0012622"
+     ]
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "7-year-old",
+     "why": "age"
+    }
+   ]
+  },
+  {
+   "id": "PRAC-CFTR-F508del",
+   "context": "15-year-old male with cystic fibrosis",
+   "annotations": [],
+   "negatives": [
+    {
+     "quote": "cystic fibrosis",
+     "why": "diagnosis name, not a phenotype"
+    },
+    {
+     "quote": "15-year-old male",
+     "why": "age and sex"
+    }
+   ]
+  },
+  {
+   "id": "PRAC-DMD-del",
+   "context": "Progressive muscle weakness",
+   "annotations": [
+    {
+     "quote": "Progressive muscle weakness",
+     "status": "present",
+     "acceptable": [
+      "HP:0003323",
+      "HP:0001324"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-COL1A1",
+   "context": "Joint hypermobility, skin hyperextensibility, and easy bruising.",
+   "annotations": [
+    {
+     "quote": "Joint hypermobility",
+     "status": "present",
+     "acceptable": [
+      "HP:0001382"
+     ]
+    },
+    {
+     "quote": "skin hyperextensibility",
+     "status": "present",
+     "acceptable": [
+      "HP:0000974"
+     ]
+    },
+    {
+     "quote": "easy bruising",
+     "status": "present",
+     "acceptable": [
+      "HP:0000978"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-OTC",
+   "context": "3-month-old male infant with hyperammonemia",
+   "annotations": [
+    {
+     "quote": "hyperammonemia",
+     "status": "present",
+     "acceptable": [
+      "HP:0001987"
+     ]
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "3-month-old male infant",
+     "why": "age and sex"
+    }
+   ]
+  },
+  {
+   "id": "PRAC-SLC35A2",
+   "context": "seizures and global developmental delay",
+   "annotations": [
+    {
+     "quote": "seizures",
+     "status": "present",
+     "acceptable": [
+      "HP:0001250"
+     ]
+    },
+    {
+     "quote": "global developmental delay",
+     "status": "present",
+     "acceptable": [
+      "HP:0001263"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-GRIN2B",
+   "context": "intellectual disability, seizures, and developmental delays",
+   "annotations": [
+    {
+     "quote": "intellectual disability",
+     "status": "present",
+     "acceptable": [
+      "HP:0001249"
+     ]
+    },
+    {
+     "quote": "seizures",
+     "status": "present",
+     "acceptable": [
+      "HP:0001250"
+     ]
+    },
+    {
+     "quote": "developmental delays",
+     "status": "present",
+     "acceptable": [
+      "HP:0001263",
+      "HP:0012758"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-ANO10",
+   "context": "progressive cerebellar ataxia and peripheral neuropathy",
+   "annotations": [
+    {
+     "quote": "progressive cerebellar ataxia",
+     "status": "present",
+     "acceptable": [
+      "HP:0002073",
+      "HP:0001251"
+     ]
+    },
+    {
+     "quote": "peripheral neuropathy",
+     "status": "present",
+     "acceptable": [
+      "HP:0009830"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-KMT2B",
+   "context": "childhood-onset generalized dystonia",
+   "annotations": [
+    {
+     "quote": "generalized dystonia",
+     "status": "present",
+     "acceptable": [
+      "HP:0007325",
+      "HP:0001332"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "PRAC-NF1",
+   "context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma",
+   "annotations": [
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "status": "present",
+     "acceptable": [
+      "HP:0100697"
+     ]
+    },
+    {
+     "quote": "Pheochromocytoma",
+     "status": "present",
+     "acceptable": [
+      "HP:0002666"
+     ]
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "AITX-00009",
+   "context": "Patient with SLC35A2-CDG who is experiencing seizures and global developmental delay",
+   "annotations": [
+    {
+     "quote": "seizures",
+     "status": "present",
+     "acceptable": [
+      "HP:0001250"
+     ]
+    },
+    {
+     "quote": "global developmental delay",
+     "status": "present",
+     "acceptable": [
+      "HP:0001263"
+     ]
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "SLC35A2-CDG",
+     "why": "diagnosis name"
+    }
+   ]
+  },
+  {
+   "id": "AITX-00010",
+   "context": "seizures and global developmental delay. Age 2 months, Hemoglobin 5, Normal liver labs, Not enrolled in other trials",
+   "annotations": [
+    {
+     "quote": "seizures",
+     "status": "present",
+     "acceptable": [
+      "HP:0001250"
+     ]
+    },
+    {
+     "quote": "global developmental delay",
+     "status": "present",
+     "acceptable": [
+      "HP:0001263"
+     ]
+    },
+    {
+     "quote": "Hemoglobin 5",
+     "status": "present",
+     "acceptable": [
+      "HP:0001903",
+      "HP:0020062"
+     ]
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "Normal liver labs",
+     "why": "normal finding"
+    },
+    {
+     "quote": "Not enrolled in other trials",
+     "why": "administrative"
+    },
+    {
+     "quote": "Age 2 months",
+     "why": "age"
+    }
+   ]
+  },
+  {
+   "id": "AITX-00011",
+   "context": "early-onset seizures and developmental delays",
+   "annotations": [
+    {
+     "quote": "seizures",
+     "status": "present",
+     "acceptable": [
+      "HP:0001250"
+     ]
+    },
+    {
+     "quote": "developmental delays",
+     "status": "present",
+     "acceptable": [
+      "HP:0001263",
+      "HP:0012758"
+     ]
+    }
+   ],
+   "negatives": []
+  }
+ ]
+}
