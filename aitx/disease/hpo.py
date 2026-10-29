@@ -12,6 +12,13 @@ disease annotations D:
 IC(t) = -ln(n_t / N): n_t = diseases annotated with t or a descendant, N = all
 annotated diseases. Rare features therefore weigh more than common ones.
 A disease with no annotations gets score None ("no annotation data"), never 0.
+
+Onset (contract v2.3): the patient's age at onset is compared with the
+disease's Onset-branch annotations (aspect C). Penalty only: a clear
+mismatch subtracts ONSET_PENALTY, a match adds nothing, so diseases that
+happen to have onset annotations gain no advantage over those without.
+Never a veto. When only the current age is known, onset <= age, so only a
+disease that starts later than the patient's age is penalised.
 """
 from __future__ import annotations
 
@@ -26,6 +33,26 @@ from aitx.disease.sources import Annotation, HpoAnnotations
 
 PHENOTYPIC_ABNORMALITY = "HP:0000118"
 UNKNOWN_FREQ = 0.5
+ONSET = "HP:0003674"
+ONSET_PENALTY = 1.0
+INF = float("inf")
+# Age at onset in months, [low, high), from the HPO term definitions.
+ONSET_MONTHS = {
+    "HP:0030674": (-10, 0),      # Antenatal (embryonal, fetal, trimesters below it)
+    "HP:0003577": (0, 1),        # Congenital
+    "HP:0003623": (0, 1),        # Neonatal (first 28 days)
+    "HP:0003593": (1, 12),       # Infantile
+    "HP:0011463": (12, 60),      # Childhood (1-5 y)
+    "HP:0003621": (60, 192),     # Juvenile (5-15 y)
+    "HP:0410280": (0, 192),      # Pediatric
+    "HP:0003581": (192, INF),    # Adult (>= 16 y)
+    "HP:0011462": (192, 480),    # Young adult (16-40 y)
+    "HP:0025708": (192, 228),    # Early young adult (16-19 y)
+    "HP:0025709": (228, 300),    # Intermediate young adult (19-25 y)
+    "HP:0025710": (300, 480),    # Late young adult (25-40 y)
+    "HP:0003596": (480, 720),    # Middle age (40-60 y)
+    "HP:0003584": (720, INF),    # Late (> 60 y)
+}
 
 
 def _curie(iri: str) -> str:
@@ -180,6 +207,48 @@ def score(ont: Ontology, patient_present: list[str], patient_absent: list[str],
     s = sum(m["ic"] for m in matches) / n - sum(p["penalty"] for p in penalties) / n
     return {"score": round(s, 4), "note": "", "matches": matches, "penalties": penalties,
             "annotated_terms": len(present)}
+
+
+# ------------------------------------------------------------------- onset
+
+def onset_range(ont: Ontology, tid: str) -> tuple[float, float] | None:
+    """Month range of an Onset term, from the term itself or its nearest listed ancestor."""
+    cur, _ = ont.resolve(tid)
+    if not cur or ONSET not in ont.ancestors(cur):
+        return None
+    if cur in ONSET_MONTHS:
+        return ONSET_MONTHS[cur]
+    hits = [ONSET_MONTHS[a] for a in ont.ancestors(cur) if a in ONSET_MONTHS]
+    return min(hits, key=lambda r: r[1] - r[0]) if hits else None
+
+
+def onset_fit(ont: Ontology, patient: dict, disease_clinical: list[tuple[str, int]]) -> dict:
+    """patient: {"min", "max", "kind": "onset" | "age_upper_bound"} in months (or {} if unknown)."""
+    terms = []
+    for tid, line in disease_clinical:
+        r = onset_range(ont, tid)
+        if r is not None:
+            terms.append({"term": tid, "label": ont.terms[ont.resolve(tid)[0]].label,
+                          "months": [r[0], None if r[1] == INF else r[1]], "line": line})
+    out = {"patient": patient or None, "disease_onsets": terms, "result": "unknown", "adjustment": 0.0}
+    if not terms or not patient or patient.get("max") is None:
+        out["note"] = "no disease onset annotation" if not terms else "patient onset unknown"
+        return out
+    lo = patient["min"] if patient.get("min") is not None else 0
+    lo, hi = lo * 0.8 - 1, patient["max"] * 1.25 + 1        # tolerance: category edges are fuzzy
+    overlap = any(t["months"][0] < hi and lo < (INF if t["months"][1] is None else t["months"][1]) for t in terms)
+    if patient.get("kind") == "age_upper_bound":
+        if not overlap:
+            out.update(result="mismatch", adjustment=-ONSET_PENALTY,
+                       note="every annotated onset is later than the patient's current age")
+        else:
+            out.update(result="compatible", note="only an upper bound (current age) is known; no bonus")
+        return out
+    if overlap:
+        out.update(result="match", note="consistent with annotated onset; no bonus (penalty-only rule)")
+    else:
+        out.update(result="mismatch", adjustment=-ONSET_PENALTY)
+    return out
 
 
 # ----------------------------------------------------------- lexical checks

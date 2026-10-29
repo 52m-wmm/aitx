@@ -5,6 +5,7 @@ from aitx.disease import extract as X
 from aitx.disease import live
 from aitx.disease import resolve as R
 from aitx.disease import sources as S
+from aitx.disease.hpo import onset_fit
 from aitx.disease.hpo import score as pheno_score
 
 
@@ -13,6 +14,34 @@ def _annotations(c: R.Candidate, res: R.Resources) -> list[S.Annotation]:
     for i in c.omim + c.orphanet:
         out += res.hpoa.phenotypes.get(i, [])
     return out
+
+
+def _clinical(c: R.Candidate, res: R.Resources) -> list[tuple[str, int]]:
+    out = []
+    for i in c.omim + c.orphanet:
+        out += res.hpoa.clinical.get(i, [])
+    return out
+
+
+def patient_onset(facts: dict) -> dict:
+    """Months; from the verified onset fact, else the current age as an upper bound."""
+    o, a = facts.get("onset") or {}, facts.get("age") or {}
+    if o.get("months_min") is not None or o.get("months_max") is not None:
+        lo = o.get("months_min") if o.get("months_min") is not None else o.get("months_max")
+        hi = o.get("months_max") if o.get("months_max") is not None else lo
+        return {"min": lo, "max": hi, "kind": "onset", "quote": o.get("quote")}
+    if a.get("months") is not None:
+        return {"min": None, "max": a["months"], "kind": "age_upper_bound", "quote": a.get("quote")}
+    return {}
+
+
+def _score(c: R.Candidate, res: R.Resources, present: list[str], excluded: list[str], onset: dict) -> dict:
+    ph = pheno_score(res.ont, present, excluded, _annotations(c, res))
+    ph["onset"] = onset_fit(res.ont, onset, _clinical(c, res))
+    if ph["score"] is not None and ph["onset"]["adjustment"]:
+        ph["score_before_onset"] = ph["score"]
+        ph["score"] = round(ph["score"] + ph["onset"]["adjustment"], 4)
+    return ph
 
 
 def _omim_entries(c: R.Candidate, res: R.Resources) -> list[dict]:
@@ -38,6 +67,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     de_novo = facts["variant_origin"].get("value") == "de_novo"
     present = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] == "present")
     excluded = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] == "excluded")
+    onset = patient_onset(facts)
 
     gene_info = {g: live.hgnc_gene(g, use_cache=use_cache) for g in genes}
     aliases = {a for g in gene_info.values() for a in g.get("aliases", []) + g.get("previous_symbols", [])}
@@ -60,7 +90,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
         mois = R.candidate_mois(c, res)
         val = R.validity(c)
         inh = R.inheritance(c, mois, zygosity, len(z), sex, de_novo)
-        ph = pheno_score(res.ont, present, excluded, _annotations(c, res))
+        ph = _score(c, res, present, excluded, onset)
         excl_reasons = []
         if c.obsolete:
             excl_reasons.append("obsolete MONDO term")
@@ -75,12 +105,26 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
             "mondo_url": f"https://monarchinitiative.org/{c.key}" if c.key.startswith("MONDO:") else None,
             "omim": _omim_entries(c, res), "orphanet": c.orphanet, "specific": c.specific,
             "mondo_cite": S.Cite("mondo_sssom", res.mondo.snapshot, res.mondo.line[c.key]).to_dict() if c.key in res.mondo.line else None,
-            "validity": val, "inheritance": inh, "clinvar": links.get(c.key, []), "phenotype": ph,
+            "validity": val, "inheritance": inh, "clinvar": links.get(c.key, []),
+            "clinvar_info": [{"vcv": rec["vcv"], "url": rec["url"], "clinical_significance": rec["clinical_significance"],
+                              "stars": rec["stars"], "match": rec["match"], "variant": r["query"],
+                              "why_not_ranked": "match is version_mismatch" if rec["match"] == "version_mismatch"
+                              else f"clinical significance is '{rec['clinical_significance']}', not P/LP"}
+                             for r in cv_results for rec in r["records"]
+                             if not rec["used_for_ranking"] and c.key in rec.get("mapped_candidates", [])],
+            "phenotype": ph,
             "orphanet_mechanism_hint": [{"text": m, "source": "Orphanet product6 association type",
                                          "cite": next(a.cite.to_dict() for a in c.ratings if a.mechanism == m)} for m in mech],
             "synonyms": c.synonyms, "ols": {k: c.ols.get(k) for k in ("url", "accessed_at", "obsolete")} if c.ols else None,
             "excluded": bool(excl_reasons), "exclusion_reasons": excl_reasons,
         })
+
+    eligible = {c["key"] for c in cands if not c["excluded"]}
+    annotated = {rc.key for rc in raw if _annotations(rc, res)}
+    groups = R.merge_groups(raw, eligible, annotated)
+    for c in cands:
+        c["merge"] = groups[c["key"]]
+        c["compete"] = groups[c["key"]]["role"] == "representative"
 
     sel = R.select(cands, present, excluded, explicit_keys)
 
@@ -89,7 +133,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     for s in ext["samples"]:
         sp = sorted(t for t, st in s["terms"] if st == "present")
         sx = sorted(t for t, st in s["terms"] if st == "excluded")
-        sc = [dict(c, phenotype=pheno_score(res.ont, sp, sx, _annotations(rc, res))) for c, rc in zip(cands, raw)]
+        sc = [dict(c, phenotype=_score(rc, res, sp, sx, onset)) for c, rc in zip(cands, raw)]
         ss = R.select(sc, sp, sx, explicit_keys)
         per_sample.append({"status": ss["status"], "id": ss["id"]})
     distinct = {(p["status"], p["id"]) for p in per_sample}
@@ -104,7 +148,8 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
                "status": sel["status"], "basis": sel["basis"], "reasons": sel["reasons"],
                "alternatives": [{"id": k, "label": by_key[k]["label"]} for k in sel.get("tied", []) if k != sel["id"]]}
     if sel["id"]:
-        best = max((c["phenotype"]["score"] for c in cands if not c["excluded"] and c["phenotype"]["score"] is not None),
+        best = max((c["phenotype"]["score"] for c in cands
+                    if not c["excluded"] and c["compete"] and c["phenotype"]["score"] is not None),
                    default=None)
         conf, notes = R.confidence(sel, by_key[sel["id"]], best)
         primary["confidence"] = conf if sel["status"] == "resolved" else "low"
@@ -124,6 +169,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
                                                     "phenotype_conflicts", "samples", "prompt_version")},
         "explicit_diagnosis": explicit,
         "patient_facts": facts,
+        "patient_onset": onset or None,
         "inheritance_evidence": {"zygosity": zyg, "sex": sex, "variant_origin": facts["variant_origin"].get("value"),
                                  "variants": [{k: v.get(k) for k in ("gene", "transcript", "variant_cdna", "zygosity")}
                                               for v in genotype]},

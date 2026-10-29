@@ -134,6 +134,59 @@ def candidate_mois(c: Candidate, res: Resources) -> list[dict]:
     return [{"moi": k, "sources": v} for k, v in sorted(out.items())]
 
 
+# ------------------------------------------------------------ merge groups
+
+def merge_groups(cands: list[Candidate], eligible: set[str], annotated: set[str]) -> dict[str, dict]:
+    """Merge nested or equivalent candidates (contract v2.2).
+
+    - Equivalent: two candidates share an OMIM / Orphanet / UMLS id (the mapping
+      file says they are the same disease). One representative per class:
+      the one with phenotype annotations, then with more OMIM ids, then by key.
+    - Nested: candidate A is a MONDO ancestor of an eligible candidate B and has
+      no phenotype annotations of its own. A is then a grouping concept, folded
+      into B's group, and does not compete. A parent WITH annotations is a disease
+      in its own right and competes with its children on equal terms (e.g. NF1
+      OMIM 162200 vs familial spinal neurofibromatosis OMIM 162210).
+    Returns key -> {group, role: representative | equivalent | broader, ...}.
+    Siblings under a common parent stay separate groups.
+    """
+    parent = {c.key: c.key for c in cands}
+
+    def find(k):
+        while parent[k] != k:
+            parent[k] = parent[parent[k]]
+            k = parent[k]
+        return k
+    owner: dict[str, str] = {}
+    for c in cands:
+        for i in sorted({*c.omim, *c.orphanet, *c.umls}):
+            if i in owner:
+                parent[find(c.key)] = find(owner[i])
+            else:
+                owner[i] = c.key
+    classes: dict[str, list[Candidate]] = defaultdict(list)
+    for c in cands:
+        classes[find(c.key)].append(c)
+    out: dict[str, dict] = {}
+    for members in classes.values():
+        rank = sorted(members, key=lambda c: (c.key not in eligible, c.key not in annotated, -len(c.omim), c.key))
+        rep = rank[0].key
+        for c in members:
+            out[c.key] = {"group": rep, "role": "representative" if c.key == rep else "equivalent",
+                          "equivalent_to": sorted(m.key for m in members if m.key != c.key)}
+    for a in cands:
+        narrower = sorted(b.key for b in cands if b.key != a.key and b.key in eligible and a.key in b.ancestors
+                          and out[b.key]["group"] != out[a.key]["group"])
+        if a.key in annotated:
+            if narrower:
+                out[a.key]["narrower_competing"] = narrower
+            continue
+        if narrower and out[a.key]["role"] == "representative":
+            out[a.key].update(role="broader", narrower=narrower,
+                              group=out[narrower[0]]["group"] if len(narrower) == 1 else out[a.key]["group"])
+    return out
+
+
 # ----------------------------------------------------------- inheritance fit
 
 def moi_fit(moi: str, zygosity: str, n_variants: int, sex: str) -> tuple[str, str]:
@@ -294,7 +347,13 @@ def _gap(a: float, b: float) -> float:
 
 
 def _contenders(pool: list[dict]) -> list[dict]:
-    """Drop grouping terms (no OMIM/Orphanet id, no annotations) when a specific disease is present."""
+    """Candidates that compete for primary within a pool.
+
+    Drops members merged into another candidate's group (broader MONDO terms with a more
+    specific candidate below them, non-representative equivalents) and grouping terms
+    (no OMIM/Orphanet id, no annotations) when a specific disease is present.
+    """
+    pool = [c for c in pool if c.get("compete", True)] or pool
     return [c for c in pool if c["specific"] or c["phenotype"]["score"] is not None] or pool
 
 
@@ -350,48 +409,74 @@ def select(cands: list[dict], present: list[str], excluded: list[str], explicit:
                 "lead": _lead(top)}
 
     tier_val = min(MOI_ORDER[c["inheritance"]["result"]] for c in elig)
-    tier = [c for c in elig if MOI_ORDER[c["inheritance"]["result"]] == tier_val]
-    lower = [c for c in elig if c not in tier]
-    contenders = _contenders(tier)
-    grouping = [c["key"] for c in tier if c not in contenders]
-    if grouping:
-        reasons.append(f"grouping terms without OMIM/Orphanet ids or annotations not compared: {', '.join(grouping)}")
-    if lower:
-        reasons.append(f"inheritance tier '{tier[0]['inheritance']['result']}' ranked above "
-                       f"{len(lower)} candidate(s) with weaker inheritance fit")
-    scored = by_pheno([c for c in contenders if c["phenotype"]["score"] is not None])
-    unscored = [c for c in contenders if c["phenotype"]["score"] is None]
 
-    if len(contenders) == 1:
-        c = contenders[0]
-        basis = "only_candidate" if len(elig) == 1 else "inheritance"
-        reasons.append(f"only candidate {'left' if basis == 'only_candidate' else 'in the best inheritance tier'}: {c['label']}")
-        return {"status": "resolved", "id": c["key"], "basis": basis, "reasons": reasons, "tied": []}
-    if not scored:
-        reasons.append("no phenotype annotation data to separate the candidates")
-        return {"status": "ambiguous", "id": contenders[0]["key"], "basis": "phenotype", "reasons": reasons,
-                "tied": [c["key"] for c in contenders]}
-    if not present:
-        reasons.append("no verified patient phenotype terms to compare candidates")
-        return {"status": "ambiguous", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons,
-                "tied": [c["key"] for c in contenders]}
-    s0 = scored[0]["phenotype"]["score"]
-    if s0 <= 0:
-        reasons.append("no candidate's phenotype annotations match the patient's terms")
-        return {"status": "unresolved", "id": None, "basis": "phenotype", "reasons": reasons,
-                "tied": [c["key"] for c in contenders]}
-    tied = [c for c in scored[1:] if _gap(s0, c["phenotype"]["score"]) < AMBIGUITY_GAP]
-    if unscored:
-        reasons.append(f"candidates without annotation data cannot be compared: {', '.join(c['key'] for c in unscored)}")
-    if tied or unscored:
-        reasons.append(f"phenotype scores within {int(AMBIGUITY_GAP * 100)}%: "
-                       + ", ".join(f"{c['label']} {c['phenotype']['score']}" for c in [scored[0], *tied]))
-        return {"status": "ambiguous", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons,
-                "tied": [c["key"] for c in [scored[0], *tied, *unscored]]}
-    nxt = scored[1]["phenotype"]["score"] if len(scored) > 1 else None
-    reasons.append(f"highest phenotype score {s0}" + (f" vs next {nxt} ({_gap(s0, nxt):.0%} lead)" if nxt is not None else ""))
-    return {"status": "resolved", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons, "tied": [],
-            "lead": round(_gap(s0, nxt), 3) if nxt is not None else None}
+    def by_tier():
+        tier = [c for c in elig if MOI_ORDER[c["inheritance"]["result"]] == tier_val]
+        lower = [c for c in elig if c not in tier]
+        contenders = _contenders(tier)
+        grouping = [c["key"] for c in tier if c not in contenders]
+        if grouping:
+            reasons.append(f"not compared (merged into a more specific candidate, or grouping term): {', '.join(grouping)}")
+        if lower:
+            reasons.append(f"inheritance tier '{tier[0]['inheritance']['result']}' ranked above "
+                           f"{len(lower)} candidate(s) with weaker inheritance fit")
+        scored = by_pheno([c for c in contenders if c["phenotype"]["score"] is not None])
+        unscored = [c for c in contenders if c["phenotype"]["score"] is None]
+
+        if len(contenders) == 1:
+            c = contenders[0]
+            basis = "only_candidate" if len(_contenders(elig)) == 1 else "inheritance"
+            reasons.append(f"only candidate {'left' if basis == 'only_candidate' else 'in the best inheritance tier'}: {c['label']}")
+            return {"status": "resolved", "id": c["key"], "basis": basis, "reasons": reasons, "tied": []}
+        if not scored:
+            reasons.append("no phenotype annotation data to separate the candidates")
+            return {"status": "ambiguous", "id": contenders[0]["key"], "basis": "phenotype", "reasons": reasons,
+                    "tied": [c["key"] for c in contenders]}
+        if not present:
+            reasons.append("no verified patient phenotype terms to compare candidates")
+            return {"status": "ambiguous", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons,
+                    "tied": [c["key"] for c in contenders]}
+        s0 = scored[0]["phenotype"]["score"]
+        if s0 <= 0:
+            reasons.append("no candidate's phenotype annotations match the patient's terms")
+            return {"status": "unresolved", "id": None, "basis": "phenotype", "reasons": reasons,
+                    "tied": [c["key"] for c in contenders]}
+        tied = [c for c in scored[1:] if _gap(s0, c["phenotype"]["score"]) < AMBIGUITY_GAP]
+        if unscored:
+            reasons.append(f"candidates without annotation data cannot be compared: {', '.join(c['key'] for c in unscored)}")
+        if tied or unscored:
+            reasons.append(f"phenotype scores within {int(AMBIGUITY_GAP * 100)}%: "
+                           + ", ".join(f"{c['label']} {c['phenotype']['score']}" for c in [scored[0], *tied]))
+            return {"status": "ambiguous", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons,
+                    "tied": [c["key"] for c in [scored[0], *tied, *unscored]]}
+        nxt = scored[1]["phenotype"]["score"] if len(scored) > 1 else None
+        reasons.append(f"highest phenotype score {s0}" + (f" vs next {nxt} ({_gap(s0, nxt):.0%} lead)" if nxt is not None else ""))
+        return {"status": "resolved", "id": scored[0]["key"], "basis": "phenotype", "reasons": reasons, "tied": [],
+                "lead": round(_gap(s0, nxt), 3) if nxt is not None else None}
+
+    sel = by_tier()
+    if tier_val != MOI_ORDER["consistent"] or sel["status"] == "unresolved":
+        return sel
+    # Safety net (contract v2.2): an 'unknown'-inheritance candidate whose phenotype score beats the
+    # best 'consistent' one by the ambiguity gap or more is not silently ranked below it.
+    top = by_key_score(cands, sel["id"])
+    if top is None or top <= 0:
+        return sel
+    strong = [c for c in _contenders([c for c in elig if c["inheritance"]["result"] == "unknown"])
+              if c.get("compete", True) and c["phenotype"]["score"] is not None
+              and c["phenotype"]["score"] > 0 and _gap(c["phenotype"]["score"], top) >= AMBIGUITY_GAP]
+    if strong:
+        sel["status"] = "ambiguous"
+        sel["reasons"].append("candidate(s) with unknown inheritance score clearly higher than the best consistent one: "
+                              + ", ".join(f"{c['label']} {c['phenotype']['score']} vs {top}" for c in strong))
+        sel["tied"] = list(dict.fromkeys([sel["id"], *sel.get("tied", []), *(c["key"] for c in strong)]))
+        sel.pop("lead", None)
+    return sel
+
+
+def by_key_score(cands: list[dict], key: str | None) -> float | None:
+    c = next((c for c in cands if c["key"] == key), None)
+    return c["phenotype"]["score"] if c else None
 
 
 _CONF = ["low", "moderate", "high"]

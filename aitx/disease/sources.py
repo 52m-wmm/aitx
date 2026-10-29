@@ -267,11 +267,13 @@ class HpoAnnotations:
     inheritance: dict[str, list[tuple[str, int]]]  # disease id -> [(MOI code, line)]
     names: dict[str, str]
     snapshot: str
+    clinical: dict[str, list[tuple[str, int]]] = field(default_factory=dict)  # aspect C (onset, course): [(hpo id, line)]
 
 
 def load_hpoa(lf: LocalFile) -> HpoAnnotations:
     ph: dict[str, list[Annotation]] = defaultdict(list)
     inh: dict[str, list[tuple[str, int]]] = defaultdict(list)
+    clin: dict[str, list[tuple[str, int]]] = defaultdict(list)
     names: dict[str, str] = {}
     header = None
     for line, row in tsv_rows(lf.path):
@@ -286,7 +288,9 @@ def load_hpoa(lf: LocalFile) -> HpoAnnotations:
                                     row[header["qualifier"]] == "NOT", line))
         elif aspect == "I" and hp in HPO_MOI:
             inh[d].append((HPO_MOI[hp], line))
-    return HpoAnnotations(dict(ph), dict(inh), names, lf.snapshot)
+        elif aspect == "C" and row[header["qualifier"]] != "NOT":
+            clin[d].append((hp, line))
+    return HpoAnnotations(dict(ph), dict(inh), names, lf.snapshot, dict(clin))
 
 
 def manifest(files: dict[str, LocalFile]) -> list[dict]:

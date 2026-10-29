@@ -40,9 +40,14 @@ def ont(tmp_path_factory):
              node("0001987", "Hyperammonemia"), node("0000478", "Abnormality of the eye", syn=["Eye abnormality"]),
              node("0000005", "Mode of inheritance"),
              node("0000057", "obsolete Clitoromegaly", deprecated=True),
+             node("0003674", "Onset"), node("0410280", "Pediatric onset"), node("0003593", "Infantile onset"),
+             node("0011463", "Childhood onset"), node("0003581", "Adult onset"), node("0003596", "Middle age onset"),
+             node("0099999", "Some new onset subterm"),
              node("0009999", "obsolete Old seizure term", deprecated=True, repl="0001250")]
     edges = [("0000118", "0000001"), ("0001250", "0000118"), ("0007359", "0001250"), ("0001263", "0000118"),
-             ("0001987", "0000118"), ("0000478", "0000118"), ("0000005", "0000001")]
+             ("0001987", "0000118"), ("0000478", "0000118"), ("0000005", "0000001"),
+             ("0003674", "0000001"), ("0410280", "0003674"), ("0003593", "0410280"), ("0011463", "0410280"),
+             ("0003581", "0003674"), ("0003596", "0003581"), ("0099999", "0003596")]
     g = {"graphs": [{"nodes": nodes, "edges": [{"sub": OBO + a, "pred": "is_a", "obj": OBO + b} for a, b in edges],
                      "meta": {"version": "test"}}]}
     p = tmp_path_factory.mktemp("hpo") / "hp.json"
@@ -154,6 +159,32 @@ def test_facts_verified():
     assert f["family_history"]["statement"] == "unknown"
 
 
+CTX2 = ("The individual is a 14 year old male with slowly progressive loss of sensation in their lower extremities. "
+        "They initially had good growth but around 10 years of age began losing weight.")
+
+
+def test_symptom_specific_timing_stays_on_the_symptom():
+    # the LLM is told to attach this timing to the symptom, not to facts.onset
+    f = X.verify_facts({"onset": None}, CTX2)
+    assert f["onset"]["months_min"] is None                       # no overall onset
+    from aitx.disease.pipeline import patient_onset
+    assert patient_onset(f) == {}                                   # nothing to compare -> onset neutral
+    # symptom timing is verified and converted like any other age
+    o = X.verify_onset({"min": 10, "max": 10, "unit": "year", "approximate": True, "quote": "around 10 years of age"}, CTX2)
+    assert (o["months_min"], o["months_max"]) == (120, 120)
+
+
+def test_phenotype_onset_quote_must_be_verbatim(ont):
+    p = X.verify_phenotype({"quote": "developmental delay", "hpo_id": "HP:0001263", "status": "present",
+                            "onset": {"min": 8, "max": 8, "unit": "month", "quote": "at 9 months"}}, CTX, ont)
+    assert p["valid"] and p["onset"]["months_min"] is None and not p["onset"]["verified"]
+
+
+def test_prompt_separates_overall_and_symptom_onset():
+    assert "ONLY when the text explicitly dates the disease" in X.SYSTEM
+    assert "timing in the \"onset\" of that phenotype entry" in X.SYSTEM
+
+
 def test_facts_age_number_must_match_quote():
     f = X.verify_facts({"age": {"value": 1, "unit": "year", "quote": "18-month-old"}}, CTX)
     assert f["age"]["months"] is None
@@ -224,6 +255,59 @@ def test_moi_fit(moi, zyg, n, sex, want):
     assert R.moi_fit(moi, zyg, n, sex)[0] == want
 
 
+# --------------------------------------------------------------------- onset
+
+def test_onset_range_uses_nearest_listed_ancestor(ont):
+    assert H.onset_range(ont, "HP:0003593") == (1, 12)
+    assert H.onset_range(ont, "HP:0099999") == (480, 720)   # unlisted subterm -> Middle age onset
+    assert H.onset_range(ont, "HP:0001250") is None          # not an onset term
+
+
+def test_onset_is_penalty_only(ont):
+    infant = {"min": 0, "max": 6, "kind": "onset"}
+    m = H.onset_fit(ont, infant, [("HP:0003593", 1)])
+    assert m["result"] == "match" and m["adjustment"] == 0      # a match earns nothing
+    # so a disease with a matching onset annotation scores the same as one without any
+    assert m["adjustment"] == H.onset_fit(ont, infant, [])["adjustment"]
+    mm = H.onset_fit(ont, infant, [("HP:0003596", 2)])
+    assert mm["result"] == "mismatch" and mm["adjustment"] == -H.ONSET_PENALTY
+    # any one overlapping annotation is enough
+    assert H.onset_fit(ont, infant, [("HP:0003596", 2), ("HP:0003593", 3)])["result"] == "match"
+
+
+def test_onset_unknown_is_neutral(ont):
+    assert H.onset_fit(ont, {}, [("HP:0003593", 1)])["adjustment"] == 0
+    assert H.onset_fit(ont, {"min": 0, "max": 6, "kind": "onset"}, [])["adjustment"] == 0
+    # course terms in aspect C (e.g. "Progressive") are not onset terms
+    assert H.onset_fit(ont, {"min": 0, "max": 6, "kind": "onset"}, [("HP:0001250", 1)])["result"] == "unknown"
+
+
+def test_onset_tolerance_at_category_edges(ont):
+    # 13 months is just past "infantile" (< 12 months): within tolerance, still a match
+    assert H.onset_fit(ont, {"min": 13, "max": 13, "kind": "onset"}, [("HP:0003593", 1)])["result"] == "match"
+
+
+def test_age_upper_bound_only_penalises_clear_mismatch(ont):
+    child = {"min": None, "max": 84, "kind": "age_upper_bound"}      # 7-year-old, onset not stated
+    assert H.onset_fit(ont, child, [("HP:0003593", 1)])["adjustment"] == 0          # compatible, no bonus
+    r = H.onset_fit(ont, child, [("HP:0003596", 1)])                                  # middle-age onset
+    assert r["result"] == "mismatch" and r["adjustment"] == -H.ONSET_PENALTY
+
+
+def test_patient_onset_from_facts():
+    from aitx.disease.pipeline import patient_onset
+    assert patient_onset({"onset": {"months_min": 0, "months_max": 6}, "age": {"months": 36}})["kind"] == "onset"
+    assert patient_onset({"onset": {}, "age": {"months": 36}}) == {"min": None, "max": 36, "kind": "age_upper_bound",
+                                                                    "quote": None}
+    assert patient_onset({"onset": {}, "age": {}}) == {}
+
+
+def test_onset_is_not_a_veto():
+    # a candidate with an onset mismatch still wins when its phenotype lead is large enough
+    s = R.select([cand("A", 5.0 - H.ONSET_PENALTY), cand("B", 1.0)], ["HP:1"], [], [])
+    assert (s["status"], s["id"]) == ("resolved", "A")
+
+
 # ----------------------------------------------------------------- selection
 
 def cand(key, score, moi="consistent", clinvar=(), specific=True, label=None):
@@ -286,6 +370,79 @@ def test_confidence_rules():
     assert R.confidence({"basis": "only_candidate"}, c, None)[0] == "moderate"
     c = cand("A", 1.0, clinvar=[2])
     assert R.confidence({"basis": "clinvar"}, c, 5.0)[0] == "moderate"   # conflict with phenotype
+
+
+# ------------------------------------------------------- merging candidates
+
+def test_merge_nested_and_equivalent():
+    cs = [C("MONDO:HSAN1", "SPTLC1", orpha=["Orphanet:36386"]),                    # broader, no annotations
+          C("MONDO:HSAN1A", "SPTLC1", omim=["OMIM:162400"], anc=["MONDO:HSAN1"]),
+          C("MONDO:ALS27", "SPTLC1", omim=["OMIM:620285"]),
+          C("Orphanet:36386", "SPTLC1", orpha=["Orphanet:36386"])]                  # same disease, other id
+    g = R.merge_groups(cs, {c.key for c in cs}, {"MONDO:HSAN1A", "MONDO:ALS27"})
+    assert g["MONDO:HSAN1"]["role"] == "broader" and g["MONDO:HSAN1"]["group"] == "MONDO:HSAN1A"
+    assert g["Orphanet:36386"]["role"] == "equivalent"
+    assert g["MONDO:HSAN1A"]["role"] == g["MONDO:ALS27"]["role"] == "representative"
+
+
+def test_merge_keeps_siblings_apart():
+    cs = [C("MONDO:OI", "COL1A1", orpha=["Orphanet:666"]), C("MONDO:OI1", "COL1A1", omim=["OMIM:166200"], anc=["MONDO:OI"]),
+          C("MONDO:OI3", "COL1A1", omim=["OMIM:259420"], anc=["MONDO:OI"])]
+    g = R.merge_groups(cs, {c.key for c in cs}, {"MONDO:OI1", "MONDO:OI3"})       # umbrella OI without annotations
+    assert g["MONDO:OI"]["role"] == "broader" and g["MONDO:OI"]["narrower"] == ["MONDO:OI1", "MONDO:OI3"]
+    assert g["MONDO:OI1"]["group"] != g["MONDO:OI3"]["group"]
+
+
+def test_annotated_parent_competes_with_children():
+    cs = [C("MONDO:NF1", "NF1", omim=["OMIM:162200"]),
+          C("MONDO:SPINAL", "NF1", omim=["OMIM:162210"], anc=["MONDO:NF1"]),
+          C("MONDO:NF1sub", "NF1", orpha=["Orphanet:363700"], anc=["MONDO:NF1"])]
+    for annotated in ({"MONDO:NF1"}, {"MONDO:NF1", "MONDO:SPINAL"}):   # children with or without annotations
+        g = R.merge_groups(cs, {c.key for c in cs}, annotated)
+        assert g["MONDO:NF1"]["role"] == "representative"
+        assert g["MONDO:NF1"]["narrower_competing"] == ["MONDO:NF1sub", "MONDO:SPINAL"]
+        assert all(g[k]["role"] == "representative" for k in ("MONDO:SPINAL", "MONDO:NF1sub"))
+
+
+def test_annotated_parent_and_child_compete_in_selection():
+    s = R.select([cand("NF1", 7.0), cand("SPINAL", 2.0)], ["HP:1"], [], [])
+    assert (s["status"], s["id"]) == ("resolved", "NF1")
+
+
+def test_broader_term_not_folded_into_excluded_child():
+    cs = [C("MONDO:P", "G", orpha=["Orphanet:1"]), C("MONDO:K", "G", omim=["OMIM:1"], anc=["MONDO:P"])]
+    g = R.merge_groups(cs, {"MONDO:P"}, set())
+    assert g["MONDO:P"]["role"] == "representative"
+
+
+def test_unannotated_broader_term_cannot_make_ambiguity():
+    broad = dict(cand("BROAD", None), compete=False)       # has an Orphanet id, so "specific", but merged
+    s = R.select([cand("A", 5.0), broad], ["HP:1"], [], [])
+    assert (s["status"], s["id"]) == ("resolved", "A")
+    s = R.select([cand("A", 5.0), cand("BROAD", None)], ["HP:1"], [], [])    # without merging it would
+    assert s["status"] == "ambiguous"
+
+
+def test_broader_term_absorbed_in_clinvar_pool_too():
+    s = R.select([cand("A", 3.0, clinvar=[2]), dict(cand("P", 3.2, clinvar=[2]), compete=False)], ["HP:1"], [], [])
+    assert (s["status"], s["id"]) == ("resolved", "A")
+
+
+# ------------------------------------------------- unknown-inheritance net
+
+def test_unknown_much_higher_score_makes_ambiguous():
+    s = R.select([cand("C", 2.0), cand("U", 5.0, moi="unknown")], ["HP:1"], [], [])
+    assert s["status"] == "ambiguous" and set(s["tied"]) == {"C", "U"} and s["id"] == "C"
+
+
+def test_unknown_slightly_higher_score_stays_behind():
+    s = R.select([cand("C", 4.5), cand("U", 5.0, moi="unknown")], ["HP:1"], [], [])   # 10% < gap
+    assert (s["status"], s["id"]) == ("resolved", "C")
+
+
+def test_conditional_candidate_not_covered_by_unknown_net():
+    s = R.select([cand("C", 2.0), cand("X", 9.0, moi="conditional")], ["HP:1"], [], [])
+    assert (s["status"], s["id"]) == ("resolved", "C")
 
 
 # ------------------------------------------------------- explicit / mapping

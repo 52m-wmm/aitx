@@ -28,7 +28,7 @@ from aitx.disease.hpo import Ontology, lexical_overlap
 
 N_SAMPLES = 3
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
-PROMPT_VERSION = "step2-extract-v1"
+PROMPT_VERSION = "step2-extract-v2"
 
 SYSTEM = """You extract structured facts from a short clinical description of a patient with a rare genetic disease.
 Return only a JSON object with this shape:
@@ -36,7 +36,9 @@ Return only a JSON object with this shape:
   "phenotypes": [
     {"quote": "<shortest exact span from the text naming one clinical feature>",
      "hpo_id": "HP:nnnnnnn", "hpo_label": "<exact HPO term label>",
-     "status": "present" | "excluded"}
+     "status": "present" | "excluded",
+     "onset": null | {"min": <number or null>, "max": <number or null>, "unit": "day"|"week"|"month"|"year"|null,
+                      "approximate": <true|false>, "quote": <exact span>}}
   ],
   "facts": {
     "age": {"value": <number or null>, "unit": "day"|"week"|"month"|"year"|null, "quote": <exact span or null>},
@@ -53,8 +55,12 @@ Rules:
   Phenotypic abnormality term the text supports; do not add features that are not stated.
 - "excluded" only when the text explicitly says the feature is absent (e.g. "without seizures").
 - Every quote must be copied character-for-character from the text.
-- onset: age when the first symptoms began. "first months of life" -> min 0, max 6, unit month, approximate true.
+- facts.onset: age at onset of the DISEASE as a whole, filled ONLY when the text explicitly dates the disease
+  or its main presentation (e.g. "presented at 8 months of age", "symptoms since birth", or the onset of the
+  feature the description is centred on). "first months of life" -> min 0, max 6, unit month, approximate true.
   A single age -> min = max.
+- If the text dates only one particular symptom (e.g. "around 10 years of age began losing weight"), put that
+  timing in the "onset" of that phenotype entry and leave facts.onset null. Otherwise a phenotype's onset is null.
 - Anything the text does not state is null / "unknown". Never guess."""
 
 
@@ -154,6 +160,8 @@ def verify_phenotype(item: dict, context: str, ont: Ontology) -> dict:
         return out
     out.update(hpo_id=cur, label=ont.terms[cur].label, valid=True,
                lexical_overlap=lexical_overlap(quote, ont.names(cur)))
+    if item.get("onset"):
+        out["onset"] = verify_onset(item["onset"], context)   # symptom-specific timing, not the overall onset
     return out
 
 
@@ -196,6 +204,19 @@ def _fact(value, quote, context, reasons: list[str], cue: re.Pattern | None = No
     return {"value": value, "quote": quote, "verified": True, **({"reasons": reasons} if reasons else {})}
 
 
+def verify_onset(o: dict, context: str) -> dict:
+    """{min, max, unit, approximate, quote} from the LLM -> months, with a verbatim quote check."""
+    lo, hi = to_months(o.get("min"), o.get("unit")), to_months(o.get("max"), o.get("unit"))
+    onset = _fact((lo, hi) if lo is not None or hi is not None else None, o.get("quote"), context, [])
+    if onset["value"] != "unknown":
+        onset["months_min"], onset["months_max"] = onset.pop("value")
+        onset["approximate"] = bool(o.get("approximate")) or lo != hi
+    else:
+        onset.pop("value")
+        onset["months_min"] = onset["months_max"] = None
+    return onset
+
+
 def verify_facts(f: dict, context: str) -> dict:
     f = f or {}
     out = {}
@@ -205,16 +226,7 @@ def verify_facts(f: dict, context: str) -> dict:
     age["months"] = age.pop("value") if age["value"] != "unknown" else None
     out["age"] = {**age, "source_value": a.get("value"), "source_unit": a.get("unit")}
 
-    o = f.get("onset") or {}
-    lo, hi = to_months(o.get("min"), o.get("unit")), to_months(o.get("max"), o.get("unit"))
-    onset = _fact((lo, hi) if lo is not None or hi is not None else None, o.get("quote"), context, [])
-    if onset["value"] != "unknown":
-        onset["months_min"], onset["months_max"] = onset.pop("value")
-        onset["approximate"] = bool(o.get("approximate")) or lo != hi
-    else:
-        onset.pop("value")
-        onset["months_min"] = onset["months_max"] = None
-    out["onset"] = onset
+    out["onset"] = verify_onset(f.get("onset") or {}, context)
 
     s = f.get("sex") or {}
     sv = s.get("value") if s.get("value") in ("male", "female") else None
