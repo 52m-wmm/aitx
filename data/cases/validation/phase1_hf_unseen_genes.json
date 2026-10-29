@@ -1,0 +1,62 @@
+[
+  {
+    "id": "AITX-00007",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "DDC",
+          "transcript": "NM_001082971.2",
+          "variant_cdna": "c.286G>A",
+          "variant_protein": "p.(Gly96Arg)",
+          "zygosity": "homozygous"
+        }
+      ],
+      "clinical_context": "Global developmental delay"
+    },
+    "question": {
+      "category": "Established_Targeted",
+      "answer_format": "string_match",
+      "prompt": "What is the youngest age for which a gene therapy is approved for this patient's genetic condition in the united kingdom? Answer with the format \"X months\".",
+      "date_submitted": "2025-08-01"
+    },
+    "answer_expected": "18 months",
+    "answer_explanation": "specified on GeneReviews",
+    "difficulty_rationale": "",
+    "sources": [
+      "GeneReviews"
+    ],
+    "citations": [
+      "https://www.ncbi.nlm.nih.gov/books/NBK595821/"
+    ]
+  },
+  {
+    "id": "AITX-00011",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "KCNT1",
+          "transcript": "NM_020822.3",
+          "variant_cdna": "c.2849G>A",
+          "variant_protein": "p.Arg950Gln",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "early-onset seizures and developmental delays"
+    },
+    "question": {
+      "category": "Clinical_Trials",
+      "answer_format": "string_match",
+      "prompt": "For which clinical trials evaluating new therapeutics is this patient eligible? Provide a clinical trial ID or answer None.",
+      "date_submitted": "2025-08-01"
+    },
+    "answer_expected": "None",
+    "answer_explanation": "Only a natural history study is listed.",
+    "difficulty_rationale": "",
+    "sources": [
+      "ClinicalTrials.gov"
+    ],
+    "citations": [
+      "https://clinicaltrials.gov/search?cond=KCNT1"
+    ]
+  }
+]

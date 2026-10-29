@@ -188,20 +188,23 @@ def inheritance(c: Candidate, mois: list[dict], zygosity: str, n_variants: int, 
 # --------------------------------------------------------------- explicit dx
 
 _OMIM_RX = re.compile(r"(?:OMIM|MIM)\s*[#:%*+]?\s*#?\s*(\d{6})", re.I)
+_ORPHA_RX = re.compile(r"\b(?:ORPHA|Orphanet)\s*[:#]?\s*(\d{1,7})\b", re.I)
 
 
 def explicit_diagnosis(context: str, cands: list[Candidate], genes: set[str], aliases: set[str],
                        ont: Ontology) -> dict | None:
     norm_ctx = f" {normalize(context)} "
-    numbers = _OMIM_RX.findall(context)
+    # Explicit identifiers (OMIM #, ORPHA:) always take precedence over name matching
+    # and are not subject to the "name is also an HPO term" rule below.
+    numbers = [f"OMIM:{n}" for n in _OMIM_RX.findall(context)] + [f"Orphanet:{n}" for n in _ORPHA_RX.findall(context)]
     alerts, hits = [], defaultdict(list)
-    for n in numbers:
-        ms = [c for c in cands if f"OMIM:{n}" in c.omim]
+    for curie in numbers:
+        ms = [c for c in cands if curie in c.omim or curie in c.orphanet]
         if ms:
             for c in ms:
-                hits[c.key].append({"how": "omim_number", "text": f"OMIM {n}"})
+                hits[c.key].append({"how": "id_number", "text": curie})
         else:
-            alerts.append(f"text names OMIM {n}, which is not in the candidate set for {', '.join(sorted(genes))}; not adopted")
+            alerts.append(f"text names {curie}, which is not in the candidate set for {', '.join(sorted(genes))}; not adopted")
     skipped = []
     blocked = {g.lower() for g in genes | aliases}
     for c in cands:
@@ -220,11 +223,11 @@ def explicit_diagnosis(context: str, cands: list[Candidate], genes: set[str], al
             hits[c.key].append({"how": "name", "text": name})
     if not hits and not alerts and not numbers:
         return None if not skipped else {"adopted": [], "matches": [], "alerts": [], "skipped_names": skipped}
-    # Prefer candidates named by OMIM number; otherwise the longest matching name wins.
+    # Prefer candidates named by OMIM/ORPHA number; otherwise the longest matching name wins.
     if hits:
         def strength(k):
             hs = hits[k]
-            return (any(h["how"] == "omim_number" for h in hs), max(len(h["text"]) for h in hs))
+            return (any(h["how"] == "id_number" for h in hs), max(len(h["text"]) for h in hs))
         top = max(strength(k) for k in hits)
         adopted = sorted(k for k in hits if strength(k) == top)
     else:

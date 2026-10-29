@@ -313,6 +313,40 @@ def test_phenotype_names_and_gene_symbols_not_diagnoses(ont):
     assert e["adopted"] == [] and e["skipped_names"][0]["candidate"] == "MONDO:1"
 
 
+def test_explicit_number_wins_even_if_name_is_hpo_term(ont):
+    # label "Hyperammonemia" is an HPO term, so the name alone is skipped as a symptom ...
+    cs = [C("MONDO:1", "OTC", label="hyperammonemia", omim=["OMIM:311250"], orpha=["Orphanet:664"]),
+          C("MONDO:2", "OTC", label="hyperammonemia type 2 something")]
+    e = R.explicit_diagnosis("infant with hyperammonemia", cs, {"OTC"}, set(), ont)
+    assert e["adopted"] == []
+    # ... but an explicit number always counts, OMIM or ORPHA
+    for text in ("infant with hyperammonemia (OMIM #311250)", "infant with hyperammonemia, ORPHA:664"):
+        e = R.explicit_diagnosis(text, cs, {"OTC"}, set(), ont)
+        assert e["adopted"] == ["MONDO:1"], text
+        assert any(h["how"] == "id_number" for m in e["matches"] for h in m["evidence"])
+
+
+def test_number_beats_longer_name_match(ont):
+    cs = [C("MONDO:1", label="Baker-Gordon syndrome", omim=["OMIM:618218"]),
+          C("MONDO:2", label="a much longer named syndrome of something")]
+    e = R.explicit_diagnosis("has a much longer named syndrome of something, OMIM 618218", cs, {"SYT1"}, set(), ont)
+    assert e["adopted"] == ["MONDO:1"]
+
+
+def test_unknown_inheritance_is_not_inconsistent():
+    c = R.Candidate("MONDO:1", "G")
+    inh = R.inheritance(c, [], "heterozygous", 1, "male", False)
+    assert inh["result"] == "unknown"
+    inh = R.inheritance(c, [{"moi": "MT", "sources": []}], "homozygous", 1, "male", False)
+    assert inh["result"] == "unknown"
+    # an unknown-inheritance candidate stays eligible and can be selected
+    s2 = R.select([cand("U", 3.0, moi="unknown")], ["HP:1"], [], [])
+    assert s2["id"] == "U" and s2["status"] == "resolved"
+    # it is ranked after a consistent candidate, never dropped
+    s3 = R.select([cand("U", 9.0, moi="unknown"), cand("C", 1.0)], ["HP:1"], [], [])
+    assert s3["id"] == "C" and s3["basis"] == "inheritance"
+
+
 def test_trait_mapping_via_hierarchy():
     cs = [C("MONDO:EDS1", "COL1A1", anc=["MONDO:0020066"]), C("MONDO:OI1", "COL1A1", anc=["MONDO:OI"]),
           C("MONDO:OI", "COL1A1")]

@@ -259,12 +259,12 @@ VUS、良性或疾病对不上的记录只作为信息保留。
 
 | # | 情况 | 处理 | 触发它的实例 |
 | --- | --- | --- | --- |
-| 1 | 遗传方式与症状分谁先 | 第 5 步的症状分排序**在遗传方式分层之内**进行：`consistent` 层 > `conditional` 层 > `unknown` 层。最佳层只剩一个候选时，首选依据记为新增值 `inheritance` | ACTL6B 纯合：常隐 DEE76 排在常显 618470 前 |
+| 1 | 遗传方式与症状分谁先 | 第 5 步的症状分排序**在遗传方式分层之内**进行：`consistent` 层 > `conditional` 层 > `unknown` 层。`unknown`（没有遗传方式记录、线粒体等）**不等于** `inconsistent`：不排除，只排在后面。最佳层只剩一个候选时，首选依据记为新增值 `inheritance` | ACTL6B 纯合：常隐 DEE76 排在常显 618470 前 |
 | 2 | 归类术语（无 OMIM/Orphanet 编号、无症状注释，如 "complex neurodevelopmental disorder"） | 保留在候选里，但同一比较池中有具体疾病时**不参与首选比较**，理由中列出 | KMT2B、AGXT、DMD |
 | 3 | ClinVar 记录用的转录本版本与输入不同 | 取两个版本的序列比对：变化位于 CDS 内且两版 CDS **逐字相同** → `cds_identical_version`，视同精确匹配参与排序；否则仍是 `version_mismatch` | CFTR F508del：ClinVar 记在 NM_000492.3，输入是 .4，CDS 4443 nt 完全相同 |
 | 4 | ClinVar 组合记录（单倍型 / 复合，如 `c.[1521_1523del;3080T>C]`） | 只接受**单变异**记录，组合记录列入 `rejected` | CFTR 检索返回 16 条，其中有 F508del 组合记录 |
 | 5 | ClinVar 疾病映射到候选 | 疾病带 MONDO 编号时**只用 MONDO 编号**映射（ClinVar 常给亚型附上伞状 Orphanet 编号）；该 MONDO 不是候选本身时，映射到以它为**祖先**的候选（经 OLS4 层级），但若覆盖该基因全部候选则不映射 | COL1A1：记录同时列 "Ehlers-Danlos syndrome"（MONDO:0020066），映射到经典型 EDS 等 |
-| 6 | 原文点名匹配 | 名称同时是 HPO 症状术语时，当作**症状**不当作诊断（记入 `skipped_names`）；基因符号和别名不算 | NF1 原文 "Pheochromocytoma" 是症状 |
+| 6 | 原文点名匹配 | 原文带明确编号（`OMIM #nnnnnn`、`ORPHA:nnn`）时**编号永远优先**，不受下一条限制，且优先于任何名称匹配；按名称匹配时，名称同时是 HPO 症状术语则当作**症状**不当作诊断（记入 `skipped_names`）；基因符号和别名不算 | NF1 原文 "Pheochromocytoma" 是症状；SYT1 原文 "OMIM #618218" |
 | 7 | 症状注释来源 | 候选的症状注释取其 **OMIM 和 Orphanet** 编号注释的并集 | 经典型 EDS 只在 ORPHA:287 下有注释 |
 | 8 | LLM 抽样 | 每个病例固定 3 次调用（temperature 0，分别缓存），术语与事实按**多数票**；首选分别在 3 份抽样上重算，不一致则改为 `ambiguous`。推理模型 `max_tokens` 用 16384，被截断或空的回答**不写缓存**并重试 | AITX-40003 一份抽样选了 ALS27，另两份选 HSAN1 |
 | 9 | LLM 给的 HPO 编号错、名称对 | 编号校验不过时，按 LLM 给的名称或引用片段做 HPO 精确名称匹配，仍须满足词面重叠 | "very thin" 被给成 HP:0001989（实为 Fetal akinesia sequence），已拒收 |
