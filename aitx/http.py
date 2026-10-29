@@ -27,12 +27,14 @@ class Fetched:
     from_cache: bool
 
 
-def _key(url: str) -> Path:
-    return CACHE_DIR / (hashlib.sha256(url.encode()).hexdigest() + ".json")
+def _key(url: str, headers: dict | None = None) -> Path:
+    k = url if not headers else url + "\n" + json.dumps(headers, sort_keys=True)
+    return CACHE_DIR / (hashlib.sha256(k.encode()).hexdigest() + ".json")
 
 
-def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3) -> Fetched:
-    path = _key(url)
+def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3,
+        headers: dict | None = None) -> Fetched:
+    path = _key(url, headers)
     if use_cache and path.exists():
         d = json.loads(path.read_text())
         return Fetched(d["url"], d["text"], d["accessed_at"], True)
@@ -40,7 +42,7 @@ def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3
     last_err: Exception | None = None
     for attempt in range(retries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 text = r.read().decode("utf-8", errors="replace")
             accessed = int(time.time())

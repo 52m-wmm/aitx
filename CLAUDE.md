@@ -32,7 +32,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 步骤 | 内容 | 状态 |
 | --- | --- | --- |
 | 1 | 变异解析（确定性，无 LLM） | 完成：离线测试 49 个全过，联网验收全部 HARD 通过（2026-10-28） |
-| 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | 未开始 |
+| 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | 代码完成：离线测试共 104 个全过；联网验收全部 HARD 通过（2026-10-28，用 LLM 缓存）。`--fresh-llm` 重跑在第 14 个病例因 DeepSeek 余额不足（402）中断，前 13 个通过；契约 v2.1 补充规则待审 |
 | 3 | 疗法匹配（变异机制 → 适用的治疗思路） | 未开始 |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
