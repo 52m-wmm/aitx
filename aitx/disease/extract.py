@@ -129,7 +129,8 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
     else:  # never cache a truncated or empty answer
         raise RuntimeError(f"LLM returned no usable content (finish_reason={choice.get('finish_reason')})")
     out = {"requested_model": cfg["model"], "served_model": resp.get("model", ""),
-           "content": content, "sample": k, "call_params": CALL_PARAMS, "prompt_version": PROMPT_VERSION}
+           "content": content, "sample": k, "call_params": CALL_PARAMS, "call_params_source": "recorded",
+           "prompt_version": PROMPT_VERSION}
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     return out

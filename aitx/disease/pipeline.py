@@ -171,6 +171,11 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     else:
         primary["confidence"] = None
     primary["per_sample"] = per_sample
+    # for review: the score a competitor must reach to be "within the ambiguity gap" of the primary
+    ps = by_key[sel["id"]]["phenotype"]["score"] if sel["id"] else None
+    primary["ambiguity_gap"] = R.AMBIGUITY_GAP
+    primary["primary_score"] = ps
+    primary["ambiguity_threshold_score"] = round(ps * (1 - R.AMBIGUITY_GAP), 4) if ps is not None and ps > 0 else None
 
     gr = {g: [ch.to_dict(res.files["genereviews"].snapshot) for ch in res.genereviews.get(g, [])] for g in genes}
     out = {

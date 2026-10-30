@@ -89,6 +89,17 @@ python3 scripts/run_pipeline.py data/cases/aitx_final_patients.json --from-step 
 LLM 缓存（`.cache/llm/`）的键包含模型名、API 地址、提示词版本和完整提示词正文；改提示词或换模型后自动失效。
 每条缓存还记录调用参数（temperature 等），参数不同不复用；设置了 `AITX_EXPECT_MODEL_PREFIX` 时，由其他模型生成的缓存也不复用。
 
+## 审查用查看页面（Step 2.5）
+
+```bash
+python3 scripts/build_viewer.py      # 读取 out/step*/ 生成静态 HTML 快照（中文界面）
+python3 scripts/build_viewer.py --lang en   # 英文界面
+open out/review/index.html           # 快照列表，点最新的一份
+```
+
+每次生成一份快照 `out/review/<时间>/`（总表、每个病例一页、与上一份快照的对比页），不需要服务器。
+页面上的数字全部读自结果文件，不重新计算、不调用 LLM。病例结果需先用 `scripts/run_pipeline.py` 生成（带来源记录）。
+
 ## 目录结构
 
 ```
@@ -110,6 +121,7 @@ aitx/
     pipeline.py        组装 DiseaseResolution 输出和校验
 scripts/
   run_pipeline.py      整条流水线入口，支持 --from-step / --to-step
+  build_viewer.py      审查用静态页面（9 个视图），输出到 out/review/
   step1_variant.py     第 1 步命令行入口
   acceptance_step1.py  第 1 步联网验收
   step2_disease.py     第 2 步命令行入口
