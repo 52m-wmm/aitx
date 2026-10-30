@@ -1,13 +1,15 @@
 """Step 2.5 review viewer: static HTML pages from out/step<N>/ results (no server, no LLM).
 
 Usage:
-    python scripts/build_viewer.py                          # Chinese UI (default)
-    python scripts/build_viewer.py --lang en                # English UI
+    python scripts/build_viewer.py                          # both languages; Chinese by default
+    python scripts/build_viewer.py --lang en                # both languages; English by default
     python scripts/build_viewer.py --compare 20261030-1200  # compare with a named earlier snapshot
 
-Writes out/review/<timestamp>[-en]/ (index.html, cases/<id>.html, compare.html, data/ copies of the
-step outputs it was built from, review.json) and out/review/index.html listing all snapshots.
-Snapshots are compared with the previous snapshot in the same language.
+Writes out/review/<timestamp>/ (index, cases/<id>, compare pages in Chinese `X.html` and English
+`X.en.html`, data/ copies of the step outputs it was built from, review.json) and
+out/review/index.html listing all snapshots. Every page has a 中文 / EN switch that opens the
+same page in the other language (keeping the section anchor) and remembers the choice in the
+browser's localStorage; --lang only sets the default when no choice is stored.
 Every number shown is read from the step outputs; the page computes nothing beyond counting
 and laying out. Views (design: Notion "Step 2.5", section 7.3.5):
   1 overview table             2 reasoning chain            3 variant card
@@ -35,6 +37,12 @@ CLEAN_VALIDATION = {"AITX-00007"}
 USED_VALIDATION = {"AITX-00011"}
 e = html.escape
 LANG = "zh"
+DEFAULT_LANG = "zh"
+
+
+def fn(base: str, lang: str | None = None) -> str:
+    """File name of a page in a language: index -> index.html / index.en.html."""
+    return f"{base}.en.html" if (lang or LANG) == "en" else f"{base}.html"
 
 
 def L(zh: str, en: str) -> str:
@@ -189,12 +197,30 @@ ul.tree li{border-left:1px solid var(--line);padding-left:10px;margin:3px 0}code
 """
 
 
-def page(title: str, body: str, depth: int = 0) -> str:
+SWITCH_JS = """<script>
+(function(){var KEY='aitx-review-lang',me=document.documentElement.lang,def='%s';
+var sw=document.getElementById('langsw');
+function other(){var p=location.pathname.split('/').pop();
+ return me==='en'?p.replace(/\\.en\\.html$/,'.html'):p.replace(/\\.html$/,'.en.html');}
+sw.addEventListener('click',function(ev){ev.preventDefault();
+ try{localStorage.setItem(KEY,me==='en'?'zh':'en');}catch(x){}
+ location.href=other()+location.hash;});
+var want=def;try{want=localStorage.getItem(KEY)||def;}catch(x){}
+if(want!==me){location.replace(other()+location.hash);}
+})();</script>"""
+
+
+def page(title: str, body: str, base: str, depth: int = 0) -> str:
+    """base: this page's file name without extension (e.g. "index", "AITX-40003")."""
     up = "../" * depth
+    switch = (f"<a id='langsw' href='{fn(base, 'zh' if LANG == 'en' else 'en')}' style='float:right'>"
+              f"{'中文' if LANG == 'en' else 'EN'}</a>")
     return (f"<!doctype html><html lang='{LANG}'><head><meta charset='utf-8'>"
             f"<meta name='viewport' content='width=device-width,initial-scale=1'><title>{e(title)}</title>"
-            f"<style>{CSS}</style></head><body><main><p class='muted'><a href='{up}index.html'>{L('总表', 'Overview')}</a> · "
-            f"<a href='{up}compare.html'>{L('版本对比', 'Run comparison')}</a></p>{body}</main></body></html>")
+            f"<style>{CSS}</style></head><body><main><p class='muted'>{switch}"
+            f"<a href='{up}{fn('index')}'>{L('总表', 'Overview')}</a> · "
+            f"<a href='{up}{fn('compare')}'>{L('版本对比', 'Run comparison')}</a></p>{body}</main>"
+            f"{SWITCH_JS % DEFAULT_LANG}</body></html>")
 
 
 def tag(cls: str, text: str) -> str:
@@ -558,7 +584,7 @@ def case_page(c: dict, context: str) -> str:
 <h2>{L('ClinVar 变异级证据', 'ClinVar variant-level evidence')}</h2>{v_clinvar(s2)}
 <h2 id='tree'>{L('证据树（Step 3 起）', 'Evidence tree (from Step 3)')}</h2>{v_tree(c)}
 <h2>{L('来源链接', 'Source links')}</h2>{v_sources(s2)}"""
-    return page(f"{c['id']} {L('审查', 'review')}", body, depth=1)
+    return page(f"{c['id']} {L('审查', 'review')}", body, c["id"], depth=1)
 
 
 # ------------------------------------------------------------- index, compare
@@ -567,7 +593,7 @@ def index_page(rows: list[dict], snap: str, commit: str) -> str:
     trs = []
     for r in rows:
         problems = "<br>".join(e(p) for p in r["problems"]) or f"<span class=muted>{L('无', 'none')}</span>"
-        trs.append(f"<tr><td><a href='cases/{e(r['id'])}.html'>{e(r['id'])}</a></td><td>{e(group_label(r['group']))}</td>"
+        trs.append(f"<tr><td><a href='cases/{e(fn(r['id']))}'>{e(r['id'])}</a></td><td>{e(group_label(r['group']))}</td>"
                    f"<td>{'<br>'.join(e(v) for v in r['variants'])}</td><td>{e(r['primary'] or '—')}"
                    f"<div class='muted'>{e(' '.join(r['omim']))}</div></td>"
                    f"<td>{tag(STATUS_CLS[r['status']], status_label(r['status']))}</td><td>{e(str(r['confidence']))}</td>"
@@ -578,7 +604,7 @@ def index_page(rows: list[dict], snap: str, commit: str) -> str:
               f"Snapshot {snap} · code {commit} · {len(rows)} cases. Click a case for details.")
     body = (f"<h1>{L('审查总表', 'Review overview')}</h1><p class='muted'>{e(intro)}</p><div class='wrap'><table><tr>"
             + "".join(f"<th>{h}</th>" for h in head) + f"</tr>{''.join(trs)}</table></div>")
-    return page(L("审查总表", "Review overview"), body)
+    return page(L("审查总表", "Review overview"), body, "index")
 
 
 def compare_page(cur: list[dict], prev: list[dict] | None, snap: str, prev_snap: str | None) -> str:
@@ -587,7 +613,7 @@ def compare_page(cur: list[dict], prev: list[dict] | None, snap: str, prev_snap:
         msg = L(f"快照 {snap} 是第一份快照，没有可对比的旧版本。下次生成时会自动和这一份对比，也可以用 --compare 指定。",
                 f"Snapshot {snap} is the first one in this language; nothing to compare yet. The next build compares "
                 "with it automatically, or pass --compare.")
-        return page(title, f"<h1>{title}</h1><p class='muted'>{e(msg)}</p>")
+        return page(title, f"<h1>{title}</h1><p class='muted'>{e(msg)}</p>", "compare")
     old = {r["id"]: r for r in prev}
     names = {"primary": L("首选", "primary"), "status": L("状态", "status"), "confidence": L("置信度", "confidence"),
              "basis": L("依据", "basis")}
@@ -607,15 +633,15 @@ def compare_page(cur: list[dict], prev: list[dict] | None, snap: str, prev_snap:
         if sc:
             diffs.append(L("得分", "scores") + ": " + e("; ".join(sc[:6])) + (" …" if len(sc) > 6 else ""))
         same = f"<span class=muted>{L('无变化', 'no change')}</span>"
-        trs.append(f"<tr><td><a href='cases/{e(r['id'])}.html'>{e(r['id'])}</a></td><td>{'<br>'.join(diffs) or same}</td></tr>")
+        trs.append(f"<tr><td><a href='cases/{e(fn(r['id']))}'>{e(r['id'])}</a></td><td>{'<br>'.join(diffs) or same}</td></tr>")
     body = (f"<h1>{title}</h1><p class='muted'>{e(prev_snap)} → {e(snap)}</p>"
             f"<table><tr><th>{L('病例', 'Case')}</th><th>{L('变化', 'Changes')}</th></tr>{''.join(trs)}</table>")
-    return page(title, body)
+    return page(title, body, "compare")
 
 
 def snapshots_index() -> None:
     snaps = sorted([p.name for p in REVIEW.iterdir() if p.is_dir() and (p / "index.html").exists()], reverse=True)
-    items = "".join(f"<li><a href='{s}/index.html'>{s}</a> {'English' if s.endswith('-en') else '中文'}</li>" for s in snaps)
+    items = "".join(f"<li><a href='{s}/index.html'>{s}</a>{' (EN only)' if s.endswith('-en') else ''}</li>" for s in snaps)
     (REVIEW / "index.html").write_text(
         f"<!doctype html><html><head><meta charset='utf-8'><title>Review snapshots / 审查快照</title><style>{CSS}</style></head>"
         f"<body><main><h1>审查快照 / Review snapshots</h1><p class='muted'>新的在前 / newest first</p><ul>{items}</ul></main></body></html>")
@@ -636,10 +662,12 @@ def contexts() -> dict[str, str]:
 def main() -> int:
     global LANG
     ap = argparse.ArgumentParser()
-    ap.add_argument("--lang", choices=["zh", "en"], default="zh", help="UI language (default zh)")
+    ap.add_argument("--lang", choices=["zh", "en"], default="zh",
+                    help="default UI language when the browser has no stored choice (both are always built)")
     ap.add_argument("--compare", help="snapshot name under out/review/ to compare with (default: previous one, same language)")
     args = ap.parse_args()
-    LANG = args.lang
+    global DEFAULT_LANG
+    DEFAULT_LANG = args.lang
     ids = sorted(p.stem for p in (OUT / "step2").glob("*.json") if p.stem != "sources_manifest")
     ctx = contexts()
     cases, problems = [], []
@@ -651,34 +679,33 @@ def main() -> int:
         cases.append(c)
     if problems:
         print("\n".join(problems))
-    suffix = "-en" if LANG == "en" else ""
-    snap = time.strftime("%Y%m%d-%H%M%S") + suffix
+    snap = time.strftime("%Y%m%d-%H%M%S")
     d = REVIEW / snap
     (d / "cases").mkdir(parents=True, exist_ok=True)
     (d / "data").mkdir(exist_ok=True)
-    rows = []
-    for c in sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"])):
-        (d / "cases" / f"{c['id']}.html").write_text(case_page(c, ctx.get(c["id"], "")))
+    ordered = sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"]))
+    rows = [summary_row(c) for c in ordered]
+    for c in ordered:
         for k in STEPS:
             src = runmeta.path(k, c["id"])
             if src.exists():
                 shutil.copy(src, d / "data" / f"step{k}-{c['id']}.json")
-        rows.append(summary_row(c))
     commit = runmeta.code_commit()
-    (d / "review.json").write_text(json.dumps({"schema": "review-v1", "snapshot": snap, "lang": LANG, "code_commit": commit,
+    (d / "review.json").write_text(json.dumps({"schema": "review-v1", "snapshot": snap, "code_commit": commit,
                                                "cases": rows, "trees": {c["id"]: c["tree"] for c in cases}},
                                               indent=1, ensure_ascii=False))
-    (d / "index.html").write_text(index_page(rows, snap, commit))
-
-    def same_lang(name: str) -> bool:
-        return name.endswith("-en") == (LANG == "en")
     prev_name = args.compare or next((p.name for p in sorted(REVIEW.iterdir(), reverse=True)
-                                      if p.is_dir() and p.name != snap and same_lang(p.name)
-                                      and (p / "review.json").exists()), None)
+                                      if p.is_dir() and p.name != snap and (p / "review.json").exists()), None)
     prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
-    (d / "compare.html").write_text(compare_page(rows, prev, snap, prev_name))
+    for lang in ("zh", "en"):
+        LANG = lang
+        for c in ordered:
+            c["status"] = {k: step_status(k, c["steps"][k]) for k in STEPS}   # status text is language-dependent
+            (d / "cases" / fn(c["id"])).write_text(case_page(c, ctx.get(c["id"], "")))
+        (d / fn("index")).write_text(index_page(rows, snap, commit))
+        (d / fn("compare")).write_text(compare_page(rows, prev, snap, prev_name))
     snapshots_index()
-    print(f"{len(rows)} case pages -> {d}/index.html")
+    print(f"{len(rows)} cases x 2 languages -> {d}/index.html")
     return 1 if problems else 0
 
 

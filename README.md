@@ -92,12 +92,12 @@ LLM 缓存（`.cache/llm/`）的键包含模型名、API 地址、提示词版�
 ## 审查用查看页面（Step 2.5）
 
 ```bash
-python3 scripts/build_viewer.py      # 读取 out/step*/ 生成静态 HTML 快照（中文界面）
-python3 scripts/build_viewer.py --lang en   # 英文界面
+python3 scripts/build_viewer.py      # 读取 out/step*/ 生成静态 HTML 快照（中英文都生成）
 open out/review/index.html           # 快照列表，点最新的一份
 ```
 
 每次生成一份快照 `out/review/<时间>/`（总表、每个病例一页、与上一份快照的对比页），不需要服务器。
+每页右上角有 中文 / EN 开关，切换后停留在同一位置，浏览器会记住选择；`--lang en` 只改没有记住选择时的默认语言。
 页面上的数字全部读自结果文件，不重新计算、不调用 LLM。病例结果需先用 `scripts/run_pipeline.py` 生成（带来源记录）。
 
 ## 目录结构
