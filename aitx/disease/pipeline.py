@@ -44,6 +44,16 @@ def _score(c: R.Candidate, res: R.Resources, present: list[str], excluded: list[
     return ph
 
 
+def _with_step1(v: dict, step1: dict | None) -> dict:
+    prof = next((p for p in (step1 or {}).get("variants", [])
+                 if p.get("gene") == v["gene"] and p.get("variant_cdna") == v["variant_cdna"]), None)
+    if prof:
+        v["variant_class"] = prof.get("variant_class")
+        v["nmd_prediction"] = (prof.get("nmd") or {}).get("prediction")
+        v["from_step1"] = True
+    return v
+
+
 def _omim_entries(c: R.Candidate, res: R.Resources) -> list[dict]:
     out = []
     for o in c.omim:
@@ -55,7 +65,9 @@ def _omim_entries(c: R.Candidate, res: R.Resources) -> list[dict]:
     return out
 
 
-def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction: dict | None = None) -> dict:
+def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction: dict | None = None,
+             step1: dict | None = None) -> dict:
+    """step1: the case's step-1 VariantProfile output, if available (adds variant class / NMD to the evidence)."""
     pid = case["id"]
     genotype = case["patient"]["genotype"]
     context = case["patient"].get("clinical_context", "")
@@ -171,7 +183,8 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
         "patient_facts": facts,
         "patient_onset": onset or None,
         "inheritance_evidence": {"zygosity": zyg, "sex": sex, "variant_origin": facts["variant_origin"].get("value"),
-                                 "variants": [{k: v.get(k) for k in ("gene", "transcript", "variant_cdna", "zygosity")}
+                                 "variants": [_with_step1({k: v.get(k) for k in ("gene", "transcript", "variant_cdna",
+                                                                                 "zygosity")}, step1)
                                               for v in genotype]},
         "clinvar": cv_results,
         "candidates": [c for c in cands if not c["excluded"]],

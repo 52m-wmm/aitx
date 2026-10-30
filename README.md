@@ -72,10 +72,28 @@ python3 scripts/step2_disease.py data/cases/aitx_final_patients.json
 到 `.cache/datasets/<名称>/<日期>/`，断线自动续传，下载后逐个做完整性校验；超过 7 天自动刷新。
 正式提交时用 `AITX_DATASET_SNAPSHOT=YYYY-MM-DD` 固定一份快照。
 
+## 整条流水线：从任意一步开始
+
+```bash
+# 从第 1 步跑到当前已实现的最后一步
+python3 scripts/run_pipeline.py data/cases/aitx_final_patients.json
+
+# 复用已有的第 1 步结果，只重跑第 2 步及以后
+python3 scripts/run_pipeline.py data/cases/aitx_final_patients.json --from-step 2
+```
+
+每一步的输出 `out/step<N>/<病例ID>.json` 都带 `_meta`：生成它的病例输入指纹、所依赖的上游输出文件指纹、代码版本（git commit）。
+用 `--from-step N` 时会核对前面各步的输出：缺失、由不同的病例输入生成、或建立在已被重跑的旧上游输出之上，都会报 `[STALE]` 并提示从哪一步重跑，**不会悄悄用旧结果**。
+`scripts/step1_variant.py`、`scripts/step2_disease.py` 仍可单独运行用于调试，但它们的输出没有 `_meta`，流水线不会复用。
+
+LLM 缓存（`.cache/llm/`）的键包含模型名、API 地址、提示词版本和完整提示词正文；改提示词或换模型后自动失效。
+每条缓存还记录调用参数（temperature 等），参数不同不复用；设置了 `AITX_EXPECT_MODEL_PREFIX` 时，由其他模型生成的缓存也不复用。
+
 ## 目录结构
 
 ```
 aitx/
+  runmeta.py           各步输出的读写与来源记录（输入指纹、上游指纹、代码版本）
   http.py              带磁盘缓存的 HTTP 请求，记录每个来源的访问时间
   llm.py               统一的模型接口（换模型只改环境变量）
   variant/
@@ -91,6 +109,7 @@ aitx/
     resolve.py         候选疾病、证据强度、ClinVar 关联、遗传方式、首选选择
     pipeline.py        组装 DiseaseResolution 输出和校验
 scripts/
+  run_pipeline.py      整条流水线入口，支持 --from-step / --to-step
   step1_variant.py     第 1 步命令行入口
   acceptance_step1.py  第 1 步联网验收
   step2_disease.py     第 2 步命令行入口

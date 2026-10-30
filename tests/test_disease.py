@@ -267,6 +267,41 @@ def test_phenotype_onset_quote_must_be_verbatim():
     assert p["checked"] and p["onset"]["months_min"] is None and not p["onset"]["verified"]
 
 
+CFG = {"model": "deepseek-flash", "base_url": "https://api.deepseek.com", "expect_model_prefix": ""}
+MSG = [{"role": "system", "content": "prompt A"}, {"role": "user", "content": "text"}]
+
+
+def test_cache_key_changes_with_model_prompt_version_params(monkeypatch):
+    base = X.cache_key(MSG, 0, CFG)
+    assert X.cache_key(MSG, 0, CFG) == base                                            # deterministic
+    assert X.cache_key(MSG, 0, dict(CFG, model="deepseek/deepseek-v4-flash-0423")) != base
+    assert X.cache_key(MSG, 0, dict(CFG, base_url="https://openrouter.ai/api/v1")) != base
+    assert X.cache_key([dict(MSG[0], content="prompt B"), MSG[1]], 0, CFG) != base     # prompt text edited
+    assert X.cache_key(MSG, 1, CFG) != base                                            # another sample
+    monkeypatch.setattr(X, "PROMPT_VERSION", "step2-extract-v999")
+    assert X.cache_key(MSG, 0, CFG) != base
+
+
+def test_cache_entry_with_other_call_params_not_reused():
+    entry = {"served_model": "deepseek-flash", "call_params": dict(X.CALL_PARAMS)}
+    assert X._cache_usable(entry, CFG)
+    assert not X._cache_usable(dict(entry, call_params=dict(X.CALL_PARAMS, temperature=0.7)), CFG)
+    assert not X._cache_usable({"served_model": "deepseek-flash"}, CFG)        # parameters unknown
+
+
+def test_cache_entry_from_other_served_model_not_reused(tmp_path, monkeypatch):
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(X.llm, "config", lambda: dict(CFG, expect_model_prefix="deepseek-v4.1"))
+    (tmp_path / f"{X.cache_key(MSG, 0, dict(CFG, expect_model_prefix='deepseek-v4.1'))}.json").write_text(
+        json.dumps({"served_model": "deepseek-v4-flash-0423", "content": "{}", "call_params": X.CALL_PARAMS}))
+    calls = []
+    monkeypatch.setattr(X.llm, "chat", lambda m, **kw: calls.append(1) or {
+        "model": "deepseek-v4.1-flash-1017", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]})
+    out = X._cached_chat(MSG, 0, True)
+    assert calls and out["served_model"] == "deepseek-v4.1-flash-1017"
+    assert X._cached_chat(MSG, 0, True)["served_model"] == "deepseek-v4.1-flash-1017" and len(calls) == 1
+
+
 def test_prompt_never_asks_for_ids():
     assert "Do not give any ontology identifiers" in X.SYSTEM and "hpo_id" not in X.SYSTEM
     assert "ONLY when the text explicitly dates the disease" in X.SYSTEM
