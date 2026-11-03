@@ -39,7 +39,7 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
   "missing_information": [ ... ], // 第 3 节
   "rules_applied": [ ... ],       // 第 4 节
   "evidence": [ ... ],            // 第 1 节；3.0 只写背景类证据，3a–3e 往里加
-  "sections": {                   // 模板 9 个章节 -> 证据 id 列表；3.0 全部为空
+  "sections": {                   // Summary 之外的 8 个章节 -> 证据 id 列表；3.0 全部为空
     "existing_targeted_therapies": [], "supportive_management": [], "contraindications_precautions": [],
     "clinical_trial_eligibility": [], "off_label_expanded_access": [],
     "bespoke_therapies": [], "drug_repurposing": [], "outcome_measures_ranking": []
