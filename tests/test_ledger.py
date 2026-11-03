@@ -156,8 +156,8 @@ def test_unknown_section_rejected():
 
 # ------------------------------------------------------ action records (contract 1.4)
 
-NEDO = ("Nedosiran is indicated to lower urinary oxalate levels in children 9 years of age and older and adults "
-        "with primary hyperoxaluria type 1.")
+NEDO = ("Examplimab is indicated to lower urinary oxalate levels in children 9 years of age and older and adults "
+        "with primary hyperoxaluria type 1.")       # fictional label text (real labels are checked in 3a acceptance)
 TRIAL = ("Inclusion Criteria: Age 2 to 18 years. Exclusion Criteria: Prior liver transplantation. Estimated GFR below 30.")
 
 
@@ -181,7 +181,7 @@ def test_label_age_limit_makes_action_not_applicable():
     led = LG.Ledger("P", B)
     ev = _ev(led, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
     req = LG.requirement("r1", "label_condition", "9 years of age and older", ev["id"], AGE7, "does_not_satisfy", ["b1", "b2"])
-    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1", "b2"], [req], [ev["id"]],
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Examplimab", ["b1", "b2"], [req], [ev["id"]],
                          {"b1": "approved only for age ≥ 9", "b2": "approved only for age ≥ 9"})
     led.actions.append(a)
     assert a["status_by_branch"]["b1"]["status"] == "not_applicable"
@@ -213,7 +213,7 @@ def test_status_can_differ_between_branches():
                          {"field": "diagnosis", "value": "PH1", "quote": "PH1", "step": 2}, "satisfies", ["b1"])
     req2 = LG.requirement("r2", "label_condition", "with primary hyperoxaluria type 1", ev["id"],
                           {"field": "diagnosis", "value": "PH2", "quote": "PH2", "step": 2}, "does_not_satisfy", ["b2"])
-    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1", "b2"], [req, req2],
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Examplimab", ["b1", "b2"], [req, req2],
                          [ev["id"]], {"b1": "labelled for PH1", "b2": "not labelled for PH2"})
     assert (a["status_by_branch"]["b1"]["status"], a["status_by_branch"]["b2"]["status"]) == ("applicable", "not_applicable")
 
@@ -222,13 +222,13 @@ def test_requirement_must_be_verbatim_and_result_untampered():
     led = LG.Ledger("P", B)
     ev = _ev(led, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
     req = LG.requirement("r1", "label_condition", "patients aged 12 and over", ev["id"], AGE7, "does_not_satisfy", ["b1"])
-    led.actions.append(LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1"], [req],
+    led.actions.append(LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Examplimab", ["b1"], [req],
                                         [ev["id"]], {"b1": "age"}))
     assert "not verbatim" in check(led, "action_records_consistent")["detail"]
     led2 = LG.Ledger("P", B)
     ev2 = _ev(led2, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
     req2 = LG.requirement("r1", "label_condition", "9 years of age and older", ev2["id"], AGE7, "does_not_satisfy", ["b1"])
-    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1"], [req2], [ev2["id"]], {"b1": "age"})
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Examplimab", ["b1"], [req2], [ev2["id"]], {"b1": "age"})
     a["status_by_branch"]["b1"]["status"] = "applicable"                     # hand-set status against its requirements
     led2.actions.append(a)
     assert "does not follow" in check(led2, "action_records_consistent")["detail"]
