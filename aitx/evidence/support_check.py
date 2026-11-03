@@ -22,27 +22,21 @@ from concurrent.futures import ThreadPoolExecutor
 
 from aitx.disease import extract as X
 
-PROMPT_VERSION = "support-check-v4"
+PROMPT_VERSION = "support-check-v5"   # general principles only; no examples (2026-11-03)
 N_CHECKS = 3          # independent judgements per claim; an item is supported only if all of them say so
 VERDICTS = ("supported", "partially_supported", "not_supported")
 
-SYSTEM = """You check whether quoted source text supports each part of a claim. Judge ONLY from the quotes;
-do not use outside knowledge and do not give the claim the benefit of the doubt.
-For each numbered item answer one verdict:
-  "supported"            the quotes explicitly state it
-  "partially_supported"  the quotes state something weaker, broader or different: e.g. a difference in frequency
-                         or an odds ratio presented as a rule, a single case generalized, a condition that does not
-                         match the one in the quotes (e.g. one variant vs two variants)
-The conclusion may not be stronger than the quotes: a difference in proportions between groups does not support
-excluding a diagnosis or preferring one over another; a single case or family does not support a general rule; an
-association does not support causation. If the claim is stronger than the quotes in any of these ways, the item is
-at most "partially_supported".
-A condition that is the same as, or a special case of, what the quotes state is "supported" (if the quotes say
-"in-frame mutations cause X", the condition "in-frame deletions" is supported). A condition broader than the quotes
-is not.
-  "not_supported"        the quotes do not state it or contradict it
-Disease names: an item may give a disease's standard name followed by "also called: ..." synonyms; a quote that
-names the disease by any of these names refers to that disease.
+SYSTEM = """You check whether quoted source text supports each part of a claim.
+Principles:
+1. Judge only from the quotes. Do not use outside knowledge and do not give the claim the benefit of the doubt.
+2. A condition is supported if the quotes state it, or state something more general that includes it. A condition
+   that is broader than, or different from, what the quotes state is at most partially supported.
+3. A conclusion may not be stronger than the quotes. A difference in proportions between groups does not support
+   excluding or preferring a diagnosis; a single case or family does not support a general rule; an association
+   does not support causation.
+4. A disease may be named in the quotes by its standard name or by any synonym listed in the item.
+Verdict for each numbered item: "supported" (the quotes state it), "partially_supported" (the quotes state something
+weaker, broader or different), "not_supported" (the quotes do not state it or contradict it).
 Return only JSON: {"items": [{"item": <number>, "verdict": "...", "reason": "<one short sentence>"}]}"""
 
 

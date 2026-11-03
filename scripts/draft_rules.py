@@ -20,6 +20,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx.evidence import drafting  # noqa: E402
 from aitx.evidence.rules import RULES_DIR, identity  # noqa: E402
@@ -59,6 +60,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--gene", action="append")
     args = ap.parse_args()
+    import eval_support_check
+    added = eval_support_check.collect()          # reviews made by hand since the last run become regression cases
+    if added:
+        print(f"support-check regression set: added {added}")
     genes = genes_from_step2()
     RULES_DIR.mkdir(parents=True, exist_ok=True)
     for gene in sorted(args.gene or genes):

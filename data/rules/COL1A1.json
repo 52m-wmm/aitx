@@ -1,6 +1,6 @@
 {
  "gene": "COL1A1",
- "drafted_at": 1793712090,
+ "drafted_at": 1793712711,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -387,12 +387,12 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "not_supported",
+    "overall": "partially_supported",
     "items": [
      {
       "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 134.",
       "verdict": "supported",
-      "reason": "The quote explicitly lists Arg134Cys as an arginine-to-cysteine change in COL1A1, a missense variant at residue 134.",
+      "reason": "The quote names a COL1A1 Arg134Cys arginine-to-cysteine change, which is a missense change at residue 134.",
       "judgements": [
        "supported",
        "supported",
@@ -402,20 +402,20 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote reports Arg134Cys in an EDS phenotype within an EDS/OI overlap heading, but does not state it points to combined OI and EDS 1/OIEDS1 or give that specific diagnosis.",
+      "reason": "The quote supports an EDS/OI overlap phenotype but not specifically combined OI and EDS syndrome 1/OIEDS1.",
       "judgements": [
        "partially_supported",
-       "supported",
-       "supported"
+       "partially_supported",
+       "partially_supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "not_supported",
-      "reason": "The quote reports three specific arginine-to-cysteine changes, not a general association for all missense COL1A1 variants affecting residue 134.",
+      "verdict": "supported",
+      "reason": "The quote reports three COL1A1 arginine-to-cysteine changes in an EDS phenotype, not a single patient/family or a frequency comparison.",
       "judgements": [
-       "not_supported",
-       "not_supported",
+       "supported",
+       "supported",
        "supported"
       ]
      }
@@ -424,14 +424,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "9a54dc0c3b7fcce13ab0359cd470323fb8820b2289f5eed7230877db08a59198"
+   "content_sha256": "59c9a77a082ab2e7827390a0b8a17447d2c958c714fda91942100a754e500fcd"
   },
   {
    "id": "COL1A1-2",
@@ -477,14 +477,14 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "partially_supported",
+    "overall": "not_supported",
     "items": [
      {
       "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 915.",
-      "verdict": "partially_supported",
-      "reason": "The quote names Arg915Cys as an arginine-to-cysteine change, but it does not state a rule for all missense variants affecting residue 915.",
+      "verdict": "supported",
+      "reason": "The quote explicitly lists Arg915Cys as an arginine-to-cysteine change in COL1A1, i.e. a missense change at residue 915.",
       "judgements": [
-       "partially_supported",
+       "supported",
        "supported",
        "supported"
       ]
@@ -492,7 +492,7 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote associates Arg915Cys with an EDS/OI overlap/EDS phenotype, but it does not explicitly identify combined OI/EDS syndrome 1 (OIEDS1) or say such variants point to it.",
+      "reason": "The quote supports an EDS/OI overlap phenotype, but does not specifically name combined OI and EDS syndrome 1/OIEDS1.",
       "judgements": [
        "partially_supported",
        "partially_supported",
@@ -501,11 +501,11 @@
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "partially_supported",
-      "reason": "The quote reports three arginine-to-cysteine changes rather than a single patient/family or frequency comparison, but it does not establish a general association for all such COL1A1 missense variants at residue 915.",
+      "verdict": "not_supported",
+      "reason": "The quote only reports three specific changes in an EDS phenotype and does not state a general association for such COL1A1 variants.",
       "judgements": [
-       "partially_supported",
-       "partially_supported",
+       "supported",
+       "not_supported",
        "supported"
       ]
      }
@@ -514,14 +514,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "9fd652c9b0c052dcf5f12afa77822430e5d6f00d8708734f9551f847f01c7b20"
+   "content_sha256": "bb04b02cfc783c63a7a2620fdb627b5ecc1144212c80bc8951156b59dd79910e"
   },
   {
    "id": "COL1A1-3",
@@ -567,12 +567,12 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "not_supported",
+    "overall": "partially_supported",
     "items": [
      {
       "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 396.",
       "verdict": "supported",
-      "reason": "The quote names COL1A1 Arg396Cys, an arginine-to-cysteine missense change at residue 396.",
+      "reason": "The quote identifies Arg396Cys as an arginine-to-cysteine COL1A1 change at residue 396.",
       "judgements": [
        "supported",
        "supported",
@@ -582,21 +582,21 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote reports Arg396Cys in an EDS/OI overlap/EDS phenotype but does not explicitly state combined OI and EDS type 1/OIEDS1 or that such variants point to it.",
+      "reason": "The quote describes EDS/OI overlap and an EDS phenotype, but does not specifically name combined OI/EDS syndrome 1 or OIEDS1.",
       "judgements": [
        "partially_supported",
        "partially_supported",
-       "partially_supported"
+       "supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "not_supported",
-      "reason": "The quote reports three specific variants from a publication, not a general association for all COL1A1 residue-396 missense variants.",
+      "verdict": "supported",
+      "reason": "The quote reports three Arg-to-Cys COL1A1 changes, not a single patient/family or a frequency comparison.",
       "judgements": [
-       "partially_supported",
-       "not_supported",
-       "not_supported"
+       "supported",
+       "supported",
+       "supported"
       ]
      }
     ],
@@ -604,14 +604,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "9fa3d6431a03fb80d98e4e6fe17839d140f9a30938ed1e1b93ffe17e30091b26"
+   "content_sha256": "3abbf36f837f462a5f1557342e114de0242f754b11c4b550bd2efcc295610109"
   },
   {
    "id": "COL1A1-4",
@@ -654,22 +654,12 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "not_supported",
+    "overall": "partially_supported",
     "items": [
      {
       "item": "Condition: the rule is about COL1A1 variants that lie in exon 6.",
-      "verdict": "not_supported",
-      "reason": "The quote says loss of exon 6, not variants lying in exon 6, which is a broader condition.",
-      "judgements": [
-       "not_supported",
-       "partially_supported",
-       "not_supported"
-      ]
-     },
-     {
-      "item": "Conclusion: such variants point to Ehlers-Danlos syndrome arthrochalasia type 1 (also called: EDS VIIA; EDSARTH1; Ehlers-Danlos syndrome type 7A).",
       "verdict": "partially_supported",
-      "reason": "The quote supports arthrochalasia EDS from COL1A1 exon 6 loss but does not specify type 1 or the listed synonyms.",
+      "reason": "The quote specifies loss of exon 6, not COL1A1 variants that merely lie in exon 6.",
       "judgements": [
        "partially_supported",
        "partially_supported",
@@ -677,9 +667,19 @@
       ]
      },
      {
+      "item": "Conclusion: such variants point to Ehlers-Danlos syndrome arthrochalasia type 1 (also called: EDS VIIA; EDSARTH1; Ehlers-Danlos syndrome type 7A).",
+      "verdict": "partially_supported",
+      "reason": "The quote names Arthrochalasia EDS but does not specify type 1 or its listed synonyms.",
+      "judgements": [
+       "partially_supported",
+       "partially_supported",
+       "supported"
+      ]
+     },
+     {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quote states a general causal association, not a single case or a frequency difference.",
+      "reason": "The quote states a general causal association for COL1A1 exon 6 loss, not a single case or frequency difference.",
       "judgements": [
        "supported",
        "supported",
@@ -691,14 +691,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "ed4c5780886996bdd13b9ca71f68e5c05de44797ee05e4ab203a099edff31c5f"
+   "content_sha256": "5cefe7a5c432cdf60a52a8c3dfdddddfcc006927180ceab5b398b72e44b47c70"
   },
   {
    "id": "COL1A1-5",
@@ -755,7 +755,7 @@
      {
       "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 836 and that lie in exon 41 and that are present as a single heterozygous variant (one variant, on one allele).",
       "verdict": "supported",
-      "reason": "The quote states affected individuals were heterozygous for a missense mutation in exon 41 of COL1A1 altering residue 836 (R836C), matching the condition.",
+      "reason": "The quote states a heterozygous missense mutation in exon 41 altering residue 836 (R836C) in COL1A1.",
       "judgements": [
        "supported",
        "supported",
@@ -765,7 +765,7 @@
      {
       "item": "Conclusion: such variants point to Caffey disease (also called: infantile cortical hyperostosis).",
       "verdict": "not_supported",
-      "reason": "The quote never names Caffey disease or infantile cortical hyperostosis, referring only to unspecified 'affected individuals'.",
+      "reason": "The quote does not mention Caffey disease or infantile cortical hyperostosis.",
       "judgements": [
        "not_supported",
        "not_supported",
@@ -775,10 +775,10 @@
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "not_supported",
-      "reason": "The quote reports the mutation in affected individuals/carriers but does not establish a general association for such variants rather than a specific finding.",
+      "reason": "The quote reports a specific heterozygous mutation in affected individuals/carriers, not a general association for such COL1A1 variants.",
       "judgements": [
        "partially_supported",
-       "partially_supported",
+       "not_supported",
        "not_supported"
       ]
      }
@@ -787,7 +787,7 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
@@ -797,7 +797,7 @@
     "at": "2026-11-03",
     "reason": "Generalized from a single family / individual report."
    },
-   "content_sha256": "ad6d172e038829fd683e48e73e6b55c5099b9359d69fe8b8d2abed3f4741f054"
+   "content_sha256": "45ea551f6df71741635a26e3b3e156ea341bcb08e09c63dc765a7e926e31f93e"
   },
   {
    "id": "COL1A1-6",
@@ -843,7 +843,7 @@
      {
       "item": "Condition: the rule is about COL1A1 variants that are splice-site variants.",
       "verdict": "supported",
-      "reason": "The quote explicitly addresses splice site mutations in COL1A1.",
+      "reason": "The quote explicitly discusses splice site mutations in COL1A1.",
       "judgements": [
        "supported",
        "supported",
@@ -853,17 +853,17 @@
      {
       "item": "Conclusion: such variants point to osteogenesis imperfecta type 1 (also called: Adair-Dighton syndrome; COL1A1-related osteogenesis imperfecta; OI type 1; OI1; Van der Hoeve syndrome; classic non-deforming OI with blue sclerae; mild osteogenesis imperfecta; non-deforming osteogenesis imperfecta).",
       "verdict": "partially_supported",
-      "reason": "The quote states a mild type I phenotype but does not explicitly name osteogenesis imperfecta type 1.",
+      "reason": "The quote states a 'mild type I phenotype' but does not explicitly name osteogenesis imperfecta type 1.",
       "judgements": [
-       "supported",
-       "supported",
+       "partially_supported",
+       "partially_supported",
        "partially_supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The statement is given as a general association for splice site mutations, not a single case or group comparison.",
+      "reason": "The quote makes a general statement about such COL1A1 splice site mutations, not a single case or group-frequency comparison.",
       "judgements": [
        "supported",
        "supported",
@@ -875,14 +875,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "ab2d2cdfa5556aa52f63c33a51f118a25aeedd98a7254045d9c180951dd6af05"
+   "content_sha256": "e795b2a548161ee9608de578db81e6e429cd85edcfc00a2dd2603e993e70d821"
   }
  ],
  "rejected_drafts": [],

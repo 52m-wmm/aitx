@@ -1,6 +1,6 @@
 {
  "gene": "DMD",
- "drafted_at": 1793712220,
+ "drafted_at": 1793712830,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -300,12 +300,12 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "partially_supported",
+    "overall": "not_supported",
     "items": [
      {
       "item": "Condition: the rule is about DMD variants that are frameshift variants.",
       "verdict": "supported",
-      "reason": "[1] states that in Duchenne patients mutations induce a reading-frame shift, so the rule concerns DMD frameshift variants.",
+      "reason": "Quote 1 states that Duchenne patients' mutations induce a reading-frame shift, supporting the frameshift condition.",
       "judgements": [
        "supported",
        "supported",
@@ -314,22 +314,22 @@
      },
      {
       "item": "Conclusion: such variants point to Duchenne muscular dystrophy (also called: DMD; Duchenne muscular dystrophy, X-linked recessive; muscular dystrophy, Duchenne type; severe dystrophinopathy, Duchenne type) rather than Becker muscular dystrophy (also called: BMD; Becker dystrophinopathy; Becker muscular dystrophy, X-linked recessive; Becker's muscular dystrophy; muscular dystrophy pseudohypertrophic progressive, Becker type; muscular dystrophy, Becker type).",
-      "verdict": "partially_supported",
-      "reason": "The quotes link reading-frame shifts to Duchenne patients and give rule-agreement percentages, but do not explicitly establish that such variants point to DMD rather than BMD.",
+      "verdict": "not_supported",
+      "reason": "The quotes never state that frameshift variants distinguish DMD from BMD; they only report a DMD association and percentage agreement.",
       "judgements": [
-       "partially_supported",
+       "not_supported",
        "partially_supported",
        "partially_supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such DMD variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "supported",
-      "reason": "[3] reports the rule across over 4,700 mutations, and [2] gives population-level agreement, not a single patient or family.",
+      "verdict": "partially_supported",
+      "reason": "The quotes give general patient/database percentages, not just a single family, but the DMD-versus-BMD point is framed mainly as frequency/agreement.",
       "judgements": [
        "supported",
        "supported",
-       "supported"
+       "partially_supported"
       ]
      }
     ],
@@ -337,7 +337,7 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
@@ -347,7 +347,7 @@
     "at": "2026-11-03",
     "reason": "The reading-frame rule is a classic, well-established result; the support check misread 'the rule holds true for 96% of the patients' (concordance rate) as a difference in frequency between groups."
    },
-   "content_sha256": "b2fd122a51b5d69a6672111b33eccdf8b86e742d12587659931ffb5725e9c4bf"
+   "content_sha256": "8007847f00964af6317c426945b3c5cc0d1b24d563eb0d3f20fffed75c0fbc1e"
   },
   {
    "id": "DMD-2",
@@ -415,7 +415,7 @@
      {
       "item": "Condition: the rule is about DMD variants that are in-frame deletion or in-frame insertion or in-frame insertion-deletion variants.",
       "verdict": "supported",
-      "reason": "The quotes refer generally to in-frame mutations in DMD, which includes in-frame deletions, insertions, and insertion-deletions.",
+      "reason": "The quotes refer generally to in-frame mutations, which includes in-frame deletion/insertion/indel variants.",
       "judgements": [
        "supported",
        "supported",
@@ -425,7 +425,7 @@
      {
       "item": "Conclusion: such variants point to Becker muscular dystrophy (also called: BMD; Becker dystrophinopathy; Becker muscular dystrophy, X-linked recessive; Becker's muscular dystrophy; muscular dystrophy pseudohypertrophic progressive, Becker type; muscular dystrophy, Becker type) rather than Duchenne muscular dystrophy (also called: DMD; Duchenne muscular dystrophy, X-linked recessive; muscular dystrophy, Duchenne type; severe dystrophinopathy, Duchenne type).",
       "verdict": "supported",
-      "reason": "The quotes state that in-frame mutations occur in Becker patients and allow largely functional dystrophin, whereas Duchenne mutations disrupt the reading frame.",
+      "reason": "The quotes state that in-frame mutations occur in Becker while Duchenne involves reading-frame shifts, supporting the association.",
       "judgements": [
        "supported",
        "supported",
@@ -435,7 +435,7 @@
      {
       "item": "Scope: this is stated as a general association for such DMD variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quotes describe a general reading-frame rule across DMD/BMD patients and mutation databases, not a single case or family.",
+      "reason": "The quotes present the reading-frame rule as a general rule supported by large database agreement, not merely one case or a frequency comparison.",
       "judgements": [
        "supported",
        "supported",
@@ -447,14 +447,14 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "8ddf0958ec99f1b297cf5ce93c075990f02b29ff42eb8b0747febfa5549099a7"
+   "content_sha256": "0776a778812d0ef979249b3f8716dc3749c014ed3f282054c41ff24f28aa9efe"
   }
  ],
  "rejected_drafts": [],

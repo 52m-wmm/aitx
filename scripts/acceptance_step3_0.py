@@ -109,6 +109,12 @@ def main() -> int:
         sc = (files.get(rid) or {}).get("support_check") or {}
         hard(sc.get("overall") in ("partially_supported", "not_supported"),
              f"support check stops {rid} on its own -> {sc.get('overall')}")
+    import eval_support_check as ESC
+    ESC.collect()
+    reg = ESC.evaluate(json.loads(ESC.SET.read_text())["cases"])
+    hard(not ESC.leaks(json.loads(ESC.SET.read_text())["cases"]), "regression cases do not appear in the check prompt")
+    hard(not reg["false_pass"], f"support check regression set ({reg['n']} reviewed rules, {reg['prompt_version']}): "
+                                f"accuracy {reg['accuracy']}, false passes {reg['false_pass']}, false blocks {reg['false_block']}")
     dmd = ledgers["PRAC-DMD-del"]
     applied = [r for r in dmd["rules_applied"] if r["rule_id"].startswith("DMD-")]
     hard(bool(applied), f"PRAC-DMD-del: DMD rule applied -> {[r['rule_id'] for r in applied]}")

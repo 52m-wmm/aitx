@@ -1,6 +1,6 @@
 {
  "gene": "CFTR",
- "drafted_at": 1793712090,
+ "drafted_at": 1793712711,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -275,31 +275,31 @@
      {
       "item": "Condition: the rule is about CFTR variants that are present as a single heterozygous variant (one variant, on one allele).",
       "verdict": "not_supported",
-      "reason": "The quote describes compound heterozygosity or two variants, not a single heterozygous variant on one allele.",
+      "reason": "The quote describes compound heterozygosity or two variants, not a single heterozygous variant.",
       "judgements": [
-       "partially_supported",
-       "partially_supported",
+       "not_supported",
+       "not_supported",
        "not_supported"
       ]
      },
      {
       "item": "Conclusion: such variants point to congenital bilateral aplasia of vas deferens from CFTR mutation (also called: CAVD; CBAVD; congenital bilateral absence of vas deferens; congenital bilateral aplasia of the vas deferens; vas deferens, congenital bilateral aplasia of) rather than cystic fibrosis (also called: CF; cystic fibrosis lung disease, modifier of; fibrocystic disease of the pancreas; mucoviscidosis; pseudomonas aeruginosa, susceptibility to chronic infection by, in cystic fibrosis).",
-      "verdict": "partially_supported",
-      "reason": "The quote supports isolated CBAVD from biallelic severe/non-CF combinations without CF manifestations, but not a diagnostic rule for single heterozygous variants or explicitly 'rather than CF'.",
+      "verdict": "not_supported",
+      "reason": "The quote does not state that single heterozygous CFTR variants point to CBAVD rather than CF; it describes biallelic combinations causing CBAVD without CF manifestations.",
       "judgements": [
-       "partially_supported",
-       "partially_supported",
-       "partially_supported"
+       "not_supported",
+       "supported",
+       "not_supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such CFTR variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "supported",
-      "reason": "The quote states a general association ('Isolated CBAVD usually results from...'), not a single case/family or only a frequency difference.",
+      "verdict": "partially_supported",
+      "reason": "The quote gives a general 'usually results' association, but only for compound/biallelic variants rather than single heterozygous variants.",
       "judgements": [
        "supported",
        "supported",
-       "supported"
+       "partially_supported"
       ]
      }
     ],
@@ -307,7 +307,7 @@
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v4"
+     "prompt_version": "support-check-v5"
     }
    },
    "status": "pending_review",
@@ -317,7 +317,7 @@
     "at": "2026-11-03",
     "reason": "Condition misstates the source: CBAVD results from biallelic (compound heterozygous) CFTR variants, but the rule's condition is a single heterozygous variant, which does not cause CBAVD."
    },
-   "content_sha256": "39166209cb7376207ba0785f775046aaa9cbb46b0945c7f5f62723002802a12c"
+   "content_sha256": "e5f015b508cb214a23ac84cd58f515f1f7cbda0cefaf37eb0dbae609be06831a"
   }
  ],
  "rejected_drafts": [],
