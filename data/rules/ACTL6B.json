@@ -1,6 +1,6 @@
 {
  "gene": "ACTL6B",
- "drafted_at": 1793708084,
+ "drafted_at": 1793710341,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -120,7 +120,6 @@
     }
    ],
    "strength": "reported",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -129,10 +128,36 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about patients with a single heterozygous variant (one variant, on one allele) in ACTL6B.",
+      "verdict": "supported",
+      "reason": "The quote states that the ACTL6B monoallelic variant is responsible for the autosomal dominant disorder, matching a single heterozygous variant."
+     },
+     {
+      "item": "Conclusion: such variants point to intellectual developmental disorder with severe speech and ambulation defects rather than developmental and epileptic encephalopathy, 76.",
+      "verdict": "supported",
+      "reason": "The quote links monoallelic ACTL6B variants to intellectual developmental disorder with speech/ambulation deficits and DEE76 to biallelic variants."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "supported",
+      "reason": "The quote presents this as a general association from previous studies, not as a single case/family or mere frequency difference."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "b0c5c9e6866fd061d46d85bf0bcfd42ed9c46e40e020440e5985ce33f44921b6"
+   "content_sha256": "e60cfb299da4968420f51be296265b0a0ef74f2463f3e8de43e731dc0ed77b4c"
   },
   {
    "id": "ACTL6B-2",
@@ -175,7 +200,6 @@
     }
    ],
    "strength": "reported",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -184,10 +208,36 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about patients with a homozygous variant (the same variant on both alleles) in ACTL6B.",
+      "verdict": "supported",
+      "reason": "The quotes state that DEE76 is due to ACTL6B biallelic variants and that 12 cases had homozygous variants."
+     },
+     {
+      "item": "Conclusion: such variants point to developmental and epileptic encephalopathy, 76 rather than intellectual developmental disorder with severe speech and ambulation defects.",
+      "verdict": "supported",
+      "reason": "The quotes distinguish monoallelic ACTL6B variants causing the intellectual developmental disorder from biallelic variants causing DEE76."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "supported",
+      "reason": "The quotes present this as an association across 18 summarized DEE76 cases, not as a single case or only a frequency difference."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "4c5eca46eab747ffa5567d33f10e686a2a0cef6a8d7c8b9e3f7067de84037336"
+   "content_sha256": "9f9e982a302b677e1b37e8ddda2233ad17afb29876cb5afbeb3916ba3ad8770d"
   }
  ],
  "rejected_drafts": [],

@@ -1,6 +1,6 @@
 {
  "gene": "NF1",
- "drafted_at": 1793708896,
+ "drafted_at": 1793710433,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -283,7 +283,6 @@
     }
    ],
    "strength": "reported",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -292,10 +291,39 @@
     },
     "prompt_version": "rules-draft-v1"
    },
-   "review": {
-    "decision": "not_reviewed"
+   "support_check": {
+    "overall": "partially_supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about NF1 missense variants.",
+      "verdict": "supported",
+      "reason": "The quotes explicitly discuss missense mutations in the context of SNF versus classical NF1."
+     },
+     {
+      "item": "Conclusion: such variants point to neurofibromatosis, familial spinal rather than neurofibromatosis type 1.",
+      "verdict": "supported",
+      "reason": "The quotes state missense mutations carry increased risk/proportion for SNF rather than classical NF1."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "partially_supported",
+      "reason": "The quotes report group-level frequency/odds differences, not a general association beyond patient-group frequency comparisons."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
    },
-   "content_sha256": "72a26fa48f07185beb7ffea7b0b52403a4a22f5556f46e5759a726ef6585e27a"
+   "status": "pending_review",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-03",
+    "reason": "Over-generalization: the quotes only report that missense variants are more frequent in spinal NF than in classical NF1 (21.4% vs 7.5%; odds ratios). They do not say that a missense variant argues against classical NF1; most NF1 missense carriers have classical NF1."
+   },
+   "content_sha256": "b028cb5bbdf44458c4b4514dad8a66fa107d0b4e04cf24b22fa283081a73c578"
   },
   {
    "id": "NF1-2",
@@ -333,7 +361,6 @@
     }
    ],
    "strength": "weak",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -342,10 +369,41 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "not_supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about NF1 in-frame insertion variants.",
+      "verdict": "not_supported",
+      "reason": "The quotes describe one in-frame tandem duplication, not a rule about NF1 in-frame insertion variants generally."
+     },
+     {
+      "item": "Condition: the rule is about NF1 variants in exon 28.",
+      "verdict": "supported",
+      "reason": "The quotes explicitly locate the NF1 mutation in exon 28."
+     },
+     {
+      "item": "Conclusion: such variants point to Watson syndrome rather than neurofibromatosis type 1.",
+      "verdict": "partially_supported",
+      "reason": "The quotes describe a family with WS and NS features and contrast with classical NF1 null alleles, but do not state that such variants point to WS rather than NF1 generally."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "not_supported",
+      "reason": "The evidence is limited to a single family, not a general association across such NF1 variants."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "50be072844a1e998050122632a10a3d9a6919337de445c1868223e2dddde7fa3"
+   "content_sha256": "2bc022607bfa627a0e867733a3e71a4b3b3994a8ee0097f19ac1afce42ba0954"
   }
  ],
  "rejected_drafts": [],

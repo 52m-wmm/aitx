@@ -18,6 +18,7 @@ import json
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -34,9 +35,18 @@ AMBIGUOUS_PRACTICE = ["PRAC-COL1A1", "PRAC-DMD-del", "PRAC-GRIN2B"]
 BECKER, DUCHENNE = "OMIM:300376", "OMIM:310200"
 
 
+_last_hit: dict[str, float] = {}
+HOST_INTERVAL_S = 1.0          # be polite: at most one request per second to the same host
+
+
 def url_ok(url: str) -> bool:
     req = urllib.request.Request(url, headers={"User-Agent": http.USER_AGENT})
-    for attempt in range(4):                       # many links in a row get rate-limited: back off and retry
+    host = urllib.parse.urlparse(url).netloc
+    for attempt in range(4):                       # many links in a row get rate-limited: pace, back off, retry
+        wait = _last_hit.get(host, 0) + HOST_INTERVAL_S - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        _last_hit[host] = time.time()
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
                 return r.status == 200
@@ -94,6 +104,11 @@ def main() -> int:
     rules = load_rules()
     hard(bool(rules["loaded"]), f"{len(rules['loaded'])} rule(s) loaded with re-verified quotes; "
                                 f"{len(rules['skipped'])} skipped")
+    files = {r["id"]: r for f in (ROOT / "data" / "rules").glob("*.json") for r in json.loads(f.read_text())["rules"]}
+    for rid in ("NF1-1", "CFTR-1"):          # reverse test: rules the reviewer vetoed must fail the support check
+        sc = (files.get(rid) or {}).get("support_check") or {}
+        hard(sc.get("overall") in ("partially_supported", "not_supported"),
+             f"support check stops {rid} on its own -> {sc.get('overall')}")
     dmd = ledgers["PRAC-DMD-del"]
     applied = [r for r in dmd["rules_applied"] if r["rule_id"].startswith("DMD-")]
     hard(bool(applied), f"PRAC-DMD-del: DMD rule applied -> {[r['rule_id'] for r in applied]}")

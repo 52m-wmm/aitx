@@ -1,6 +1,6 @@
 {
  "gene": "DMD",
- "drafted_at": 1793708640,
+ "drafted_at": 1793710433,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -266,7 +266,6 @@
     }
    ],
    "strength": "established",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -275,10 +274,36 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "not_supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about DMD frameshift variants.",
+      "verdict": "supported",
+      "reason": "Quotes state the reading frame rule applies to DMD patients and that frameshift mutations occur in Duchenne patients."
+     },
+     {
+      "item": "Conclusion: such variants point to Duchenne muscular dystrophy rather than Becker muscular dystrophy.",
+      "verdict": "partially_supported",
+      "reason": "Quotes link frameshift to Duchenne patients but never explicitly state these variants point to DMD rather than Becker; BMD is mentioned only as a percentage."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such DMD variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "not_supported",
+      "reason": "Quotes present the association as frequency percentages (96% DMD, 93% BMD), i.e., a frequency difference, not as a general rule beyond frequency."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "80fb28915a9cf1f5f08dd6ab93b5abef44a2add607d41f524dcb90ca88f6917e"
+   "content_sha256": "3ed0c2368d329a63a3ed37358f96bd1f523ebd8950a7b3fad003808bf8507f84"
   },
   {
    "id": "DMD-2",
@@ -332,7 +357,6 @@
     }
    ],
    "strength": "established",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -341,10 +365,36 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about DMD in-frame deletion or in-frame insertion or in-frame insertion-deletion variants.",
+      "verdict": "supported",
+      "reason": "The quotes state the reading-frame rule for in-frame mutations in DMD/Duchenne and Becker patients, covering in-frame deletion/insertion/insertion-deletion variants as subtypes."
+     },
+     {
+      "item": "Conclusion: such variants point to Becker muscular dystrophy rather than Duchenne muscular dystrophy.",
+      "verdict": "supported",
+      "reason": "The quotes explicitly say in-frame mutations are found in Becker patients and allow functional dystrophin, while Duchenne mutations disrupt the reading frame."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such DMD variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "supported",
+      "reason": "The quotes state the rule generally and report it across large DMD databases/patient groups, not as a single case or mere group frequency difference."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "22c604ca54f2d471077d726842d9f4319c31a24e47ed1781e654c4e19e7e1cd7"
+   "content_sha256": "545fe58a58b090a0da85280f33b4e2e80df880611cdab48aadcaa78db88df7b0"
   }
  ],
  "rejected_drafts": [],

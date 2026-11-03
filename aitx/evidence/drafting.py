@@ -8,7 +8,10 @@ Same procedure for every gene that appears in a step 2 result, not only evaluati
      step 2 candidate list and must quote the texts verbatim (it never writes ids, PMIDs or URLs);
   3. code checks every draft: quotes verbatim in the fetched text, condition fields from step 1 only,
      condition values allowed, every number in a position / exon condition appears in a quote,
-     diseases from the list; passing drafts become `verified` rules, the rest are kept as rejected drafts.
+     diseases from the list; failing drafts are kept as rejected drafts;
+  4. an independent LLM call (aitx.evidence.support_check) judges whether the quotes support each condition,
+     the conclusion and the scope; only fully supported rules are `verified`, others are `pending_review`
+     (not loaded until a reviewer accepts them).
 Each run records its searches (database, query, time, number of results) and the LLM's served model.
 A human reviewer may only veto a rule (with a reason) in the written file; content is hash-protected.
 """
@@ -24,6 +27,7 @@ from aitx.disease import datasets as D
 from aitx.disease import extract as X
 from aitx.evidence import genereviews as GR
 from aitx.evidence import ledger as LG
+from aitx.evidence import support_check as SC
 from aitx.evidence.rules import CONDITION_FIELDS, content_hash
 
 PROMPT_VERSION = "rules-draft-v1"
@@ -203,8 +207,12 @@ def draft_gene(gene: str, candidates: list[dict], nbks: list[str], *, use_cache:
         if rule is None:
             out["rejected_drafts"].append({"draft": d, "reasons": why})
             continue
-        rule = {"id": f"{gene}-{i}", "gene": gene, "version": 1, **rule, "status": "verified",
+        rule = {"id": f"{gene}-{i}", "gene": gene, "version": 1, **rule,
                 "drafted": {"llm": out["llm"], "prompt_version": PROMPT_VERSION}}
+        # independent check: do the quotes support each condition, the conclusion and the scope?
+        labels = {o["id"]: c["label"] for c in candidates for o in c["omim"]}
+        rule["support_check"] = SC.check_rule(rule, labels, use_cache=use_cache)
+        rule["status"] = "verified" if rule["support_check"]["overall"] == "supported" else "pending_review"
         rule["review"] = {"decision": "not_reviewed"}
         rule["content_sha256"] = content_hash(rule)
         out["rules"].append(rule)

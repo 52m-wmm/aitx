@@ -1,6 +1,6 @@
 {
  "gene": "SPTLC1",
- "drafted_at": 1793709186,
+ "drafted_at": 1793710457,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -227,7 +227,6 @@
     }
    ],
    "strength": "established",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -236,10 +235,36 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "support_check": {
+    "overall": "partially_supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about SPTLC1 variants affecting protein residue 331.",
+      "verdict": "supported",
+      "reason": "The quotes explicitly discuss SPTLC1 pathogenic variants at Ser331."
+     },
+     {
+      "item": "Conclusion: such variants point to neuropathy, hereditary sensory and autonomic, type 1A rather than amyotrophic lateral sclerosis 27, juvenile.",
+      "verdict": "partially_supported",
+      "reason": "Quotes support HSAN1A-like neuropathy and reclassify one p.Ser331Tyr juvenile ALS case as HSN, but do not state this as a general 'rather than ALS27' rule."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such SPTLC1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "supported",
+      "reason": "Quote 1 states a general association for SPTLC1 variants at Ser331, not merely one family or a frequency difference."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
+   },
+   "status": "pending_review",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "328535970b4c6cde4be833d88c8f65a5a9b80bc8490aba7bb5678b130385105a"
+   "content_sha256": "6913c6fa5e3c25a833e7a7f53a8d23043ea48009a72521b7d27a5a8c5b504a82"
   }
  ],
  "rejected_drafts": [],

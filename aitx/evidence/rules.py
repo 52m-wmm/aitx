@@ -1,8 +1,9 @@
 """Gene-specific rule layer (step 3.0 contract, section 4).
 
 Rules are data in data/rules/<GENE>.json, drafted by the system (scripts/draft_rules.py) and never
-edited by hand: a reviewer may only veto a rule, with a reason. A rule is loaded only if
-  - status is "verified" and it was not vetoed,
+edited by hand: a reviewer may only veto a rule, or accept a rule left pending by the support check,
+always with a reason. A rule is loaded only if
+  - status is "verified" (support check passed) or "pending_review" accepted by a reviewer, and it was not vetoed,
   - its content hash still matches what the drafting pipeline wrote (no hand edits),
   - every source quote is found verbatim in the source text fetched again now (aitx.http, cached),
   - its conditions use step 1 fields only.
@@ -24,6 +25,13 @@ from aitx.evidence.branches import MAX_BRANCHES, make_branch, set_roles
 ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = ROOT / "data" / "rules"
 CONDITION_FIELDS = {"variant_class", "nmd_prediction", "zygosity", "exon", "protein_position"}
+
+
+def identity(rule: dict) -> str:
+    """What a reviewer decided about: statement, conditions, effect and quotes (not status or checks)."""
+    body = {k: rule.get(k) for k in ("gene", "statement", "applies_when", "effect")}
+    body["quotes"] = sorted(s.get("quote", "") for s in rule.get("sources") or [])
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 def content_hash(rule: dict) -> str:
@@ -48,8 +56,14 @@ def validate(rule: dict) -> list[str]:
     review = rule.get("review") or {}
     if review.get("decision") == "vetoed":
         bad.append("vetoed: " + (review.get("reason") or "NO REASON GIVEN"))
-    if rule.get("status") != "verified":
+    accepted = review.get("decision") == "accepted" and review.get("reason")
+    if rule.get("status") == "pending_review" and not accepted:
+        bad.append("pending review: the support check found the quotes do not fully support it ("
+                   + (rule.get("support_check") or {}).get("overall", "?") + ")")
+    elif rule.get("status") not in ("verified", "pending_review"):
         bad.append(f"status {rule.get('status')!r}, not verified")
+    if rule.get("status") == "verified" and (rule.get("support_check") or {}).get("overall", "supported") != "supported":
+        bad.append("marked verified but the support check did not find it supported")
     if rule.get("content_sha256") != content_hash(rule):
         bad.append("content differs from the drafted version (hand edit)")
     unknown = set(rule.get("applies_when") or {}) - CONDITION_FIELDS
@@ -123,7 +137,8 @@ def apply_rules(led: LG.Ledger, rules: dict, step1: dict, step2: dict | None = N
         for r in rules.get("loaded", []):
             if r["gene"] != v["gene"] or not matches(r.get("applies_when") or {}, v):
                 continue
-            promotions = promote(led, r, step2)
+            weak = r.get("strength") == "weak"           # weak rules are background only (decision 2026-11-03)
+            promotions = [] if weak else promote(led, r, step2)
             by_omim = {o: b["id"] for b in led.branches if b["diagnosis"] for o in b["diagnosis"]["omim"]}
             eff = r.get("effect") or {}
             sup = [by_omim[o] for o in eff.get("supports", []) if o in by_omim]
@@ -141,10 +156,14 @@ def apply_rules(led: LG.Ledger, rules: dict, step1: dict, step2: dict | None = N
                                       "statement": r["statement"], "strength": r.get("strength"),
                                       "supports": sup, "argues_against": ag, "evidence_ids": ev_ids,
                                       "promotions": promotions,
+                                      "affects_branches": not weak,
                                       "branches_not_present": [o for o in eff.get("supports", []) + eff.get("argues_against", [])
                                                                if o not in by_omim]})
-            led.branch_assessment += [{"branch": b, "rule_id": r["id"], "effect": "supports", "evidence_ids": ev_ids} for b in sup]
-            led.branch_assessment += [{"branch": b, "rule_id": r["id"], "effect": "argues_against", "evidence_ids": ev_ids} for b in ag]
+            if not weak:
+                led.branch_assessment += [{"branch": b, "rule_id": r["id"], "effect": "supports", "evidence_ids": ev_ids}
+                                          for b in sup]
+                led.branch_assessment += [{"branch": b, "rule_id": r["id"], "effect": "argues_against",
+                                           "evidence_ids": ev_ids} for b in ag]
     led.branch_order = branch_order(led.branches, led.branch_assessment)
 
 

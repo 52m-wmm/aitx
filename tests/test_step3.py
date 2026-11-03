@@ -207,3 +207,33 @@ def test_unloaded_rule_promotes_nothing(pubmed):
     RU.apply_rules(led, {"loaded": [], "skipped": [{"rule_id": "x", "reasons": ["vetoed: y"]}]}, INFRAME,
                    _s2(("M:BMD", "Becker", ["OMIM:300376"])))
     assert [b["id"] for b in led.branches] == ["M:DMD", "M:XLID"]
+
+
+def test_weak_rule_is_background_only(pubmed):
+    led = LG.Ledger("P", _dmd_branches())
+    s2 = _s2(("M:DMD", "Duchenne", ["OMIM:310200"], 5.4), ("M:BMD", "Becker", ["OMIM:300376"], 3.0))
+    RU.apply_rules(led, {"loaded": [rule(strength="weak")], "skipped": []}, INFRAME, s2)
+    assert [b["id"] for b in led.branches] == ["M:DMD", "M:XLID"]          # no promotion
+    assert led.branch_assessment == [] and led.branch_order == ["M:DMD", "M:XLID"]
+    applied = led.rules_applied[0]
+    assert applied["affects_branches"] is False and applied["promotions"] == []
+    assert any(e["retrieved_by"] == "rule DMD-frame-1" for e in led.evidence.values())   # still background evidence
+
+
+def test_pending_rule_needs_reviewer_acceptance(pubmed):
+    r = rule(status="pending_review", support_check={"overall": "partially_supported"})
+    assert any("pending review" in x for x in RU.validate(r))
+    r["review"] = {"decision": "accepted", "by": "reviewer", "at": "2026-11-03"}          # no reason -> not enough
+    assert any("pending review" in x for x in RU.validate(r))
+    r["review"]["reason"] = "quotes state the reading-frame rule"
+    assert RU.validate(r) == []                                                          # accepted -> loads
+
+
+def test_verified_rule_must_have_passed_support_check(pubmed):
+    r = rule(support_check={"overall": "not_supported"})                                 # status verified by hand
+    assert any("did not find it supported" in x for x in RU.validate(r))
+
+
+def test_review_identity_ignores_status_and_checks():
+    a, b = rule(), rule(status="pending_review", support_check={"overall": "partially_supported"})
+    assert RU.identity(a) == RU.identity(b) and RU.content_hash(a) != RU.content_hash(b)

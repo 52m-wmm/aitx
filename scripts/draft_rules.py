@@ -6,7 +6,9 @@ Usage:
 
 Writes data/rules/<GENE>.json (see aitx/evidence/drafting.py). A reviewer may only veto a rule:
 set "review": {"decision": "vetoed", "by": ..., "at": ..., "reason": ...} in the file. Redrafting keeps the
-review of any rule whose content is unchanged (same content_sha256), so a veto survives reruns.
+review of any rule whose content is unchanged (same statement, conditions, effect and quotes), so a veto or
+an acceptance survives reruns. Rules the support check does not find fully supported are written as
+"pending_review" and are not loaded until a reviewer sets "review": {"decision": "accepted", ..., "reason": ...}.
 Needs AITX_LLM_API_KEY unless the LLM answers are cached.
 """
 from __future__ import annotations
@@ -20,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from aitx.evidence import drafting  # noqa: E402
-from aitx.evidence.rules import RULES_DIR  # noqa: E402
+from aitx.evidence.rules import RULES_DIR, identity  # noqa: E402
 
 
 def genes_from_step2() -> dict[str, dict]:
@@ -44,10 +46,13 @@ def genes_from_step2() -> dict[str, dict]:
 def keep_reviews(new: dict, path: Path) -> None:
     if not path.exists():
         return
-    old = {r["content_sha256"]: r.get("review") for r in json.loads(path.read_text()).get("rules", [])}
+    # a review applies to the same rule content (statement, conditions, effect, quotes), even if a later
+    # pipeline version adds or changes checks around it
+    old = {identity(r): r.get("review") for r in json.loads(path.read_text()).get("rules", [])}
     for r in new["rules"]:
-        if r["content_sha256"] in old and old[r["content_sha256"]]:
-            r["review"] = old[r["content_sha256"]]
+        rev = old.get(identity(r))
+        if rev and rev.get("decision") != "not_reviewed":
+            r["review"] = rev
 
 
 def main() -> int:

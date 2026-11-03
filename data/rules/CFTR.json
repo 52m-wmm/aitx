@@ -1,6 +1,6 @@
 {
  "gene": "CFTR",
- "drafted_at": 1793708199,
+ "drafted_at": 1793710346,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -233,7 +233,6 @@
     }
    ],
    "strength": "reported",
-   "status": "verified",
    "drafted": {
     "llm": {
      "llm": "deepseek-flash",
@@ -242,10 +241,39 @@
     },
     "prompt_version": "rules-draft-v1"
    },
-   "review": {
-    "decision": "not_reviewed"
+   "support_check": {
+    "overall": "not_supported",
+    "items": [
+     {
+      "item": "Condition: the rule is about patients with a single heterozygous variant (one variant, on one allele) in CFTR.",
+      "verdict": "not_supported",
+      "reason": "The quotes describe biallelic/compound heterozygous genotypes, not a single heterozygous CFTR variant."
+     },
+     {
+      "item": "Conclusion: such variants point to congenital bilateral aplasia of vas deferens from CFTR mutation rather than cystic fibrosis.",
+      "verdict": "supported",
+      "reason": "The quotes state CFTR-CBAVD is a CFTR-related disorder without additional CF manifestations and usually results from these variant combinations."
+     },
+     {
+      "item": "Scope: this is stated as a general association for such CFTR variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
+      "verdict": "supported",
+      "reason": "The quotes state a general association using 'usually results' and 'most common,' not a single case or only a frequency difference."
+     }
+    ],
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "support-check-v2"
+    }
    },
-   "content_sha256": "89701b82ad2fdac3815a25d2db5eee0789aaca2bc9e6a3ac1cb60d3cec1f962b"
+   "status": "pending_review",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-03",
+    "reason": "Condition misstates the source: CBAVD results from biallelic (compound heterozygous) CFTR variants, but the rule's condition is a single heterozygous variant, which does not cause CBAVD."
+   },
+   "content_sha256": "f9b663e90d4f08ae9dcfc6c2f57d47ab128b0fd488a55e400693251bbf41da51"
   }
  ],
  "rejected_drafts": [],
