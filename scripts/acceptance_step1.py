@@ -36,7 +36,8 @@ HARD = [
     ("PRAC-CFTR-F508del", "variant_class", "inframe_deletion", "notation"),
     ("PRAC-CFTR-F508del", "nmd.prediction", "not_applicable", "no premature stop"),
     ("PRAC-KMT2B", "nmd.prediction", "likely_escapes", "official example answer: NMD = No"),
-    ("PRAC-SLC35A2", "variant_class", "start_lost", "p.Met1Ile"),
+    ("PRAC-SLC35A2-ex7", "variant_class", "start_lost", "p.Met1Ile"),
+    ("PRAC-SLC35A2-ex8", "variant_class", "start_lost", "p.Met1Ile"),
     ("PRAC-GRIN2B", "variant_class", "nonsense", "p.Gln919Ter"),
     ("AITX-40001", "ptc_aa_position", 414, "Gln367 + Ter48 - 1"),
 ]

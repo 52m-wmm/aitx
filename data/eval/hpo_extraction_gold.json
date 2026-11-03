@@ -180,27 +180,6 @@
    ]
   },
   {
-   "id": "PRAC-SLC35A2",
-   "context": "seizures and global developmental delay",
-   "annotations": [
-    {
-     "quote": "seizures",
-     "status": "present",
-     "acceptable": [
-      "HP:0001250"
-     ]
-    },
-    {
-     "quote": "global developmental delay",
-     "status": "present",
-     "acceptable": [
-      "HP:0001263"
-     ]
-    }
-   ],
-   "negatives": []
-  },
-  {
    "id": "PRAC-GRIN2B",
    "context": "intellectual disability, seizures, and developmental delays",
    "annotations": [

@@ -40,7 +40,8 @@ EXPECT = [
 SOFT = {
     "PRAC-DMD-del": "Duchenne vs Becker (in-frame deletion favours Becker; gene-specific rule is step 3/4)",
     "PRAC-GRIN2B": "ID6 613970 vs DEE27 616139",
-    "PRAC-SLC35A2": "primary and confidence",
+    "PRAC-SLC35A2-ex7": "SLC35A2-CDG named in the text",
+    "PRAC-SLC35A2-ex8": "primary and confidence (no diagnosis named)",
     "AITX-40001": "expected DEE76 618468; AD 618470 downgraded by inheritance",
     "AITX-40002": "expected SCA29 117360; Gillespie needs aniridia (not stated)",
     "AITX-40003": "HSAN1 162400 vs ALS27 620285; possibly ambiguous",

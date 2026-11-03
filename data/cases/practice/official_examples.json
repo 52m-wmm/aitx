@@ -90,7 +90,7 @@
     }
   },
   {
-    "id": "PRAC-SLC35A2",
+    "id": "PRAC-SLC35A2-ex7",
     "patient": {
       "genotype": [
         {
@@ -101,7 +101,22 @@
           "zygosity": "heterozygous"
         }
       ],
-      "clinical_context": "seizures and global developmental delay"
+      "clinical_context": "Patient with SLC35A2-CDG who is experiencing seizures and global developmental delay"
+    }
+  },
+  {
+    "id": "PRAC-SLC35A2-ex8",
+    "patient": {
+      "genotype": [
+        {
+          "gene": "SLC35A2",
+          "transcript": "NM_005660.3",
+          "variant_cdna": "c.3G>A",
+          "variant_protein": "p.Met1Ile",
+          "zygosity": "heterozygous"
+        }
+      ],
+      "clinical_context": "seizures and global developmental delay. Age 2 months, Hemoglobin 5, Normal liver labs, Not enrolled in other trials"
     }
   },
   {
