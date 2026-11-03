@@ -80,6 +80,9 @@ python3 scripts/run_pipeline.py data/cases/aitx_final_patients.json
 
 # 复用已有的第 1 步结果，只重跑第 2 步及以后
 python3 scripts/run_pipeline.py data/cases/aitx_final_patients.json --from-step 2
+
+# 只跑某个病例（在全部病例文件里按编号查找），可重复 --case
+python3 scripts/run_pipeline.py --case PRAC-OTC --from-step 2
 ```
 
 每一步的输出 `out/step<N>/<病例ID>.json` 都带 `_meta`：生成它的病例输入指纹、所依赖的上游输出文件指纹、代码版本（git commit）。
@@ -90,6 +93,22 @@ LLM 缓存（`.cache/llm/`）的键包含模型名、API 地址、提示词版�
 每条缓存还记录调用参数（temperature 等），参数不同不复用；设置了 `AITX_EXPECT_MODEL_PREFIX` 时，由其他模型生成的缓存也不复用。
 
 ## 审查用查看页面（Step 2.5）
+
+### 本地 Web 应用（实时查看、页面上重跑）
+
+```bash
+pip3 install -r requirements-viewer.txt   # 只有查看应用需要 FastAPI / uvicorn，流水线本身只用标准库
+python3 scripts/viewer_app.py             # 打开 http://127.0.0.1:8765/ （只绑定本机）
+```
+
+- 每次请求现场读取 `out/step*/` 渲染页面，模板与静态导出共用（`build_viewer.py`），改模板后下次请求即生效。
+- 结果文件或模板变化后，已打开的页面几秒内自动刷新（SSE）。
+- 病例页有“从第 N 步重跑”按钮：后台执行 `python3 -u scripts/run_pipeline.py --case <ID> --from-step N`，日志实时显示，跑完自动刷新。
+  会走到 LLM 步骤的按钮旁有提示；默认用缓存，勾选“不用缓存”需二次确认。同一病例同时只能有一个运行任务。
+- 首页显示正在运行的任务和最近的运行记录；记录在 `out/viewer_runs/history.jsonl`，日志在 `out/viewer_runs/<运行ID>.log`。
+- 界面只调用命令行能做的事，验收仍用命令行脚本。重跑若需要真正调用 LLM，启动应用前先设置 `AITX_LLM_API_KEY`。
+
+### 静态快照导出
 
 ```bash
 python3 scripts/build_viewer.py      # 读取 out/step*/ 生成静态 HTML 快照（中英文都生成）
@@ -111,6 +130,7 @@ aitx/
     hgvs.py            c. 和 p. 写法解析
     transcript.py      获取并解析 RefSeq 转录本记录
     profile.py         生成 VariantProfile：分类、外显子、NMD、机制假设、校验
+    translate.py       独立重新翻译（自检 6）：按 c. 改 mRNA、翻译到第一个终止
   disease/
     datasets.py        整包数据下载（断点续传）、完整性校验、日期快照
     sources.py         各数据文件的解析器，每条记录带行号用于引用
@@ -121,7 +141,8 @@ aitx/
     pipeline.py        组装 DiseaseResolution 输出和校验
 scripts/
   run_pipeline.py      整条流水线入口，支持 --from-step / --to-step
-  build_viewer.py      审查用静态页面（9 个视图），输出到 out/review/
+  build_viewer.py      审查页面模板（9 个视图）+ 静态快照导出，输出到 out/review/
+  viewer_app.py        本地 Web 应用：实时渲染、自动刷新、页面上重跑（调用 run_pipeline.py）
   step1_variant.py     第 1 步命令行入口
   acceptance_step1.py  第 1 步联网验收
   step2_disease.py     第 2 步命令行入口

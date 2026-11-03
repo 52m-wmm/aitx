@@ -4,6 +4,7 @@ Usage:
     python scripts/run_pipeline.py data/cases/aitx_final_patients.json               # all steps
     python scripts/run_pipeline.py data/cases/aitx_final_patients.json --from-step 2  # reuse out/step1
     python scripts/run_pipeline.py cases.json --from-step 2 --to-step 2
+    python scripts/run_pipeline.py --case PRAC-OTC --from-step 2           # one case, looked up in CASE_FILES
 
 With --from-step N, outputs of steps < N are read from out/step<k>/<id>.json and must
 have been produced from the same case input (and on the upstream files that exist
@@ -24,6 +25,24 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from aitx import runmeta  # noqa: E402
 
 PLANNED = {3: "therapy matching", 4: "existing options lookup", 5: "report assembly"}
+USES_LLM = {2}                        # steps that call the LLM (the viewer warns before rerunning them)
+CASE_FILES = [ROOT / "data/cases/practice/official_examples.json", ROOT / "data/cases/aitx_final_patients.json",
+              ROOT / "data/cases/validation/phase1_hf_unseen_genes.json"]
+
+
+def load_cases(path: Path | None, ids: list[str] | None) -> list[dict]:
+    """Cases from `path` (default: every file in CASE_FILES), optionally only the given ids."""
+    files = [path] if path else [f for f in CASE_FILES if f.exists()]
+    cases = []
+    for f in files:
+        data = json.loads(f.read_text())
+        cases += data if isinstance(data, list) else [data]
+    if ids:
+        missing = set(ids) - {c["id"] for c in cases}
+        if missing:
+            raise SystemExit(f"case id(s) not found: {sorted(missing)}")
+        cases = [c for c in cases if c["id"] in ids]
+    return cases
 
 
 class Context:
@@ -83,7 +102,8 @@ def run(cases: list[dict], start: int, stop: int, use_cache: bool = True) -> int
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cases", type=Path)
+    ap.add_argument("cases", type=Path, nargs="?", help="case JSON file (default: all files in CASE_FILES)")
+    ap.add_argument("--case", action="append", dest="ids", help="run only this case id (repeatable)")
     ap.add_argument("--from-step", type=int, default=1)
     ap.add_argument("--to-step", type=int, default=max(STEPS))
     ap.add_argument("--no-cache", action="store_true", help="bypass LLM and API caches")
@@ -94,8 +114,9 @@ def main() -> int:
             ap.error(f"step {k} is not available{note}; implemented steps: {sorted(STEPS)}")
     if args.from_step > args.to_step:
         ap.error("--from-step is after --to-step")
-    data = json.loads(args.cases.read_text())
-    return run(data if isinstance(data, list) else [data], args.from_step, args.to_step, not args.no_cache)
+    if not args.cases and not args.ids:
+        ap.error("give a case file, --case ID, or both")
+    return run(load_cases(args.cases, args.ids), args.from_step, args.to_step, not args.no_cache)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,9 @@ Usage:
     python scripts/build_viewer.py --lang en                # both languages; English by default
     python scripts/build_viewer.py --compare 20261030-1200  # compare with a named earlier snapshot
 
+This is the static export. For live pages (auto-refresh, rerun buttons) run scripts/viewer_app.py,
+which renders the same templates per request through render_page().
+
 Writes out/review/<timestamp>/ (index, cases/<id>, compare pages in Chinese `X.html` and English
 `X.en.html`, data/ copies of the step outputs it was built from, review.json) and
 out/review/index.html listing all snapshots. Every page has a 中文 / EN switch that opens the
@@ -28,6 +31,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx import runmeta  # noqa: E402
 
@@ -727,26 +731,20 @@ def snapshots_index() -> None:
 # ----------------------------------------------------------------------- main
 
 def contexts() -> dict[str, str]:
+    from run_pipeline import CASE_FILES
     out = {}
-    for f in [ROOT / "data/cases/practice/official_examples.json", ROOT / "data/cases/aitx_final_patients.json",
-              ROOT / "data/cases/validation/phase1_hf_unseen_genes.json"]:
+    for f in CASE_FILES:
         if f.exists():
             for c in json.loads(f.read_text()):
                 out[c["id"]] = c["patient"].get("clinical_context", "")
     return out
 
 
-def main() -> int:
-    global LANG
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--lang", choices=["zh", "en"], default="zh",
-                    help="default UI language when the browser has no stored choice (both are always built)")
-    ap.add_argument("--compare", help="snapshot name under out/review/ to compare with (default: previous one, same language)")
-    args = ap.parse_args()
-    global DEFAULT_LANG
-    DEFAULT_LANG = args.lang
+def collect() -> tuple[list[dict], list[str]]:
+    """All cases with a step 2 output, in overview order, plus problems found while loading.
+
+    Step status texts are in the current LANG (set LANG before calling)."""
     ids = sorted(p.stem for p in (OUT / "step2").glob("*.json") if p.stem != "sources_manifest")
-    ctx = contexts()
     cases, problems = [], []
     for cid in ids:
         c = load_case(cid)
@@ -754,13 +752,56 @@ def main() -> int:
             problems.append(f"{cid}: step 2 output has no provenance; regenerate with scripts/run_pipeline.py")
             continue
         cases.append(c)
+    return sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"])), problems
+
+
+def latest_snapshot(exclude: str | None = None) -> str | None:
+    if not REVIEW.exists():
+        return None
+    return next((p.name for p in sorted(REVIEW.iterdir(), reverse=True)
+                 if p.is_dir() and p.name != exclude and (p / "review.json").exists()), None)
+
+
+def render_page(rel: str) -> str | None:
+    """Render one page live from out/ (paths as in a snapshot: index.html, cases/<id>.en.html, ...).
+
+    Used by scripts/viewer_app.py; None if there is no such page. Not thread-safe (LANG is global)."""
+    global LANG
+    LANG = "en" if rel.endswith(".en.html") else "zh"
+    base = rel[:-len(".en.html")] if LANG == "en" else rel[:-len(".html")]
+    ordered, _ = collect()
+    if base.startswith("cases/"):
+        c = next((c for c in ordered if c["id"] == base[len("cases/"):]), None)
+        return case_page(c, contexts().get(c["id"], "")) if c else None
+    rows = [summary_row(c) for c in ordered]
+    live = L("实时（直接读取 out/）", "live (read from out/)")
+    if base == "index":
+        return index_page(rows, live, runmeta.code_commit())
+    if base == "compare":
+        prev_name = latest_snapshot()
+        prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
+        return compare_page(rows, prev, live, prev_name)
+    return None
+
+
+def main() -> int:
+    global LANG, DEFAULT_LANG, REVIEW
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--lang", choices=["zh", "en"], default="zh",
+                    help="default UI language when the browser has no stored choice (both are always built)")
+    ap.add_argument("--compare", help="snapshot name under out/review/ to compare with (default: previous one, same language)")
+    ap.add_argument("--review-dir", type=Path, default=REVIEW, help="where snapshots go (default out/review)")
+    args = ap.parse_args()
+    DEFAULT_LANG = args.lang
+    REVIEW = args.review_dir
+    ctx = contexts()
+    ordered, problems = collect()
     if problems:
         print("\n".join(problems))
     snap = time.strftime("%Y%m%d-%H%M%S")
     d = REVIEW / snap
     (d / "cases").mkdir(parents=True, exist_ok=True)
     (d / "data").mkdir(exist_ok=True)
-    ordered = sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"]))
     rows = [summary_row(c) for c in ordered]
     for c in ordered:
         for k in STEPS:
@@ -769,10 +810,9 @@ def main() -> int:
                 shutil.copy(src, d / "data" / f"step{k}-{c['id']}.json")
     commit = runmeta.code_commit()
     (d / "review.json").write_text(json.dumps({"schema": "review-v1", "snapshot": snap, "code_commit": commit,
-                                               "cases": rows, "trees": {c["id"]: c["tree"] for c in cases}},
+                                               "cases": rows, "trees": {c["id"]: c["tree"] for c in ordered}},
                                               indent=1, ensure_ascii=False))
-    prev_name = args.compare or next((p.name for p in sorted(REVIEW.iterdir(), reverse=True)
-                                      if p.is_dir() and p.name != snap and (p / "review.json").exists()), None)
+    prev_name = args.compare or latest_snapshot(exclude=snap)
     prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
     for lang in ("zh", "en"):
         LANG = lang
