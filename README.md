@@ -8,7 +8,8 @@
 | 2 | 疾病归一化 | ✅ 已验收（2026-10-28）：不用缓存的联网验收硬性项全过（练习病例 7 个标准答案、两个陷阱病例、ClinVar 精确匹配、缓存重跑一致）；离线测试 135 个全过；症状提取测试集精确率/召回率 1.0；已知局限见契约 |
 | 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：否定词规则、起病年龄映射到 HPO 起病术语、难题测试集（见 Step 2 契约 v2.5） |
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 + 静态快照导出；Step 1 三张平面图与 3D 结构已接入 |
-| 3 | 疗法匹配 | 未开始（3.0 契约待写，待办见 `docs/step3_contract_todo.md`） |
+| 3.0 | 证据账本与公共基础 | 实现完成，联网验收硬性项全过（2026-11-03）：证据账本（有来源 / 推理 / 阴性）、诊断分支（伞状展开、规则提拔、最多 3 个）、行动键标准化、行动记录（看板用）、基因特有规则层（系统起草，16 个基因 15 条规则）、HTTP 缓存按数据源过期。契约 `docs/step3_0_contract.md`；待你审阅规则否决后打标签 |
+| 3a–3e | 按章节检索证据 | 未开始 |
 | 4 | 查现成方案（试验、获批药物、文献） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 | 未开始 |
 
@@ -97,6 +98,20 @@ python3 scripts/run_pipeline.py --case PRAC-OTC --from-step 2
 
 LLM 缓存（`.cache/llm/`）的键包含模型名、API 地址、提示词版本和完整提示词正文；改提示词或换模型后自动失效。
 每条缓存还记录调用参数（temperature 等），参数不同不复用；设置了 `AITX_EXPECT_MODEL_PREFIX` 时，由其他模型生成的缓存也不复用。
+
+## 第 3.0 步：证据账本
+
+```bash
+python3 scripts/run_pipeline.py --from-step 3        # 由 Step 1/2 结果生成 out/step3/<病例ID>.json
+python3 scripts/draft_rules.py                        # 为 Step 2 结果中的全部基因起草规则 -> data/rules/<基因>.json
+python3 scripts/acceptance_step3_0.py                 # 联网验收
+python3 scripts/run_pipeline.py --from-step 3 --refresh-trials   # 正式生成报告前：强制刷新 ClinicalTrials.gov
+```
+
+- 规则由系统起草（GeneReviews 相关小节 + PubMed 摘要，LLM 只按编号选疾病、逐字引用，代码核对）。人工审查只能否决：
+  在规则文件里给该规则写 `"review": {"decision": "vetoed", "by": ..., "at": ..., "reason": ...}`；其他字段不能改（内容哈希保护）。
+- GeneReviews 全书取自 NCBI Literature Archive（`gene_NBK1116.tar.gz`，约 640 MB，放在 `.cache/`，不提交）。
+  许可：非商业研究用途、注明出处与版权、附原文链接、不得修改；引用一律逐字并带版权声明和章节链接。
 
 ## 审查用查看页面（Step 2.5）
 

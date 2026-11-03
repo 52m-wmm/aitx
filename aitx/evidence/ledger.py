@@ -31,6 +31,9 @@ SECTIONS = {   # report sections (template order, Summary excluded) -> evidence 
 TIERS = {**SECTIONS, "background": "background"}
 KINDS = ("sourced", "reasoning", "negative")
 STATUSES = ("candidate", "verified", "rejected")
+ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none")
+REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
+PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown")
 
 SOURCE_ID = {   # source type -> id format
     "url": r"https?://\S+",
@@ -126,6 +129,47 @@ def negative(section: str, applies_to: list[str], *, database: str, endpoint: st
     return e
 
 
+# ------------------------------------------------------------ action records (contract 1.4)
+
+def requirement_result(kind: str, patient_status: str) -> str:
+    """pass / fail / unknown for one requirement line; exclusion criteria are inverted."""
+    if patient_status == "unknown":
+        return "unknown"
+    meets = patient_status == "satisfies"
+    return ("fail" if meets else "pass") if kind == "exclusion" else ("pass" if meets else "fail")
+
+
+def status_from(results: list[str]) -> str:
+    """Branch status from its requirement results: any fail -> not applicable; else any unknown -> conditional."""
+    if "fail" in results:
+        return "not_applicable"
+    if "unknown" in results:
+        return "conditional"
+    return "applicable"
+
+
+def requirement(rid: str, kind: str, text: str, evidence_id: str, patient_fact: dict | None, patient_status: str,
+                applies_to: list[str], note: str = "") -> dict:
+    if kind not in REQ_KINDS or patient_status not in PATIENT_STATUSES:
+        raise ValueError(f"bad requirement kind/status {kind!r}/{patient_status!r}")
+    return {"id": rid, "kind": kind, "requirement": text, "requirement_evidence": evidence_id,
+            "applies_to": sorted(applies_to), "patient_fact": patient_fact, "patient_status": patient_status,
+            "result": requirement_result(kind, patient_status), "note": note}
+
+
+def action_record(action_key: str | None, section: str, label: str, applies_to: list[str],
+                  requirements: list[dict], evidence_ids: list[str], reasons: dict[str, str],
+                  searched_none: bool = False) -> dict:
+    """Status per branch is derived from the requirement lines (or searched_none); reasons: branch -> short text."""
+    by_branch = {}
+    for b in sorted(applies_to):
+        res = [r["result"] for r in requirements if b in r["applies_to"]]
+        st = "searched_none" if searched_none else status_from(res)
+        by_branch[b] = {"status": st, "reason": reasons.get(b, "")}
+    return {"action_key": action_key, "section": section, "label": label, "applies_to": sorted(applies_to),
+            "status_by_branch": by_branch, "requirements": requirements, "evidence_ids": evidence_ids}
+
+
 # ------------------------------------------------------------------ ledger
 
 class Ledger:
@@ -140,6 +184,7 @@ class Ledger:
         self.rules_skipped: list[dict] = []
         self.branch_assessment: list[dict] = []
         self.branch_order: list[str] = [b["id"] for b in branches]
+        self.actions: list[dict] = []
 
     def add(self, e: dict) -> dict:
         if e["kind"] == "reasoning" and e["status"] == "candidate":
@@ -211,10 +256,40 @@ class Ledger:
         chk("umbrella_branches_expanded",
             [b["id"] for b in self.branches if b.get("umbrella") and not (b.get("expanded_from") or b.get("not_expandable"))],
             "no unexpanded umbrella branch")
+        chk("action_records_consistent", self._action_problems(), "every action record is traceable and consistent")
         chk("drug_keys_normalized",
             [f"{e['action']['key']} ({e['section']})" for s in SECTIONS for e in self.in_section(s)
              if e["action"].get("normalized") is False], "all drugs normalized to RxNorm / ChEMBL", level="warn")
         return out
+
+    def _action_problems(self) -> list[str]:
+        bad, branch_ids = [], {b["id"] for b in self.branches}
+        missing = {m["variable"] for m in self.missing_information}
+        for a in self.actions:
+            tag = a.get("action_key") or f"{a['section']} (searched_none)"
+            if not set(a["applies_to"]) <= branch_ids or set(a["status_by_branch"]) != set(a["applies_to"]):
+                bad.append(f"{tag}: branches")
+            for r in a["requirements"]:
+                ev = self.evidence.get(r["requirement_evidence"]) or {}
+                if ev.get("status") != "verified" or not quote_in(r["requirement"], str(ev.get("quote", ""))):
+                    bad.append(f"{tag}: requirement {r['id']} not verbatim in verified evidence {r['requirement_evidence']}")
+                if r["result"] != requirement_result(r["kind"], r["patient_status"]):
+                    bad.append(f"{tag}: requirement {r['id']} result inconsistent")
+                if r["patient_status"] != "unknown" and not (r.get("patient_fact") or {}).get("quote"):
+                    bad.append(f"{tag}: requirement {r['id']} has no quoted patient fact")
+                if r["result"] == "unknown" and (r.get("patient_fact") or {}).get("field", r["id"]) not in missing:
+                    bad.append(f"{tag}: unknown {(r.get('patient_fact') or {}).get('field', r['id'])} not in missing_information")
+            for b, st in a["status_by_branch"].items():
+                if st["status"] == "searched_none":
+                    neg = [e for e in a["evidence_ids"] if self.evidence.get(e, {}).get("kind") == "negative"
+                           and self.evidence[e]["status"] == "verified"]
+                    if a.get("action_key") or not neg:
+                        bad.append(f"{tag}: searched_none needs no action key and a verified negative search")
+                elif st["status"] != status_from([r["result"] for r in a["requirements"] if b in r["applies_to"]]):
+                    bad.append(f"{tag}: status for {b} does not follow its requirements")
+                if not st.get("reason"):
+                    bad.append(f"{tag}: no reason for {b}")
+        return bad
 
     def to_dict(self) -> dict:
         ev = sorted(self.evidence.values(), key=lambda e: (list(TIERS).index(e["section"]), e["id"]))
@@ -222,6 +297,6 @@ class Ledger:
                 "branch_assessment": self.branch_assessment, "branch_order": self.branch_order,
                 "patient_context": self.patient_context, "missing_information": self.missing_information,
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
-                "sections_status": self.sections_status,
+                "sections_status": self.sections_status, "actions": self.actions,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}

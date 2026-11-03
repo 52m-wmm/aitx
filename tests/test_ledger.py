@@ -152,3 +152,94 @@ def test_llm_items_record_model():
 def test_unknown_section_rejected():
     with pytest.raises(ValueError):
         LG.reasoning("x", "summary", ["b1"], [])
+
+
+# ------------------------------------------------------ action records (contract 1.4)
+
+NEDO = ("Nedosiran is indicated to lower urinary oxalate levels in children 9 years of age and older and adults "
+        "with primary hyperoxaluria type 1.")
+TRIAL = ("Inclusion Criteria: Age 2 to 18 years. Exclusion Criteria: Prior liver transplantation. Estimated GFR below 30.")
+
+
+def _ev(led, text, quote, key, section="existing_targeted_therapies"):
+    return led.add(LG.sourced(quote, section, ["b1", "b2"], {"type": "url", "id": "https://example.org/x", "url": "u"},
+                              quote, text, 1, action={"key": key}))
+
+
+AGE7 = {"field": "age", "value": "7 years", "quote": "7-year-old", "step": 2}
+
+
+def test_requirement_results_invert_exclusion():
+    assert LG.requirement_result("inclusion", "satisfies") == "pass"
+    assert LG.requirement_result("label_condition", "does_not_satisfy") == "fail"
+    assert LG.requirement_result("exclusion", "satisfies") == "fail"        # meets an exclusion -> not eligible
+    assert LG.requirement_result("exclusion", "does_not_satisfy") == "pass"
+    assert LG.requirement_result("exclusion", "unknown") == "unknown"
+
+
+def test_label_age_limit_makes_action_not_applicable():
+    led = LG.Ledger("P", B)
+    ev = _ev(led, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
+    req = LG.requirement("r1", "label_condition", "9 years of age and older", ev["id"], AGE7, "does_not_satisfy", ["b1", "b2"])
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1", "b2"], [req], [ev["id"]],
+                         {"b1": "approved only for age ≥ 9", "b2": "approved only for age ≥ 9"})
+    led.actions.append(a)
+    assert a["status_by_branch"]["b1"]["status"] == "not_applicable"
+    assert check(led, "action_records_consistent")["status"] == "pass"
+
+
+def test_trial_criteria_line_by_line_and_unknown_is_conditional():
+    led = LG.Ledger("P", B)
+    ev = _ev(led, TRIAL, "Inclusion Criteria: Age 2 to 18 years. Exclusion Criteria: Prior liver transplantation. Estimated GFR below 30.",
+             "trial:NCT01234567", "clinical_trial_eligibility")
+    reqs = [LG.requirement("inc1", "inclusion", "Age 2 to 18 years", ev["id"], AGE7, "satisfies", ["b1", "b2"]),
+            LG.requirement("exc1", "exclusion", "Prior liver transplantation", ev["id"], None, "unknown", ["b1", "b2"]),
+            LG.requirement("exc2", "exclusion", "Estimated GFR below 30", ev["id"], None, "unknown", ["b1"])]
+    a = LG.action_record("trial:NCT01234567", "clinical_trial_eligibility", "Trial X", ["b1", "b2"], reqs, [ev["id"]],
+                         {"b1": "eligible if no prior transplant and eGFR ≥ 30", "b2": "eligible if no prior transplant"})
+    led.actions.append(a)
+    assert [a["status_by_branch"][b]["status"] for b in ("b1", "b2")] == ["conditional", "conditional"]
+    # unknown facts must be listed as missing information
+    assert check(led, "action_records_consistent")["status"] == "fail"
+    led.missing_information.append({"variable": "exc1", "why_it_matters": "trial exclusion"})
+    led.missing_information.append({"variable": "exc2", "why_it_matters": "trial exclusion"})
+    assert check(led, "action_records_consistent")["status"] == "pass"
+
+
+def test_status_can_differ_between_branches():
+    led = LG.Ledger("P", B)
+    ev = _ev(led, NEDO, "with primary hyperoxaluria type 1", "drug:rxcui:2675287")
+    req = LG.requirement("r1", "label_condition", "with primary hyperoxaluria type 1", ev["id"],
+                         {"field": "diagnosis", "value": "PH1", "quote": "PH1", "step": 2}, "satisfies", ["b1"])
+    req2 = LG.requirement("r2", "label_condition", "with primary hyperoxaluria type 1", ev["id"],
+                          {"field": "diagnosis", "value": "PH2", "quote": "PH2", "step": 2}, "does_not_satisfy", ["b2"])
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1", "b2"], [req, req2],
+                         [ev["id"]], {"b1": "labelled for PH1", "b2": "not labelled for PH2"})
+    assert (a["status_by_branch"]["b1"]["status"], a["status_by_branch"]["b2"]["status"]) == ("applicable", "not_applicable")
+
+
+def test_requirement_must_be_verbatim_and_result_untampered():
+    led = LG.Ledger("P", B)
+    ev = _ev(led, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
+    req = LG.requirement("r1", "label_condition", "patients aged 12 and over", ev["id"], AGE7, "does_not_satisfy", ["b1"])
+    led.actions.append(LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1"], [req],
+                                        [ev["id"]], {"b1": "age"}))
+    assert "not verbatim" in check(led, "action_records_consistent")["detail"]
+    led2 = LG.Ledger("P", B)
+    ev2 = _ev(led2, NEDO, "children 9 years of age and older", "drug:rxcui:2675287")
+    req2 = LG.requirement("r1", "label_condition", "9 years of age and older", ev2["id"], AGE7, "does_not_satisfy", ["b1"])
+    a = LG.action_record("drug:rxcui:2675287", "existing_targeted_therapies", "Nedosiran", ["b1"], [req2], [ev2["id"]], {"b1": "age"})
+    a["status_by_branch"]["b1"]["status"] = "applicable"                     # hand-set status against its requirements
+    led2.actions.append(a)
+    assert "does not follow" in check(led2, "action_records_consistent")["detail"]
+
+
+def test_searched_none_row_needs_negative_evidence():
+    led = LG.Ledger("P", B)
+    neg = led.add(LG.negative("clinical_trial_eligibility", ["b1", "b2"], database="clinicaltrials.gov", endpoint="u",
+                              query="SPTLC1", queried_at=1, n_results=0, response_count=0))
+    led.actions.append(LG.action_record(None, "clinical_trial_eligibility", "No recruiting trials", ["b1", "b2"], [],
+                                        [neg["id"]], {"b1": "none found", "b2": "none found"}, searched_none=True))
+    assert check(led, "action_records_consistent")["status"] == "pass"
+    led.actions.append(LG.action_record(None, "drug_repurposing", "None", ["b1"], [], [], {"b1": "x"}, searched_none=True))
+    assert check(led, "action_records_consistent")["status"] == "fail"

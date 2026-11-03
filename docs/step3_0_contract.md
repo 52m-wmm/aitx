@@ -152,6 +152,31 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 | 13d | 兜底键药物进入章节 | — | 允许，`normalized = false`；查看页面显示"未标准化"警告 |
 | 14 | 同一药物在同一章节有两条证据（两个来源） | — | 允许（同一行动多条证据） |
 
+### 1.4 行动记录（`actions`，行动看板用；3a 起每个子节点必须填写）
+
+Step 3 完成后，查看页面以"行动看板"为主视图（树状图保留为折叠的全景目录）。为此账本里每个行动除证据条目外，
+还有一条行动记录（2026-11-03 审阅补充；看板页面在 Step 3 全部完成后再做）：
+
+| 字段 | 含义 |
+| --- | --- |
+| `action_key` | 1.3 节的行动键；`searched_none` 行为 null |
+| `section`、`label` | 所属章节；显示名（英文，如 "Lumasiran"） |
+| `applies_to` | 适用的诊断分支（有歧义时看板并排对比各分支） |
+| `status_by_branch` | 每个分支一项：`{status, reason}`。status ∈ `applicable` / `not_applicable` / `conditional` / `searched_none`；reason 是一句简短英文理由（如 "approved only for age ≥ 9"） |
+| `requirements` | 条件核对，**每条要求一行**（临床试验的入组、排除标准逐条拆开）：`{id, kind: inclusion / exclusion / label_condition / other, requirement: 要求原文（逐字）, requirement_evidence: 证据 id, applies_to, patient_fact: {field, value, quote, step} 或 null, patient_status: satisfies / does_not_satisfy / unknown, result: pass / fail / unknown, note}` |
+| `evidence_ids` | 支撑这个行动的证据条目 |
+
+**规则（3.0 的校验，第 8 节）：**
+
+1. `requirement` 必须逐字出现在 `requirement_evidence` 那条已核对证据的引用里（要求原文可追溯到说明书、试验登记记录等）。
+2. `patient_fact` 只能来自 Step 1 / Step 2 的结果，带原文引用；病例没写的事实为 null，`patient_status = unknown`。
+3. `result` 由代码推出，不由 LLM 填：入组 / 说明书条件 / 其他要求 `satisfies → pass`、`does_not_satisfy → fail`；
+   **排除标准反过来**：`satisfies → fail`（病人符合排除标准即不合格）、`does_not_satisfy → pass`；`unknown → unknown`。
+4. 状态与逐条结果一致：某分支下有任何 `fail` → `not_applicable`；没有 `fail` 但有 `unknown` → `conditional`；
+   全部 `pass`（或没有要求）→ `applicable`；`searched_none` 只用于没有找到行动的章节，必须引用阴性证据（1.2 节）。
+5. 结果为 `unknown` 的要求，其 `patient_fact.field` 必须登记在 `missing_information` 里（Summary 的缺失信息由此生成）。
+6. `applies_to`、`status_by_branch` 的键都必须是本账本的分支；`status_by_branch` 覆盖 `applies_to` 的每个分支。
+
 ## 2. 诊断分支（branches）
 
 | Step 2 状态 | 分支 |
@@ -272,6 +297,7 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 | 某章节对某分支没有 verified 行动时，有 verified 的阴性证据 | fail |
 | 阴性证据的 `n_results` 与缓存响应一致、`queried_at` 为真实请求时间 | 该条 `rejected` |
 | 被否决的规则没有被加载 | fail |
+| 行动记录：要求原文可追溯、`result` 与 `patient_status` / `kind` 一致、各分支状态与逐条结果一致、未知事实已登记为缺失信息、分支键合法（1.4 节） | fail |
 | `conditions` 中未知变量都在 `missing_information` 里 | fail |
 | 伞状分支已展开或注明无法展开 | fail |
 | 加载的规则都有核对过的来源 | 该规则不加载，记 warn |
