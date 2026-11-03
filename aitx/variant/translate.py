@@ -133,6 +133,8 @@ def retranslate(t: Transcript, cv: CVariant) -> dict:
 def _window(t: Transcript, mut: str, first_aa: int) -> dict:
     """Codons around the first changed residue, normal frame vs variant frame (for the viewer)."""
     lo = max(1, first_aa - WINDOW_CODONS // 2 + 1)
-    return {"first_codon": lo, "changed_codon": first_aa,
-            "reference": _codons(t.seq, t.cds_start, lo, WINDOW_CODONS),
-            "variant": _codons(mut, t.cds_start, lo, WINDOW_CODONS)}
+    ref, var = _codons(t.seq, t.cds_start, lo, WINDOW_CODONS), _codons(mut, t.cds_start, lo, WINDOW_CODONS)
+    by_n = {c["n"]: c["codon"] for c in ref}
+    for c in var:
+        c["changed"] = by_n.get(c["n"]) != c["codon"]
+    return {"first_codon": lo, "changed_codon": first_aa, "reference": ref, "variant": var}

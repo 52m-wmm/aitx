@@ -161,3 +161,16 @@ def test_patient_summary_biallelic(tx):
     s = patient_summary([a, b])
     assert s["genes"]["TEST1"]["allelic_model"].startswith("biallelic")
     assert s["all_checks_pass"]
+
+
+def test_transcript_layout(tx):
+    p = build_profile(v("c.300dup", f"p.({S.aa3(101)}101CysfsTer3)"), tx)
+    lay = p.transcript_layout
+    assert [e["length"] for e in lay["exons"]] == [100, 200, 150, 213]
+    assert lay["cds"] == [S.CDS_START, S.CDS_END] and lay["variant_mrna"] == [310, 310]
+    assert lay["new_stop_mrna"] == 316                       # ptc c.306 -> mRNA 316, exon 3
+    j = {x["after_exon"]: x for x in lay["junctions"]}
+    assert not j[1]["downstream_of_new_stop"] and not j[2]["downstream_of_new_stop"]
+    assert j[3]["nt_downstream_of_new_stop"] == 134 and j[3]["more_than_50nt_downstream"]
+    missense = build_profile(v("c.149T>G", f"p.{S.aa3(50)}50Ser"), tx).transcript_layout
+    assert missense["new_stop_mrna"] is None and not any(x["downstream_of_new_stop"] for x in missense["junctions"])

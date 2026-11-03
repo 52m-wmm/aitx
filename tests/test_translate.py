@@ -97,9 +97,16 @@ def test_codon_window(tx):
     ref = {c["n"]: c for c in w["reference"]}
     var = {c["n"]: c for c in w["variant"]}
     assert ref[50]["codon"] == "ATT" and var[50]["codon"] == "AGT" and var[50]["aa"] == "Ser"
-    assert all(ref[k] == var[k] for k in ref if k != 50)
+    assert all(ref[k]["codon"] == var[k]["codon"] and not var[k]["changed"] for k in ref if k != 50)
+    assert var[50]["changed"]
 
 
 def test_intronic_not_computable(tx):
     status, rt = check(tx, "c.90+1G>A", "p.?")
     assert status == "warn" and rt["status"] == "not_computable"
+
+
+def test_codon_window_marks_changed_codons(tx):
+    w = retranslate(tx, parse_cdna("c.300dup"))["codon_window"]     # frameshift at codon 101
+    changed = [c["n"] for c in w["variant"] if c["changed"]]
+    assert changed and changed[0] == 101 and all(not c["changed"] for c in w["variant"] if c["n"] < 101)

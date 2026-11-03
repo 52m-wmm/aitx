@@ -52,6 +52,7 @@ class VariantProfile:
     retranslation: dict = field(default_factory=dict)
     normal_residues_retained: int | None = None      # residues of the normal sequence before the change
     frameshift_tail_aa: int | None = None            # frameshift: novel (out-of-frame) residues before the stop
+    transcript_layout: dict = field(default_factory=dict)   # exons, CDS, variant / new stop, junctions (for the viewer)
 
     @property
     def ok(self) -> bool:
@@ -341,6 +342,29 @@ def _mechanism(vclass: str, nmd: dict, retained: float | None) -> dict:
                      "residue; must be established from literature and functional data"}
 
 
+def _layout(cv: CVariant, t: Transcript, nmd: dict) -> dict:
+    """Transcript drawn to scale: exons (mRNA coordinates), CDS, variant and new-stop positions,
+    and each exon-exon junction marked relative to the new stop (EJC rule used by NMD)."""
+    var = None
+    if not (cv.start.intronic or cv.end.intronic):
+        var = [t.c_to_mrna(cv.start.base, cv.start.utr3), t.c_to_mrna(cv.end.base, cv.end.utr3)]
+    ptc_c = nmd.get("ptc_c_position_approx")
+    stop = t.c_to_mrna(max(ptc_c, 1)) if ptc_c is not None else None
+    junctions = []
+    for i, (_, e) in enumerate(t.exons[:-1], start=1):
+        dist = None if stop is None else e - stop          # junction nt downstream of the new stop
+        junctions.append({"after_exon": i, "mrna_position": e,
+                          "nt_downstream_of_new_stop": dist,
+                          "downstream_of_new_stop": dist is not None and dist > 0,
+                          "more_than_50nt_downstream": dist is not None and dist > NMD_JUNCTION_NT})
+    return {"mrna_length": len(t.seq), "cds": [t.cds_start, t.cds_end],
+            "exons": [{"number": i, "start": s, "end": e, "length": e - s + 1}
+                      for i, (s, e) in enumerate(t.exons, start=1)],
+            "variant_mrna": var, "new_stop_mrna": stop,
+            "new_stop_note": "stop position from the stated p. notation, confirmed by self-check 6" if stop else None,
+            "junctions": junctions}
+
+
 def _allelic_state(zygosity: str) -> dict:
     z = (zygosity or "").lower()
     if z == "homozygous":
@@ -413,6 +437,7 @@ def build_profile(variant: dict, t: Transcript) -> VariantProfile:
         retranslation=rt,
         normal_residues_retained=normal_kept,
         frameshift_tail_aa=(ptc_aa - pv.pos) if (ptc_aa and pv.kind == "frameshift" and pv.pos) else None,
+        transcript_layout=_layout(cv, t, nmd),
     )
 
 

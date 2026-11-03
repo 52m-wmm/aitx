@@ -198,6 +198,17 @@ line-height:1.5;box-shadow:0 4px 14px rgba(0,0,0,.15)}.hl:hover .tip,.hl:focus .
 .mx td.c{text-align:center;font-variant-numeric:tabular-nums}.mx th.v{writing-mode:vertical-rl;transform:rotate(180deg);
 max-height:180px;font-weight:500}details>summary{cursor:pointer}ul.tree{list-style:none;padding-left:18px;margin:4px 0}
 ul.tree li{border-left:1px solid var(--line);padding-left:10px;margin:3px 0}code{font-size:12.5px}
+svg.fig{width:100%;height:auto;display:block;margin:6px 0 2px;font-family:-apple-system,"PingFang SC",sans-serif}
+svg.fig text{fill:var(--fg);font-size:12px}svg.fig text.m{fill:var(--muted);font-size:11px}
+svg.fig text.mono{font-family:ui-monospace,Menlo,monospace;font-size:14px}
+svg.fig .box{fill:var(--card);stroke:var(--line)}svg.fig .box.chg{fill:var(--hlx);stroke:var(--fail);stroke-width:2}
+svg.fig .normal{fill:var(--barp)}svg.fig .garbled{fill:var(--warn)}svg.fig .lost{fill:none;stroke:var(--grey);stroke-dasharray:4 3}
+svg.fig .del{fill:var(--hlx);stroke:var(--fail);stroke-width:1.5}svg.fig .mark{stroke:var(--fail);stroke-width:2.5;fill:var(--fail)}
+svg.fig .stop{stroke:var(--fg);stroke-width:2.5}svg.fig .utr{fill:var(--grey);opacity:.55}svg.fig .cds{fill:var(--bar)}
+svg.fig .jn{stroke:var(--grey);stroke-width:1.2}svg.fig .jn.dn{stroke:var(--warn);stroke-width:2}
+svg.fig .jn.dn50{stroke:var(--fail);stroke-width:2.5}svg.fig .axis{stroke:var(--line)}
+.figs h4{margin:12px 0 0;font-size:13px}.legend{font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:10px;margin:0 4px 0 10px;vertical-align:middle;border-radius:2px}
 """
 
 
@@ -279,6 +290,161 @@ def _variant_lengths(v: dict) -> tuple[str, str, str, str, str, str]:
     return total, kept, retr, border, ptc_exon, reasons
 
 
+# ------------------------------------------------------------ step 1 figures (SVG)
+# All positions come from the step 1 output (retranslation, transcript_layout, nmd);
+# the figures only scale them to pixels.
+
+FIG_W = 760
+
+
+def _svg(h: int, body: str, label: str) -> str:
+    return (f"<svg class='fig' viewBox='0 0 {FIG_W} {h}' role='img' aria-label='{e(label)}' "
+            f"xmlns='http://www.w3.org/2000/svg'>{body}</svg>")
+
+
+def _txt(x: float, y: float, t: str, cls: str = "", anchor: str = "start") -> str:
+    c = f" class='{cls}'" if cls else ""
+    return f"<text x='{x:.1f}' y='{y:.1f}' text-anchor='{anchor}'{c}>{e(t)}</text>"
+
+
+def fig_codons(v: dict) -> str:
+    w = (v.get("retranslation") or {}).get("codon_window")
+    if not w:
+        return f"<p class='muted'>{L('无密码子数据（内含子变异或旧版输出）', 'no codon data (intronic variant or older output)')}</p>"
+    ref, var = w["reference"], w["variant"]
+    x0, cw, n = 92, 82, max(len(ref), len(var))
+    h = 150
+    parts = [_txt(8, 62, L("正常", "Normal")), _txt(8, 126, L("变异后", "Variant"))]
+    for i in range(n):
+        x = x0 + i * cw
+        if i < len(ref):
+            r = ref[i]
+            hot = r["n"] == w["changed_codon"]
+            parts.append(_txt(x + cw / 2 - 4, 18, f"#{r['n']}", "m", "middle"))
+            parts.append(f"<rect class='box{' chg' if hot else ''}' x='{x}' y='28' width='{cw - 8}' height='44' rx='5'/>")
+            parts.append(_txt(x + cw / 2 - 4, 48, r["codon"], "mono", "middle"))
+            parts.append(_txt(x + cw / 2 - 4, 66, r["aa"], "m", "middle"))
+        if i < len(var):
+            c = var[i]
+            parts.append(f"<rect class='box{' chg' if c['changed'] else ''}' x='{x}' y='92' width='{cw - 8}' height='44' rx='5'/>")
+            parts.append(_txt(x + cw / 2 - 4, 112, c["codon"], "mono", "middle"))
+            parts.append(_txt(x + cw / 2 - 4, 130, c["aa"], "m", "middle"))
+    return _svg(h, "".join(parts), L("密码子对比", "Codon comparison"))
+
+
+def fig_protein(v: dict) -> str:
+    rt = v.get("retranslation") or {}
+    L0 = v["protein_length"]
+    nm = v.get("nmd") or {}
+    ext = nm.get("protein_extended_by_aa")
+    vlen = rt.get("variant_protein_length") or L0
+    scale_max = max(L0, vlen)
+    x0, wbar = 92, FIG_W - 92 - 24
+    def X(aa: float) -> float:
+        return x0 + wbar * aa / scale_max
+    parts = [_txt(8, 34, L("正常", "Normal")), _txt(8, 90, L("变异后", "Variant")),
+             f"<rect class='normal' x='{x0}' y='22' width='{X(L0) - x0:.1f}' height='16' rx='3'/>",
+             _txt(x0, 56, "1", "m"), _txt(X(L0), 56, f"{L0} aa", "m", "end")]
+    cls, kept, tail = v["variant_class"], v.get("normal_residues_retained"), v.get("frameshift_tail_aa")
+    y = 78
+    note = ""
+    if cls in ("frameshift", "nonsense") and kept is not None:
+        parts.append(f"<rect class='lost' x='{x0}' y='{y}' width='{X(L0) - x0:.1f}' height='16' rx='3'/>")
+        parts.append(f"<rect class='normal' x='{x0}' y='{y}' width='{max(X(kept) - x0, 1.5):.1f}' height='16' rx='3'/>")
+        if tail:
+            parts.append(f"<rect class='garbled' x='{X(kept):.1f}' y='{y}' width='{max(X(kept + tail) - X(kept), 1.5):.1f}' height='16'/>")
+        stop = v.get("ptc_aa_position")
+        if stop:
+            sx = X(stop - 1)
+            parts.append(f"<line class='stop' x1='{sx:.1f}' y1='{y - 6}' x2='{sx:.1f}' y2='{y + 22}'/>")
+            parts.append(_txt(min(sx + 4, FIG_W - 150), y + 36, L(f"终止（第 {stop} 位）", f"stop (residue {stop})")))
+        if ext:
+            note = L(f"比正常长 {ext} aa", f"{ext} aa longer than normal")
+    elif cls == "missense" or cls == "start_lost":
+        parts.append(f"<rect class='normal' x='{x0}' y='{y}' width='{X(L0) - x0:.1f}' height='16' rx='3'/>")
+        pos = v.get("first_affected_aa") or 1
+        fc = rt.get("first_changed_aa") or {}
+        mx = X(pos - 0.5)
+        parts.append(f"<line class='mark' x1='{mx:.1f}' y1='{y - 8}' x2='{mx:.1f}' y2='{y + 24}'/>")
+        label = f"{fc.get('reference', '')}{pos}{fc.get('variant', '')}"
+        parts.append(_txt(min(max(mx, x0 + 40), FIG_W - 60), y + 38, label, "", "middle"))
+        if cls == "start_lost" and rt.get("next_inframe_met"):
+            note = L(f"起始密码子丢失；下一个框内 Met 在第 {rt['next_inframe_met']} 位",
+                     f"start codon lost; next in-frame Met at residue {rt['next_inframe_met']}")
+    elif cls.startswith("inframe") and rt.get("reference_span"):
+        a, b = rt["reference_span"]
+        parts.append(f"<rect class='normal' x='{x0}' y='{y}' width='{X(L0) - x0:.1f}' height='16' rx='3'/>")
+        if b >= a:
+            parts.append(f"<rect class='del' x='{X(a - 1):.1f}' y='{y - 4}' width='{max(X(b) - X(a - 1), 2):.1f}' height='24'/>")
+            parts.append(_txt(X((a + b) / 2), y + 38, L(f"缺失 {a}–{b}（{b - a + 1} aa）", f"deleted {a}–{b} ({b - a + 1} aa)"), "", "middle"))
+        if rt.get("inserted"):
+            ix = X(a - 0.5)
+            parts.append(f"<line class='mark' x1='{ix:.1f}' y1='{y - 8}' x2='{ix:.1f}' y2='{y + 24}'/>")
+            parts.append(_txt(ix, y - 12, L(f"插入 {rt['inserted']}", f"inserted {rt['inserted']}"), "", "middle"))
+    else:
+        parts.append(f"<rect class='normal' x='{x0}' y='{y}' width='{X(L0) - x0:.1f}' height='16' rx='3'/>")
+    legend = (f"<div class='legend'><i style='background:var(--barp)'></i>{L('正常序列', 'normal sequence')}"
+              f"<i style='background:var(--warn)'></i>{L('移码后的乱码序列', 'out-of-frame sequence')}"
+              f"<i style='border:1px dashed var(--grey)'></i>{L('丢失部分', 'lost part')}"
+              f"<i style='background:var(--fail)'></i>{L('改变位置', 'changed position')}"
+              + (f" · <b>{e(note)}</b>" if note else "") + "</div>")
+    return _svg(128, "".join(parts), L("蛋白长度条", "Protein length bar")) + legend
+
+
+def fig_exons(v: dict) -> str:
+    lay = v.get("transcript_layout") or {}
+    if not lay.get("exons"):
+        return f"<p class='muted'>{L('结果文件里没有外显子结构（旧版输出）', 'no exon structure in the result file (older output)')}</p>"
+    total, (cs, ce) = lay["mrna_length"], lay["cds"]
+    x0, wbar = 14, FIG_W - 28
+    def X(pos: float) -> float:
+        return x0 + wbar * (pos - 1) / total
+    exons = lay["exons"]
+    many = len(exons) > 20
+    var_ex, stop_ex = (v.get("exon") or {}).get("number"), (v.get("nmd") or {}).get("ptc_exon")
+    parts = []
+    y = 48
+    for ex in exons:
+        s0, e0 = ex["start"], ex["end"]
+        # UTR parts thin, coding part thick
+        segs = [(s0, min(e0, cs - 1), "utr"), (max(s0, cs), min(e0, ce), "cds"), (max(s0, ce + 1), e0, "utr")]
+        for a, b, kind in segs:
+            if b >= a:
+                hh = 22 if kind == "cds" else 10
+                parts.append(f"<rect class='{kind}' x='{X(a):.2f}' y='{y + (22 - hh) / 2:.1f}' "
+                             f"width='{max(X(b + 1) - X(a), 0.8):.2f}' height='{hh}'/>")
+        n = ex["number"]
+        if not many or n in (1, len(exons), var_ex, stop_ex) or n % 10 == 0:
+            parts.append(_txt(X((s0 + e0) / 2), y + 40, str(n), "m", "middle"))
+    for j in lay["junctions"]:
+        cls = "jn dn50" if j["more_than_50nt_downstream"] else "jn dn" if j["downstream_of_new_stop"] else "jn"
+        jx = X(j["mrna_position"] + 0.5)
+        parts.append(f"<line class='{cls}' x1='{jx:.2f}' y1='{y - 6}' x2='{jx:.2f}' y2='{y + 28}'/>")
+    if lay.get("variant_mrna"):
+        vx = X(lay["variant_mrna"][0])
+        parts.append(f"<path class='mark' d='M{vx - 6:.1f},{y - 22} L{vx + 6:.1f},{y - 22} L{vx:.1f},{y - 10} Z'/>")
+        parts.append(_txt(min(max(vx, x0 + 40), FIG_W - 60), y - 28, L("变异", "variant"), "", "middle"))
+    if lay.get("new_stop_mrna"):
+        sx = X(lay["new_stop_mrna"])
+        parts.append(f"<line class='stop' x1='{sx:.1f}' y1='{y - 4}' x2='{sx:.1f}' y2='{y + 58}'/>")
+        parts.append(_txt(min(max(sx, x0 + 40), FIG_W - 70), y + 72, L("新终止", "new stop"), "", "middle"))
+    nmd = v.get("nmd") or {}
+    side = (f"<p><b>NMD: {e(str(nmd.get('prediction')))}</b> — {e('; '.join(nmd.get('reasons') or []))}</p>")
+    legend = (f"<div class='legend'><i style='background:var(--bar)'></i>{L('编码区', 'coding')}"
+              f"<i style='background:var(--grey);opacity:.55'></i>UTR"
+              f"<i style='background:var(--grey)'></i>{L('拼接标记（外显子连接点）', 'splice junction')}"
+              f"<i style='background:var(--warn)'></i>{L('新终止之后（≤50 nt）', 'after new stop (≤50 nt)')}"
+              f"<i style='background:var(--fail)'></i>{L('新终止之后 >50 nt（会触发 NMD 的信号）', 'after new stop, >50 nt (NMD signal)')}"
+              f" · {L(f'{len(exons)} 个外显子，按 NCBI 记录的真实长度按比例绘制', f'{len(exons)} exons, drawn to scale from the NCBI record')}</div>")
+    return _svg(132, "".join(parts), L("外显子图", "Exon diagram")) + legend + side
+
+
+def v_figures(v: dict) -> str:
+    return (f"<div class='figs'><h4>{L('① 密码子对比（变异附近）', '1 Codons around the change')}</h4>{fig_codons(v)}"
+            f"<h4>{L('② 蛋白长度（按比例）', '2 Protein length (to scale)')}</h4>{fig_protein(v)}"
+            f"<h4>{L('③ 外显子与拼接标记（按比例）', '3 Exons and splice junctions (to scale)')}</h4>{fig_exons(v)}</div>")
+
+
 def v_variant(s1: dict | None) -> str:
     if not s1:
         return f"<p class='muted'>{L('没有第 1 步输出。', 'No step 1 output.')}</p>"
@@ -305,7 +471,7 @@ def v_variant(s1: dict | None) -> str:
  · {L('新终止所在外显子', 'exon of the new stop')}: {ptc_exon}<div class='muted'>{reasons}</div></td></tr>
 <tr><th>{L('机制初判', 'Mechanism hypothesis')}</th><td colspan='3'>{e(mech['hypothesis'])}
  ({L('置信度', 'confidence')} {e(mech['confidence'])}): {e(mech['basis'])}</td></tr>
-</table><details><summary>{L('自检', 'Self-checks')} {len(v['checks'])}</summary><table>{checks}</table></details>
+</table>{v_figures(v)}<details><summary>{L('自检', 'Self-checks')} {len(v['checks'])}</summary><table>{checks}</table></details>
 <p class='muted'>{L('来源', 'Sources')}: {src}</p></div>""")
     return "".join(out)
 

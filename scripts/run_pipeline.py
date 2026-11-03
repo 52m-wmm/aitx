@@ -5,6 +5,7 @@ Usage:
     python scripts/run_pipeline.py data/cases/aitx_final_patients.json --from-step 2  # reuse out/step1
     python scripts/run_pipeline.py cases.json --from-step 2 --to-step 2
     python scripts/run_pipeline.py --case PRAC-OTC --from-step 2           # one case, looked up in CASE_FILES
+    python scripts/run_pipeline.py --from-step 2                           # every case in CASE_FILES
 
 With --from-step N, outputs of steps < N are read from out/step<k>/<id>.json and must
 have been produced from the same case input (and on the upstream files that exist
@@ -114,8 +115,6 @@ def main() -> int:
             ap.error(f"step {k} is not available{note}; implemented steps: {sorted(STEPS)}")
     if args.from_step > args.to_step:
         ap.error("--from-step is after --to-step")
-    if not args.cases and not args.ids:
-        ap.error("give a case file, --case ID, or both")
     return run(load_cases(args.cases, args.ids), args.from_step, args.to_step, not args.no_cache)
 
 
