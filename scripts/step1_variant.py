@@ -11,20 +11,39 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from aitx.variant.profile import build_profile, patient_summary  # noqa: E402
+from aitx.variant import structure  # noqa: E402
+from aitx.variant.profile import VariantProfile, build_profile, patient_summary  # noqa: E402
 from aitx.variant.transcript import fetch_transcript  # noqa: E402
+
+
+def structure_facts(p: VariantProfile, t) -> dict:
+    """AlphaFold facts for the first affected residue; never fails step 1 (network or data gaps are recorded)."""
+    if os.environ.get("AITX_SKIP_STRUCTURE"):
+        return {"status": "skipped", "error": "AITX_SKIP_STRUCTURE is set"}
+    pos = p.first_affected_aa
+    if p.variant_class == "splice" or pos is None or pos > t.protein_length:
+        pos = None
+    lost = (p.normal_residues_retained + 1) if (p.variant_class in ("frameshift", "nonsense")
+                                                  and p.normal_residues_retained is not None) else None
+    try:
+        return structure.annotate(t.protein_id, p.gene, t.protein, pos, lost_from=lost)
+    except Exception as e:  # noqa: BLE001 - structure is optional context, not a step 1 check
+        return {"status": "unavailable", "error": f"{type(e).__name__}: {e}"}
 
 
 def run_case(case: dict) -> dict:
     profiles = []
     for v in case["patient"]["genotype"]:
         t = fetch_transcript(v["transcript"])
-        profiles.append(build_profile(v, t))
+        p = build_profile(v, t)
+        p.structure = structure_facts(p, t)
+        profiles.append(p)
     return {
         "id": case["id"],
         "step": "variant_profile",

@@ -13,7 +13,7 @@ from aitx.variant.hgvs import AA3_TO_1, CVariant, PVariant, parse_cdna, parse_pr
 from aitx.variant.transcript import Transcript
 from aitx.variant.translate import aa3, retranslate
 
-SCHEMA_VERSION = "variant-profile-v1.1"
+SCHEMA_VERSION = "variant-profile-v1.2"
 NMD_RULES = "nmd-v1"
 NMD_JUNCTION_NT = 50
 NMD_START_PROXIMAL_NT = 150
@@ -53,6 +53,7 @@ class VariantProfile:
     normal_residues_retained: int | None = None      # residues of the normal sequence before the change
     frameshift_tail_aa: int | None = None            # frameshift: novel (out-of-frame) residues before the stop
     transcript_layout: dict = field(default_factory=dict)   # exons, CDS, variant / new stop, junctions (for the viewer)
+    structure: dict = field(default_factory=dict)           # AlphaFold facts (aitx.variant.structure), added by the CLI
 
     @property
     def ok(self) -> bool:

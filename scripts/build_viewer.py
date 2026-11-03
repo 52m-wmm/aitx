@@ -208,6 +208,8 @@ svg.fig .stop{stroke:var(--fg);stroke-width:2.5}svg.fig .utr{fill:var(--grey);op
 svg.fig .jn{stroke:var(--grey);stroke-width:1.2}svg.fig .jn.dn{stroke:var(--warn);stroke-width:2}
 svg.fig .jn.dn50{stroke:var(--fail);stroke-width:2.5}svg.fig .axis{stroke:var(--line)}
 .figs h4{margin:12px 0 0;font-size:13px}.legend{font-size:12px;color:var(--muted)}
+.mol3d{position:relative;width:100%;height:420px;border:1px solid var(--line);border-radius:8px;margin:6px 0;
+background:var(--card)}.mol3d .ph{padding:16px;color:var(--muted)}.molbar{margin:4px 0;font-size:12.5px}
 .legend i{display:inline-block;width:12px;height:10px;margin:0 4px 0 10px;vertical-align:middle;border-radius:2px}
 """
 
@@ -439,10 +441,62 @@ def fig_exons(v: dict) -> str:
     return _svg(132, "".join(parts), L("外显子图", "Exon diagram")) + legend + side
 
 
+def fig_structure(v: dict) -> str:
+    """Section 4: AlphaFold facts from the step 1 output; the 3D view itself is added by viewer_app."""
+    st = v.get("structure") or {}
+    if not st or st.get("status") in ("skipped", "unavailable"):
+        why = st.get("error") or L("结果文件里没有结构信息（旧版输出）", "no structure facts in the result file (older output)")
+        return f"<p class='muted'>{L('没有可用的 AlphaFold 结构', 'No AlphaFold structure available')}: {e(why)}</p>"
+    src = st["source"]
+    af_page = f"https://alphafold.ebi.ac.uk/entry/{src['alphafold_isoform']}"
+    when = time.strftime("%Y-%m-%d", time.gmtime(src["accessed_at"])) if src.get("accessed_at") else "?"
+    rows = [(L("来源", "Source"), f"{link(af_page, src['alphafold_entry'])} · {L('模型版本', 'model')} v{e(str(src['model_version']))}"
+             f" ({e(str(src.get('model_created') or '')[:10])}) · {link(src['pdb_url'], 'PDB')} · "
+             f"{L('访问于', 'accessed')} {when} · UniProt {link('https://www.uniprot.org/uniprotkb/' + src['uniprot'], src['uniprot'])}")]
+    notes = list(st.get("notes") or [])
+    m = st.get("mapping") or {}
+    if m:
+        rows.append((L("位置映射", "Position mapping"), e(f"RefSeq {m['refseq_position']} → model {m['model_position']} ({m['method']})")
+                     + (f"<div class='muted'>{e(m['note'])}</div>" if m.get("note") else "")))
+    if st["status"] == "residue_not_in_model":
+        rows.append((L("变异位置", "Variant residue"), tag("warn", L("不在模型中", "not in the model"))))
+    pl = st.get("plddt")
+    if pl:
+        bad = "" if pl["reliable"] else " " + tag("fail", L("该区域结构预测不可靠", "structure prediction unreliable here"))
+        rows.append((L("预测可信度 pLDDT", "Confidence (pLDDT)"), f"<b>{pl['value']}</b> ({e(pl['band'])}){bad}"))
+    rsa = st.get("rsa")
+    if rsa:
+        cls = {"buried": L("埋在内部", "buried"), "exposed": L("暴露在表面", "exposed")}[rsa["class"]]
+        extra = (" " + tag("warn", L("接近阈值", "borderline"))) if rsa.get("borderline") else ""
+        extra += "" if rsa["reliable"] else " " + tag("fail", L("所在区域预测不可靠，仅供参考", "unreliable region"))
+        rows.append((L("相对溶剂可及性 RSA", "Relative solvent accessibility"),
+                     f"<b>{rsa['value']}</b> → {cls}{extra} <span class='muted'>(SASA {rsa['sasa_A2']} Å² / "
+                     f"max {rsa['max_asa_A2']} Å²)</span><div class='muted'>{e(rsa['method'])}</div>"))
+    nb = st.get("neighbours_8A")
+    if nb is not None:
+        rows.append((L("8 Å 内的邻居", "Neighbours within 8 Å"),
+                     f"{len(nb)}: " + e(", ".join(f"{n['aa']}{n['position']}" for n in nb))))
+    if st.get("lost_model_range"):
+        a, b = st["lost_model_range"]
+        rows.append((L("丢失部分（模型编号）", "Lost part (model numbering)"), f"{a}–{b}"))
+    for n in notes:
+        rows.append((L("说明", "Note"), e(n)))
+    table = "<table>" + "".join(f"<tr><th style='width:190px'>{h}</th><td>{d}</td></tr>" for h, d in rows) + "</table>"
+    pos = (st.get("residue") or {}).get("model_position")
+    data = {"file": src["local_file"], "pos": pos, "plddt": (pl or {}).get("value"),
+            "neighbours": [n["position"] for n in (nb or [])], "lost": st.get("lost_model_range"),
+            "label": f"{(st.get('residue') or {}).get('model_aa', '')}{pos or ''}"}
+    holder = (f"<div class='mol3d' data-mol='{e(json.dumps(data))}'><div class='ph'>"
+              f"{L('3D 视图需要在本地应用中打开：python3 scripts/viewer_app.py', '3D view needs the local app: python3 scripts/viewer_app.py')}"
+              f"</div></div>")
+    return table + holder
+
+
 def v_figures(v: dict) -> str:
     return (f"<div class='figs'><h4>{L('① 密码子对比（变异附近）', '1 Codons around the change')}</h4>{fig_codons(v)}"
             f"<h4>{L('② 蛋白长度（按比例）', '2 Protein length (to scale)')}</h4>{fig_protein(v)}"
-            f"<h4>{L('③ 外显子与拼接标记（按比例）', '3 Exons and splice junctions (to scale)')}</h4>{fig_exons(v)}</div>")
+            f"<h4>{L('③ 外显子与拼接标记（按比例）', '3 Exons and splice junctions (to scale)')}</h4>{fig_exons(v)}"
+            f"<h4>{L('④ 3D 蛋白结构（AlphaFold 预测）', '4 3D protein structure (AlphaFold prediction)')}</h4>{fig_structure(v)}</div>")
 
 
 def v_variant(s1: dict | None) -> str:

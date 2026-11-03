@@ -27,7 +27,7 @@ def test_cli_end_to_end(tmp_path):
     cases.write_text(json.dumps(case))
     out = tmp_path / "out"
 
-    env = {**os.environ, "AITX_CACHE_DIR": str(cache), "NCBI_API_KEY": ""}
+    env = {**os.environ, "AITX_CACHE_DIR": str(cache), "NCBI_API_KEY": "", "AITX_SKIP_STRUCTURE": "1"}
     env.pop("NCBI_API_KEY")
     r = subprocess.run([sys.executable, str(ROOT / "scripts/step1_variant.py"), str(cases), "--out", str(out)],
                        capture_output=True, text=True, env=env, cwd=tmp_path)

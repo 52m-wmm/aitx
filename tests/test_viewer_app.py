@@ -163,5 +163,56 @@ def test_static_export_still_works(tmp_path):
     assert all(p.exists() for p in pages) and len(pages) > 3
     for p in pages:                                       # opens from disk: no server parts
         t = p.read_text()
-        assert "/events" not in t and "/api/" not in t and "app-rerun" not in t
+        assert "EventSource(" not in t and "fetch('/api/" not in t and "app-rerun" not in t and "3Dmol" not in t
     assert json.loads((snap / "review.json").read_text())["cases"]
+
+
+# ------------------------------------------------- run records, runs page, 3D
+
+def test_history_keeps_newest_200_and_deletes_old_logs(tmp_path):
+    r = VA.Runner(runs_dir=tmp_path)
+    lines = []
+    for i in range(205):
+        rid = f"run{i:03d}"
+        (tmp_path / f"{rid}.log").write_text("x")
+        lines.append(json.dumps({"id": rid, "case_id": "C", "started": i}))
+    (tmp_path / "history.jsonl").write_text("\n".join(lines) + "\n")
+    removed = r.trim()
+    assert removed == [f"run{i:03d}" for i in range(5)]
+    kept = (tmp_path / "history.jsonl").read_text().splitlines()
+    assert len(kept) == 200 and json.loads(kept[0])["id"] == "run005" and json.loads(kept[-1])["id"] == "run204"
+    assert not (tmp_path / "run000.log").exists() and (tmp_path / "run005.log").exists()
+    assert r.trim() == []
+
+
+def test_finished_run_triggers_trim(tmp_path):
+    r = VA.Runner(runs_dir=tmp_path, pipeline=fake_pipeline(tmp_path))
+    (tmp_path / "history.jsonl").write_text(
+        "\n".join(json.dumps({"id": f"old{i}", "case_id": "C"}) for i in range(VA.MAX_RUN_RECORDS)) + "\n")
+    wait(r, r.start("PRAC-OTC", 2, 2, False).id)
+    ids = [json.loads(x)["id"] for x in (tmp_path / "history.jsonl").read_text().splitlines()]
+    assert len(ids) == VA.MAX_RUN_RECORDS and ids[0] == "old1"
+
+
+def test_overview_panel_collapsed_with_5_recent_and_runs_page(tmp_path, stub_pages):
+    c = client(VA.Runner(runs_dir=tmp_path), tmp_path)
+    idx = c.get("/index.html").text
+    assert "<details class='card' id='app-runs'>" in idx                 # collapsed by default (JS opens it when running)
+    assert "data-limit='5'" in idx and "href='/runs.html'" in idx
+    runs = c.get("/runs.html").text
+    assert "data-limit='200'" in runs and "运行记录" in runs
+    assert "Run records" in c.get("/runs.en.html").text
+    assert c.get("/api/runs?limit=5").json() == {"active": [], "recent": []}
+
+
+def test_structure_files_and_3d_script(tmp_path, monkeypatch):
+    monkeypatch.setattr(VA.structure, "STRUCT_DIR", tmp_path)
+    (tmp_path / "AF-P00001-F1-model_v6.pdb").write_text("ATOM")
+    monkeypatch.setattr(VA.build_viewer, "render_page",
+                        lambda rel: "<html><body><main><h1>T</h1><div class='mol3d' data-mol='{}'></div></main></body></html>")
+    c = client(VA.Runner(runs_dir=tmp_path), tmp_path)
+    assert c.get("/structures/AF-P00001-F1-model_v6.pdb").text == "ATOM"
+    assert c.get("/structures/history.jsonl").status_code == 404
+    assert c.get("/structures/..%2Fx.pdb").status_code == 404
+    page = c.get("/cases/X-1.html").text
+    assert VA.MOL_LIB in page and "按 AlphaFold 预测可信度" in page

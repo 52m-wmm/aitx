@@ -12,8 +12,11 @@ What it adds over the static export (scripts/build_viewer.py, still the way to m
         python3 -u scripts/run_pipeline.py --case <id> --from-step N [--no-cache]
     as a subprocess (no second copy of the pipeline logic) and streams its output to the page.
     One run per case at a time; --no-cache needs an explicit confirmation flag.
-  - run status: active runs and recent run records on the overview page
-    (records in out/viewer_runs/history.jsonl, logs in out/viewer_runs/<run id>.log)
+  - run status: running tasks and the last 5 records on the overview page (collapsed unless
+    something is running); all records on /runs.html. Records in out/viewer_runs/history.jsonl,
+    logs in out/viewer_runs/<run id>.log; only the newest 200 are kept (older logs deleted)
+  - 3D structure: AlphaFold models cached by step 1 (.cache/alphafold/) are served from
+    /structures/ and shown with 3Dmol.js (pinned CDN version); positions come from step 1
 
 The app computes nothing about cases and never calls the LLM itself; every number on a page
 comes from the result files, and everything here can be done from the command line.
@@ -25,6 +28,7 @@ import asyncio
 import contextlib
 import importlib
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -34,7 +38,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,11 +48,13 @@ sys.path.insert(0, str(SCRIPTS))
 
 import build_viewer  # noqa: E402
 import run_pipeline  # noqa: E402
+from aitx.variant import structure  # noqa: E402
 
 PIPELINE = SCRIPTS / "run_pipeline.py"
 RUNS_DIR = ROOT / "out" / "viewer_runs"
 WATCH_INTERVAL_S = 1.0
-RECENT_RUNS = 20
+RECENT_ON_INDEX = 5
+MAX_RUN_RECORDS = 200
 
 
 # ------------------------------------------------------------------ templates
@@ -70,7 +76,8 @@ class Templates:
             if m != self.mtime:
                 importlib.reload(build_viewer)
                 self.mtime = m
-            out = build_viewer.render_page(rel)
+            out = runs_page("en" if rel.endswith(".en.html") else "zh") if rel.startswith("runs.") \
+                else build_viewer.render_page(rel)
         return None if out is None else inject(out, rel, "en" if rel.endswith(".en.html") else "zh")
 
 
@@ -94,13 +101,35 @@ def rerun_panel(case_id: str, lang: str) -> str:
             f"background:var(--card);border:1px solid var(--line);padding:8px;font-size:12px'></pre></div>")
 
 
-def runs_panel(lang: str) -> str:
+def _runs_table(lang: str, limit: int) -> str:
     head = "".join(f"<th>{h}</th>" for h in (
         _t(lang, "开始时间", "Started"), _t(lang, "病例", "Case"), _t(lang, "步骤", "Steps"),
         _t(lang, "缓存", "Cache"), _t(lang, "结果", "Result"), _t(lang, "用时", "Duration")))
-    return (f"<div class='card' id='app-runs'><h3>{_t(lang, '运行状态', 'Runs')}</h3>"
-            f"<p class='muted'>{_t(lang, '静态快照导出：python3 scripts/build_viewer.py', 'Static snapshot export: python3 scripts/build_viewer.py')}</p>"
-            f"<table><tr>{head}</tr><tbody id='runrows'></tbody></table></div>")
+    return f"<table><tr>{head}</tr><tbody id='runrows' data-limit='{limit}'></tbody></table>"
+
+
+def runs_panel(lang: str) -> str:
+    """Overview: running tasks + the last RECENT_ON_INDEX records, collapsed unless something is running."""
+    more = _t(lang, "全部运行记录", "all run records")
+    return (f"<details class='card' id='app-runs'><summary><b>{_t(lang, '运行状态', 'Runs')}</b> "
+            f"<span class='muted' id='runsummary'></span></summary>"
+            f"<p class='muted'>{_t(lang, '静态快照导出：python3 scripts/build_viewer.py', 'Static snapshot export: python3 scripts/build_viewer.py')}"
+            f" · <a href='/{_runs_page(lang)}'>{more}</a></p>{_runs_table(lang, RECENT_ON_INDEX)}</details>")
+
+
+def _runs_page(lang: str) -> str:
+    return "runs.en.html" if lang == "en" else "runs.html"
+
+
+def runs_page(lang: str) -> str:
+    title = _t(lang, "运行记录", "Run records")
+    body = (f"<h1>{title}</h1><p class='muted'>"
+            + _t(lang, f"最多保留最近 {MAX_RUN_RECORDS} 条（out/viewer_runs/history.jsonl），更早的记录和日志自动删除。",
+                 f"The last {MAX_RUN_RECORDS} records are kept (out/viewer_runs/history.jsonl); older records and "
+                 "their logs are deleted.")
+            + f"</p>{_runs_table(lang, MAX_RUN_RECORDS)}")
+    build_viewer.LANG = lang
+    return build_viewer.page(title, body, "runs")
 
 
 LIVE_JS = """<script>
@@ -116,9 +145,14 @@ function fmt(r){ var dur=r.duration_s==null?'…':r.duration_s.toFixed(1)+' s';
      (r.status==='ok'?'<span class="tag pass">'+T.ok+'</span>':'<span class="tag fail">'+T.failed+'</span>');
   return '<tr><td>'+new Date(r.started*1000).toLocaleString()+'</td><td><a href="/cases/'+r.case_id+page.suffix+'">'+r.case_id+
     '</a></td><td>'+r.from_step+'–'+r.to_step+'</td><td>'+(r.no_cache?T.nocache:T.cache)+'</td><td>'+res+'</td><td>'+dur+'</td></tr>'; }
-function loadRuns(){ fetch('/api/runs').then(function(x){return x.json();}).then(function(d){
-  var tb=document.getElementById('runrows'); if(tb){ var rows=d.active.concat(d.recent);
+function loadRuns(){ var tb=document.getElementById('runrows');
+  var lim=tb?+tb.dataset.limit:1;
+  fetch('/api/runs?limit='+lim).then(function(x){return x.json();}).then(function(d){
+  if(tb){ var rows=d.active.concat(d.recent);
     tb.innerHTML=rows.length?rows.map(fmt).join(''):'<tr><td colspan=6 class=muted>'+T.none+'</td></tr>';
+    var box=document.getElementById('app-runs'), sum=document.getElementById('runsummary');
+    if(box && d.active.length) box.open=true;
+    if(sum) sum.textContent=d.active.length?(d.active.length+' '+T.running):(d.recent.length?T.lastrun+' '+new Date(d.recent[0].started*1000).toLocaleString():'');
     if(d.active.length) setTimeout(loadRuns,2000); }
   if(rr){ var mine=d.active.filter(function(r){return r.case_id===caseId;}); if(mine.length) follow(mine[0].id); }
 });}
@@ -146,7 +180,7 @@ loadRuns();
 def inject(page_html: str, rel: str, lang: str) -> str:
     texts = {"running": _t(lang, "运行中", "running"), "ok": _t(lang, "成功", "ok"), "failed": _t(lang, "失败", "failed"),
              "cache": _t(lang, "用缓存", "cached"), "nocache": _t(lang, "不用缓存", "no cache"),
-             "none": _t(lang, "还没有运行记录", "no runs yet"), "reloading": _t(lang, "即将刷新页面", "reloading"),
+             "none": _t(lang, "还没有运行记录", "no runs yet"), "lastrun": _t(lang, "最近一次：", "last run:"), "reloading": _t(lang, "即将刷新页面", "reloading"),
              "confirm": _t(lang, "不用缓存会重新调用 LLM 并产生费用，确定吗？",
                            "Without the cache the LLM is called again and this costs money. Continue?")}
     js = LIVE_JS % {"texts": json.dumps(texts, ensure_ascii=False),
@@ -156,7 +190,65 @@ def inject(page_html: str, rel: str, lang: str) -> str:
         page_html = page_html.replace("</h1>", "</h1>" + rerun_panel(cid, lang), 1)
     elif rel.startswith("index"):
         page_html = page_html.replace("</h1>", "</h1>" + runs_panel(lang), 1)
+    nav = _t(lang, "版本对比", "Run comparison") + "</a>"
+    page_html = page_html.replace(nav, nav + f" · <a href='/{_runs_page(lang)}'>{_t(lang, '运行记录', 'Run records')}</a>", 1)
+    if "class='mol3d'" in page_html:
+        js += MOL_JS % {"texts": json.dumps(mol_texts(lang), ensure_ascii=False)}
     return page_html.replace("</body>", js + "</body>", 1)
+
+
+MOL_LIB = "https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.4.2/3Dmol-min.js"   # pinned, open source (BSD)
+STRUCT_FILE = re.compile(r"^AF-[A-Za-z0-9-]+-model_v[0-9]+\.pdb$")
+
+
+def mol_texts(lang: str) -> dict:
+    return {"plddt": _t(lang, "按 AlphaFold 预测可信度（pLDDT）着色", "Colour by AlphaFold confidence (pLDDT)"),
+            "at": _t(lang, "变异位置", "variant residue"), "reset": _t(lang, "回到变异位置", "Back to the variant"),
+            "unreliable": _t(lang, "该区域结构预测不可靠", "structure prediction unreliable here"),
+            "legend_var": _t(lang, "红：变异氨基酸 · 橙：8 Å 内的邻居 · 灰：截短后丢失的部分",
+                             "red: variant residue · orange: neighbours within 8 Å · grey: part lost by truncation"),
+            "legend_pl": _t(lang, "pLDDT：深蓝 >90 很高 · 浅蓝 70–90 可信 · 黄 50–70 低 · 橙 <50 很低",
+                            "pLDDT: dark blue >90 very high · light blue 70–90 confident · yellow 50–70 low · orange <50 very low"),
+            "fail": _t(lang, "3D 视图加载失败", "3D view failed to load")}
+
+
+MOL_JS = """<script src='""" + MOL_LIB + """'></script><script>
+(function(){
+var T=%(texts)s;
+function css(n,f){var v=getComputedStyle(document.documentElement).getPropertyValue(n).trim();return v||f;}
+function af(b){return b>90?'#0053d6':(b>=70?'#65cbf3':(b>=50?'#ffdb13':'#ff7d45'));}
+document.querySelectorAll('.mol3d').forEach(function(box){
+  var d=JSON.parse(box.getAttribute('data-mol'));
+  fetch('/structures/'+d.file).then(function(r){if(!r.ok) throw new Error('HTTP '+r.status);return r.text();})
+  .then(function(pdb){
+    box.innerHTML='';
+    var v=$3Dmol.createViewer(box,{backgroundColor:css('--card','#ffffff')});
+    v.addModel(pdb,'pdb');
+    var mode='variant', focus=d.pos?{resi:[d.pos].concat(d.neighbours)}:{};
+    function draw(){
+      v.removeAllLabels();
+      if(mode==='plddt'){ v.setStyle({},{cartoon:{colorfunc:function(a){return af(a.b);}}}); }
+      else { v.setStyle({},{cartoon:{color:css('--bar','#54aeff'),opacity:0.7}});
+        if(d.lost) v.setStyle({resi:d.lost[0]+'-'+d.lost[1]},{cartoon:{color:'#9aa0a6',opacity:0.4}}); }
+      if(d.neighbours.length) v.addStyle({resi:d.neighbours},{stick:{colorscheme:'orangeCarbon',radius:0.2}});
+      if(d.pos){ v.addStyle({resi:d.pos},{stick:{color:'#e5322d',radius:0.35},sphere:{color:'#e5322d',scale:0.55}});
+        v.addLabel(d.label,{fontSize:13,fontColor:'#ffffff',backgroundColor:'#cf222e',backgroundOpacity:0.9},{resi:d.pos,atom:'CA'}); }
+      document.getElementById(lid).textContent=mode==='plddt'?T.legend_pl:T.legend_var;
+      v.render();
+    }
+    var lid='legend-'+Math.random().toString(36).slice(2);
+    var bar=document.createElement('div'); bar.className='molbar';
+    var conf=d.plddt==null?'':(T.at+' '+d.label+'：pLDDT <b>'+d.plddt+'</b>'+(d.plddt<70?' <span class="tag fail">'+T.unreliable+'</span>':''));
+    bar.innerHTML='<label><input type="checkbox"> '+T.plddt+'</label> &nbsp; '+conf+' &nbsp; <button type="button">'+T.reset+'</button>'+
+      '<div class="legend" id="'+lid+'"></div>';
+    box.parentNode.insertBefore(bar,box);
+    bar.querySelector('input').addEventListener('change',function(ev){mode=ev.target.checked?'plddt':'variant';draw();});
+    function home(){ v.zoomTo(focus); if(d.pos){ v.center({resi:d.pos}); v.zoom(0.6); } v.render(); }
+    bar.querySelector('button').addEventListener('click',home);
+    draw(); home();
+  }).catch(function(err){ box.innerHTML='<div class="ph">'+T.fail+': '+err+'</div>'; });
+});
+})();</script>"""
 
 
 # ------------------------------------------------------------------- watcher
@@ -170,7 +262,8 @@ class Watcher:
         self._stop = threading.Event()
 
     def scan(self) -> dict[str, float]:
-        files = list((self.root / "out").glob("step*/*.json")) + [self.root / "scripts" / "build_viewer.py"]
+        files = list((self.root / "out").glob("step*/*.json")) + [self.root / "scripts" / "build_viewer.py",
+                                                                    self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}
 
     def poll(self) -> None:
@@ -253,8 +346,28 @@ class Runner:
             self.active.pop(run.case_id, None)
             with (self.dir / "history.jsonl").open("a") as h:
                 h.write(json.dumps(run.record(), ensure_ascii=False) + "\n")
+            self.trim()
 
-    def history(self, n: int = RECENT_RUNS) -> list[dict]:
+    def trim(self, keep: int = MAX_RUN_RECORDS) -> list[str]:
+        """Keep the newest `keep` records; delete older ones together with their log files."""
+        p = self.dir / "history.jsonl"
+        if not p.exists():
+            return []
+        lines = [x for x in p.read_text().splitlines() if x.strip()]
+        if len(lines) <= keep:
+            return []
+        old, lines = lines[:-keep], lines[-keep:]
+        removed = []
+        for x in old:
+            rec = json.loads(x)
+            log = self.dir / f"{rec['id']}.log"
+            if log.exists():
+                log.unlink()
+            removed.append(rec["id"])
+        p.write_text("\n".join(lines) + "\n")
+        return removed
+
+    def history(self, n: int = MAX_RUN_RECORDS) -> list[dict]:
         p = self.dir / "history.jsonl"
         if not p.exists():
             return []
@@ -316,8 +429,16 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
         return StreamingResponse(gen(), media_type="text/event-stream")
 
     @app.get("/api/runs")
-    def list_runs():
-        return {"active": [r.record() for r in runner.active.values()], "recent": runner.history()}
+    def list_runs(limit: int = RECENT_ON_INDEX):
+        return {"active": [r.record() for r in runner.active.values()],
+                "recent": runner.history(max(1, min(limit, MAX_RUN_RECORDS)))}
+
+    @app.get("/structures/{name}")
+    def structure_file(name: str):
+        p = structure.STRUCT_DIR / name
+        if not STRUCT_FILE.match(name) or not p.exists():
+            raise HTTPException(404, "no such structure file")
+        return FileResponse(p, media_type="chemical/x-pdb")
 
     @app.post("/api/runs", status_code=201)
     def start_run(req: RunRequest):
