@@ -17,6 +17,7 @@ of samples, at the most specific level the majority supports.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import os
 import re
@@ -111,15 +112,16 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
         entry = json.loads(path.read_text())
         if _cache_usable(entry, cfg):
             return entry
-    for attempt in range(3):
+    attempts = 5
+    for attempt in range(attempts):
         try:
             resp = llm.chat(messages, **CALL_PARAMS)
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
                 raise RuntimeError(f"LLM API refused the request: HTTP {e.code} {e.reason}") from e
-            if attempt == 2:
+            if attempt == attempts - 1:
                 raise
-            time.sleep(3 * (attempt + 1))
+            time.sleep(5 * (attempt + 1))
             print(f"[llm] transient error, retrying: {e}", flush=True)
             continue
         choice = resp["choices"][0]

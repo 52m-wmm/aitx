@@ -589,6 +589,47 @@ def case_page(c: dict, context: str) -> str:
 
 # ------------------------------------------------------------- index, compare
 
+def legend() -> str:
+    """How to read the overview columns (mirrors resolve.select / resolve.confidence)."""
+    items = [
+        (L("分组", "Group"), L(
+            "练习：官网 Phase 0 示例题（data/cases/practice/official_examples.json），可用于调试；"
+            "验证（干净）：Phase 1 Hugging Face 数据集中练习和评测都没出现过的基因（AITX-00007 DDC），规则定稿前不看结果、不据此调规则；"
+            "验证（已用于发现问题）：同来源，但已用来发现问题（AITX-00011 KCNT1），不再算留出集；"
+            "评测：比赛的 4 个评测病例（data/cases/aitx_final_patients.json）。",
+            "Practice: official Phase 0 examples (data/cases/practice/official_examples.json), fine for debugging. "
+            "Validation (clean): a Phase 1 Hugging Face case whose gene appears in no practice or evaluation case "
+            "(AITX-00007 DDC); rules are never tuned on it. Validation (used): same source, already used to find issues "
+            "(AITX-00011 KCNT1), so no longer held out. Evaluation: the 4 challenge cases (data/cases/aitx_final_patients.json).")),
+        (L("依据", "Basis"), L(
+            "按优先级从高到低：原文点名（临床描述写出了疾病名或 OMIM/ORPHA 编号）> ClinVar 变异级证据（同一变异的 P/LP 记录关联到该病）"
+            "> 遗传方式分层（只有它落在最好的遗传方式层）> 症状分（同一层里按 HPO 症状相似度比较）；"
+            "唯一候选：排除后只剩这一个。前一级能定就不看后一级。",
+            "Highest priority first: named in the text (disease name or OMIM/ORPHA number in the clinical text) > "
+            "ClinVar variant-level evidence (P/LP record for this exact variant linked to the disease) > inheritance tier "
+            "(the only candidate in the best inheritance tier) > phenotype score (HPO similarity within that tier). "
+            "Only candidate: the only one left after exclusions. A lower level is used only if the higher ones do not decide.")),
+        (L("置信度", "Confidence"), L(
+            "检查三项：① 基因-疾病证据强度为 Definitive/Strong；② 遗传方式吻合；③ 选择依据明确（原文点名，或 ClinVar ≥2 星，"
+            "或症状分领先 ≥20%）。三项全满足为 high，缺一项为 moderate，缺两项及以上为 low。另外：遗传方式只是条件吻合直接为 low；"
+            "所选疾病没有症状注释时最高 moderate；按原文或 ClinVar 选出、但症状分落后最高分 ≥20% 时再降一级。",
+            "Three checks: (1) gene-disease validity Definitive/Strong; (2) inheritance consistent; (3) clear basis "
+            "(named in the text, ClinVar >= 2 stars, or phenotype lead >= 20%). All three: high; one missing: moderate; "
+            "two or more missing: low. Also: conditional inheritance forces low; no phenotype annotations caps at moderate; "
+            "chosen by text or ClinVar while its phenotype score trails the best by >= 20% drops one level.")),
+        (L("状态", "Status"), L(
+            "已确定：有唯一首选；有歧义：前几名差距小于 20%，或三次 LLM 抽样结果不一致，或 unknown 遗传方式的候选症状分高出 ≥20%，"
+            "后续步骤要对每个并列诊断分别处理；未确定：没有合格候选。",
+            "Resolved: one primary. Ambiguous: top candidates within 20%, LLM samples disagree, or an unknown-inheritance "
+            "candidate scores >= 20% higher; later steps handle each tied diagnosis. Unresolved: no eligible candidate.")),
+        (L("并列数", "Tied"), L(
+            "与首选并列、需要一起考虑的其他候选个数（状态为“已确定”时为 0）。",
+            "Number of other candidates tied with the primary and carried forward (0 when resolved).")),
+    ]
+    dl = "".join(f"<tr><th style='white-space:nowrap'>{h}</th><td>{e(t)}</td></tr>" for h, t in items)
+    return f"<details open><summary>{L('怎么看这张表', 'How to read this table')}</summary><table>{dl}</table></details>"
+
+
 def index_page(rows: list[dict], snap: str, commit: str) -> str:
     trs = []
     for r in rows:
@@ -602,7 +643,7 @@ def index_page(rows: list[dict], snap: str, commit: str) -> str:
             L("置信度", "Confidence"), L("依据", "Basis"), L("并列数", "Tied"), L("报错/警告", "Errors / warnings")]
     intro = L(f"快照 {snap} · 代码 {commit} · {len(rows)} 个病例。点病例编号看详情。",
               f"Snapshot {snap} · code {commit} · {len(rows)} cases. Click a case for details.")
-    body = (f"<h1>{L('审查总表', 'Review overview')}</h1><p class='muted'>{e(intro)}</p><div class='wrap'><table><tr>"
+    body = (f"<h1>{L('审查总表', 'Review overview')}</h1><p class='muted'>{e(intro)}</p>{legend()}<div class='wrap'><table><tr>"
             + "".join(f"<th>{h}</th>" for h in head) + f"</tr>{''.join(trs)}</table></div>")
     return page(L("审查总表", "Review overview"), body, "index")
 

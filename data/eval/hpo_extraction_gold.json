@@ -29,16 +29,60 @@
   },
   {
    "id": "PRAC-CFTR-F508del",
-   "context": "15-year-old male with cystic fibrosis",
-   "annotations": [],
+   "context": "A 15-year-old male with a diagnosis of cystic fibrosis presents with chronic sinopulmonary disease characterized by persistent respiratory symptoms and recurrent infections. He also has exocrine pancreatic insufficiency requiring enzyme replacement therapy and exhibits features of male infertility consistent with congenital bilateral absence of the vas deferens (CBAVD).",
+   "annotations": [
+    {
+     "quote": "chronic sinopulmonary disease",
+     "status": "present",
+     "acceptable": [
+      "HP:0005425",
+      "HP:0011109",
+      "HP:0006528"
+     ]
+    },
+    {
+     "quote": "recurrent infections",
+     "status": "present",
+     "acceptable": [
+      "HP:0002205",
+      "HP:0002719",
+      "HP:0005425"
+     ]
+    },
+    {
+     "quote": "exocrine pancreatic insufficiency",
+     "status": "present",
+     "acceptable": [
+      "HP:0001738"
+     ]
+    },
+    {
+     "quote": "male infertility",
+     "status": "present",
+     "acceptable": [
+      "HP:0003251"
+     ]
+    },
+    {
+     "quote": "congenital bilateral absence of the vas deferens (CBAVD)",
+     "status": "present",
+     "acceptable": [
+      "HP:0012873"
+     ]
+    }
+   ],
    "negatives": [
     {
-     "quote": "cystic fibrosis",
+     "quote": "diagnosis of cystic fibrosis",
      "why": "diagnosis name, not a phenotype"
     },
     {
      "quote": "15-year-old male",
      "why": "age and sex"
+    },
+    {
+     "quote": "enzyme replacement therapy",
+     "why": "treatment"
     }
    ]
   },
@@ -87,7 +131,7 @@
   },
   {
    "id": "PRAC-OTC",
-   "context": "3-month-old male infant with hyperammonemia",
+   "context": "3-month-old male infant with hyperammonemia, lethargy, and poor feeding requiring hospitalization shortly after birth. The patient was born at 35 weeks' gestation and was diagnosed with OTC deficiency following genetic testing. Currently on protein-restricted diet, arginine supplementation, and alternative pathway therapy.",
    "annotations": [
     {
      "quote": "hyperammonemia",
@@ -95,12 +139,43 @@
      "acceptable": [
       "HP:0001987"
      ]
+    },
+    {
+     "quote": "lethargy",
+     "status": "present",
+     "acceptable": [
+      "HP:0001254"
+     ]
+    },
+    {
+     "quote": "poor feeding",
+     "status": "present",
+     "acceptable": [
+      "HP:0011968",
+      "HP:0008872"
+     ]
+    },
+    {
+     "quote": "born at 35 weeks' gestation",
+     "status": "present",
+     "acceptable": [
+      "HP:0001622",
+      "HP:0025664"
+     ]
     }
    ],
    "negatives": [
     {
      "quote": "3-month-old male infant",
      "why": "age and sex"
+    },
+    {
+     "quote": "OTC deficiency",
+     "why": "diagnosis name, not a phenotype"
+    },
+    {
+     "quote": "protein-restricted diet, arginine supplementation, and alternative pathway therapy",
+     "why": "treatment"
     }
    ]
   },

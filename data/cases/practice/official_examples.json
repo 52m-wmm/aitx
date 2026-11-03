@@ -41,7 +41,7 @@
           "zygosity": "homozygous"
         }
       ],
-      "clinical_context": "15-year-old male with cystic fibrosis"
+      "clinical_context": "A 15-year-old male with a diagnosis of cystic fibrosis presents with chronic sinopulmonary disease characterized by persistent respiratory symptoms and recurrent infections. He also has exocrine pancreatic insufficiency requiring enzyme replacement therapy and exhibits features of male infertility consistent with congenital bilateral absence of the vas deferens (CBAVD)."
     }
   },
   {
@@ -86,7 +86,7 @@
           "zygosity": "hemizygous"
         }
       ],
-      "clinical_context": "3-month-old male infant with hyperammonemia"
+      "clinical_context": "3-month-old male infant with hyperammonemia, lethargy, and poor feeding requiring hospitalization shortly after birth. The patient was born at 35 weeks' gestation and was diagnosed with OTC deficiency following genetic testing. Currently on protein-restricted diet, arginine supplementation, and alternative pathway therapy."
     }
   },
   {
