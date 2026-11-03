@@ -1,6 +1,6 @@
 {
  "gene": "SPTLC1",
- "drafted_at": 1793711406,
+ "drafted_at": 1793712248,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -254,25 +254,41 @@
     "overall": "partially_supported",
     "items": [
      {
-      "item": "Condition: the rule is about SPTLC1 variants affecting protein residue 331.",
+      "item": "Condition: the rule is about SPTLC1 variants that affect protein residue 331.",
       "verdict": "supported",
-      "reason": "Quote 1 explicitly refers to SPTLC1 pathogenic variants at Ser331, including p.Ser331Phe and p.Ser331Tyr."
+      "reason": "Quote [1] explicitly refers to SPTLC1 pathogenic variants at Ser331, i.e., affecting residue 331.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Conclusion: such variants point to neuropathy, hereditary sensory and autonomic, type 1A (also called: HSAN1A; SPTLC1 hereditary sensory and autonomic neuropathy type 1; hereditary sensory and autonomic neuropathy type 1 caused by mutation in SPTLC1; neuropathy, hereditary sensory and autonomic, type IA) rather than amyotrophic lateral sclerosis 27, juvenile (also called: ALS27; SPTLC1 amyotrophic lateral sclerosis; SPTLC1-ALS; SPTLC1-associated amyotrophic lateral sclerosis; SPTLC1-related amyotrophic lateral sclerosis; amyotrophic lateral sclerosis caused by mutation in SPTLC1; juvenile amyotrophic lateral sclerosis type 27).",
       "verdict": "partially_supported",
-      "reason": "The quotes tie Ser331 variants to neuropathy and mention classic HSAN1A, but they only reclassify one p.Ser331Tyr case as likely HSN, not explicitly all residue-331 variants as HSAN1A rather than juvenile ALS27."
+      "reason": "The quotes support a neuropathy phenotype and reclassify one juvenile ALS case toward HSN, but do not explicitly identify HSAN1A rather than ALS27 for these variants.",
+      "judgements": [
+       "partially_supported",
+       "partially_supported",
+       "partially_supported"
+      ]
      },
      {
       "item": "Scope: this is stated as a general association for such SPTLC1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "Quote 1 states a general association for SPTLC1 pathogenic variants at Ser331, not a single family or a frequency comparison."
+      "reason": "Quote [1] states a general association for SPTLC1 pathogenic variants at Ser331, not merely a single patient or family.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      }
     ],
+    "n_checks": 3,
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v3"
+     "prompt_version": "support-check-v4"
     }
    },
    "status": "pending_review",
@@ -282,7 +298,7 @@
     "at": "2026-11-03",
     "reason": "Generalized from a single reclassified case / individual report."
    },
-   "content_sha256": "0c7277430b358b46444c4db20ea8f8af6e2ff69482a60ba56650652ece7e3750"
+   "content_sha256": "19c7d740f3791a011dcb9f5d9b057bf1e11aeed15b46ac51159583fcabf6ffb0"
   }
  ],
  "rejected_drafts": [],

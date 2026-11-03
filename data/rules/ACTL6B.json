@@ -1,6 +1,6 @@
 {
  "gene": "ACTL6B",
- "drafted_at": 1793711183,
+ "drafted_at": 1793712082,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -143,32 +143,48 @@
     "overall": "supported",
     "items": [
      {
-      "item": "Condition: the rule is about patients with a single heterozygous variant (one variant, on one allele) in ACTL6B.",
+      "item": "Condition: the rule is about ACTL6B variants that are present as a single heterozygous variant (one variant, on one allele).",
       "verdict": "supported",
-      "reason": "The quote explicitly refers to the ACTL6B monoallelic variant, i.e. a single heterozygous variant."
+      "reason": "The quote states that the ACTL6B monoallelic variant is responsible for the autosomal dominant disorder.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Conclusion: such variants point to intellectual developmental disorder with severe speech and ambulation defects (also called: ACTL6B-related BAFopathy; IDDSSAD) rather than developmental and epileptic encephalopathy, 76 (also called: DEE76; EIEE76; EPILEPTIC ENCEPHALOPATHY, EARLY INFANTILE, 76; developmental and epileptic encephalopathy 76; epileptic encephalopathy, early infantile, 76).",
       "verdict": "supported",
-      "reason": "The quote states monoallelic ACTL6B causes autosomal dominant IDD with severe speech and ambulation deficits, while DEE76 is due to biallelic variants."
+      "reason": "The quotes distinguish monoallelic ACTL6B variants causing the intellectual developmental disorder from biallelic variants causing DEE76.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quote presents this as a general association from previous studies, not as a single patient/family report or a frequency difference."
+      "reason": "The quotes present this as a general association from previous studies, not a single case or mere frequency difference.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      }
     ],
+    "n_checks": 3,
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v3"
+     "prompt_version": "support-check-v4"
     }
    },
    "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "bf3ceb94119c9be7d2774eb07f9dc0b5677fd12c605eaca990e655256186497e"
+   "content_sha256": "a9d7dc61731cbba8f62dbb0ce85a807bb67fb0ebdeb4b70d9d1bd47ac1307bb2"
   },
   {
    "id": "ACTL6B-2",
@@ -223,32 +239,48 @@
     "overall": "supported",
     "items": [
      {
-      "item": "Condition: the rule is about patients with a homozygous variant (the same variant on both alleles) in ACTL6B.",
+      "item": "Condition: the rule is about ACTL6B variants that are present as a homozygous variant (the same variant on both alleles).",
       "verdict": "supported",
-      "reason": "The quotes explicitly include 12 DEE76 cases with homozygous ACTL6B variants among the 18 autosomal recessive cases."
+      "reason": "The quotes explicitly refer to homozygous ACTL6B variants among DEE76 cases, a special case of biallelic variants.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Conclusion: such variants point to developmental and epileptic encephalopathy, 76 (also called: DEE76; EIEE76; EPILEPTIC ENCEPHALOPATHY, EARLY INFANTILE, 76; developmental and epileptic encephalopathy 76; epileptic encephalopathy, early infantile, 76) rather than intellectual developmental disorder with severe speech and ambulation defects (also called: ACTL6B-related BAFopathy; IDDSSAD).",
       "verdict": "supported",
-      "reason": "The quotes state DEE76 is due to ACTL6B biallelic variants, while monoallelic variants cause IDDSSAD, and homozygous variants are a form of biallelic variation."
+      "reason": "The quotes distinguish biallelic/homozygous ACTL6B variants causing DEE76 from monoallelic variants causing IDDSSAD.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quotes describe a cohort of 18 DEE76 cases with autosomal recessive inheritance, not a single patient/family or merely a frequency difference."
+      "reason": "Quote [2] summarizes all 18 DEE76 cases, not a single patient or family, and gives inheritance counts rather than a frequency comparison between patient groups.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      }
     ],
+    "n_checks": 3,
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v3"
+     "prompt_version": "support-check-v4"
     }
    },
    "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "3a396f9144b22d925ae5dd1cc77471040fbc6c7c1b676667a9ac3038da6adea0"
+   "content_sha256": "aa362fae18625fc1412bf71ae9ecbf646389033e512c0d8d4d5ebc8b7d4a8c56"
   }
  ],
  "rejected_drafts": [],

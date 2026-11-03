@@ -1,6 +1,6 @@
 {
  "gene": "NF1",
- "drafted_at": 1793711364,
+ "drafted_at": 1793712220,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -336,38 +336,54 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "supported",
+    "overall": "not_supported",
     "items": [
      {
-      "item": "Condition: the rule is about NF1 missense variants.",
+      "item": "Condition: the rule is about NF1 variants that are missense variants.",
       "verdict": "supported",
-      "reason": "The quotes explicitly discuss missense mutations in SNF cases compared with the classical NF1 group."
+      "reason": "Both quotes address missense mutations among NF1/SNF cases, so the rule is about NF1 missense variants.",
+      "judgements": [
+       "supported",
+       "supported",
+       "supported"
+      ]
      },
      {
       "item": "Conclusion: such variants point to neurofibromatosis, familial spinal rather than neurofibromatosis type 1 (also called: NF1; Neurofibromatosis 1; Nf1-Microdeletion syndrome; Recklinghausen's disease; neurofibromatosis; neurofibromatosis 1; neurofibromatosis type i; neurofibromatosis, type 1).",
-      "verdict": "supported",
-      "reason": "The quotes report increased odds/risk of SNF versus NF1 for missense mutations."
+      "verdict": "partially_supported",
+      "reason": "The quotes show only a higher frequency/odds ratio of missense mutations in SNF versus classical NF1, not that such variants point to one diagnosis rather than another.",
+      "judgements": [
+       "partially_supported",
+       "partially_supported",
+       "partially_supported"
+      ]
      },
      {
       "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "supported",
-      "reason": "The quotes provide group-level odds ratios and risk estimates, not a single patient/family report or merely raw frequency."
+      "verdict": "not_supported",
+      "reason": "The quotes report only a difference in frequency (proportions, odds ratios) between patient groups, not a general association beyond that comparison.",
+      "judgements": [
+       "not_supported",
+       "not_supported",
+       "not_supported"
+      ]
      }
     ],
+    "n_checks": 3,
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v3"
+     "prompt_version": "support-check-v4"
     }
    },
-   "status": "verified",
+   "status": "pending_review",
    "review": {
     "decision": "vetoed",
     "by": "Mengmeng Wu",
     "at": "2026-11-03",
     "reason": "Over-generalization: the quotes only report that missense variants are more frequent in spinal NF than in classical NF1 (21.4% vs 7.5%; odds ratios). They do not say that a missense variant argues against classical NF1; most NF1 missense carriers have classical NF1."
    },
-   "content_sha256": "43c68c428f0b39016dcd701be1aafc0c2163841632081d30e9c9d27e5dd845f1"
+   "content_sha256": "ae65d98133624cb48abaed4d2c5e7c9a9c403eaa3a94c13620a0bfa36f07f1e3"
   },
   {
    "id": "NF1-2",
@@ -417,30 +433,41 @@
     "overall": "not_supported",
     "items": [
      {
-      "item": "Condition: the rule is about NF1 in-frame insertion variants.",
+      "item": "Condition: the rule is about NF1 variants that are in-frame insertion variants and that lie in exon 28.",
       "verdict": "not_supported",
-      "reason": "The quotes describe one in-frame tandem duplication, not a rule about NF1 in-frame insertion variants generally."
-     },
-     {
-      "item": "Condition: the rule is about NF1 variants in exon 28.",
-      "verdict": "supported",
-      "reason": "The quotes explicitly place the duplication in exon 28 of the NF1 gene."
+      "reason": "The quotes describe a single in-frame tandem duplication in exon 28 but do not state a general rule about all such NF1 variants.",
+      "judgements": [
+       "not_supported",
+       "partially_supported",
+       "partially_supported"
+      ]
      },
      {
       "item": "Conclusion: such variants point to Watson syndrome (also called: WTSN) rather than neurofibromatosis type 1 (also called: NF1; Neurofibromatosis 1; Nf1-Microdeletion syndrome; Recklinghausen's disease; neurofibromatosis; neurofibromatosis 1; neurofibromatosis type i; neurofibromatosis, type 1).",
       "verdict": "partially_supported",
-      "reason": "The quotes associate the variant with WS/NS features and contrast it with classical NF1 null alleles, but do not state it points to WS rather than NF1 overall."
+      "reason": "The quotes show one family with WS/NS features and a non-null NF1 mutation, but do not establish a general association for such variants.",
+      "judgements": [
+       "partially_supported",
+       "partially_supported",
+       "partially_supported"
+      ]
      },
      {
       "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "not_supported",
-      "reason": "The evidence is from a single family, not a general association across such variants."
+      "reason": "The quotes report only a single family, not a general association or a frequency comparison.",
+      "judgements": [
+       "not_supported",
+       "not_supported",
+       "not_supported"
+      ]
      }
     ],
+    "n_checks": 3,
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v3"
+     "prompt_version": "support-check-v4"
     }
    },
    "status": "pending_review",
@@ -450,7 +477,7 @@
     "at": "2026-11-03",
     "reason": "Generalized from a single family / individual report."
    },
-   "content_sha256": "0851233b357d0c35d37466f3cbfb7812722a5b5706c1ea27e63d0e839c4b5f54"
+   "content_sha256": "3dd9b1fa6ce9411d484d5d40558f59bd5ed2991f499f930e98f3fe11ef40a477"
   }
  ],
  "rejected_drafts": [],
