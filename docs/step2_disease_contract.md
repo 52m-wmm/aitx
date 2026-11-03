@@ -371,3 +371,11 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 2. 起病年龄映射：完成（规则 24）。混合语义检索：暂不做，原因见上。
 3. CBAVD 漏提：根因是否定词规则误删（不是 LLM 漏提、也不是检索），已修复（规则 22），两个测试集都已召回。
 4. 基因特有规则（DMD 读码框、SPTLC1 表型与区域）：移到 Step 3.0，见 `docs/step3_contract_todo.md`。
+
+## Step 2 待办（2026-11-03 记录，不阻塞 3.0）
+
+1. **疾病分组参与竞争**：AITX-40001 的候选里，"undetermined early-onset epileptic encephalopathy"（MONDO:0018614）和
+   "syndromic intellectual disability"（MONDO:0000508）是 Orphanet 的疾病分组、不是具体疾病，但前者因有症状注释而参与了比较。
+   "有无症状注释"不足以判断是否具体疾病；拟改用数据库自身的分类（Orphanet 疾病类型、MONDO 的 grouping 标记）。
+   **先统计**全部病例中有多少候选属于这种情况、是否影响任何病例的状态（特别是 40002、40003 的并列项），再提方案，审定后改。
+2. **"ranked above N candidates"的计数**包含了被合并掉的候选，改为只计进入比较的候选。
