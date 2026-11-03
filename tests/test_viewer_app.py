@@ -82,7 +82,7 @@ def test_api_run_streams_log_and_records(tmp_path, stub_pages):
     assert resp.status_code == 201, resp.text
     run = wait(r, resp.json()["id"])
     assert run.status == "ok"
-    assert run.lines[0] == "ARGS --case PRAC-OTC --from-step 2 --to-step 2"
+    assert run.lines[0] == f"ARGS --case PRAC-OTC --from-step 2 --to-step {max(VA.run_pipeline.STEPS)}"
     body = c.get(f"/api/runs/{run.id}/stream").text
     assert "ARGS --case PRAC-OTC" in body and "event: end" in body
     d = c.get("/api/runs").json()

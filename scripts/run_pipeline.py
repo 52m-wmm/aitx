@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx import runmeta  # noqa: E402
 
-PLANNED = {3: "therapy matching", 4: "existing options lookup", 5: "report assembly"}
+PLANNED = {4: "report synthesis", 5: "verification"}
 USES_LLM = {2}                        # steps that call the LLM (the viewer warns before rerunning them)
 CASE_FILES = [ROOT / "data/cases/practice/official_examples.json", ROOT / "data/cases/aitx_final_patients.json",
               ROOT / "data/cases/validation/phase1_hf_unseen_genes.json"]
@@ -70,7 +70,12 @@ def step2(case: dict, prior: dict, ctx: Context) -> dict:
     return pipeline.run_case(case, ctx.step2_resources(), use_cache=ctx.use_cache, step1=prior.get(1))
 
 
-STEPS = {1: step1, 2: step2}          # step -> fn(case, prior outputs {step: result}, ctx) -> result
+def step3(case: dict, prior: dict, ctx: Context) -> dict:
+    from aitx.evidence import pipeline
+    return pipeline.run_case(case, prior[1], prior[2])
+
+
+STEPS = {1: step1, 2: step2, 3: step3}          # step -> fn(case, prior outputs {step: result}, ctx) -> result
 
 
 def run(cases: list[dict], start: int, stop: int, use_cache: bool = True) -> int:

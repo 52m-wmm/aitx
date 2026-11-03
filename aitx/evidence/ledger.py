@@ -137,7 +137,9 @@ class Ledger:
         self.patient_context: dict = {}
         self.missing_information: list[dict] = []
         self.rules_applied: list[dict] = []
+        self.rules_skipped: list[dict] = []
         self.branch_assessment: list[dict] = []
+        self.branch_order: list[str] = [b["id"] for b in branches]
 
     def add(self, e: dict) -> dict:
         if e["kind"] == "reasoning" and e["status"] == "candidate":
@@ -217,8 +219,9 @@ class Ledger:
     def to_dict(self) -> dict:
         ev = sorted(self.evidence.values(), key=lambda e: (list(TIERS).index(e["section"]), e["id"]))
         return {"schema_version": SCHEMA_VERSION, "patient_id": self.patient_id, "branches": self.branches,
-                "branch_assessment": self.branch_assessment, "patient_context": self.patient_context,
-                "missing_information": self.missing_information, "rules_applied": self.rules_applied,
+                "branch_assessment": self.branch_assessment, "branch_order": self.branch_order,
+                "patient_context": self.patient_context, "missing_information": self.missing_information,
+                "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
                 "sections_status": self.sections_status,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}
