@@ -145,13 +145,16 @@ def main() -> int:
         else:
             print("  [INFO] " + line)
 
-    print("\n== symptom extraction test set (practice contexts only) ==")
+    print("\n== symptom extraction test sets (practice contexts only) ==")
     import eval_extraction as EV
-    gold = json.loads(EV.GOLD.read_text())
-    bad = EV.check_gold(gold, res.ont)
-    hard(not bad, "gold HPO ids exist in hp.json and quotes are verbatim" + (f" -> {bad}" if bad else ""))
-    ev = EV.evaluate(gold, res.ont)
-    EV.report(ev)
+    ev = {}
+    for name, path in EV.SETS.items():
+        gold = json.loads(path.read_text())
+        bad = EV.check_gold(gold, res.ont)
+        hard(not bad, f"{name} set: gold HPO ids exist in hp.json and quotes are verbatim" + (f" -> {bad}" if bad else ""))
+        print(f"-- {name} set --")
+        ev[name] = EV.evaluate(gold, res.ont)
+        EV.report(ev[name])
 
     print("\n== to check by hand (SOFT) ==")
     for cid, note in SOFT.items():

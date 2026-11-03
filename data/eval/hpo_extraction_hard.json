@@ -1,0 +1,254 @@
+{
+ "description": "Hard symptom extraction set (step 2.1): negation, colloquial phrasing, abbreviations and multi-sentence narratives, written by rewriting the official practice examples (no evaluation case, no clean validation case). Same format as hpo_extraction_gold.json; 'kind' tags the difficulty. Baseline only, no pass threshold.",
+ "contexts": [
+  {
+   "id": "HARD-CFTR-colloquial",
+   "based_on": "PRAC-CFTR-F508del",
+   "context": "15-year-old boy who is always coughing up thick mucus and keeps getting chest infections. His stools are greasy and foul-smelling, and he takes enzyme capsules with every meal. A fertility work-up showed he was born without the vas deferens on both sides.",
+   "annotations": [
+    {
+     "quote": "always coughing up thick mucus",
+     "status": "present",
+     "acceptable": [
+      "HP:0031245",
+      "HP:0012735"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "keeps getting chest infections",
+     "status": "present",
+     "acceptable": [
+      "HP:0002783",
+      "HP:0002205",
+      "HP:0006532"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "stools are greasy and foul-smelling",
+     "status": "present",
+     "acceptable": [
+      "HP:0002570"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "born without the vas deferens on both sides",
+     "status": "present",
+     "acceptable": [
+      "HP:0012873"
+     ],
+     "kind": "colloquial"
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "15-year-old boy",
+     "why": "age and sex"
+    },
+    {
+     "quote": "enzyme capsules with every meal",
+     "why": "treatment"
+    }
+   ]
+  },
+  {
+   "id": "HARD-CFTR-CBAVD",
+   "based_on": "PRAC-CFTR-F508del (known limitation 11)",
+   "context": "Semen analysis showed no sperm at all. Urology confirmed CBAVD.",
+   "annotations": [
+    {
+     "quote": "no sperm at all",
+     "status": "present",
+     "acceptable": [
+      "HP:0000027"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "CBAVD",
+     "status": "present",
+     "acceptable": [
+      "HP:0012873"
+     ],
+     "kind": "abbreviation"
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "HARD-OTC-narrative",
+   "based_on": "PRAC-OTC",
+   "context": "He was born at 35 weeks and seemed well at first. On day 3 he became very sleepy and stopped feeding. Blood tests showed his ammonia was markedly raised. There were no seizures.",
+   "annotations": [
+    {
+     "quote": "born at 35 weeks",
+     "status": "present",
+     "acceptable": [
+      "HP:0001622",
+      "HP:0025664"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "became very sleepy",
+     "status": "present",
+     "acceptable": [
+      "HP:0001254",
+      "HP:0002329",
+      "HP:0001262"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "stopped feeding",
+     "status": "present",
+     "acceptable": [
+      "HP:0011968",
+      "HP:0008872"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "ammonia was markedly raised",
+     "status": "present",
+     "acceptable": [
+      "HP:0001987"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "no seizures",
+     "status": "excluded",
+     "acceptable": [
+      "HP:0001250"
+     ],
+     "kind": "negation"
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "seemed well at first",
+     "why": "no finding"
+    }
+   ]
+  },
+  {
+   "id": "HARD-DMD-colloquial",
+   "based_on": "PRAC-DMD-del",
+   "context": "He falls a lot and has to push on his thighs with his hands to get up from the floor. His calves look big and firm.",
+   "annotations": [
+    {
+     "quote": "falls a lot",
+     "status": "present",
+     "acceptable": [
+      "HP:0002359",
+      "HP:0002527"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "push on his thighs with his hands to get up from the floor",
+     "status": "present",
+     "acceptable": [
+      "HP:0003391"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "calves look big and firm",
+     "status": "present",
+     "acceptable": [
+      "HP:0003707",
+      "HP:0008981"
+     ],
+     "kind": "colloquial"
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "HARD-COL1A1-negation",
+   "based_on": "PRAC-COL1A1",
+   "context": "Her joints bend much further than normal and her skin stretches easily. She has never broken a bone, and her hearing is normal.",
+   "annotations": [
+    {
+     "quote": "joints bend much further than normal",
+     "status": "present",
+     "acceptable": [
+      "HP:0001382"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "skin stretches easily",
+     "status": "present",
+     "acceptable": [
+      "HP:0000974"
+     ],
+     "kind": "colloquial"
+    },
+    {
+     "quote": "never broken a bone",
+     "status": "excluded",
+     "acceptable": [
+      "HP:0002757",
+      "HP:0020110",
+      "HP:0002659"
+     ],
+     "kind": "negation"
+    },
+    {
+     "quote": "hearing is normal",
+     "status": "excluded",
+     "acceptable": [
+      "HP:0000365"
+     ],
+     "kind": "negation"
+    }
+   ],
+   "negatives": []
+  },
+  {
+   "id": "HARD-KMT2B-narrative",
+   "based_on": "PRAC-KMT2B",
+   "context": "Around age 6 his right foot began turning inward when he walked. Over the next three years the twisting spread to his legs, trunk and arms. He has no learning difficulties.",
+   "annotations": [
+    {
+     "quote": "right foot began turning inward when he walked",
+     "status": "present",
+     "acceptable": [
+      "HP:0002451",
+      "HP:0001332"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "twisting spread to his legs, trunk and arms",
+     "status": "present",
+     "acceptable": [
+      "HP:0007325",
+      "HP:0001332"
+     ],
+     "kind": "narrative"
+    },
+    {
+     "quote": "no learning difficulties",
+     "status": "excluded",
+     "acceptable": [
+      "HP:0001328",
+      "HP:0001249"
+     ],
+     "kind": "negation"
+    }
+   ],
+   "negatives": [
+    {
+     "quote": "Around age 6",
+     "why": "age"
+    }
+   ]
+  }
+ ]
+}

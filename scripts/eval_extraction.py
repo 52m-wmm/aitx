@@ -9,7 +9,11 @@ against hp.json (exists, current, under Phenotypic abnormality); a bad id stops 
 A match needs the same status and an id in the span's "acceptable" list (strict).
 Terms that hit a gold id's ancestor or descendant are listed as near misses.
 
-Usage:  python scripts/eval_extraction.py [--fresh-llm]
+Two sets: the basic set (hpo_extraction_gold.json) and the hard set (hpo_extraction_hard.json:
+negation, colloquial phrasing, abbreviations, multi-sentence narratives; recall is also
+reported per 'kind'). Each set is evaluated and reported on its own.
+
+Usage:  python scripts/eval_extraction.py [--set basic|hard|all] [--fresh-llm]
 """
 from __future__ import annotations
 
@@ -27,6 +31,8 @@ from aitx.disease import extract  # noqa: E402
 from aitx.disease.hpo import Ontology  # noqa: E402
 
 GOLD = ROOT / "data" / "eval" / "hpo_extraction_gold.json"
+GOLD_HARD = ROOT / "data" / "eval" / "hpo_extraction_hard.json"
+SETS = {"basic": GOLD, "hard": GOLD_HARD}
 
 
 def load_ontology() -> Ontology:
@@ -80,7 +86,17 @@ def evaluate(gold: dict, ont: Ontology, use_cache: bool = True) -> dict:
             if i not in hit_gold:
                 got = [f"{e['hpo_id']} {e['label']} ({e['quote']!r})" for e in ext]
                 misses.append({"context": c["id"], "quote": a["quote"], "acceptable": a["acceptable"], "extracted": got})
+    by_kind: dict[str, list[int]] = {}
+    for c in gold["contexts"]:
+        for i, a in enumerate(c["annotations"]):
+            k = a.get("kind")
+            if k:
+                hit = not any(m["context"] == c["id"] and m["quote"] == a["quote"] for m in misses)
+                by_kind.setdefault(k, [0, 0])
+                by_kind[k][0] += hit
+                by_kind[k][1] += 1
     return {"precision": round(tp_ext / n_ext, 3) if n_ext else None, "recall": round(matched / n_gold, 3),
+            "recall_by_kind": {k: f"{h}/{n}" for k, (h, n) in sorted(by_kind.items())},
             "extracted": n_ext, "true_positive_terms": tp_ext, "gold_spans": n_gold, "gold_matched": matched,
             "negative_spans": sum(len(c["negatives"]) for c in gold["contexts"]),
             "false_positives": false_pos, "near_misses": near, "missed": misses}
@@ -89,6 +105,8 @@ def evaluate(gold: dict, ont: Ontology, use_cache: bool = True) -> dict:
 def report(r: dict) -> None:
     print(f"precision {r['precision']}  ({r['true_positive_terms']}/{r['extracted']} extracted terms correct)")
     print(f"recall    {r['recall']}  ({r['gold_matched']}/{r['gold_spans']} gold spans found)")
+    if r.get("recall_by_kind"):
+        print("recall by kind: " + ", ".join(f"{k} {v}" for k, v in r["recall_by_kind"].items()))
     print(f"false positives: {len(r['false_positives'])} (of which near misses on the hierarchy: {len(r['near_misses'])})")
     for f in r["false_positives"]:
         why = (f"from negative span {f['from_negative_span']!r}" if f["from_negative_span"]
@@ -100,21 +118,25 @@ def report(r: dict) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
+    ap.add_argument("--set", choices=["basic", "hard", "all"], default="all")
     ap.add_argument("--fresh-llm", action="store_true")
     args = ap.parse_args()
     if args.fresh_llm:
         extract.CACHE_DIR = Path(tempfile.mkdtemp(prefix="aitx-llm-"))
-    gold = json.loads(GOLD.read_text())
     ont = load_ontology()
-    bad = check_gold(gold, ont)
-    if bad:
-        print("gold set has invalid entries:\n  " + "\n  ".join(bad))
-        return 2
-    r = evaluate(gold, ont)
-    report(r)
-    out = ROOT / "out" / "eval_extraction.json"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text(json.dumps(r, indent=2, ensure_ascii=False))
+    out = {}
+    for name in (["basic", "hard"] if args.set == "all" else [args.set]):
+        gold = json.loads(SETS[name].read_text())
+        bad = check_gold(gold, ont)
+        if bad:
+            print(f"{name} set has invalid entries:\n  " + "\n  ".join(bad))
+            return 2
+        print(f"== {name} set ({SETS[name].name}) ==")
+        out[name] = evaluate(gold, ont)
+        report(out[name])
+    dest = ROOT / "out" / "eval_extraction.json"
+    dest.parent.mkdir(exist_ok=True)
+    dest.write_text(json.dumps(out, indent=2, ensure_ascii=False))
     return 0
 
 
