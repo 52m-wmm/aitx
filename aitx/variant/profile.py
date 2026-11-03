@@ -50,6 +50,8 @@ class VariantProfile:
     evidence: list[dict]
     notes: list[str] = field(default_factory=list)
     retranslation: dict = field(default_factory=dict)
+    normal_residues_retained: int | None = None      # residues of the normal sequence before the change
+    frameshift_tail_aa: int | None = None            # frameshift: novel (out-of-frame) residues before the stop
 
     @property
     def ok(self) -> bool:
@@ -409,6 +411,8 @@ def build_profile(variant: dict, t: Transcript) -> VariantProfile:
                    "what": f"RefSeq record {t.accession}: exon structure, CDS, translation"}],
         notes=notes + t.notes,
         retranslation=rt,
+        normal_residues_retained=normal_kept,
+        frameshift_tail_aa=(ptc_aa - pv.pos) if (ptc_aa and pv.kind == "frameshift" and pv.pos) else None,
     )
 
 

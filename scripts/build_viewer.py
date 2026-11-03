@@ -242,6 +242,39 @@ def v_chain(c: dict) -> str:
     return "<div class='chain'>" + "<span class='arrow'>→</span>".join(nodes) + "</div>"
 
 
+def _variant_lengths(v: dict) -> tuple[str, str, str, str, str, str]:
+    """Display strings for the length / NMD rows; every number is read from the step 1 output."""
+    nmd, na = v["nmd"], L("不适用", "n/a")
+    tail = v.get("frameshift_tail_aa")
+    if v.get("truncated_protein_length") is not None:
+        total = f"{v['truncated_protein_length']} aa"
+        if tail:
+            total += " " + L(f"（含 {tail} 个移码后的乱码氨基酸）", f"(includes {tail} out-of-frame residues)")
+    elif nmd.get("protein_extended_by_aa") is not None:
+        total = L(f"比正常长 {nmd['protein_extended_by_aa']} aa", f"{nmd['protein_extended_by_aa']} aa longer than normal")
+        if tail:
+            total += " " + L(f"（变化后 {tail} 个氨基酸为移码乱码序列）", f"({tail} out-of-frame residues after the change)")
+    else:
+        total = na
+    n, frac = v.get("normal_residues_retained"), v.get("fraction_of_protein_retained")
+    kept = na if n is None else L(f"保留 {n} 个氨基酸（占正常长度 {frac:.1%}）", f"{n} aa ({frac:.1%} of normal)")
+    if tail:
+        kept += " " + L("，其后是移码乱码序列", "; followed by an out-of-frame sequence")
+    cmp_ = (v.get("retranslation") or {}).get("comparison")
+    if cmp_:
+        verdict = {True: tag("pass", L("一致", "agree")), False: tag("fail", L("不一致", "disagree")),
+                   None: tag("warn", L("未比对", "not compared"))}[cmp_["agree"]]
+        retr = f"{verdict} {e(cmp_['what'])}: {L('输入', 'stated')} {e(str(cmp_['stated']))}，{L('计算得', 'computed')} {e(str(cmp_['computed']))}"
+    else:
+        retr = f"<span class=muted>{L('结果文件里没有（旧版 Step 1 输出）', 'not in the result file (older step 1 output)')}</span>"
+    border = " " + tag("warn", L("临界", "borderline")) if nmd.get("borderline") else ""
+    ptc_exon = "—" if nmd.get("ptc_exon") is None else f"{nmd['ptc_exon']} / {v['exon'].get('total')}"
+    if nmd.get("ptc_exon") is None and nmd.get("prediction") == "not_applicable":
+        ptc_exon = na
+    reasons = e("; ".join(nmd.get("reasons") or []))
+    return total, kept, retr, border, ptc_exon, reasons
+
+
 def v_variant(s1: dict | None) -> str:
     if not s1:
         return f"<p class='muted'>{L('没有第 1 步输出。', 'No step 1 output.')}</p>"
@@ -252,6 +285,7 @@ def v_variant(s1: dict | None) -> str:
                          f"<td>{e(ch['detail'])}</td></tr>" for ch in v["checks"])
         src = " · ".join(link(x.get("source"), x.get("what", L("来源", "source"))[:60]) for x in v.get("evidence", []))
         last = L("（最后一个）", " (last exon)") if ex.get("is_last_exon") else ""
+        total_len, kept, retr, border, ptc_exon, reasons = _variant_lengths(v)
         out.append(f"""<div class='card'><h3>{e(v['gene'])} {e(v['transcript'])} {e(v['variant_cdna'])}
  {e(v.get('variant_protein') or '')} {tag('pass' if v['ok'] else 'fail', L('自检全过', 'all checks pass') if v['ok'] else L('自检失败', 'self-check failed'))}</h3>
 <table><tr><th>{L('类型', 'Class')}</th><td>{e(v['variant_class'])}</td><th>{L('合子状态', 'Zygosity')}</th><td>{e(v['zygosity'])}
@@ -260,9 +294,11 @@ def v_variant(s1: dict | None) -> str:
 <th>{L('蛋白长度', 'Protein length')}</th><td>{v['protein_length']} aa</td></tr>
 <tr><th>{L('首个受影响氨基酸', 'First affected residue')}</th><td>{v.get('first_affected_aa')}</td>
 <th>{L('新终止位置', 'New stop position')}</th><td>{v.get('ptc_aa_position')}</td></tr>
-<tr><th>{L('截短后长度', 'Truncated length')}</th><td>{v.get('truncated_protein_length')}
- ({L('保留比例', 'fraction retained')} {v.get('fraction_of_protein_retained')})</td>
-<th>{L('NMD 预测', 'NMD prediction')}</th><td>{e(str(nmd.get('prediction')))} — {e(str(nmd.get('reason', '')))}</td></tr>
+<tr><th>{L('截短后总长', 'Total length after change')}</th><td>{total_len}</td>
+<th>{L('正常部分', 'Normal part kept')}</th><td>{kept}</td></tr>
+<tr><th>{L('独立重新翻译', 'Independent re-translation')}</th><td colspan='3'>{retr}</td></tr>
+<tr><th>{L('NMD 预测', 'NMD prediction')}</th><td colspan='3'>{e(str(nmd.get('prediction')))}{border}
+ · {L('新终止所在外显子', 'exon of the new stop')}: {ptc_exon}<div class='muted'>{reasons}</div></td></tr>
 <tr><th>{L('机制初判', 'Mechanism hypothesis')}</th><td colspan='3'>{e(mech['hypothesis'])}
  ({L('置信度', 'confidence')} {e(mech['confidence'])}): {e(mech['basis'])}</td></tr>
 </table><details><summary>{L('自检', 'Self-checks')} {len(v['checks'])}</summary><table>{checks}</table></details>

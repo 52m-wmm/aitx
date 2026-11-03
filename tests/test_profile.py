@@ -49,6 +49,7 @@ def test_frameshift_mid_transcript_triggers_nmd(tx):
     assert p.variant_class == "frameshift"
     assert p.ptc_aa_position == 103 and p.truncated_protein_length == 102
     assert p.fraction_of_protein_retained == 0.5          # 100 normal residues of 200
+    assert p.normal_residues_retained == 100 and p.frameshift_tail_aa == 2   # Cys101, Ser102, then stop
     assert p.nmd["prediction"] == "likely_triggers"
     assert p.nmd["ptc_exon"] == 3
     assert p.mechanism_hypothesis["hypothesis"] == "loss_of_function"
