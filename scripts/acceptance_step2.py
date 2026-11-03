@@ -145,6 +145,13 @@ def main() -> int:
         else:
             print("  [INFO] " + line)
 
+    print("\n== onset term tables vs hp.json (HARD) ==")
+    from aitx.disease import hpo as HPO
+    rows = [(t, lbl) for t, lbl, _, _ in HPO.ONSET_LEAVES] + [(t, lbl) for _, t, lbl in HPO.ONSET_WORDS]
+    bad = [f"{t} {lbl}" for t, lbl in rows if res.ont.resolve(t)[0] != t or HPO.ONSET not in res.ont.ancestors(t)
+           or res.ont.terms[t].label != lbl]
+    hard(not bad, "onset terms exist, are current, under Onset (HP:0003674), labels match" + (f" -> {bad}" if bad else ""))
+
     print("\n== symptom extraction test sets (practice contexts only) ==")
     import eval_extraction as EV
     ev = {}

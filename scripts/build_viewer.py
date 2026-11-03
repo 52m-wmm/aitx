@@ -448,6 +448,17 @@ def fig_structure(v: dict) -> str:
         why = st.get("error") or L("结果文件里没有结构信息（旧版输出）", "no structure facts in the result file (older output)")
         return f"<p class='muted'>{L('没有可用的 AlphaFold 结构', 'No AlphaFold structure available')}: {e(why)}</p>"
     src = st["source"]
+    trunc_note = ""
+    if v.get("variant_class") in ("frameshift", "nonsense"):
+        kept = v.get("fraction_of_protein_retained")
+        if kept is not None and kept < 0.5:
+            trunc_note = L("截短变异：蛋白大部分丢失，位置信息仅供参考", "truncating variant: most of the protein is lost; "
+                           "position data for reference only")
+        elif kept is not None:
+            trunc_note = L(f"截短变异：正常序列保留 {kept:.0%}，之后的部分丢失或被替换，位置信息仅供参考",
+                           f"truncating variant: {kept:.0%} of the normal sequence kept, the rest lost or replaced; "
+                           "position data for reference only")
+    note_html = f"<div>{tag('warn', trunc_note)}</div>" if trunc_note else ""
     af_page = f"https://alphafold.ebi.ac.uk/entry/{src['alphafold_isoform']}"
     when = time.strftime("%Y-%m-%d", time.gmtime(src["accessed_at"])) if src.get("accessed_at") else "?"
     rows = [(L("来源", "Source"), f"{link(af_page, src['alphafold_entry'])} · {L('模型版本', 'model')} v{e(str(src['model_version']))}"
@@ -471,11 +482,11 @@ def fig_structure(v: dict) -> str:
         extra += "" if rsa["reliable"] else " " + tag("fail", L("所在区域预测不可靠，仅供参考", "unreliable region"))
         rows.append((L("相对溶剂可及性 RSA", "Relative solvent accessibility"),
                      f"<b>{rsa['value']}</b> → {cls}{extra} <span class='muted'>(SASA {rsa['sasa_A2']} Å² / "
-                     f"max {rsa['max_asa_A2']} Å²)</span><div class='muted'>{e(rsa['method'])}</div>"))
+                     f"max {rsa['max_asa_A2']} Å²)</span>{note_html}<div class='muted'>{e(rsa['method'])}</div>"))
     nb = st.get("neighbours_8A")
     if nb is not None:
         rows.append((L("8 Å 内的邻居", "Neighbours within 8 Å"),
-                     f"{len(nb)}: " + e(", ".join(f"{n['aa']}{n['position']}" for n in nb))))
+                     f"{len(nb)}: " + e(", ".join(f"{n['aa']}{n['position']}" for n in nb)) + note_html))
     if st.get("lost_model_range"):
         a, b = st["lost_model_range"]
         rows.append((L("丢失部分（模型编号）", "Lost part (model numbering)"), f"{a}–{b}"))
@@ -485,7 +496,8 @@ def fig_structure(v: dict) -> str:
     pos = (st.get("residue") or {}).get("model_position")
     data = {"file": src["local_file"], "pos": pos, "plddt": (pl or {}).get("value"),
             "neighbours": [n["position"] for n in (nb or [])], "lost": st.get("lost_model_range"),
-            "label": f"{(st.get('residue') or {}).get('model_aa', '')}{pos or ''}"}
+            "label": f"{(st.get('residue') or {}).get('model_aa', '')}{pos or ''}",
+            "whole": v.get("variant_class") in ("frameshift", "nonsense")}      # truncating: show the whole protein
     holder = (f"<div class='mol3d' data-mol='{e(json.dumps(data))}'><div class='ph'>"
               f"{L('3D 视图需要在本地应用中打开：python3 scripts/viewer_app.py', '3D view needs the local app: python3 scripts/viewer_app.py')}"
               f"</div></div>")
@@ -562,8 +574,7 @@ def v_highlight(s2: dict, context: str) -> str:
                f"{L('映射方式', 'mapping')}: {e(p.get('mapping', ''))}<br>"
                f"{L('投票', 'votes')} {p['votes']}/{len(ex['samples'])}: {e(_sample_marks(p, ex['samples']))}"
                + (f"<br>{L('合并了下级', 'merged children')}: {e(', '.join(p['merged_from']))}" if p.get("merged_from") else "")
-               + (f"<br>{L('该症状起病', 'onset of this symptom')}: {e(str(onset.get('months_min')))}–{e(str(onset.get('months_max')))} "
-                  + L("月", "months") if onset.get("months_min") is not None else ""))
+               + (f"<br>{L('该症状起病', 'onset of this symptom')}: {e(_onset_text(onset))}" if onset.get("quote") else ""))
         parts.append(e(context[pos:a]))
         parts.append(f"<span class='hl{' exc' if p['status'] == 'excluded' else ''}' tabindex='0'>"
                      f"{e(context[a:b])}<span class='tip'>{tip}</span></span>")
@@ -576,7 +587,8 @@ def v_highlight(s2: dict, context: str) -> str:
             (L("变异来源", "Variant origin"), facts["variant_origin"].get("value"), facts["variant_origin"].get("quote")),
             (L("家族史", "Family history"), facts["family_history"].get("statement"), facts["family_history"].get("quote")),
             (L("用于打分的起病年龄", "Onset used for scoring"),
-             f"{onset.get('min')}–{onset.get('max')} {L('月', 'months')} ({onset.get('kind')})" if onset else L("未知", "unknown"),
+             (_onset_text({"months_min": onset.get("min"), "months_max": onset.get("max"), **onset})
+              + (f" ({onset.get('kind')})" if onset.get("kind") == "age_upper_bound" else "")) if onset else L("未知", "unknown"),
              onset.get("quote"))]
     facts_html = "".join(f"<tr><th>{e(k)}</th><td>{e(str(v))}</td><td class='muted'>{e(str(q or ''))}</td></tr>"
                          for k, v, q in rows)
@@ -592,6 +604,18 @@ def v_highlight(s2: dict, context: str) -> str:
                "Yellow = present, red = explicitly absent; hover to see the HPO term and the three samples.")
     return (f"<div class='card ctx'>{''.join(parts)}</div><p class='muted'>{e(legend)}</p><table>{facts_html}</table>"
             + (f"<h3>{L('未进入结果的症状', 'Features not in the result')}</h3><ul>{other}{rej_html}</ul>" if other or rej_html else ""))
+
+
+def _onset_text(o: dict) -> str:
+    """HPO onset term(s) + interval used for scoring + the age stated in the text (all read from the result)."""
+    if o.get("months_min") is None and o.get("months_max") is None:
+        return L("未能映射", "not mapped") + (f" — {'; '.join(o.get('reasons') or [])}" if o.get("reasons") else "")
+    terms = ", ".join(t["label"] for t in o.get("hpo_onset") or [])
+    hi = o.get("months_max")
+    rng = f"{o.get('months_min')}–{hi if hi is not None else '∞'} " + L("月", "months")
+    st = o.get("stated_months")
+    said = (" · " + L("原文", "stated") + f" {st[0]}" + (f"–{st[1]}" if st[1] != st[0] else "") + " " + L("月", "months")) if st else ""
+    return (f"{terms}（{rng}）" if terms else rng) + said
 
 
 def v_funnel(s2: dict) -> str:

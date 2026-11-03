@@ -203,7 +203,7 @@ STRUCT_FILE = re.compile(r"^AF-[A-Za-z0-9-]+-model_v[0-9]+\.pdb$")
 
 def mol_texts(lang: str) -> dict:
     return {"plddt": _t(lang, "按 AlphaFold 预测可信度（pLDDT）着色", "Colour by AlphaFold confidence (pLDDT)"),
-            "at": _t(lang, "变异位置", "variant residue"), "reset": _t(lang, "回到变异位置", "Back to the variant"),
+            "at": _t(lang, "变异位置", "variant residue"), "reset": _t(lang, "回到默认视角", "Reset view"),
             "unreliable": _t(lang, "该区域结构预测不可靠", "structure prediction unreliable here"),
             "legend_var": _t(lang, "红：变异氨基酸 · 橙：8 Å 内的邻居 · 灰：截短后丢失的部分",
                              "red: variant residue · orange: neighbours within 8 Å · grey: part lost by truncation"),
@@ -243,7 +243,8 @@ document.querySelectorAll('.mol3d').forEach(function(box){
       '<div class="legend" id="'+lid+'"></div>';
     box.parentNode.insertBefore(bar,box);
     bar.querySelector('input').addEventListener('change',function(ev){mode=ev.target.checked?'plddt':'variant';draw();});
-    function home(){ v.zoomTo(focus); if(d.pos){ v.center({resi:d.pos}); v.zoom(0.6); } v.render(); }
+    function home(){ if(d.whole){ v.zoomTo(); v.render(); return; }   // truncating: whole protein, lost part visible
+      v.zoomTo(focus); if(d.pos){ v.center({resi:d.pos}); v.zoom(0.6); } v.render(); }
     bar.querySelector('button').addEventListener('click',home);
     draw(); home();
   }).catch(function(err){ box.innerHTML='<div class="ph">'+T.fail+': '+err+'</div>'; });

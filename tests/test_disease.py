@@ -38,13 +38,15 @@ def ont(tmp_path_factory):
              node("0007359", "Focal-onset seizure", syn=["Focal seizures"]),
              node("0001263", "Global developmental delay", syn=["Developmental delay"]),
              node("0001987", "Hyperammonemia"), node("0000478", "Abnormality of the eye", syn=["Eye abnormality"]),
+             node("0012873", "Absent vas deferens", syn=["Congenital absence of the vas deferens"]),
+             node("0000365", "Hearing impairment", syn=["Hearing loss", "Deafness"]),
              node("0000005", "Mode of inheritance"),
              node("0000057", "obsolete Clitoromegaly", deprecated=True),
              node("0003674", "Onset"), node("0410280", "Pediatric onset"), node("0003593", "Infantile onset"),
              node("0011463", "Childhood onset"), node("0003581", "Adult onset"), node("0003596", "Middle age onset"),
              node("0099999", "Some new onset subterm"),
              node("0009999", "obsolete Old seizure term", deprecated=True, repl="0001250")]
-    edges = [("0000118", "0000001"), ("0001250", "0000118"), ("0007359", "0001250"), ("0001263", "0000118"),
+    edges = [("0012873", "0000118"), ("0000365", "0000118"), ("0000118", "0000001"), ("0001250", "0000118"), ("0007359", "0001250"), ("0001263", "0000118"),
              ("0001987", "0000118"), ("0000478", "0000118"), ("0000005", "0000001"),
              ("0003674", "0000001"), ("0410280", "0003674"), ("0003593", "0410280"), ("0011463", "0410280"),
              ("0003581", "0003674"), ("0003596", "0003581"), ("0099999", "0003596")]
@@ -138,8 +140,44 @@ def test_quote_must_be_verbatim():
 
 def test_negation():
     assert X.check_item(item("without overt seizures", "Seizure", "excluded"), CTX).get("checked")
-    assert not X.check_item(item("without overt seizures", "Seizure", "present"), CTX).get("checked")
     assert not X.check_item(item("developmental delay", "Global developmental delay", "excluded"), CTX).get("checked")
+    # a negated 'present' quote is no longer rejected here: the decision waits for the mapped term
+    r = X.check_item(item("without overt seizures", "Seizure", "present"), CTX)
+    assert r.get("checked") and r["negated_quote"] == "without"
+
+
+@pytest.mark.parametrize("quote", ["never broken a bone", "hearing is normal", "MRI unremarkable", "sepsis ruled out"])
+def test_new_negation_cues_allow_excluded(quote):
+    assert X.check_item(item(quote, "x", "excluded"), f"Notes: {quote}.").get("checked")
+
+
+@pytest.mark.parametrize("quote", ["joints bend much further than normal", "head size above normal",
+                                   "tone below normal"])
+def test_comparison_with_normal_is_not_a_negation(quote):
+    r = X.check_item(item(quote, "x", "present"), f"Exam: {quote}.")
+    assert r.get("checked") and "negated_quote" not in r
+    assert not X.check_item(item(quote, "x", "excluded"), f"Exam: {quote}.").get("checked")
+
+
+def test_absence_term_keeps_negated_present_quote(ont, monkeypatch):
+    monkeypatch.setattr(X, "_cached_chat", lambda *a, **k: pytest.fail("no LLM call expected"))
+    ctx = "He was born without the vas deferens on both sides. There were no seizures."
+    its = [X.check_item(item("born without the vas deferens", "Absent vas deferens"), ctx),
+           X.check_item(item("no seizures", "Seizure", "excluded"), ctx)]
+    out = X.map_items(its, ctx, ont, 0, True)
+    assert (out[0]["valid"], out[0]["status"], out[0]["hpo_id"]) == (True, "present", "HP:0012873")
+    assert "denotes an absence" in out[0]["negation_note"]
+    # the other direction: an explicit negation stays excluded, the new rule does not turn it into 'present'
+    assert (out[1]["valid"], out[1]["status"], out[1]["hpo_id"]) == (True, "excluded", "HP:0001250")
+
+
+def test_negated_feature_marked_present_is_still_rejected(ont, monkeypatch):
+    monkeypatch.setattr(X, "_cached_chat", lambda *a, **k: pytest.fail("no LLM call expected"))
+    ctx = "There were no seizures and hearing is normal."
+    out = X.map_items([X.check_item(item("no seizures", "Seizure", "present"), ctx),
+                       X.check_item(item("hearing is normal", "Hearing impairment", "present"), ctx)], ctx, ont, 0, True)
+    assert [o["valid"] for o in out] == [False, False]          # Seizure / Hearing impairment are not absences
+    assert all("not an absence" in o["reasons"][-1] for o in out)
 
 
 def test_presenting_needs_a_cue():
@@ -219,12 +257,10 @@ def test_vote_drops_minority_and_separates_status(ont):
 
 def test_presenting_symptom_onset_becomes_overall_onset():
     ctx = "A 3-year-old who presented with seizure onset in the first months of life and developmental delay."
-    seiz = X.check_item(item("seizure onset", "Seizure", presenting=True,
-                             onset={"min": 0, "max": 6, "unit": "month", "approximate": True,
-                                    "quote": "first months of life"}), ctx)
+    seiz = X.check_item(item("seizure onset", "Seizure", presenting=True, onset={"quote": "first months of life"}), ctx)
     seiz.update(valid=True, hpo_id="HP:0001250")
     po = X.presenting_onset([seiz])
-    assert (po["months_min"], po["months_max"], po["source"]) == (0, 6, "presenting symptom")
+    assert (po["months_min"], po["months_max"], po["source"]) == (1, 12, "presenting symptom")   # Infantile onset
     # a dated symptom that is not the presenting one does not set the overall onset
     seiz["presenting"] = False
     assert X.presenting_onset([seiz]) is None
@@ -240,7 +276,7 @@ def test_facts_verified():
     f = X.verify_facts({"age": {"value": 18, "unit": "month", "quote": "18-month-old"},
                         "sex": {"value": "female", "quote": "female"},
                         "variant_origin": {"value": "de_novo", "quote": "de novo"},
-                        "onset": {"min": 8, "max": 8, "unit": "month", "quote": "at 8 months"},
+                        "onset": {"quote": "at 8 months"},
                         "family_history": {"statement": None, "quote": None}}, CTX)
     assert f["age"]["months"] == 18 and f["sex"]["value"] == "female" and f["variant_origin"]["value"] == "de_novo"
     assert f["onset"]["months_min"] is None   # quote not in text -> unknown
@@ -258,13 +294,42 @@ def test_symptom_specific_timing_stays_on_the_symptom():
     from aitx.disease.pipeline import patient_onset
     assert patient_onset(f) == {}                                   # nothing to compare -> onset neutral
     # symptom timing is verified and converted like any other age
-    o = X.verify_onset({"min": 10, "max": 10, "unit": "year", "approximate": True, "quote": "around 10 years of age"}, CTX2)
-    assert (o["months_min"], o["months_max"]) == (120, 120)
+    o = X.verify_onset({"quote": "around 10 years of age"}, CTX2)
+    assert o["stated_months"] == [120, 120] and o["approximate"]
+    assert [t["id"] for t in o["hpo_onset"]] == ["HP:0003621"] and (o["months_min"], o["months_max"]) == (60, 192)
 
 
 def test_phenotype_onset_quote_must_be_verbatim():
-    p = X.check_item(item("developmental delay", onset={"min": 8, "max": 8, "unit": "month", "quote": "at 9 months"}), CTX)
+    p = X.check_item(item("developmental delay", onset={"quote": "at 9 months"}), CTX)
     assert p["checked"] and p["onset"]["months_min"] is None and not p["onset"]["verified"]
+
+
+@pytest.mark.parametrize("quote,terms,interval,stated", [
+    ("at 8 months", ["HP:0003593"], (1, 12), [8, 8]),                    # Infantile onset
+    ("around age 6", ["HP:0003621"], (60, 192), [72, 72]),               # Juvenile onset, 5-15 y
+    ("at age 12 months", ["HP:0011463"], (12, 60), [12, 12]),            # [low, high): 1 y is childhood
+    ("between 2 and 4 years", ["HP:0011463"], (12, 60), [24, 48]),
+    ("first 6 months of life", ["HP:0003623", "HP:0003593"], (0, 12), [0, 6]),   # a range takes every term it touches
+    ("on day 3", ["HP:0003623"], (0, 1), [0.1, 0.1]),
+    ("since birth", ["HP:0003577"], (0, 1), None),                       # named period
+    ("in early childhood", ["HP:0011463"], (12, 60), None),
+    ("in adulthood", ["HP:0003581"], (192, None), None),
+])
+def test_onset_quote_mapped_to_hpo_interval(quote, terms, interval, stated):
+    o = X.map_onset(quote)
+    assert [t["id"] for t in o["hpo_onset"]] == terms
+    assert (o["months_min"], o["months_max"]) == interval and o["stated_months"] == stated
+
+
+def test_unmappable_onset_is_unknown():
+    o = X.map_onset("presented")
+    assert o["hpo_onset"] == [] and o["months_min"] is None and "could not be mapped" in o["reasons"][0]
+
+
+def test_onset_tables_agree_with_hpo_intervals():
+    for tid, _, lo, hi in H.ONSET_LEAVES:
+        assert H.ONSET_MONTHS[tid] == (lo, hi)
+    assert all(tid in H.ONSET_MONTHS for _, tid, _ in H.ONSET_WORDS)
 
 
 CFG = {"model": "deepseek-flash", "base_url": "https://api.deepseek.com", "expect_model_prefix": ""}
@@ -304,7 +369,8 @@ def test_cache_entry_from_other_served_model_not_reused(tmp_path, monkeypatch):
 
 def test_prompt_never_asks_for_ids():
     assert "Do not give any ontology identifiers" in X.SYSTEM and "hpo_id" not in X.SYSTEM
-    assert "ONLY when the text explicitly dates the disease" in X.SYSTEM
+    assert "filled ONLY when the text explicitly" in X.SYSTEM
+    assert "Give the quote only; do not convert it to numbers." in X.SYSTEM     # onset numbers come from code
 
 
 def test_facts_age_number_must_match_quote():

@@ -317,13 +317,21 @@
       "HP:0001903",
       "HP:0020062"
      ]
+    },
+    {
+     "quote": "Normal liver labs",
+     "status": "excluded",
+     "acceptable": [
+      "HP:0031865",
+      "HP:0034685",
+      "HP:0430135",
+      "HP:0002910",
+      "HP:0001410"
+     ],
+     "note": "2026-11-03 (step 2.1): was a negative example ('normal finding'). Re-labelled under the adopted definition 'a specific function/test stated as normal = the corresponding abnormality is excluded'; any liver-function abnormality term counts."
     }
    ],
    "negatives": [
-    {
-     "quote": "Normal liver labs",
-     "why": "normal finding"
-    },
     {
      "quote": "Not enrolled in other trials",
      "why": "administrative"

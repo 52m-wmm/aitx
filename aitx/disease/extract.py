@@ -31,7 +31,7 @@ from aitx.disease.hpo import Ontology
 
 N_SAMPLES = 3
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
-PROMPT_VERSION = "step2-extract-v4"
+PROMPT_VERSION = "step2-extract-v5"
 N_CANDIDATES = 10
 
 SYSTEM = """You extract structured facts from a short clinical description of a patient with a rare genetic disease.
@@ -45,13 +45,11 @@ Return only a JSON object with this shape:
                       lay-to-medical rewording>"],
      "status": "present" | "excluded",
      "presenting": <true if the text describes this as the presenting / first symptom, e.g. "presented with">,
-     "onset": null | {"min": <number or null>, "max": <number or null>, "unit": "day"|"week"|"month"|"year"|null,
-                      "approximate": <true|false>, "quote": <exact span>}}
+     "onset": null | {"quote": <exact span saying when this feature began>}}
   ],
   "facts": {
     "age": {"value": <number or null>, "unit": "day"|"week"|"month"|"year"|null, "quote": <exact span or null>},
-    "onset": {"min": <number or null>, "max": <number or null>, "unit": "day"|"week"|"month"|"year"|null,
-              "approximate": <true|false>, "quote": <exact span or null>},
+    "onset": {"quote": <exact span saying when the disease began, or null>},
     "sex": {"value": "male"|"female"|"unknown", "quote": <exact span or null>},
     "variant_origin": {"value": "de_novo"|"inherited"|"unknown", "quote": <exact span or null>},
     "family_history": {"statement": <short paraphrase or null>, "quote": <exact span or null>}
@@ -59,14 +57,18 @@ Return only a JSON object with this shape:
 }
 Rules:
 - phenotypes: every sign, symptom, clinical finding, abnormal laboratory value or tumour mentioned, one entry per
-  feature. Do not list disease or syndrome names, genes, variants, test methods, normal findings, ages or sex.
+  feature. Do not list disease or syndrome names, genes, variants, test methods, ages or sex.
   Do not add features that are not stated. Do not give any ontology identifiers.
-- "excluded" only when the text explicitly says the feature is absent (e.g. "without seizures").
+- "excluded" only when the text explicitly says the feature is absent (e.g. "without seizures", "never had a
+  fracture") or explicitly says a specific function, organ or test is normal: list the corresponding abnormality
+  as excluded (e.g. "hearing is normal" -> Hearing impairment, excluded; "normal liver labs" -> Abnormal liver
+  function tests, excluded). Do not list vague statements such as "otherwise well".
+- A feature that is itself an absence (e.g. "born without the vas deferens", "no speech") is "present".
 - Every quote must be copied character-for-character from the text.
-- facts.onset: age at onset of the DISEASE as a whole, filled ONLY when the text explicitly dates the disease
-  or its main presentation (e.g. "presented at 8 months of age", "symptoms since birth").
-  "first months of life" -> min 0, max 6, unit month, approximate true. A single age -> min = max.
-- If the text dates one particular symptom (e.g. "around 10 years of age began losing weight"), put that timing in
+- facts.onset: only the exact words saying when the DISEASE as a whole began, filled ONLY when the text explicitly
+  dates the disease or its main presentation (e.g. "at 8 months of age" in "presented at 8 months of age",
+  "since birth"). Give the quote only; do not convert it to numbers.
+- If the text dates one particular symptom (e.g. "around 10 years of age began losing weight"), put that quote in
   the "onset" of that phenotype entry; put it in facts.onset only if that symptom is the presenting one.
 - Anything the text does not state is null / "unknown". Never guess."""
 
@@ -154,7 +156,13 @@ def llm_samples(context: str, *, use_cache: bool = True, n: int = N_SAMPLES) -> 
 
 # ------------------------------------------------------------- verification
 
-_NEG = re.compile(r"\b(without|no|not|absence of|absent|denies|negative for|free of)\b", re.I)
+# "normal" negates only when something is said to BE normal; comparisons ("further than normal",
+# "below normal") describe an abnormality and are not negations
+_NEG = re.compile(r"\b(without|no|not|never|(?<!than )(?<!above )(?<!below )(?<!beyond )normal|unremarkable|ruled out|"
+                  r"absence of|absent|denies|negative for|free of)\b", re.I)
+# HPO term names that themselves denote an absence (Absent vas deferens, Azoospermia = "Absent sperm in semen",
+# Absent speech = "No speech development"): a negation word in the quote can then be part of the feature
+_ABSENCE_TERM = re.compile(r"\b(absent|absence|aplasia|agenesis|lack|lacking|missing|no|without|none)\b", re.I)
 _PRESENTING = re.compile(r"\b(present(ed|s|ing)|first (sign|symptom|noticed)s?|initial(ly)? (sign|symptom|present)\w*)\b", re.I)
 
 
@@ -178,8 +186,8 @@ def check_item(item: dict, context: str) -> dict:
         out["reasons"].append("marked excluded but no negation cue in text")
         return out
     if status == "present" and _NEG.search(quote):
-        out["reasons"].append("marked present but the quote itself is negated")
-        return out
+        # decided after mapping (negation_check): kept only if the mapped term itself denotes an absence
+        out["negated_quote"] = _NEG.search(quote).group(0).lower()
     if out["presenting"]:
         sentence = context[context.rfind(".", 0, start) + 1:start + len(quote)]
         if not _PRESENTING.search(sentence):
@@ -215,6 +223,22 @@ def candidates_for(item: dict, ont: Ontology) -> tuple[str | None, list[dict], s
     return None, cands, "retrieved candidates"
 
 
+def negation_check(it: dict, ont: Ontology) -> None:
+    """A 'present' item whose quote contains a negation word is kept only when the mapped HPO term itself
+    denotes an absence (its name or a synonym), or the same word is part of the term's name
+    ("born without the vas deferens" -> Absent vas deferens). Otherwise the LLM marked a negated
+    feature as present ("no seizures" -> Seizure) and the item is rejected."""
+    word = it.get("negated_quote")
+    if not word or not it.get("valid"):
+        return
+    names = ont.names(it["hpo_id"])
+    if any(_ABSENCE_TERM.search(n) or re.search(rf"\b{re.escape(word)}\b", n, re.I) for n in names):
+        it["negation_note"] = f"'{word}' in the quote is part of the feature: the term denotes an absence"
+        return
+    it.update(valid=False, hpo_id=None, label=None)
+    it["reasons"].append("marked present but the quote itself is negated, and the mapped term is not an absence")
+
+
 def map_items(items: list[dict], context: str, ont: Ontology, k: int, use_cache: bool) -> list[dict]:
     """Assign HPO ids to checked items: exact match in code, else LLM picks from code-listed candidates."""
     pending = []
@@ -230,6 +254,8 @@ def map_items(items: list[dict], context: str, ont: Ontology, k: int, use_cache:
         else:
             it["reasons"].append("no candidate HPO term found")
     if not pending:
+        for it in items:
+            negation_check(it, ont)
         return items
     lines = [f"Clinical description: {context}", ""]
     for i, it in enumerate(pending, 1):
@@ -252,6 +278,8 @@ def map_items(items: list[dict], context: str, ont: Ontology, k: int, use_cache:
             it.update(hpo_id=tid, label=ont.terms[tid].label, valid=True, mapping="LLM pick from retrieved candidates")
         else:
             it["reasons"].append("LLM picked none of the candidates" if i in picks else "no pick returned")
+    for it in items:
+        negation_check(it, ont)
     return items
 
 
@@ -294,17 +322,81 @@ def _fact(value, quote, context, reasons: list[str], cue: re.Pattern | None = No
     return {"value": value, "quote": quote, "verified": True, **({"reasons": reasons} if reasons else {})}
 
 
-def verify_onset(o: dict, context: str) -> dict:
-    """{min, max, unit, approximate, quote} from the LLM -> months, with a verbatim quote check."""
-    lo, hi = to_months(o.get("min"), o.get("unit")), to_months(o.get("max"), o.get("unit"))
-    onset = _fact((lo, hi) if lo is not None or hi is not None else None, o.get("quote"), context, [])
-    if onset["value"] != "unknown":
-        onset["months_min"], onset["months_max"] = onset.pop("value")
-        onset["approximate"] = bool(o.get("approximate")) or lo != hi
+_NUM_WORDS = {w: i for i, w in enumerate(["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                                           "ten", "eleven", "twelve"])}
+_N = r"(\d+(?:\.\d+)?|" + "|".join(_NUM_WORDS) + r")"
+_U = r"(day|week|month|year)s?"
+_RANGE = re.compile(_N + r"\s*(?:-|–|to|and)\s*" + _N + r"[\s-]*" + _U, re.I)
+_FIRST = re.compile(r"first\s+" + _N + r"\s+" + _U + r"(?:\s+of\s+life)?", re.I)
+_AGE = re.compile(_N + r"[\s-]*" + _U, re.I)
+_DAY_OF_LIFE = re.compile(r"\bday\s+(\d+)(?:\s+of\s+life)?\b", re.I)          # "day 3 (of life)": age in days
+_AGE_YEARS = re.compile(r"\bage(?:d)?\s+(?:of\s+)?" + _N + r"\b(?![\s-]*(?:day|week|month|year))", re.I)   # "age 6"
+_APPROX = re.compile(r"\b(around|about|approximately|roughly|~|circa)\b", re.I)
+
+
+def _num(x: str) -> float:
+    return float(_NUM_WORDS[x.lower()]) if x.lower() in _NUM_WORDS else float(x)
+
+
+def stated_months(quote: str) -> tuple[float, float] | None:
+    """Age range stated in an onset description, in months (code, never the LLM)."""
+    m = _DAY_OF_LIFE.search(quote)
+    if m:
+        v = to_months(int(m.group(1)), "day")
+        return v, v
+    m = _RANGE.search(quote)
+    if m:
+        return to_months(_num(m.group(1)), m.group(3)), to_months(_num(m.group(2)), m.group(3))
+    m = _FIRST.search(quote)
+    if m:
+        return 0, to_months(_num(m.group(1)), m.group(2))
+    m = _AGE.search(quote)
+    if m:
+        v = to_months(_num(m.group(1)), m.group(2))
+        return v, v
+    m = _AGE_YEARS.search(quote)
+    if m:
+        v = to_months(_num(m.group(1)), "year")
+        return v, v
+    return None
+
+
+def map_onset(quote: str | None) -> dict:
+    """Onset description -> HPO onset term(s) and the HPO-defined month interval used for scoring.
+
+    A stated age is placed in the onset term(s) whose HPO interval contains it (a range takes every term it
+    touches); otherwise a named period ("since birth", "in infancy", "childhood") picks its term.
+    The interval compared with diseases is the HPO one, not the stated number."""
+    out = {"hpo_onset": [], "months_min": None, "months_max": None, "stated_months": None,
+           "approximate": bool(quote and _APPROX.search(quote))}
+    if not quote:
+        return out
+    from aitx.disease.hpo import INF, ONSET_MONTHS, ONSET_WORDS, onset_terms_for_months
+    st = stated_months(quote)
+    if st and None not in st:
+        terms = onset_terms_for_months(*st)
+        out.update(stated_months=list(st), method="age stated in the text, placed in the HPO onset interval")
     else:
-        onset.pop("value")
-        onset["months_min"] = onset["months_max"] = None
-    return onset
+        terms = [(t, lbl) for rx, t, lbl in ONSET_WORDS if re.search(rx, quote, re.I)][:1]
+        out["method"] = "onset period named in the text"
+    if not terms:
+        out["reasons"] = ["onset description could not be mapped to an HPO onset term"]
+        return out
+    lo = min(ONSET_MONTHS[t][0] for t, _ in terms)
+    hi = max(ONSET_MONTHS[t][1] for t, _ in terms)
+    out.update(hpo_onset=[{"id": t, "label": lbl} for t, lbl in terms], months_min=lo,
+               months_max=None if hi == INF else hi)
+    return out
+
+
+def verify_onset(o: dict, context: str) -> dict:
+    """{quote} from the LLM -> verbatim check -> HPO onset term and interval (map_onset)."""
+    q = (o or {}).get("quote")
+    if not q:
+        return {"quote": None, "verified": True, **map_onset(None)}
+    if q not in context:
+        return {"quote": q, "verified": False, "reasons": ["quote not found verbatim"], **map_onset(None)}
+    return {"quote": q, "verified": True, **map_onset(q)}
 
 
 def verify_facts(f: dict, context: str) -> dict:

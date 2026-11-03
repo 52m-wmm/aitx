@@ -29,7 +29,8 @@ def patient_onset(facts: dict) -> dict:
     if o.get("months_min") is not None or o.get("months_max") is not None:
         lo = o.get("months_min") if o.get("months_min") is not None else o.get("months_max")
         hi = o.get("months_max") if o.get("months_max") is not None else lo
-        return {"min": lo, "max": hi, "kind": "onset", "quote": o.get("quote")}
+        return {"min": lo, "max": hi, "kind": "onset", "quote": o.get("quote"),
+                "hpo_onset": o.get("hpo_onset") or [], "stated_months": o.get("stated_months")}
     if a.get("months") is not None:
         return {"min": None, "max": a["months"], "kind": "age_upper_bound", "quote": a.get("quote")}
     return {}

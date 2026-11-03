@@ -54,6 +54,35 @@ ONSET_MONTHS = {
     "HP:0003584": (720, INF),    # Late (> 60 y)
 }
 
+# Non-overlapping onset terms used to place a stated age (step 2.1): [low, high) months, HPO definitions.
+ONSET_LEAVES = [
+    ("HP:0003623", "Neonatal onset", 0, 1),
+    ("HP:0003593", "Infantile onset", 1, 12),
+    ("HP:0011463", "Childhood onset", 12, 60),
+    ("HP:0003621", "Juvenile onset", 60, 192),
+    ("HP:0025708", "Early young adult onset", 192, 228),
+    ("HP:0025709", "Intermediate young adult onset", 228, 300),
+    ("HP:0025710", "Late young adult onset", 300, 480),
+    ("HP:0003596", "Middle age onset", 480, 720),
+    ("HP:0003584", "Late onset", 720, INF),
+]
+# Onset periods named in words -> HPO onset term (labels/synonyms of those terms; checked against hp.json in tests)
+ONSET_WORDS = [
+    (r"\b(prenatal|antenatal|in utero|intrauterine|fetal|foetal)\b", "HP:0030674", "Antenatal onset"),
+    (r"\b(at|since|from) birth\b|\bcongenital\b|\bpresent at birth\b", "HP:0003577", "Congenital onset"),
+    (r"\bneonatal\b|\bnewborn\b|\bfirst (few )?(days|weeks) of life\b", "HP:0003623", "Neonatal onset"),
+    (r"\binfan(cy|tile)\b|\bfirst (few )?months of life\b|\bfirst year of life\b", "HP:0003593", "Infantile onset"),
+    (r"\b(early )?childhood\b", "HP:0011463", "Childhood onset"),
+    (r"\bjuvenile\b|\badolescen(ce|t)\b|\bteen(age|s)?\b", "HP:0003621", "Juvenile onset"),
+    (r"\bmiddle age\b", "HP:0003596", "Middle age onset"),
+    (r"\badult(hood)?\b", "HP:0003581", "Adult onset"),
+]
+
+
+def onset_terms_for_months(lo: float, hi: float) -> list[tuple[str, str]]:
+    """Onset terms whose HPO interval overlaps [lo, hi] months (a single age gives one term)."""
+    return [(t, lbl) for t, lbl, a, b in ONSET_LEAVES if a <= hi and lo < b and not (lo == hi and not a <= lo < b)]
+
 
 def _curie(iri: str) -> str:
     return iri.rsplit("/", 1)[-1].replace("_", ":", 1)
