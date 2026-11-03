@@ -34,8 +34,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 1 | 变异解析（确定性，无 LLM） | ✅ step1.1 已验收（2026-11-03，tag `step1.1-accepted`）：自检 6 独立重新翻译，16 个变异全部一致、反向验证全 fail；输出 schema v1.2 另含外显子布局和 AlphaFold 结构事实（pLDDT、RSA、8 Å 邻居） |
 | 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | ✅ 已验收（2026-10-28，tag `step2-accepted`）：`--fresh-llm` 硬性项全过；离线测试 135 个全过；症状提取测试集 32 条精确率/召回率 1.0（集合偏简单）；剩余问题见契约“已知局限” |
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
-| 2.1 | Step 2 局限改进 | 下一步：难题测试集基线 → 混合检索 + 起病年龄映射 → CBAVD 漏提 → `--fresh-llm` → tag `step2.1-accepted`（待办见 Step 2 契约末尾） |
-| 3 | 疗法匹配（变异机制 → 适用的治疗思路） | 2.1 之后写 3.0 契约（待办见 `docs/step3_contract_todo.md`，含 SPTLC1 表型-区域规则、DMD 读码框规则） |
+| 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：难题测试集、缺失类术语否定规则（修复 CBAVD）、起病年龄由代码映射到 HPO 起病术语；语义检索暂缓（剩余漏提不是检索问题）。详见 Step 2 契约 v2.5 |
+| 3 | 疗法匹配（变异机制 → 适用的治疗思路） | 下一步：写 3.0 契约（待办见 `docs/step3_contract_todo.md`，含 SPTLC1 表型-区域规则、DMD 读码框规则） |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
