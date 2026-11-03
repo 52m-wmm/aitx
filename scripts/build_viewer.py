@@ -118,28 +118,61 @@ def step_status(k: int, r: dict | None) -> tuple[str, str]:
             return "fail", L("校验失败", "checks failed")
         st = r["primary"]["status"]
         return {"resolved": "pass", "ambiguous": "warn"}.get(st, "fail"), status_label(st)
+    if k == 3:
+        if not r.get("ok", True):
+            return "fail", L("账本校验失败", "ledger checks failed")
+        nb, nv = len(r.get("branches", [])), sum(x["status"] == "verified" for x in r.get("evidence", []))
+        searched = sum(v == "searched" for v in (r.get("sections_status") or {}).values())
+        return "pass", L(f"{nb} 个分支，{nv} 条已核对证据，已检索 {searched}/8 章节",
+                         f"{nb} branch(es), {nv} verified items, {searched}/8 sections searched")
     return ("pass" if r.get("ok", True) else "fail"), L("已运行", "ran")
 
 
-def evidence_tree(s2: dict, s3: dict | None) -> dict:
-    """View 8 data: diagnosis branch -> evidence layer -> section -> action -> evidence leaf.
+TIER_ORDER = ["established", "emerging", "hypothesized", "background"]
 
-    Step 3 fills `layers`; until then each diagnosis branch is present with empty layers.
-    Leaf shape reserved: {claim, quote, source_url, source_id, accessed_at, applies_to}.
-    `role` is a language-neutral code: primary | ambiguous_1 | ambiguous_2 | ambiguous_3.
+
+def evidence_tree(s2: dict, s3: dict | None) -> dict:
+    """View 8 data: diagnosis branch -> evidence tier -> section -> action -> evidence leaf.
+
+    With a step 3 ledger the tree is built from it (branches in branch_order, leaves = ledger items);
+    without one, the step 2 diagnoses are shown with empty layers. Grouping only, no computation.
     """
-    p = s2["primary"]
+    if not s3:
+        p = s2["primary"]
+        branches = []
+        if p["id"]:
+            branches.append({"diagnosis_id": p["id"], "label": p["label"],
+                             "role": "primary" if p["status"] == "resolved" else "ambiguous_1", "layers": []})
+            if p["status"] == "ambiguous":
+                for i, a in enumerate(p["alternatives"][:2], 2):
+                    branches.append({"diagnosis_id": a["id"], "label": a["label"], "role": f"ambiguous_{i}", "layers": []})
+        return {"status": "reserved", "branches": branches}
+    by_id = {b["id"]: b for b in s3["branches"]}
     branches = []
-    if p["id"]:
-        branches.append({"diagnosis_id": p["id"], "label": p["label"],
-                         "role": "primary" if p["status"] == "resolved" else "ambiguous_1", "layers": []})
-        if p["status"] == "ambiguous":
-            for i, a in enumerate(p["alternatives"][:2], 2):
-                branches.append({"diagnosis_id": a["id"], "label": a["label"], "role": f"ambiguous_{i}", "layers": []})
-    if s3:
-        for b in branches:
-            b["layers"] = (s3.get("tree") or {}).get(b["diagnosis_id"], [])
-    return {"status": "filled" if s3 else "reserved", "branches": branches}
+    for bid in s3.get("branch_order") or list(by_id):
+        b = by_id[bid]
+        items = [x for x in s3["evidence"] if bid in x["applies_to"]]
+        layers = []
+        for tier in TIER_ORDER:
+            secs = []
+            for sec in dict.fromkeys(x["section"] for x in items if x["tier"] == tier):
+                acts: dict = {}
+                for x in items:
+                    if x["tier"] == tier and x["section"] == sec:
+                        k = (x.get("action") or {}).get("key") or ""
+                        acts.setdefault(k, {"action_key": k or None, "normalized": (x.get("action") or {}).get("normalized"),
+                                            "leaves": []})["leaves"].append(x)
+                secs.append({"section": sec, "status": s3["sections_status"].get(sec), "actions": list(acts.values())})
+            if secs:
+                layers.append({"tier": tier, "sections": secs})
+        d = b.get("diagnosis") or {}
+        branches.append({"diagnosis_id": bid, "label": d.get("label") or b.get("gene"), "role": b["role"],
+                         "omim": d.get("omim") or [], "expanded_from": b.get("expanded_from"),
+                         "not_expandable": b.get("not_expandable"), "layers": layers,
+                         "assessment": [a for a in s3.get("branch_assessment", []) if a["branch"] == bid]})
+    return {"status": "filled", "branches": branches, "dropped": s3.get("branches_dropped", []),
+            "rules_applied": s3.get("rules_applied", []), "rules_skipped": s3.get("rules_skipped", []),
+            "missing": s3.get("missing_information", []), "sections_status": s3.get("sections_status", {})}
 
 
 def load_case(cid: str) -> dict:
@@ -813,24 +846,101 @@ def v_candidates(s2: dict) -> str:
 def role_label(r: str) -> str:
     if r == "primary":
         return L("首选", "Primary")
+    if r == "gene_level":
+        return L("基因级（诊断未定）", "Gene level (diagnosis unresolved)")
     return L(f"歧义候选 {r.split('_')[1]}", f"Ambiguous candidate {r.split('_')[1]}")
+
+
+def tier_label(t: str) -> str:
+    return {"established": L("已确立", "Established"), "emerging": L("新兴", "Emerging"),
+            "hypothesized": L("假设性", "Hypothesized"), "background": L("背景事实", "Background")}.get(t, t)
+
+
+def section_label(sec: str) -> str:
+    return {"background": L("背景（诊断、变异、ClinVar、GeneReviews、规则）", "Background (diagnosis, variant, ClinVar, GeneReviews, rules)"),
+            "existing_targeted_therapies": "Existing Targeted Therapies", "supportive_management": "Supportive Management",
+            "contraindications_precautions": "Contraindications & Precautions",
+            "clinical_trial_eligibility": "Clinical Trial Eligibility", "off_label_expanded_access": "Off-label / Expanded Access",
+            "bespoke_therapies": "Bespoke Therapies", "drug_repurposing": "Drug Repurposing",
+            "outcome_measures_ranking": "Outcome Measures & Ranking"}.get(sec, sec)
+
+
+def _leaf(x: dict) -> str:
+    st = tag({"verified": "pass", "rejected": "fail"}.get(x["status"], "warn"), x["status"])
+    when = time.strftime("%Y-%m-%d", time.gmtime(x.get("accessed_at") or (x.get("search") or {}).get("queried_at") or 0))
+    if x["kind"] == "negative":
+        sr = x["search"]
+        body = (f"{L('查过但没找到', 'searched, nothing found')}: {e(sr['database'])} “{e(sr['query'])}” "
+                f"→ {sr['n_results']} {L('条', 'results')}, {L('排除', 'excluded')} {sr['n_excluded']} · {when}")
+    elif x["kind"] == "reasoning":
+        body = f"{L('推理，前提', 'reasoning from')}: {e(', '.join(x['premises']))}"
+    else:
+        src = x["source"]
+        up = src.get("upstream") or {}
+        q = str(x.get("quote", ""))
+        if src.get("type") == "pipeline_fact" and len(q) > 1 and q[0] == q[-1] == '"':
+            q = q[1:-1]                      # pipeline facts are quoted as JSON values; show the plain text
+        body = (f"<q>{e(q[:160])}</q> — {link(src.get('url'), src.get('id', ''))}"
+                + (f" ({e(up.get('type', ''))} {e(str(up.get('id', '')))})" if up else "") + f" · {when}")
+    why = f"<div class='muted'>{e('; '.join(x['reasons']))}</div>" if x.get("reasons") else ""
+    return f"<li>{st} {e(x['claim'])}<div class='muted'>{body}</div>{why}</li>"
 
 
 def v_tree(c: dict) -> str:
     t = c["tree"]
     if not t:
         return ""
-    placeholder = L("证据层级 → 章节 → 行动 → 证据叶子（原文片段 + 来源链接）：Step 3 运行后填入",
-                    "evidence tier → section → action → evidence leaf (verbatim quote + source link): filled in by Step 3")
-    items = []
+    if t["status"] == "reserved":
+        items = "".join(f"<li><b>{e(role_label(b['role']))}</b>: {e(b['label'])} <span class='muted'>{e(b['diagnosis_id'])}</span></li>"
+                        for b in t["branches"])
+        return (f"<ul class='tree'>{items}</ul><p class='muted'>"
+                f"{L('Step 3 尚未运行（用 run_pipeline.py --from-step 3 生成证据账本）。', 'Step 3 has not run yet (run_pipeline.py --from-step 3).')}</p>")
+    out = []
     for b in t["branches"]:
-        inner = "".join(f"<li>{e(json.dumps(layer, ensure_ascii=False)[:200])}</li>" for layer in b["layers"]) or \
-            f"<li class='muted'>{e(placeholder)}</li>"
-        items.append(f"<li><b>{e(role_label(b['role']))}</b>: {e(b['label'])} <span class='muted'>{e(b['diagnosis_id'])}</span>"
-                     f"<ul class='tree'>{inner}</ul></li>")
-    note = L("结构已预留，Step 3 尚未运行。", "Structure reserved; Step 3 has not run yet. ") if t["status"] == "reserved" else ""
-    tail = L("报告里的条件语句将与这里的诊断分支一一对应。", "Conditional statements in the report will map one-to-one to these diagnosis branches.")
-    return f"<ul class='tree'>{''.join(items)}</ul><p class='muted'>{e(note + tail)}</p>"
+        extra = ""
+        if b.get("expanded_from"):
+            extra += f" <span class='muted'>{L('由伞状概念展开', 'expanded from umbrella')} {e(b['expanded_from'])}</span>"
+        if b.get("not_expandable"):
+            extra += " " + tag("warn", L("伞状概念，无法展开", "umbrella, not expandable"))
+        for a in b.get("assessment") or []:
+            extra += " " + tag("pass" if a["effect"] == "supports" else "warn",
+                               (L("规则支持", "rule supports") if a["effect"] == "supports" else L("规则不支持", "rule argues against"))
+                               + f" {a['rule_id']}")
+        layers = []
+        for layer in b["layers"]:
+            secs = []
+            for sec in layer["sections"]:
+                acts = []
+                for a in sec["actions"]:
+                    leaves = "".join(_leaf(x) for x in a["leaves"])
+                    if a["action_key"]:
+                        warn = (" " + tag("warn", L("未标准化", "not normalized"))) if a.get("normalized") is False else ""
+                        acts.append(f"<li><code>{e(a['action_key'])}</code>{warn}<ul class='tree'>{leaves}</ul></li>")
+                    else:
+                        acts.append(leaves)
+                secs.append(f"<li><b>{e(section_label(sec['section']))}</b> <span class='muted'>({len(sec['actions'])})</span>"
+                            f"<ul class='tree'>{''.join(acts)}</ul></li>")
+            layers.append(f"<li><details{' open' if layer['tier'] != 'background' else ''}><summary><b>{e(tier_label(layer['tier']))}</b></summary>"
+                          f"<ul class='tree'>{''.join(secs)}</ul></details></li>")
+        out.append(f"<li><b>{e(role_label(b['role']))}</b>: {e(b['label'])} <span class='muted'>{e(b['diagnosis_id'])} "
+                   f"{e(' '.join(b.get('omim') or []))}</span>{extra}<ul class='tree'>{''.join(layers)}</ul></li>")
+    notes = []
+    if t.get("dropped"):
+        notes.append(f"<li>{L('超过 3 个分支而舍弃（按 Step 2 分数）', 'Dropped (more than 3 branches, by step 2 score)')}: "
+                     + e(", ".join(f"{d['diagnosis']['label']} ({d['step2_score']})" for d in t["dropped"])) + "</li>")
+    for r in t.get("rules_applied") or []:
+        miss = f" · {L('规则涉及但不是分支的诊断', 'diagnoses named by the rule but not a branch')}: {', '.join(r['branches_not_present'])}" if r.get("branches_not_present") else ""
+        notes.append(f"<li>{L('生效规则', 'Rule applied')} <code>{e(r['rule_id'])}</code> ({e(r['variant'])}): {e(r['statement'])}{e(miss)}</li>")
+    for r in t.get("rules_skipped") or []:
+        notes.append(f"<li>{L('未加载的规则', 'Rule not loaded')} <code>{e(str(r['rule_id']))}</code>: {e('; '.join(r['reasons']))}</li>")
+    if t.get("missing"):
+        notes.append(f"<li>{L('缺失信息', 'Missing information')}: "
+                     + e("; ".join(f"{m['variable']} — {m['why_it_matters']}" for m in t["missing"])) + "</li>")
+    pending = [s for s, st in (t.get("sections_status") or {}).items() if st != "searched"]
+    if pending:
+        notes.append(f"<li class='muted'>{L('尚未检索的章节（3a–3e 完成后填入）', 'Sections not searched yet (filled by 3a–3e)')}: "
+                     + e(", ".join(section_label(x) for x in pending)) + "</li>")
+    return f"<ul class='tree'>{''.join(out)}</ul><ul>{''.join(notes)}</ul>"
 
 
 def v_sources(s2: dict) -> str:
@@ -866,7 +976,7 @@ def case_page(c: dict, context: str) -> str:
 <h2>{L('为什么这样判：症状 × 疾病', 'Why: features × diseases')}</h2>{v_matrix(s2)}
 <h2>{L('得分与歧义线', 'Scores and the ambiguity line')}</h2>{v_bars(s2)}
 <h2>{L('ClinVar 变异级证据', 'ClinVar variant-level evidence')}</h2>{v_clinvar(s2)}
-<h2 id='tree'>{L('证据树（Step 3 起）', 'Evidence tree (from Step 3)')}</h2>{v_tree(c)}
+<h2 id='tree'>{L('证据树（Step 3 证据账本）', 'Evidence tree (step 3 ledger)')}</h2>{v_tree(c)}
 <h2>{L('来源链接', 'Source links')}</h2>{v_sources(s2)}"""
     return page(f"{c['id']} {L('审查', 'review')}", body, c["id"], depth=1)
 
