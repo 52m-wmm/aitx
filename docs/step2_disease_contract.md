@@ -378,4 +378,12 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
    "syndromic intellectual disability"（MONDO:0000508）是 Orphanet 的疾病分组、不是具体疾病，但前者因有症状注释而参与了比较。
    "有无症状注释"不足以判断是否具体疾病；拟改用数据库自身的分类（Orphanet 疾病类型、MONDO 的 grouping 标记）。
    **先统计**全部病例中有多少候选属于这种情况、是否影响任何病例的状态（特别是 40002、40003 的并列项），再提方案，审定后改。
-2. **"ranked above N candidates"的计数**包含了被合并掉的候选，改为只计进入比较的候选。
+   - 统计（2026-11-03，61 个参与比较的候选）：Orphanet 与 MONDO 自身的分类**都没有**把上述两个例子标为分组
+     （MONDO:0018614 在 Orphanet 是 Disease、MONDO 子集 ordo_disorder；MONDO:0000508 无 Orphanet、无分组标记）。
+     关联基因数能区分它们（66、54 个基因），但也会命中囊性纤维化（GenCC 19 个基因）等具体疾病，需要拍阈值。
+     40002、40003 的并列项不受影响；练习病例 DMD 的并列项"非综合征性 X 连锁智力障碍"（31 个基因，Orphanet 病因亚型）受影响。
+   - **决定：(a) + (c)，不用基因数阈值**。(a) 只按数据库标记判定分组：Orphanet DisorderGroup = "Group of disorders"
+     或 MONDO 子集 `ordo_group_of_disorders`；被标为分组的候选不参与比较（有无症状注释都一样），`specific = false`，
+     输出 `grouping` 字段写明依据。(c) 其余宽泛概念在 3.0 作为伞状分支处理（展开、无法展开时标注、报告措辞上区分）。
+   - **已实现**：18 个病例的诊断结论全部不变；被标为分组的 2 个候选（AITX-00011 MONDO:0020072、DMD MONDO:0016106）原本就未参与比较。
+2. **"ranked above N candidates"的计数**只计进入比较的候选（已实现；40001 由 4 改为 2）。
