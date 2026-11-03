@@ -171,6 +171,12 @@ export AITX_LLM_MODEL=deepseek-flash
 export AITX_LLM_API_KEY=你的key
 # 可选：服务端返回的模型名不以此开头就报错，防止别名被悄悄切换
 export AITX_EXPECT_MODEL_PREFIX=deepseek-v4.1-flash
+# 可选：同时在途的 LLM 请求数（默认 4）；结果与串行完全相同，只影响速度
+export AITX_LLM_CONCURRENCY=4
 ```
 
 每次调用都会记录到 `runs/llm_calls.jsonl`，包括服务端实际返回的模型名。
+
+并发：每个病例的 3 次抽样（各自带一次“从候选中选择”）同时进行；验收脚本和症状测试集评估还会让多个病例同时跑。
+所有线程共用一个上限 `AITX_LLM_CONCURRENCY`（只限真正发出的请求，缓存命中不受限）。缓存键和抽样序号与串行时相同，
+结果按病例和抽样序号的顺序汇总，所以输出与串行逐字节一致。`run_pipeline.py` 仍按病例依次运行，病例内部并发。

@@ -21,6 +21,7 @@ import argparse
 import json
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -61,8 +62,11 @@ def check_gold(gold: dict, ont: Ontology) -> list[str]:
 def evaluate(gold: dict, ont: Ontology, use_cache: bool = True) -> dict:
     tp_ext = n_ext = matched = n_gold = 0
     false_pos, misses, near = [], [], []
-    for c in gold["contexts"]:
-        ext = extract.extract(c["context"], ont, use_cache=use_cache)["phenotypes"]
+    # contexts are extracted in parallel (LLM requests are capped by extract.CONCURRENCY), then scored in order
+    with ThreadPoolExecutor(max_workers=extract.CONCURRENCY) as pool:
+        exts = list(pool.map(lambda c: extract.extract(c["context"], ont, use_cache=use_cache)["phenotypes"],
+                             gold["contexts"]))
+    for c, ext in zip(gold["contexts"], exts):
         n_ext += len(ext)
         n_gold += len(c["annotations"])
         hit_gold = set()

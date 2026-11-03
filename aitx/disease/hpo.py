@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import threading
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -125,6 +126,7 @@ class Ontology:
         self._max_ic = 0.0
         self._index: dict[str, list[str]] | None = None
         self._search: dict | None = None
+        self._build_lock = threading.Lock()     # lazy indexes are built once, even with concurrent callers
         self.former: dict[str, list[str]] = defaultdict(list)   # former labels/synonyms of current terms
         for t in self.terms.values():                             # "obsolete X" replaced by Y -> X is a name of Y
             if t.obsolete and t.replaced_by in self.terms and t.label.lower().startswith("obsolete "):
@@ -188,11 +190,14 @@ class Ontology:
         Case/punctuation-insensitive; a plural form ("Seizures", "developmental delays") also matches.
         """
         if self._index is None:
-            self._index = defaultdict(list)
-            for t in self.terms.values():
-                if not t.obsolete:
-                    for n in self.names(t.id):
-                        self._index[normalize(n)].append(t.id)
+            with self._build_lock:
+                if self._index is None:
+                    idx = defaultdict(list)            # built fully before it becomes visible to other threads
+                    for t in self.terms.values():
+                        if not t.obsolete:
+                            for n in self.names(t.id):
+                                idx[normalize(n)].append(t.id)
+                    self._index = idx
         out: list[str] = []
         for key in (normalize(text), " ".join(_singular(w) for w in normalize(text).split())):
             out += [t for t in self._index.get(key, []) if self.is_phenotype(t) and t not in out]
@@ -203,19 +208,27 @@ class Ontology:
     def search(self, text: str, k: int = 10) -> list[dict]:
         """Lexical retrieval (BM25 over all names) of the k closest phenotype terms."""
         if self._search is None:
-            docs, df = [], defaultdict(int)
-            for t in self.terms.values():
-                if t.obsolete or not self.is_phenotype(t.id):
-                    continue
-                for n in self.names(t.id):
-                    toks = _tokens(n)
-                    if toks:
-                        docs.append((t.id, n, toks))
-                        for w in set(toks):
-                            df[w] += 1
-            avg = sum(len(d[2]) for d in docs) / len(docs)
-            self._search = {"docs": docs, "df": df, "n": len(docs), "avg": avg}
+            with self._build_lock:
+                if self._search is None:
+                    self._search = self._build_search()
         ix = self._search
+        return self._rank(ix, text, k)
+
+    def _build_search(self) -> dict:
+        docs, df = [], defaultdict(int)
+        for t in self.terms.values():
+            if t.obsolete or not self.is_phenotype(t.id):
+                continue
+            for n in self.names(t.id):
+                toks = _tokens(n)
+                if toks:
+                    docs.append((t.id, n, toks))
+                    for w in set(toks):
+                        df[w] += 1
+        avg = sum(len(d[2]) for d in docs) / len(docs)
+        return {"docs": docs, "df": df, "n": len(docs), "avg": avg}
+
+    def _rank(self, ix: dict, text: str, k: int) -> list[dict]:
         q = set(_tokens(text))
         best: dict[str, tuple[float, str]] = {}
         for tid, name, toks in ix["docs"]:

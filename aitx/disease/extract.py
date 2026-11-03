@@ -21,15 +21,21 @@ import http.client
 import json
 import os
 import re
+import threading
 import time
 import urllib.error
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from aitx import llm
 from aitx.disease.hpo import Ontology
 
 N_SAMPLES = 3
+# LLM requests in flight at once across all threads (cache hits are not limited). Results do not depend on it:
+# cache keys and sample numbers are the same as in a serial run.
+CONCURRENCY = max(1, int(os.environ.get("AITX_LLM_CONCURRENCY", "4")))
+_SLOTS = threading.BoundedSemaphore(CONCURRENCY)
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
 PROMPT_VERSION = "step2-extract-v5"
 N_CANDIDATES = 10
@@ -117,7 +123,8 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
     attempts = 5
     for attempt in range(attempts):
         try:
-            resp = llm.chat(messages, **CALL_PARAMS)
+            with _SLOTS:
+                resp = llm.chat(messages, **CALL_PARAMS)
         except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
                 raise RuntimeError(f"LLM API refused the request: HTTP {e.code} {e.reason}") from e
@@ -148,10 +155,14 @@ def _parse(r: dict) -> dict:
     return r
 
 
+def _messages(context: str) -> list[dict]:
+    return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": f"Clinical description:\n{context}"}]
+
+
 def llm_samples(context: str, *, use_cache: bool = True, n: int = N_SAMPLES) -> list[dict]:
-    messages = [{"role": "system", "content": SYSTEM},
-                {"role": "user", "content": f"Clinical description:\n{context}"}]
-    return [_parse(_cached_chat(messages, k, use_cache)) for k in range(n)]
+    """The n stage-1 samples, requested in parallel, returned in sample order."""
+    with ThreadPoolExecutor(max_workers=n) as pool:
+        return list(pool.map(lambda k: _parse(_cached_chat(_messages(context), k, use_cache)), range(n)))
 
 
 # ------------------------------------------------------------- verification
@@ -482,19 +493,23 @@ def presenting_onset(items: list[dict]) -> dict | None:
             "quote": ons[0]["quote"], "verified": True, "source": "presenting symptom"}
 
 
+def _one_sample(context: str, ont: Ontology, k: int, use_cache: bool) -> dict:
+    """Sample k: stage-1 call, checks, code mapping and its own stage-2 pick call."""
+    s = _parse(_cached_chat(_messages(context), k, use_cache))
+    items = [check_item(p, context) for p in (s["parsed"].get("phenotypes") or [])]
+    items = map_items(items, context, ont, k, use_cache)
+    facts = verify_facts(s["parsed"].get("facts") or {}, context)
+    if facts["onset"].get("months_min") is None:
+        po = presenting_onset(items)
+        if po:
+            facts["onset"] = po
+    return {"phenotypes": items, "facts": facts, "served_model": s["served_model"], "error": s.get("error")}
+
+
 def extract(context: str, ont: Ontology, *, use_cache: bool = True, n: int = N_SAMPLES) -> dict:
-    samples = llm_samples(context, use_cache=use_cache, n=n)
-    per_sample = []
-    for k, s in enumerate(samples):
-        items = [check_item(p, context) for p in (s["parsed"].get("phenotypes") or [])]
-        items = map_items(items, context, ont, k, use_cache)
-        facts = verify_facts(s["parsed"].get("facts") or {}, context)
-        if facts["onset"].get("months_min") is None:
-            po = presenting_onset(items)
-            if po:
-                facts["onset"] = po
-        per_sample.append({"phenotypes": items, "facts": facts,
-                           "served_model": s["served_model"], "error": s.get("error")})
+    # the n sample chains run in parallel; results are used in sample order, so the output is the same as serial
+    with ThreadPoolExecutor(max_workers=n) as pool:
+        per_sample = list(pool.map(lambda k: _one_sample(context, ont, k, use_cache), range(n)))
 
     kept, unstable = vote_terms([ps["phenotypes"] for ps in per_sample], ont, n)
     need = n // 2 + 1

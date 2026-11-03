@@ -730,3 +730,54 @@ def test_genereviews_scope(tmp_path: Path):
     by = S.load_genereviews(LocalFile("genereviews", p, "", "2026-10-28", 0, 0, "", 3))
     assert by["ITPR1"][0].to_dict("x")["scope"] == "multi_gene"
     assert by["SPTLC1"][0].to_dict("x")["scope"] == "single_gene"
+
+
+# --------------------------------------------------------------- concurrency
+
+def test_llm_requests_capped_by_semaphore(tmp_path, monkeypatch):
+    import threading
+    import time as _t
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(X, "_SLOTS", threading.BoundedSemaphore(2))
+    active, peak, lock = [0], [0], threading.Lock()
+
+    def slow_chat(messages, **kw):
+        with lock:
+            active[0] += 1
+            peak[0] = max(peak[0], active[0])
+        _t.sleep(0.05)
+        with lock:
+            active[0] -= 1
+        return {"model": "fake", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+    monkeypatch.setattr(X.llm, "chat", slow_chat)
+    monkeypatch.setattr(X.llm, "config", lambda: CFG)
+    ts = [threading.Thread(target=X._cached_chat, args=([{"role": "user", "content": str(i)}], 0, False)) for i in range(6)]
+    [t.start() for t in ts]
+    [t.join() for t in ts]
+    assert peak[0] == 2                                   # parallel, but never more than the cap
+
+
+def test_samples_run_in_parallel_and_keep_sample_order(ont, monkeypatch):
+    import threading
+    import time as _t
+    running, peak, lock = [0], [0], threading.Lock()
+    ctx = "Child with focal seizures and hyperammonemia."
+    by_k = {0: "focal seizures", 1: "hyperammonemia", 2: "focal seizures"}
+
+    def fake_chat(messages, k, use_cache):
+        with lock:
+            running[0] += 1
+            peak[0] = max(peak[0], running[0])
+        _t.sleep(0.05 * (3 - k))                          # sample 0 finishes last
+        with lock:
+            running[0] -= 1
+        q = by_k[k]
+        return {"content": json.dumps({"phenotypes": [{"quote": q, "description": q, "status": "present"}],
+                                       "facts": {}}), "served_model": f"m{k}"}
+    monkeypatch.setattr(X, "_cached_chat", fake_chat)
+    out = X.extract(ctx, ont)
+    assert peak[0] == 3
+    assert [s["served_model"] for s in out["samples"]] == ["m0", "m1", "m2"]          # order = sample number
+    assert [s["terms"] for s in out["samples"]] == [[("HP:0007359", "present")], [("HP:0001987", "present")],
+                                                     [("HP:0007359", "present")]]
+    assert [p["hpo_id"] for p in out["phenotypes"]] == ["HP:0007359"]                  # 2 of 3 votes

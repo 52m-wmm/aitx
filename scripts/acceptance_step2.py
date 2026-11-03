@@ -19,6 +19,7 @@ import json
 import os
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,15 +80,18 @@ def main() -> int:
             fails.append(what)
 
     print("== per-case checks (HARD) ==")
-    for case in cases:
-        r = pipeline.run_case(case, res)
+    # cases run in parallel (LLM requests capped by extract.CONCURRENCY); results are reported in case order
+    with ThreadPoolExecutor(max_workers=extract.CONCURRENCY) as pool:
+        runs = list(pool.map(lambda c: pipeline.run_case(c, res), cases))
+    for case, r in zip(cases, runs):
         results[case["id"]] = r
         bad = [f"{c['name']}: {c['detail']}" for c in r["checks"] if c["status"] == "fail"]
         hard(not bad, f"{case['id']} checks" + (f" -> {bad}" if bad else ""))
 
     print("\n== cached rerun identical (HARD) ==")
-    for case in cases:
-        again = pipeline.run_case(case, res)
+    with ThreadPoolExecutor(max_workers=extract.CONCURRENCY) as pool:
+        agains = list(pool.map(lambda c: pipeline.run_case(c, res), cases))
+    for case, again in zip(cases, agains):
         same = json.dumps(again, sort_keys=True) == json.dumps(results[case["id"]], sort_keys=True)
         hard(same, f"{case['id']} rerun identical")
 
