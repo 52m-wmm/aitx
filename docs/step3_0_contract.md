@@ -1,6 +1,7 @@
 # 第 3.0 步：证据账本与公共基础（Evidence Ledger）
 
-> 状态：**草稿，待审**（2026-11-03）。审定后才写代码。
+> 状态：**已审，按审阅意见修订**（2026-11-03）。修订：4 个待定问题已决定（文末"已定决策"）；新增阴性结果证据（1.2 节）、
+> "同一行动"判定规则（1.3 节）。
 > 合并了 `docs/step3_contract_todo.md` 的全部事项；Notion 施工方案 7.4 节"3.0 证据账本要求"。
 
 ## 目的
@@ -54,11 +55,11 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 | 字段 | 含义 | 约束 |
 | --- | --- | --- |
 | `id` | 稳定编号：来源 id + 论断 + 适用分支 的哈希前 12 位 | 同一证据重跑得到同一 id |
-| `kind` | `sourced`（有来源原文）/ `reasoning`（推理） | 见下 |
-| `claim` | 一句话论断（英文，可直接进报告） | 不能为空 |
+| `kind` | `sourced`（有来源原文）/ `reasoning`（推理）/ `negative`（查过但没找到，见 1.2） | 见下 |
+| `claim` | 一句话论断（英文，报告语言）；查看页面另显示中文说明 | 不能为空 |
 | `section` | 模板章节之一，或 `background`（诊断、变异机制等背景，不单独成为报告里的行动） | 枚举 |
 | `tier` | `established` / `emerging` / `hypothesized` / `background`，由 `section` 决定，不单独指定 | 代码推出 |
-| `action` | 可执行的行动键（如 `drug:lumasiran`、`trial:NCT01234567`、`strategy:exon_skipping_aso`）；背景证据为 null | 见"同一行动只放一个章节" |
+| `action` | 标准化的行动键，按 1.3 节规则生成（如 `drug:rxcui:<成分编号>`、`trial:NCT<8 位数字>`、`aso_exon_skipping:DMD|exon51`）；背景和阴性证据为 null | 见 1.3 |
 | `applies_to` | 适用的诊断分支 id 列表；适用于全部分支时写全 | 必须是本账本 `branches` 的子集 |
 | `source` | `{type, id, url}`；type ∈ url / pmid / nct / nbk / spl_setid / clinvar_vcv / omim / mondo / orphanet / hpo / refseq / alphafold / clingen / pipeline_fact | `sourced` 必填；id 必须符合该类型的格式 |
 | `quote` | 来源原文中**逐字**的片段，支撑这条论断 | `sourced` 必填，由代码在抓取到的原文里核对 |
@@ -82,7 +83,71 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
    放哪个章节由分层规则决定（已获批 → 已确立；有人类用药先例 → Off-label；无先例只有机制 → Drug Repurposing；
    已获批且针对该变异的 ASO 不得出现在 Bespoke）。分层规则在 3a–3e 里实现，3.0 只做唯一性校验。
 5. **"写错比不写更糟"**：任何一项校验不过的证据只能是 `candidate` 或 `rejected`，不会进章节；
-   宁可章节为空并说明"查了哪里、没找到"（这类说明也作为证据入账，`kind = reasoning`，前提是检索记录）。
+   宁可章节为空，并用阴性结果证据说明"查了哪里、怎么查的、没找到"（1.2 节）。
+
+### 1.2 阴性结果证据（`kind = negative`）
+
+记录"查过但没找到"，对应评分的**完整性**维度：报告里某章节写"无"时，必须引用这类证据，说明查了什么。
+
+| 字段 | 含义 |
+| --- | --- |
+| `section`、`applies_to` | 这次检索针对的章节和诊断分支 |
+| `search.database` | 数据源（如 `clinicaltrials.gov`、`pubmed`、`dailymed`、`chembl`） |
+| `search.endpoint` | 实际请求的 URL（含参数） |
+| `search.query` | 发出的检索词原文（逐字，与请求一致） |
+| `search.filters` | 过滤条件（如招募状态 RECRUITING / NOT_YET_RECRUITING、物种、语种） |
+| `search.queried_at` | 实际查询时间（Unix 秒，取 HTTP 缓存记录的真实请求时间） |
+| `search.n_results` | 数据源返回的记录数（代码从响应里读出，不是 LLM 填写） |
+| `search.n_excluded` / `excluded` | 返回了记录、但逐条排除时：排除的记录 id 和排除理由（每条理由本身是证据） |
+| `claim` | 一句英文陈述，如 "No recruiting or not-yet-recruiting trials for SPTLC1 or HSAN1 were found on ClinicalTrials.gov (searched 2026-11-03)." |
+
+**规则：**
+
+1. 阴性证据**只由代码生成**，来自真实的检索记录；LLM 不能写阴性证据，也不能改 `n_results`。
+2. `n_results` 必须与缓存里那次响应的记录数一致（代码核对）；`queried_at` 必须是那次请求的真实时间。
+3. **某章节对某分支没有任何 `verified` 行动时，该章节对该分支至少有一条 `verified` 的阴性证据**，否则校验 fail
+   （报告不能在没有检索记录的情况下写"无"）。
+4. "找到了但都不适用"（如试验找到 3 个、病人都不符合）不是"没找到"：每个试验各自作为证据入账并写明不符合的入组条件；
+   阴性证据只汇总检索本身（`n_results = 3`，`n_excluded = 3`，`excluded` 指向那 3 条证据）。
+5. 有缓存过期要求的数据源（ClinicalTrials.gov 1 天），阴性证据随缓存一起过期，正式生成报告前重新检索。
+
+### 1.3 "同一行动"的判定（`action` 键）
+
+同一行动只能出现在一个章节（规则 4）。为此每个行动先标准化成一个键，**键相同即视为同一行动**，与写法、商品名、剂量无关。
+
+| 行动类别 | 键 | 判定规则 |
+| --- | --- | --- |
+| 药物（已上市） | `drug:rxcui:<成分 RxCUI，多成分按数字排序后用 + 连接>` | 名称按顺序解析到**成分**（RxNorm TTY = IN）：① RxNav 按名称精确查找，得到的概念（含 MIN 复方、PIN 盐形式、SCD / SBD 产品）展开到成分；② 查不到时用 openFDA 药品说明书把**美国商品名**换成通用名，再走 ①；③ 都查不到再看下一行。商品名与通用名同键；剂量、给药途径、方案不同仍同键（具体剂量写在 `claim` 里）；**复方与单方不同键**（成分集合不同） |
+| 药物（无 RxNorm，如研发中的化合物） | `drug:chembl:<ChEMBL 母体分子编号，多成分同上>` | 用 ChEMBL 的 parent molecule（盐归到母体）。只有 RxNorm 查不到时才用 ChEMBL，保证同一药物总得到同一种键 |
+| 药物（两者都查不到） | 无键 | 证据停在 `candidate`（原因 "drug could not be normalized"），**不能进章节** |
+| 临床试验 | `trial:NCT<8 位数字>` | 按 NCT 编号 |
+| 非药物疗法 | `<类型>:<靶点>[|<限定>]` | 类型取自受控列表（下表）；靶点：分子类疗法用 HGNC 基因符号，器官类用器官名（受控列表），饮食和对症措施用受控的方案名；位置特异的策略加限定（外显子号、变异 c. 写法） |
+| 实现某种策略的药物 | 主键是 `drug:…`，另加 `implements: <策略键>` | 如 eteplirsen 的 `implements = aso_exon_skipping:DMD|exon51`。唯一性校验**同时比较主键和 implements**，所以"已获批的外显子 51 跳跃 ASO"在 Existing Targeted、"可开发的外显子 51 跳跃 ASO"在 Bespoke 会被判为同一行动 |
+
+非药物疗法的类型（受控列表，扩充需改代码并补测试）：
+`aso_splice_modulation`、`aso_exon_skipping`、`aso_knockdown_allele_specific`、`aso_knockdown_total`、`sirna`、
+`gene_replacement`、`base_editing`、`prime_editing`、`gene_editing_other`、`cell_therapy`、`organ_transplant`、
+`diet`、`procedure`、`supportive_measure`。
+
+**单元测试用例**（离线，RxNav / openFDA / ChEMBL 响应用录好的固定数据；表中编号均于 2026-11-03 用真实接口核对过）：
+
+| # | 输入 A | 输入 B | 期望 |
+| --- | --- | --- | --- |
+| 1 | Trikafta | elexacaftor / tezacaftor / ivacaftor | 同一行动（Trikafta 不在 RxNorm 名称里，经 openFDA 换成通用名；复方 MIN 2257010 → 成分 1243041 + 1999382 + 2256951） |
+| 2 | Trikafta | ELEXACAFTOR/IVACAFTOR/TEZACAFTOR（顺序、大小写不同） | 同一行动 |
+| 2b | Kaftrio（欧洲商品名） | — | 无键：RxNorm、openFDA、ChEMBL 都查不到（2026-11-03 实测），停在 `candidate` |
+| 3 | Trikafta | ivacaftor（Kalydeco） | 不同（复方 ≠ 单方） |
+| 4 | Oxlumo | lumasiran | 同一行动（RxCUI 2467154 → 成分 2467140） |
+| 5 | lumasiran | nedosiran | 不同 |
+| 6 | pyridoxine hydrochloride | pyridoxine | 同一行动（盐归到成分：RxCUI 203164 → 成分 684879） |
+| 7 | lumasiran 3 mg/kg monthly | lumasiran quarterly | 同一行动（剂量方案不影响） |
+| 8 | trial NCT01234567 在两个章节 | — | 校验 fail |
+| 9 | eteplirsen（Existing Targeted） | 外显子 51 跳跃 ASO（Bespoke） | 同一行动（implements），校验 fail |
+| 10 | 外显子 51 跳跃 ASO | 外显子 53 跳跃 ASO | 不同（限定不同） |
+| 11 | SPTLC1 等位基因特异敲低 | SPTLC1 整体敲低 | 不同（类型不同） |
+| 12 | liver transplantation | combined liver–kidney transplantation | 不同（靶点器官集合不同） |
+| 13 | 无法解析的药名 | — | 无键，停在 `candidate`，不进章节 |
+| 14 | 同一药物在同一章节有两条证据（两个来源） | — | 允许（同一行动多条证据） |
 
 ## 2. 诊断分支（branches）
 
@@ -104,9 +169,10 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 **证据与分支**：每条证据的 `applies_to` 写明适用的分支。只适用于部分分支的行动，报告写成条件语句
 （"If the diagnosis is X, then …"）。适用于全部分支的写成不带诊断条件的行动。
 
-**分支裁决**：基因特有规则（第 4 节）可以支持或排除某个分支，但**不修改 Step 2 的输出**。
-3.0 只记录 `branch_assessment: [{branch, rule_id, effect: supports | argues_against, evidence_ids}]`；
-分支是否删除由报告阶段按证据强度写成措辞（"favours X"），不在 3.0 里硬删。
+**分支裁决**（已定）：**不删除任何分支**，也不修改 Step 2 的输出。基因特有规则（第 4 节）可以影响分支的**排序和措辞**：
+3.0 记录 `branch_assessment: [{branch, rule_id, effect: supports | argues_against, evidence_ids}]`，
+并据此给出 `branch_order`（有规则支持的分支排前，同等时按 Step 2 顺序）；报告可写"文献证据更支持 X"并附出处，
+但所有分支保留，各分支的条件语句照写。
 
 ## 3. 病人背景与缺失信息
 
@@ -143,12 +209,19 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
    - **SPTLC1 表型与变异区域**：HSAN1 与 ALS27 的致病变异是否分布在蛋白不同区域，Leu39 落在哪个区域。
      **如果文献不支持"区域决定表型"，就记录为"查过、不成立"（带出处），不建规则。**
      Step 1 的 AlphaFold 事实（pLDDT、RSA、邻居）只作背景，区域划分以文献为准。
-5. 谁来起草规则：见文末"待定问题 1"。
+5. **规则由系统起草，人只能否决**（已定）：
+   - 范围：对 Step 2 候选疾病涉及的**所有基因**执行同一调研流程，不只评测基因。
+   - 流程：代码按基因和候选疾病检索 PubMed / GeneReviews → LLM 只从抓取到的原文中摘出候选规则和逐字引用 → 代码核对引用和条件格式 →
+     通过的规则 `status = verified`，写入 `data/rules/<GENE>.json`。
+   - 人工审查只能否决，不能改写内容。否决时在规则文件里记录 `review: {decision: "vetoed", by, at, reason}`，被否决的规则不加载但保留在文件中；
+     未否决的规则 `review.decision = "not_reviewed"` 或 `"accepted"`。
+   - 每条规则记录起草所用的检索（数据源、检索词、时间、返回数量）和 LLM 的服务端模型名、提示词版本，可复现。
 
 ## 5. 数据源与缓存
 
 | 数据源 | HTTP 缓存过期 | 说明 |
 | --- | --- | --- |
+| RxNav、openFDA、ChEMBL（行动标准化，1.3 节） | 不过期 | 提交时统一冻结 |
 | ClinicalTrials.gov API v2 | **1 天** | `--refresh-trials` 强制重新抓取；正式生成报告前必须带此参数，证据记录实际访问时间 |
 | 其他（PubMed、GeneReviews、DailyMed、FDA、ClinVar、OLS4、HGNC、UniProt、AlphaFold 等） | 不过期 | 提交时统一冻结 |
 | 整包数据（HPO、GenCC、ClinGen、Orphanet 等） | 7 天刷新（现状） | 提交时固定 `AITX_DATASET_SNAPSHOT` |
@@ -182,7 +255,11 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 | `sourced` 证据：来源 id 格式合法、有 `accessed_at`、`quote_verified = true` | 该条 `rejected` |
 | `reasoning` 证据：前提都存在且已核对 | 该条 `rejected` |
 | `applies_to` ⊆ `branches` | fail |
-| 同一 `action` 不跨章节 | fail |
+| 同一行动不跨章节（主键或 `implements` 相同即同一行动，1.3 节） | fail |
+| 药物行动有标准化键（RxNorm 或 ChEMBL）；否则停在 `candidate` | 该条不进章节 |
+| 某章节对某分支没有 verified 行动时，有 verified 的阴性证据 | fail |
+| 阴性证据的 `n_results` 与缓存响应一致、`queried_at` 为真实请求时间 | 该条 `rejected` |
+| 被否决的规则没有被加载 | fail |
 | `conditions` 中未知变量都在 `missing_information` 里 | fail |
 | 伞状分支已展开或注明无法展开 | fail |
 | 加载的规则都有核对过的来源 | 该规则不加载，记 warn |
@@ -191,7 +268,9 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 
 ## 9. 验收标准
 
-**离线测试**：账本 schema；引用核对（假来源原文，正例和反例）；`id` 稳定；分支构建（resolved / ambiguous / unresolved，
+**离线测试**：账本 schema；引用核对（假来源原文，正例和反例）；1.3 节的 14 个"同一行动"用例；
+阴性证据（`n_results` 与响应不一致 → rejected；章节为空且无阴性证据 → fail；"找到但都不适用"按规则 4 记录）；
+规则文件（被否决的不加载、否决理由必填、人工不能改内容即 `review` 之外的字段与系统起草版本的哈希一致）；`id` 稳定；分支构建（resolved / ambiguous / unresolved，
 最多 3 个，伞状展开，展开后超过 3 个的截断）；`applies_to` 子集校验；同一行动跨章节报错；规则加载器拒绝无来源 / 引用不符的规则；
 规则条件只读 Step 1 字段；HTTP 缓存过期（ClinicalTrials.gov 1 天，其他不过期，`--refresh-trials` 强制刷新）；
 `accessed_at` 取缓存里的真实抓取时间。每个修复照旧补测试并做反向验证。
@@ -211,13 +290,10 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 
 章节检索与判断（3a–3e）、报告写作（Step 4）、论断是否被来源支持的语义核查（Step 5）。
 
-## 待定问题（请审阅时决定）
+## 已定决策（2026-11-03 审阅）
 
-1. **基因特有规则由谁起草**。报告必须由系统生成、不能人工编辑；规则库是系统的一部分，但人手写针对评测基因（SPTLC1）的规则，
-   可能被看作人工干预或对评测病例过拟合。可选：
-   - (a) **系统起草**：代码按基因检索 PubMed / GeneReviews，LLM 从抓取到的原文中摘出候选规则和逐字引用，代码核对引用；
-     人只审查、只能否决（不能改写内容）。所有基因同一流程，不只评测基因。**建议采用。**
-   - (b) 人工整理规则，附出处。最快，但有上面的风险。
-2. **分支裁决的力度**：第 2 节写的是"规则只影响措辞，不删分支"。是否允许强证据（如 strength = established 的规则）直接删分支？建议不允许，保留条件语句。
-3. **`unresolved` 时的基因级分支**：是否需要（目前 18 个病例没有 unresolved）。建议保留，防止报告缺章节。
-4. 证据 `claim` 用英文（报告语言），查看页面另显示中文说明。是否同意。
+1. **基因特有规则由系统起草**：对 Step 2 候选疾病涉及的所有基因执行同一流程；人只能否决，否决理由写入规则文件（第 4 节规则 5）。
+2. **不删分支**：规则只影响分支排序和措辞（"文献证据更支持 X"并附出处），所有分支保留，条件语句照写（第 2 节）。
+3. **保留基因级分支**：Step 2 为 `unresolved` 时建一个只用基因和变异事实的分支。
+4. **`claim` 用英文**，查看页面另配中文说明。
+5. 审阅补充：**阴性结果证据**（1.2 节）；**"同一行动"按标准化标识判定**（1.3 节）。
