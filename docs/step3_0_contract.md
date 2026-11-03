@@ -119,7 +119,7 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 | --- | --- | --- |
 | 药物（已上市） | `drug:rxcui:<成分 RxCUI，多成分按数字排序后用 + 连接>` | 名称按顺序解析到**成分**（RxNorm TTY = IN）：① RxNav 按名称精确查找，得到的概念（含 MIN 复方、PIN 盐形式、SCD / SBD 产品）展开到成分；② 查不到时用 openFDA 药品说明书把**美国商品名**换成通用名，再走 ①；③ 都查不到再看下一行。商品名与通用名同键；剂量、给药途径、方案不同仍同键（具体剂量写在 `claim` 里）；**复方与单方不同键**（成分集合不同） |
 | 药物（无 RxNorm，如研发中的化合物） | `drug:chembl:<ChEMBL 母体分子编号，多成分同上>` | 用 ChEMBL 的 parent molecule（盐归到母体）。只有 RxNorm 查不到时才用 ChEMBL，保证同一药物总得到同一种键 |
-| 药物（两者都查不到） | 无键 | 证据停在 `candidate`（原因 "drug could not be normalized"），**不能进章节** |
+| 药物（都查不到） | `drug:name:<标准化通用名>`，`normalized = false` | **兜底键**（2026-11-03 审阅修改）：名称转小写、去掉标点和多余空白、去掉盐型后缀（hydrochloride、hcl、sodium、potassium、calcium、magnesium、sulfate / sulphate、mesylate、maleate、acetate、citrate、tartrate、phosphate、succinate、besylate、fumarate、bromide、chloride 等受控列表），复方按 `/`、`+`、`,`、`and` 拆开后排序用 `+` 连接。**允许进入报告章节**，但证据记录 `normalized: false`，查看页面显示"未标准化"警告。理由：只在欧洲等地上市的药、早期研发化合物可能查不到编号，全部挡掉会损害完整性 |
 | 临床试验 | `trial:NCT<8 位数字>` | 按 NCT 编号 |
 | 非药物疗法 | `<类型>:<靶点>[|<限定>]` | 类型取自受控列表（下表）；靶点：分子类疗法用 HGNC 基因符号，器官类用器官名（受控列表），饮食和对症措施用受控的方案名；位置特异的策略加限定（外显子号、变异 c. 写法） |
 | 实现某种策略的药物 | 主键是 `drug:…`，另加 `implements: <策略键>` | 如 eteplirsen 的 `implements = aso_exon_skipping:DMD|exon51`。唯一性校验**同时比较主键和 implements**，所以"已获批的外显子 51 跳跃 ASO"在 Existing Targeted、"可开发的外显子 51 跳跃 ASO"在 Bespoke 会被判为同一行动 |
@@ -135,7 +135,7 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 | --- | --- | --- | --- |
 | 1 | Trikafta | elexacaftor / tezacaftor / ivacaftor | 同一行动（Trikafta 不在 RxNorm 名称里，经 openFDA 换成通用名；复方 MIN 2257010 → 成分 1243041 + 1999382 + 2256951） |
 | 2 | Trikafta | ELEXACAFTOR/IVACAFTOR/TEZACAFTOR（顺序、大小写不同） | 同一行动 |
-| 2b | Kaftrio（欧洲商品名） | — | 无键：RxNorm、openFDA、ChEMBL 都查不到（2026-11-03 实测），停在 `candidate` |
+| 2b | Kaftrio（欧洲商品名） | — | 兜底键 `drug:name:kaftrio`，`normalized = false`，可进章节（RxNorm、openFDA、ChEMBL 都查不到，2026-11-03 实测） |
 | 3 | Trikafta | ivacaftor（Kalydeco） | 不同（复方 ≠ 单方） |
 | 4 | Oxlumo | lumasiran | 同一行动（RxCUI 2467154 → 成分 2467140） |
 | 5 | lumasiran | nedosiran | 不同 |
@@ -146,7 +146,10 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 | 10 | 外显子 51 跳跃 ASO | 外显子 53 跳跃 ASO | 不同（限定不同） |
 | 11 | SPTLC1 等位基因特异敲低 | SPTLC1 整体敲低 | 不同（类型不同） |
 | 12 | liver transplantation | combined liver–kidney transplantation | 不同（靶点器官集合不同） |
-| 13 | 无法解析的药名 | — | 无键，停在 `candidate`，不进章节 |
+| 13 | 查不到的研发代号 "ABC-123 hydrochloride" | "abc-123" | 同一行动（兜底键都是 `drug:name:abc-123`，`normalized = false`） |
+| 13b | 查不到的 "Foo sodium / Bar" | "bar + foo" | 同一行动（去盐型、拆复方、排序：`drug:name:bar+foo`） |
+| 13c | 兜底键 `drug:name:kaftrio` 在两个章节 | — | 校验 fail（兜底键同样参与唯一性校验） |
+| 13d | 兜底键药物进入章节 | — | 允许，`normalized = false`；查看页面显示"未标准化"警告 |
 | 14 | 同一药物在同一章节有两条证据（两个来源） | — | 允许（同一行动多条证据） |
 
 ## 2. 诊断分支（branches）
@@ -256,7 +259,7 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 | `reasoning` 证据：前提都存在且已核对 | 该条 `rejected` |
 | `applies_to` ⊆ `branches` | fail |
 | 同一行动不跨章节（主键或 `implements` 相同即同一行动，1.3 节） | fail |
-| 药物行动有标准化键（RxNorm 或 ChEMBL）；否则停在 `candidate` | 该条不进章节 |
+| 药物行动有键；用兜底键的标 `normalized = false`（查看页面警告，不阻止进章节） | warn |
 | 某章节对某分支没有 verified 行动时，有 verified 的阴性证据 | fail |
 | 阴性证据的 `n_results` 与缓存响应一致、`queried_at` 为真实请求时间 | 该条 `rejected` |
 | 被否决的规则没有被加载 | fail |
@@ -297,3 +300,5 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 3. **保留基因级分支**：Step 2 为 `unresolved` 时建一个只用基因和变异事实的分支。
 4. **`claim` 用英文**，查看页面另配中文说明。
 5. 审阅补充：**阴性结果证据**（1.2 节）；**"同一行动"按标准化标识判定**（1.3 节）。
+6. 药物查不到编号时用**标准化通用名兜底键**，`normalized = false`，允许进章节、页面警告（1.3 节）。
+   已知局限：查不到的商品名（如 Kaftrio）无法换成通用名，与其通用名的键不同，跨章节重复时唯一性校验发现不了；靠页面警告提醒人工留意。
