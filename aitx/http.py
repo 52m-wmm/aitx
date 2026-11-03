@@ -18,6 +18,26 @@ from pathlib import Path
 CACHE_DIR = Path(os.environ.get("AITX_CACHE_DIR", Path.cwd() / ".cache" / "http"))
 USER_AGENT = "aitx-challenge-pipeline/0.1 (research)"
 
+# Cache expiry per data source (step 3.0 contract, section 5): URL prefix -> max age in seconds.
+# Sources not listed never expire (frozen at submission).
+MAX_AGE = {
+    "https://clinicaltrials.gov/": 24 * 3600,          # recruiting status and criteria change quickly
+}
+# URL prefixes to refetch once in this process regardless of age (run_pipeline --refresh-trials)
+FORCE_REFRESH: set[str] = set()
+_refreshed: set[str] = set()
+
+
+def max_age(url: str) -> int | None:
+    return next((age for prefix, age in MAX_AGE.items() if url.startswith(prefix)), None)
+
+
+def _stale(url: str, accessed_at: int, now: float | None = None) -> bool:
+    if any(url.startswith(p) for p in FORCE_REFRESH) and url not in _refreshed:
+        return True
+    age = max_age(url)
+    return age is not None and (now or time.time()) - accessed_at > age
+
 
 @dataclass
 class Fetched:
@@ -37,7 +57,8 @@ def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3
     path = _key(url, headers)
     if use_cache and path.exists():
         d = json.loads(path.read_text())
-        return Fetched(d["url"], d["text"], d["accessed_at"], True)
+        if not _stale(url, d["accessed_at"]):
+            return Fetched(d["url"], d["text"], d["accessed_at"], True)
 
     last_err: Exception | None = None
     for attempt in range(retries):
@@ -48,6 +69,7 @@ def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3
             accessed = int(time.time())
             CACHE_DIR.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps({"url": url, "text": text, "accessed_at": accessed}))
+            _refreshed.add(url)
             return Fetched(url, text, accessed, False)
         except urllib.error.HTTPError as e:
             if 400 <= e.code < 500 and e.code != 429:

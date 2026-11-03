@@ -108,6 +108,8 @@ def main() -> int:
     ap.add_argument("--from-step", type=int, default=1)
     ap.add_argument("--to-step", type=int, default=max(STEPS))
     ap.add_argument("--no-cache", action="store_true", help="bypass LLM and API caches")
+    ap.add_argument("--refresh-trials", action="store_true",
+                    help="refetch ClinicalTrials.gov even if cached < 1 day ago (required before final reports)")
     args = ap.parse_args()
     for k in (args.from_step, args.to_step):
         if k not in STEPS:
@@ -115,6 +117,9 @@ def main() -> int:
             ap.error(f"step {k} is not available{note}; implemented steps: {sorted(STEPS)}")
     if args.from_step > args.to_step:
         ap.error("--from-step is after --to-step")
+    if args.refresh_trials:
+        from aitx import http
+        http.FORCE_REFRESH.add("https://clinicaltrials.gov/")
     return run(load_cases(args.cases, args.ids), args.from_step, args.to_step, not args.no_cache)
 
 
