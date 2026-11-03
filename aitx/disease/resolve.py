@@ -34,6 +34,7 @@ class Resources:
     genereviews: dict[str, list[S.GeneReview]]
     assoc: dict[str, list[S.Assoc]]
     use_cache: bool = True
+    orphanet_groups: set[str] = field(default_factory=set)
 
 
 def load_resources(genes: set[str], *, use_cache: bool = True) -> Resources:
@@ -48,7 +49,8 @@ def load_resources(genes: set[str], *, use_cache: bool = True) -> Resources:
               + S.load_hpo_genes(files["hpo_genes_to_disease"], genes) + S.load_orphanet(files["orphanet_genes"], genes)):
         by_gene[a.gene].append(a)
     return Resources(files, S.load_mondo(files["mondo_sssom"]), S.load_mim2gene(files["omim_mim2gene"]), hpoa, ont,
-                     S.load_genereviews(files["genereviews"]), dict(by_gene), use_cache)
+                     S.load_genereviews(files["genereviews"]), dict(by_gene), use_cache,
+                     S.orphanet_groups(files["orphanet_genes"]))
 
 
 # ----------------------------------------------------------------- candidates
@@ -66,6 +68,7 @@ class Candidate:
     obsolete: bool = False
     ols: dict = field(default_factory=dict)
     ancestors: list[str] = field(default_factory=list)
+    grouping: list[str] = field(default_factory=list)   # which database calls it a group of disorders
 
     @property
     def ids(self) -> set[str]:
@@ -73,7 +76,8 @@ class Candidate:
 
     @property
     def specific(self) -> bool:
-        return bool(self.omim or self.orphanet)
+        """A specific disease: has an OMIM or Orphanet entry and no database calls it a group of disorders."""
+        return bool(self.omim or self.orphanet) and not self.grouping
 
 
 def build_candidates(gene: str, res: Resources) -> list[Candidate]:
@@ -104,6 +108,11 @@ def build_candidates(gene: str, res: Resources) -> list[Candidate]:
             c.obsolete = bool(c.ols.get("obsolete")) or c.label.lower().startswith("obsolete")
         if not c.label:
             c.label = next((res.hpoa.names[i] for i in c.omim + c.orphanet if i in res.hpoa.names), c.key)
+        # grouping concepts by the databases' own classification only (decision 2026-11-03: no gene-count threshold)
+        c.grouping = sorted([f"Orphanet DisorderGroup 'Group of disorders' ({o})" for o in c.orphanet
+                             if o in res.orphanet_groups]
+                            + (["MONDO subset ordo_group_of_disorders"]
+                               if "ordo_group_of_disorders" in (c.ols.get("subsets") or []) else []))
     return sorted(cands.values(), key=lambda c: c.key)
 
 
@@ -356,6 +365,8 @@ def _contenders(pool: list[dict]) -> list[dict]:
     (no OMIM/Orphanet id, no annotations) when a specific disease is present.
     """
     pool = [c for c in pool if c.get("compete", True)] or pool
+    # a database-classified group of disorders never competes, annotated or not
+    pool = [c for c in pool if not c.get("grouping")] or pool
     return [c for c in pool if c["specific"] or c["phenotype"]["score"] is not None] or pool
 
 
@@ -419,9 +430,10 @@ def select(cands: list[dict], present: list[str], excluded: list[str], explicit:
         grouping = [c["key"] for c in tier if c not in contenders]
         if grouping:
             reasons.append(f"not compared (merged into a more specific candidate, or grouping term): {', '.join(grouping)}")
-        if lower:
+        lower_compared = _contenders(lower) if lower else []      # count only candidates that enter comparison
+        if lower_compared:
             reasons.append(f"inheritance tier '{tier[0]['inheritance']['result']}' ranked above "
-                           f"{len(lower)} candidate(s) with weaker inheritance fit")
+                           f"{len(lower_compared)} candidate(s) with weaker inheritance fit")
         scored = by_pheno([c for c in contenders if c["phenotype"]["score"] is not None])
         unscored = [c for c in contenders if c["phenotype"]["score"] is None]
 

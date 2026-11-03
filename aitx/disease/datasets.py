@@ -19,6 +19,7 @@ import hashlib
 import http.client
 import json
 import os
+import tarfile
 import time
 import urllib.error
 import urllib.request
@@ -43,6 +44,7 @@ class Dataset:
     comment: str = "#"   # tsv: prefix of lines to skip
     ragged: bool = False  # tsv: rows may have fewer columns than the header
     quoted: bool = False  # tsv: fields may be "quoted" and span lines (GenCC notes)
+    max_age_days: int | None = None   # refresh period; None = MAX_AGE_DAYS
 
 
 DATASETS = {d.name: d for d in [
@@ -73,6 +75,10 @@ DATASETS = {d.name: d for d in [
             "genereviews.txt", "pipe4", 500),
     Dataset("omim_mim2gene", "https://omim.org/static/omim/data/mim2gene.txt",
             "mim2gene.txt", "tsv", 20000, ragged=True),
+    # Whole GeneReviews book from the NCBI Literature Archive (official bulk channel; the Bookshelf web pages
+    # answer scripts with a CAPTCHA). ~640 MB, so refreshed monthly. Kept under .cache/, never committed.
+    Dataset("genereviews_book", "https://ftp.ncbi.nlm.nih.gov/pub/litarch/ca/84/gene_NBK1116.tar.gz",
+            "gene_NBK1116.tar.gz", "tar_gz", 800, max_age_days=30),
 ]}
 
 
@@ -143,6 +149,9 @@ def count_rows(ds: Dataset, path: Path) -> int:
         if ds.kind == "xml_orphanet":
             root = ET.parse(path).getroot()
             return len(root.findall(".//Disorder"))
+        if ds.kind == "tar_gz":
+            with tarfile.open(path, "r:gz") as tf:          # reads the whole archive: a truncated file fails here
+                return sum(1 for m in tf if m.isfile())
         if ds.kind == "pipe4":
             n = 0
             for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -266,7 +275,7 @@ def ensure(name: str, *, today: dt.date | None = None, attempts: int = 2) -> Loc
     snaps = sorted(p for p in base.glob("????-??-??") if (p / "meta.json").exists()) if base.exists() else []
     if snaps:
         lf = _load_meta(snaps[-1])
-        if lf and (today - dt.date.fromisoformat(lf.snapshot)).days <= MAX_AGE_DAYS:
+        if lf and (today - dt.date.fromisoformat(lf.snapshot)).days <= (DATASETS[name].max_age_days or MAX_AGE_DAYS):
             return lf
 
     d = base / today.isoformat()
@@ -289,5 +298,10 @@ def ensure(name: str, *, today: dt.date | None = None, attempts: int = 2) -> Loc
     raise IntegrityError(f"{name}: download failed integrity check after {attempts} attempts: {last}")
 
 
+# datasets step 2 needs (the GeneReviews book is used from step 3 on and fetched only when asked for)
+STEP2_DATASETS = [n for n in DATASETS if n != "genereviews_book"]
+
+
 def ensure_all() -> dict[str, LocalFile]:
-    return {n: ensure(n) for n in DATASETS}
+    """All step 2 datasets."""
+    return {n: ensure(n) for n in STEP2_DATASETS}

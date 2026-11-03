@@ -117,6 +117,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
             "mondo": c.key if c.key.startswith("MONDO:") else None,
             "mondo_url": f"https://monarchinitiative.org/{c.key}" if c.key.startswith("MONDO:") else None,
             "omim": _omim_entries(c, res), "orphanet": c.orphanet, "specific": c.specific,
+            "grouping": c.grouping,
             "mondo_cite": S.Cite("mondo_sssom", res.mondo.snapshot, res.mondo.line[c.key]).to_dict() if c.key in res.mondo.line else None,
             "validity": val, "inheritance": inh, "clinvar": links.get(c.key, []),
             "clinvar_info": [{"vcv": rec["vcv"], "url": rec["url"], "clinical_significance": rec["clinical_significance"],
@@ -218,8 +219,8 @@ def checks(out: dict, case: dict, res: R.Resources) -> list[dict]:
     allc = out["candidates"] + out["not_supported"]
     keys = {c["key"] for c in allc}
     res_ = []
-    res_.append(_chk("datasets_complete", len(out["sources_manifest"]) == len(R.D.DATASETS),
-                     f"{len(out['sources_manifest'])}/{len(R.D.DATASETS)} datasets in manifest"))
+    res_.append(_chk("datasets_complete", len(out["sources_manifest"]) == len(R.D.STEP2_DATASETS),
+                     f"{len(out['sources_manifest'])}/{len(R.D.STEP2_DATASETS)} datasets in manifest"))
     bad_omim = [o["id"] for c in allc for o in c["omim"] if not o["is_phenotype_entry"]]
     res_.append(_chk("omim_ids_are_phenotype_entries", not bad_omim, ", ".join(bad_omim)))
     bad_mondo = [c["key"] for c in allc if c["mondo"] and c["mondo_cite"] is None

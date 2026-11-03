@@ -152,6 +152,12 @@ def load_orphanet(lf: LocalFile, genes: set[str]) -> list[Assoc]:
     return out
 
 
+def orphanet_groups(lf: LocalFile) -> set[str]:
+    """'Orphanet:<code>' of entries Orphanet itself classifies as a group of disorders (DisorderGroup)."""
+    return {f"Orphanet:{d.findtext('OrphaCode')}" for d in ET.parse(lf.path).getroot().iter("Disorder")
+            if (d.findtext("DisorderGroup/Name") or "") == "Group of disorders"}
+
+
 # --------------------------------------------------------------- ID mapping
 
 @dataclass

@@ -167,7 +167,8 @@ def mondo_term(mondo_id: str, *, use_cache: bool = True) -> dict:
         return {"label": "", "synonyms": [], "obsolete": None, "url": url, "accessed_at": f.accessed_at}
     t = terms[0]
     return {"label": t.get("label", ""), "synonyms": sorted(set(t.get("synonyms") or [])),
-            "obsolete": bool(t.get("is_obsolete")), "url": url, "accessed_at": f.accessed_at}
+            "obsolete": bool(t.get("is_obsolete")), "subsets": sorted(t.get("in_subset") or []),
+            "url": url, "accessed_at": f.accessed_at}
 
 
 def mondo_ancestors(mondo_id: str, *, use_cache: bool = True) -> list[str]:

@@ -781,3 +781,30 @@ def test_samples_run_in_parallel_and_keep_sample_order(ont, monkeypatch):
     assert [s["terms"] for s in out["samples"]] == [[("HP:0007359", "present")], [("HP:0001987", "present")],
                                                      [("HP:0007359", "present")]]
     assert [p["hpo_id"] for p in out["phenotypes"]] == ["HP:0007359"]                  # 2 of 3 votes
+
+
+# ------------------------------------------- step 2 to-dos (2026-11-03): grouping, ranked-above count
+
+def test_database_classified_group_never_competes_even_if_annotated():
+    # like "undetermined early-onset EE" if a database called it a group: it has annotations and a high score
+    grp = dict(cand("GROUP", 9.0, specific=False), grouping=["Orphanet DisorderGroup 'Group of disorders' (Orphanet:1)"])
+    s = R.select([grp, cand("A", 2.0), cand("B", 1.0)], ["HP:1"], [], [])
+    assert s["id"] == "A" and "GROUP" not in [s["id"]] + s["tied"]
+    # without the database flag the same candidate would compete (annotation alone does not decide)
+    s2 = R.select([cand("GROUP", 9.0, specific=False), cand("A", 2.0)], ["HP:1"], [], [])
+    assert s2["id"] == "GROUP"
+
+
+def test_specific_property_respects_grouping_flag():
+    c = R.Candidate("MONDO:1", "G", orphanet=["Orphanet:1"])
+    assert c.specific
+    c.grouping = ["MONDO subset ordo_group_of_disorders"]
+    assert not c.specific
+
+
+def test_ranked_above_counts_only_compared_candidates():
+    merged = dict(cand("M", 1.0, moi="unknown"), compete=False)        # merged into another candidate
+    lower = cand("L", 1.0, moi="unknown")
+    s = R.select([cand("A", 3.0), merged, lower], ["HP:1"], [], [])
+    line = next(r for r in s["reasons"] if "ranked above" in r)
+    assert "ranked above 1 candidate(s)" in line                        # L only, not the merged M
