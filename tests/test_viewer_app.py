@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 pytest.importorskip("fastapi")
+pytest.importorskip("httpx")       # needed by fastapi.testclient
 from fastapi.testclient import TestClient  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]

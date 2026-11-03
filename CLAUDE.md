@@ -31,15 +31,17 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 
 | 步骤 | 内容 | 状态 |
 | --- | --- | --- |
-| 1 | 变异解析（确定性，无 LLM） | 完成：离线测试 49 个全过，联网验收全部 HARD 通过（2026-10-28） |
+| 1 | 变异解析（确定性，无 LLM） | ✅ step1.1 已验收（2026-11-03，tag `step1.1-accepted`）：自检 6 独立重新翻译，16 个变异全部一致、反向验证全 fail；输出 schema v1.2 另含外显子布局和 AlphaFold 结构事实（pLDDT、RSA、8 Å 邻居） |
 | 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | ✅ 已验收（2026-10-28，tag `step2-accepted`）：`--fresh-llm` 硬性项全过；离线测试 135 个全过；症状提取测试集 32 条精确率/召回率 1.0（集合偏简单）；剩余问题见契约“已知局限” |
-| 3 | 疗法匹配（变异机制 → 适用的治疗思路） | 下一步 |
+| 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
+| 2.1 | Step 2 局限改进 | 下一步：难题测试集基线 → 混合检索 + 起病年龄映射 → CBAVD 漏提 → `--fresh-llm` → tag `step2.1-accepted`（待办见 Step 2 契约末尾） |
+| 3 | 疗法匹配（变异机制 → 适用的治疗思路） | 2.1 之后写 3.0 契约（待办见 `docs/step3_contract_todo.md`，含 SPTLC1 表型-区域规则、DMD 读码框规则） |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
 ## 练习与验收数据
 
-`data/cases/practice/official_examples.json`：官网 Phase 0 示例病例，部分有标准答案（例如 KMT2B c.8079delC 不触发 NMD）。
+`data/cases/practice/official_examples.json`：官网 Phase 0 的 12 个示例病例，临床描述逐字取自官网（2026-11-03 核对；SLC35A2 拆为 ex7 / ex8），部分有标准答案（例如 KMT2B c.8079delC 不触发 NMD）。
 开发调试优先用这些练习病例，最后才跑 4 个评测病例，避免过拟合。
 
 ## 用户背景

@@ -4,17 +4,18 @@
 
 | 步骤 | 内容 | 状态 |
 | --- | --- | --- |
-| 1 | 变异解析（确定性计算，无 LLM） | ✅ 已验收（2026-10-28）：离线测试 49 个全过；联网验收 15 个变异一致性校验全过、11 项标准答案全对 |
+| 1 | 变异解析（确定性计算，无 LLM） | ✅ step1.1 已验收（2026-11-03，tag `step1.1-accepted`）：新增自检 6 独立重新翻译，16 个变异全部与 p. 写法一致，反向验证全部判 fail；输出另含外显子布局与 AlphaFold 结构事实（schema v1.2） |
 | 2 | 疾病归一化 | ✅ 已验收（2026-10-28）：不用缓存的联网验收硬性项全过（练习病例 7 个标准答案、两个陷阱病例、ClinVar 精确匹配、缓存重跑一致）；离线测试 135 个全过；症状提取测试集精确率/召回率 1.0；已知局限见契约 |
-| 3 | 疗法匹配 | 未开始 |
+| 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 + 静态快照导出；Step 1 三张平面图与 3D 结构已接入 |
+| 3 | 疗法匹配 | 未开始（3.0 契约待写，待办见 `docs/step3_contract_todo.md`） |
 | 4 | 查现成方案（试验、获批药物、文献） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 | 未开始 |
 
 ## 环境要求
 
 - Python 3.9 以上（Mac 自带的 `python3` 即可）
-- 第 1 步**只用标准库**，不需要安装任何包
-- 运行测试需要 `pytest`：`pip3 install pytest`
+- 流水线**只用标准库**，不需要安装任何包
+- 运行测试需要 `pytest`：`pip3 install pytest`（查看应用的测试另需 `requirements-viewer.txt` 和 `httpx`，未安装时自动跳过）
 
 ## 第 1 步：怎么运行
 
@@ -32,6 +33,10 @@ python3 scripts/step1_variant.py data/cases/aitx_final_patients.json
 ```
 
 结果在 `out/step1/<病例ID>.json`。字段含义见 `docs/step1_variant_contract.md`。
+
+- 自检 6（独立重新翻译）：按 c. 写法修改 NCBI mRNA，重新翻译到第一个终止密码子，与输入的 p. 写法比对，不一致判 fail。
+- 结构事实：从 UniProt / AlphaFold DB 取预测结构（缓存在 `.cache/alphafold/`），记录变异位置的 pLDDT、相对溶剂可及性（RSA）和 8 Å 内的邻居。
+  只作背景信息，取不到不会让第 1 步失败；设置 `AITX_SKIP_STRUCTURE=1` 可跳过。
 
 ### 如果报 SSL 证书错误
 
@@ -105,7 +110,11 @@ python3 scripts/viewer_app.py             # 打开 http://127.0.0.1:8765/ （只
 - 结果文件或模板变化后，已打开的页面几秒内自动刷新（SSE）。
 - 病例页有“从第 N 步重跑”按钮：后台执行 `python3 -u scripts/run_pipeline.py --case <ID> --from-step N`，日志实时显示，跑完自动刷新。
   会走到 LLM 步骤的按钮旁有提示；默认用缓存，勾选“不用缓存”需二次确认。同一病例同时只能有一个运行任务。
-- 首页显示正在运行的任务和最近的运行记录；记录在 `out/viewer_runs/history.jsonl`，日志在 `out/viewer_runs/<运行ID>.log`。
+- 首页“运行状态”默认折叠（有任务运行时自动展开），显示正在运行的任务和最近 5 条记录；完整记录在顶部导航的“运行记录”页。
+  记录在 `out/viewer_runs/history.jsonl`，日志在 `out/viewer_runs/<运行ID>.log`，最多保留 200 条，更早的连同日志自动删除。
+- 病例页的 Step 1 部分有三张平面图（密码子对比、按比例的蛋白长度条、按真实长度的外显子图 + 拼接标记 + NMD 结论）
+  和 3D 蛋白结构（AlphaFold 预测，3Dmol.js；错义变异标红并显示 8 Å 内邻居，截短丢失部分变灰，可切换按 pLDDT 着色）。
+  3D 视图只在应用中可用，静态快照里显示结构事实表。
 - 界面只调用命令行能做的事，验收仍用命令行脚本。重跑若需要真正调用 LLM，启动应用前先设置 `AITX_LLM_API_KEY`。
 
 ### 静态快照导出
@@ -131,6 +140,7 @@ aitx/
     transcript.py      获取并解析 RefSeq 转录本记录
     profile.py         生成 VariantProfile：分类、外显子、NMD、机制假设、校验
     translate.py       独立重新翻译（自检 6）：按 c. 改 mRNA、翻译到第一个终止
+    structure.py       AlphaFold 结构事实：异构体位置映射、pLDDT、RSA、8 Å 邻居
   disease/
     datasets.py        整包数据下载（断点续传）、完整性校验、日期快照
     sources.py         各数据文件的解析器，每条记录带行号用于引用
@@ -141,13 +151,13 @@ aitx/
     pipeline.py        组装 DiseaseResolution 输出和校验
 scripts/
   run_pipeline.py      整条流水线入口，支持 --from-step / --to-step
-  build_viewer.py      审查页面模板（9 个视图）+ 静态快照导出，输出到 out/review/
+  build_viewer.py      审查页面模板（9 个视图 + Step 1 图示）+ 静态快照导出，输出到 out/review/
   viewer_app.py        本地 Web 应用：实时渲染、自动刷新、页面上重跑（调用 run_pipeline.py）
   step1_variant.py     第 1 步命令行入口
   acceptance_step1.py  第 1 步联网验收
   step2_disease.py     第 2 步命令行入口
   acceptance_step2.py  第 2 步联网验收
-data/cases/            四个评测病例 + 官网示例病例
+data/cases/            四个评测病例 + 官网示例病例（12 个，逐字取自官网）+ Phase 1 验证病例
 docs/                  每一步的契约文档
 tests/                 离线测试（合成转录本、合成本体，不联网）
 ```
