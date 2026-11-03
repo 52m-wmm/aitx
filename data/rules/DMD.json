@@ -1,0 +1,357 @@
+{
+ "gene": "DMD",
+ "drafted_at": 1793708640,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "Becker muscular dystrophy",
+   "omim": [
+    "OMIM:300376"
+   ],
+   "mondo": "MONDO:0010311"
+  },
+  {
+   "label": "dilated cardiomyopathy 3B",
+   "omim": [
+    "OMIM:302045"
+   ],
+   "mondo": "MONDO:0010542"
+  },
+  {
+   "label": "Duchenne muscular dystrophy",
+   "omim": [
+    "OMIM:310200"
+   ],
+   "mondo": "MONDO:0010679"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DMD%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "DMD[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793707835,
+   "n_results": 110,
+   "returned_ids": [
+    "14636778",
+    "37882106",
+    "37562008",
+    "19367636",
+    "16770791"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DMD%5Btiab%5D+AND+becker%5Btiab%5D+AND+muscular%5Btiab%5D+AND+dystrophy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "DMD[tiab] AND becker[tiab] AND muscular[tiab] AND dystrophy[tiab]",
+   "queried_at": 1793707836,
+   "n_results": 1255,
+   "returned_ids": [
+    "37591308",
+    "39503119",
+    "32310552",
+    "27230049",
+    "39588385"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DMD%5Btiab%5D+AND+dilated%5Btiab%5D+AND+cardiomyopathy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "DMD[tiab] AND dilated[tiab] AND cardiomyopathy[tiab]",
+   "queried_at": 1793707838,
+   "n_results": 254,
+   "returned_ids": [
+    "37671549",
+    "20301486",
+    "27230049",
+    "37753649",
+    "30480978"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DMD%5Btiab%5D+AND+duchenne%5Btiab%5D+AND+muscular%5Btiab%5D+AND+dystrophy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "DMD[tiab] AND duchenne[tiab] AND muscular[tiab] AND dystrophy[tiab]",
+   "queried_at": 1793707839,
+   "n_results": 8698,
+   "returned_ids": [
+    "32717791",
+    "40581438",
+    "26754139",
+    "27230049",
+    "39900900"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1119",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1119/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1119",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1119/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1119",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1119/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1431",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1431/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1431",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1431/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "14636778",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/14636778/",
+   "accessed_at": 1793707841
+  },
+  {
+   "type": "pmid",
+   "id": "37882106",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37882106/",
+   "accessed_at": 1793707842
+  },
+  {
+   "type": "pmid",
+   "id": "37562008",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37562008/",
+   "accessed_at": 1793707844
+  },
+  {
+   "type": "pmid",
+   "id": "19367636",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/19367636/",
+   "accessed_at": 1793707845
+  },
+  {
+   "type": "pmid",
+   "id": "16770791",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/16770791/",
+   "accessed_at": 1793707847
+  },
+  {
+   "type": "pmid",
+   "id": "37591308",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37591308/",
+   "accessed_at": 1793707848
+  },
+  {
+   "type": "pmid",
+   "id": "39503119",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39503119/",
+   "accessed_at": 1793707849
+  },
+  {
+   "type": "pmid",
+   "id": "32310552",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32310552/",
+   "accessed_at": 1793707851
+  },
+  {
+   "type": "pmid",
+   "id": "27230049",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27230049/",
+   "accessed_at": 1793707852
+  },
+  {
+   "type": "pmid",
+   "id": "39588385",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39588385/",
+   "accessed_at": 1793707854
+  },
+  {
+   "type": "pmid",
+   "id": "37671549",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37671549/",
+   "accessed_at": 1793707855
+  },
+  {
+   "type": "pmid",
+   "id": "20301486",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/20301486/",
+   "accessed_at": 1793707858
+  },
+  {
+   "type": "pmid",
+   "id": "37753649",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37753649/",
+   "accessed_at": 1793707860
+  },
+  {
+   "type": "pmid",
+   "id": "30480978",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30480978/",
+   "accessed_at": 1793707861
+  },
+  {
+   "type": "pmid",
+   "id": "32717791",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32717791/",
+   "accessed_at": 1793707862
+  }
+ ],
+ "rules": [
+  {
+   "id": "DMD-1",
+   "gene": "DMD",
+   "version": 1,
+   "statement": "Mutations that induce a shift in the reading frame are associated with Duchenne muscular dystrophy rather than Becker muscular dystrophy.",
+   "applies_when": {
+    "variant_class": [
+     "frameshift"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:310200"
+    ],
+    "argues_against": [
+     "OMIM:300376"
+    ]
+   },
+   "exceptions": "The reading-frame rule has exceptions; 91% of over 4700 mutations were in agreement, and it held true for 96% of DMD patients and 93% of BMD patients.",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "16770791",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/16770791/",
+     "accessed_at": 1793707847,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16770791&rettype=abstract&retmode=text",
+     "quote": "In Duchenne patients, mutations induce a shift in the reading frame leading to prematurely truncated, dysfunctional dystrophins.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "19367636",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/19367636/",
+     "accessed_at": 1793707845,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=19367636&rettype=abstract&retmode=text",
+     "quote": "The reading frame rule holds true for 96% of the DMD patients and 93% of the BMD patients.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "16770791",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/16770791/",
+     "accessed_at": 1793707847,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16770791&rettype=abstract&retmode=text",
+     "quote": "Currently, over 4700 mutations have been reported in the Leiden DMD mutation database, of which 91% are in agreement with this rule.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "established",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "80fb28915a9cf1f5f08dd6ab93b5abef44a2add607d41f524dcb90ca88f6917e"
+  },
+  {
+   "id": "DMD-2",
+   "gene": "DMD",
+   "version": 1,
+   "statement": "In-frame mutations are associated with Becker muscular dystrophy rather than Duchenne muscular dystrophy.",
+   "applies_when": {
+    "variant_class": [
+     "inframe_deletion",
+     "inframe_insertion",
+     "inframe_indel"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:300376"
+    ],
+    "argues_against": [
+     "OMIM:310200"
+    ]
+   },
+   "exceptions": "The reading-frame rule has exceptions; 91% of over 4700 mutations were in agreement, and it held true for 96% of DMD patients and 93% of BMD patients.",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "16770791",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/16770791/",
+     "accessed_at": 1793707847,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16770791&rettype=abstract&retmode=text",
+     "quote": "In Duchenne patients, mutations induce a shift in the reading frame leading to prematurely truncated, dysfunctional dystrophins. In Becker patients, in-frame mutations allow the synthesis of internally deleted, but largely functional dystrophins.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "19367636",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/19367636/",
+     "accessed_at": 1793707845,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=19367636&rettype=abstract&retmode=text",
+     "quote": "The reading frame rule holds true for 96% of the DMD patients and 93% of the BMD patients.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "16770791",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/16770791/",
+     "accessed_at": 1793707847,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=16770791&rettype=abstract&retmode=text",
+     "quote": "Currently, over 4700 mutations have been reported in the Leiden DMD mutation database, of which 91% are in agreement with this rule.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "established",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "22c604ca54f2d471077d726842d9f4319c31a24e47ed1781e654c4e19e7e1cd7"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

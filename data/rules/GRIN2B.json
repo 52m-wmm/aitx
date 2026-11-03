@@ -1,0 +1,245 @@
+{
+ "gene": "GRIN2B",
+ "drafted_at": 1793708668,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "intellectual disability, autosomal dominant 6",
+   "omim": [
+    "OMIM:613970"
+   ],
+   "mondo": "MONDO:0013509"
+  },
+  {
+   "label": "developmental and epileptic encephalopathy, 27",
+   "omim": [
+    "OMIM:616139"
+   ],
+   "mondo": "MONDO:0014505"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=GRIN2B%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "GRIN2B[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708642,
+   "n_results": 14,
+   "returned_ids": [
+    "41146259",
+    "35704740",
+    "35393335",
+    "40024627",
+    "33043365"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=GRIN2B%5Btiab%5D+AND+intellectual%5Btiab%5D+AND+disability%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "GRIN2B[tiab] AND intellectual[tiab] AND disability[tiab]",
+   "queried_at": 1793708644,
+   "n_results": 57,
+   "returned_ids": [
+    "28377535",
+    "38836461",
+    "24272827",
+    "25356899",
+    "37385334"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=GRIN2B%5Btiab%5D+AND+developmental%5Btiab%5D+AND+epileptic%5Btiab%5D+AND+encephalopathy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "GRIN2B[tiab] AND developmental[tiab] AND epileptic[tiab] AND encephalopathy[tiab]",
+   "queried_at": 1793708645,
+   "n_results": 8,
+   "returned_ids": [
+    "38380699",
+    "35240744",
+    "38727899",
+    "34997442",
+    "41470225"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK501979",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK501979/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK501979",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK501979/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK501979",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK501979/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "41146259",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41146259/",
+   "accessed_at": 1793708647
+  },
+  {
+   "type": "pmid",
+   "id": "35704740",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35704740/",
+   "accessed_at": 1793708648
+  },
+  {
+   "type": "pmid",
+   "id": "35393335",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35393335/",
+   "accessed_at": 1793708650
+  },
+  {
+   "type": "pmid",
+   "id": "40024627",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/40024627/",
+   "accessed_at": 1793708651
+  },
+  {
+   "type": "pmid",
+   "id": "33043365",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/33043365/",
+   "accessed_at": 1793708652
+  },
+  {
+   "type": "pmid",
+   "id": "28377535",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/28377535/",
+   "accessed_at": 1793708653
+  },
+  {
+   "type": "pmid",
+   "id": "38836461",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38836461/",
+   "accessed_at": 1793708654
+  },
+  {
+   "type": "pmid",
+   "id": "24272827",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/24272827/",
+   "accessed_at": 1793708655
+  },
+  {
+   "type": "pmid",
+   "id": "25356899",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25356899/",
+   "accessed_at": 1793708659
+  },
+  {
+   "type": "pmid",
+   "id": "37385334",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37385334/",
+   "accessed_at": 1793708660
+  },
+  {
+   "type": "pmid",
+   "id": "38380699",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38380699/",
+   "accessed_at": 1793708661
+  },
+  {
+   "type": "pmid",
+   "id": "35240744",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35240744/",
+   "accessed_at": 1793708662
+  },
+  {
+   "type": "pmid",
+   "id": "38727899",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38727899/",
+   "accessed_at": 1793708665
+  },
+  {
+   "type": "pmid",
+   "id": "34997442",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34997442/",
+   "accessed_at": 1793708666
+  },
+  {
+   "type": "pmid",
+   "id": "41470225",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41470225/",
+   "accessed_at": 1793708668
+  }
+ ],
+ "rules": [
+  {
+   "id": "GRIN2B-1",
+   "gene": "GRIN2B",
+   "version": 1,
+   "statement": "GRIN2B nonsense variants are associated with mild developmental delay without epilepsy, within the developmental delay or intellectual disability without epilepsy phenotype, rather than developmental and epileptic encephalopathy.",
+   "applies_when": {
+    "variant_class": [
+     "nonsense"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:613970"
+    ],
+    "argues_against": [
+     "OMIM:616139"
+    ]
+   },
+   "exceptions": "Only one patient with a nonsense variant was reported in the source.",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "35240744",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/35240744/",
+     "accessed_at": 1793708662,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=35240744&rettype=abstract&retmode=text",
+     "quote": "The phenotype of 9 cases was developmental delay or intellectual disability without epilepsy, age of visit 1 year to 6 year and 4 months of whom 5 cases had severe developmental delay, 2 cases had moderate and 2 cases had mild delay.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "35240744",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/35240744/",
+     "accessed_at": 1793708662,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=35240744&rettype=abstract&retmode=text",
+     "quote": "Missense variants were found in 10 patients, among them 6 cases had severe developmental delay, 3 cases had moderate and 1 case had mild developmental delay, but the patient with nonsense variant showed mild developmental delay without epilepsy.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "weak",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "9fd15f45490b79654c6ad6a3d3e77c4f286e9f910c2ed5dd3c394c1f03b9069d"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

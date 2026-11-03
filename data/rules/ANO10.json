@@ -1,0 +1,108 @@
+{
+ "gene": "ANO10",
+ "drafted_at": 1793708162,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "autosomal recessive spinocerebellar ataxia 10",
+   "omim": [
+    "OMIM:613728"
+   ],
+   "mondo": "MONDO:0013392"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ANO10%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "ANO10[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708147,
+   "n_results": 8,
+   "returned_ids": [
+    "27787937",
+    "25089919",
+    "38469933",
+    "36698452",
+    "22008874"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ANO10%5Btiab%5D+AND+spinocerebellar%5Btiab%5D+AND+ataxia%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "ANO10[tiab] AND spinocerebellar[tiab] AND ataxia[tiab]",
+   "queried_at": 1793708148,
+   "n_results": 23,
+   "returned_ids": [
+    "38469933",
+    "32319254",
+    "39777793",
+    "35648332",
+    "31423897"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "pmid",
+   "id": "27787937",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27787937/",
+   "accessed_at": 1793708149
+  },
+  {
+   "type": "pmid",
+   "id": "25089919",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25089919/",
+   "accessed_at": 1793708151
+  },
+  {
+   "type": "pmid",
+   "id": "38469933",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38469933/",
+   "accessed_at": 1793708152
+  },
+  {
+   "type": "pmid",
+   "id": "36698452",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36698452/",
+   "accessed_at": 1793708154
+  },
+  {
+   "type": "pmid",
+   "id": "22008874",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/22008874/",
+   "accessed_at": 1793708155
+  },
+  {
+   "type": "pmid",
+   "id": "32319254",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32319254/",
+   "accessed_at": 1793708156
+  },
+  {
+   "type": "pmid",
+   "id": "39777793",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39777793/",
+   "accessed_at": 1793708158
+  },
+  {
+   "type": "pmid",
+   "id": "35648332",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35648332/",
+   "accessed_at": 1793708160
+  },
+  {
+   "type": "pmid",
+   "id": "31423897",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31423897/",
+   "accessed_at": 1793708162
+  }
+ ],
+ "rules": [],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": "The sources report that ANO10 variants cause autosomal recessive spinocerebellar ataxia 10 and describe genotype-phenotype correlations such as truncating versus missense/in-frame variants relating to age at onset or progression. However, with only one candidate disease, no source explicitly states that a variant property favors one candidate disease over another candidate disease, so no discriminatory genotype-phenotype rule can be proposed."
+}

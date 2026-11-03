@@ -91,7 +91,7 @@ Return only JSON: {"choices": [{"feature": <feature number>, "candidate": <candi
 CALL_PARAMS = {"temperature": 0, "max_tokens": 16384, "response_format": {"type": "json_object"}}
 
 
-def cache_key(messages: list[dict], k: int, cfg: dict | None = None) -> str:
+def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_version: str | None = None) -> str:
     """Cache key: requested model, endpoint, prompt version, full prompt text, sample index.
 
     Changing the prompt (even without bumping PROMPT_VERSION), the model or the endpoint
@@ -99,7 +99,7 @@ def cache_key(messages: list[dict], k: int, cfg: dict | None = None) -> str:
     entry and checked on every hit (see _cache_usable).
     """
     cfg = cfg or llm.config()
-    return hashlib.sha256(json.dumps([cfg["model"], cfg["base_url"], PROMPT_VERSION, messages, k],
+    return hashlib.sha256(json.dumps([cfg["model"], cfg["base_url"], prompt_version or PROMPT_VERSION, messages, k],
                                      sort_keys=True).encode()).hexdigest()
 
 
@@ -112,10 +112,10 @@ def _cache_usable(entry: dict, cfg: dict) -> bool:
     return not prefix or str(entry.get("served_model", "")).startswith(prefix)
 
 
-def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
-    """One chat completion, cached under cache_key()."""
+def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: str | None = None) -> dict:
+    """One chat completion, cached under cache_key(). Other modules pass their own prompt_version."""
     cfg = llm.config()
-    path = CACHE_DIR / f"{cache_key(messages, k, cfg)}.json"
+    path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
     if use_cache and path.exists():
         entry = json.loads(path.read_text())
         if _cache_usable(entry, cfg):
@@ -141,7 +141,7 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool) -> dict:
         raise RuntimeError(f"LLM returned no usable content (finish_reason={choice.get('finish_reason')})")
     out = {"requested_model": cfg["model"], "served_model": resp.get("model", ""),
            "content": content, "sample": k, "call_params": CALL_PARAMS, "call_params_source": "recorded",
-           "prompt_version": PROMPT_VERSION}
+           "prompt_version": prompt_version or PROMPT_VERSION}
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     return out

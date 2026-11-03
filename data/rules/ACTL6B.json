@@ -1,0 +1,200 @@
+{
+ "gene": "ACTL6B",
+ "drafted_at": 1793708084,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "developmental and epileptic encephalopathy, 76",
+   "omim": [
+    "OMIM:618468"
+   ],
+   "mondo": "MONDO:0032768"
+  },
+  {
+   "label": "intellectual developmental disorder with severe speech and ambulation defects",
+   "omim": [
+    "OMIM:618470"
+   ],
+   "mondo": "MONDO:0032770"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ACTL6B%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "ACTL6B[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708073,
+   "n_results": 2,
+   "returned_ids": [
+    "39275948",
+    "31134736"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ACTL6B%5Btiab%5D+AND+developmental%5Btiab%5D+AND+epileptic%5Btiab%5D+AND+encephalopathy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "ACTL6B[tiab] AND developmental[tiab] AND epileptic[tiab] AND encephalopathy[tiab]",
+   "queried_at": 1793708074,
+   "n_results": 6,
+   "returned_ids": [
+    "31134736",
+    "39275948",
+    "36553410",
+    "30656450",
+    "33141462"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=ACTL6B%5Btiab%5D+AND+intellectual%5Btiab%5D+AND+developmental%5Btiab%5D+AND+severe%5Btiab%5D+AND+speech%5Btiab%5D+AND+ambulation%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "ACTL6B[tiab] AND intellectual[tiab] AND developmental[tiab] AND severe[tiab] AND speech[tiab] AND ambulation[tiab]",
+   "queried_at": 1793708075,
+   "n_results": 1,
+   "returned_ids": [
+    "36553410"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "pmid",
+   "id": "39275948",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39275948/",
+   "accessed_at": 1793708077
+  },
+  {
+   "type": "pmid",
+   "id": "31134736",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31134736/",
+   "accessed_at": 1793708079
+  },
+  {
+   "type": "pmid",
+   "id": "36553410",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36553410/",
+   "accessed_at": 1793708080
+  },
+  {
+   "type": "pmid",
+   "id": "30656450",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30656450/",
+   "accessed_at": 1793708082
+  },
+  {
+   "type": "pmid",
+   "id": "33141462",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/33141462/",
+   "accessed_at": 1793708084
+  }
+ ],
+ "rules": [
+  {
+   "id": "ACTL6B-1",
+   "gene": "ACTL6B",
+   "version": 1,
+   "statement": "Monoallelic (heterozygous) ACTL6B variants are associated with autosomal dominant intellectual developmental disorder with severe speech and ambulation defects, whereas DEE76 is due to biallelic variants.",
+   "applies_when": {
+    "zygosity": [
+     "heterozygous"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:618470"
+    ],
+    "argues_against": [
+     "OMIM:618468"
+    ]
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "36553410",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/36553410/",
+     "accessed_at": 1793708080,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=36553410&rettype=abstract&retmode=text",
+     "quote": "Previous studies have suggested that the ACTL6B monoallelic variant is responsible for an autosomal dominant inherited intellectual developmental disorder with severe speech and ambulation deficits. The clinical phenotype of developmental and epileptic encephalopathy type 76 (DEE76) due to ACTL6B biallelic variants was first reported in 2019, with an autosomal recessive mode of inheritance.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "b0c5c9e6866fd061d46d85bf0bcfd42ed9c46e40e020440e5985ce33f44921b6"
+  },
+  {
+   "id": "ACTL6B-2",
+   "gene": "ACTL6B",
+   "version": 1,
+   "statement": "Homozygous ACTL6B variants are associated with DEE76, with all 18 summarized DEE76 cases being autosomal recessive and 12 having homozygous variants.",
+   "applies_when": {
+    "zygosity": [
+     "homozygous"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:618468"
+    ],
+    "argues_against": [
+     "OMIM:618470"
+    ]
+   },
+   "exceptions": "DEE76 also occurred with compound heterozygous variants in six of 18 cases.",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "36553410",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/36553410/",
+     "accessed_at": 1793708080,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=36553410&rettype=abstract&retmode=text",
+     "quote": "Previous studies have suggested that the ACTL6B monoallelic variant is responsible for an autosomal dominant inherited intellectual developmental disorder with severe speech and ambulation deficits. The clinical phenotype of developmental and epileptic encephalopathy type 76 (DEE76) due to ACTL6B biallelic variants was first reported in 2019, with an autosomal recessive mode of inheritance.",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "36553410",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/36553410/",
+     "accessed_at": 1793708080,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=36553410&rettype=abstract&retmode=text",
+     "quote": "All 18 cases are autosomal recessive, including 12 with homozygous variants and six with compound heterozygous variants.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "4c5eca46eab747ffa5567d33f10e686a2a0cef6a8d7c8b9e3f7067de84037336"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

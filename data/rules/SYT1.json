@@ -1,0 +1,78 @@
+{
+ "gene": "SYT1",
+ "drafted_at": 1793709196,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "infantile hypotonia-oculomotor anomalies-hyperkinetic movements-developmental delay syndrome",
+   "omim": [
+    "OMIM:618218"
+   ],
+   "mondo": "MONDO:0033864"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=SYT1%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "SYT1[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793709187,
+   "n_results": 5,
+   "returned_ids": [
+    "35101335",
+    "39049490",
+    "37916192",
+    "38283597",
+    "41197351"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=SYT1%5Btiab%5D+AND+hypotonia-oculomotor%5Btiab%5D+AND+anomalies-hyperkinetic%5Btiab%5D+AND+movements-developmental%5Btiab%5D+AND+delay%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "SYT1[tiab] AND hypotonia-oculomotor[tiab] AND anomalies-hyperkinetic[tiab] AND movements-developmental[tiab] AND delay[tiab]",
+   "queried_at": 1793709188,
+   "n_results": 0,
+   "returned_ids": []
+  }
+ ],
+ "sources": [
+  {
+   "type": "pmid",
+   "id": "35101335",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35101335/",
+   "accessed_at": 1793709190
+  },
+  {
+   "type": "pmid",
+   "id": "39049490",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39049490/",
+   "accessed_at": 1793709191
+  },
+  {
+   "type": "pmid",
+   "id": "37916192",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37916192/",
+   "accessed_at": 1793709193
+  },
+  {
+   "type": "pmid",
+   "id": "38283597",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38283597/",
+   "accessed_at": 1793709194
+  },
+  {
+   "type": "pmid",
+   "id": "41197351",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41197351/",
+   "accessed_at": 1793709196
+  }
+ ],
+ "rules": [],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": "The sources describe SYT1 variants and a neurodevelopmental disorder, but they do not explicitly state that a variant property is associated with the single listed candidate disease rather than another candidate disease. With only one candidate disease, there is no competing candidate for a property to point toward or away from."
+}

@@ -1,0 +1,138 @@
+{
+ "gene": "DDC",
+ "drafted_at": 1793708634,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "aromatic L-amino acid decarboxylase deficiency",
+   "omim": [
+    "OMIM:608643"
+   ],
+   "mondo": "MONDO:0012084"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DDC%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "DDC[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708620,
+   "n_results": 8,
+   "returned_ids": [
+    "42563827",
+    "25001633",
+    "36268467",
+    "33996355",
+    "24788355"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=DDC%5Btiab%5D+AND+aromatic%5Btiab%5D+AND+l-amino%5Btiab%5D+AND+acid%5Btiab%5D+AND+decarboxylase%5Btiab%5D+AND+deficiency%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "DDC[tiab] AND aromatic[tiab] AND l-amino[tiab] AND acid[tiab] AND decarboxylase[tiab] AND deficiency[tiab]",
+   "queried_at": 1793708621,
+   "n_results": 70,
+   "returned_ids": [
+    "37453860",
+    "37701332",
+    "36928758",
+    "37824694",
+    "37286773"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK595821",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK595821/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK595821",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK595821/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK595821",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK595821/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "42563827",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42563827/",
+   "accessed_at": 1793708622
+  },
+  {
+   "type": "pmid",
+   "id": "25001633",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25001633/",
+   "accessed_at": 1793708623
+  },
+  {
+   "type": "pmid",
+   "id": "36268467",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36268467/",
+   "accessed_at": 1793708624
+  },
+  {
+   "type": "pmid",
+   "id": "33996355",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/33996355/",
+   "accessed_at": 1793708626
+  },
+  {
+   "type": "pmid",
+   "id": "24788355",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/24788355/",
+   "accessed_at": 1793708628
+  },
+  {
+   "type": "pmid",
+   "id": "37453860",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37453860/",
+   "accessed_at": 1793708629
+  },
+  {
+   "type": "pmid",
+   "id": "37701332",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37701332/",
+   "accessed_at": 1793708630
+  },
+  {
+   "type": "pmid",
+   "id": "36928758",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36928758/",
+   "accessed_at": 1793708631
+  },
+  {
+   "type": "pmid",
+   "id": "37824694",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37824694/",
+   "accessed_at": 1793708633
+  },
+  {
+   "type": "pmid",
+   "id": "37286773",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37286773/",
+   "accessed_at": 1793708634
+  }
+ ],
+ "rules": [],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": "Only one candidate disease (aromatic L-amino acid decarboxylase deficiency) is provided, so no source can state that a variant property is associated with one candidate disease rather than another. Source 1 explicitly states that 'No clinically relevant genotype-phenotype correlations for DDC have been identified' and only notes, for a single individual with the c.304G>A (p.Gly102Ser) variant located between Ile101 and Phe103, responsiveness to levodopa therapy, adding that other variants in and around the levodopa substrate binding pocket 'may confer levodopa responsiveness, but this has not yet been proven' -- a treatment-response observation, not a disease-distinguishing genotype-phenotype rule. The remaining sources describe variant spectra, founder variants, or clinical features without attributing any variant class, NMD outcome, zygosity, protein position range, or exon range to a specific candidate disease over another."
+}

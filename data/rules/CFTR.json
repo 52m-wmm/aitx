@@ -1,0 +1,258 @@
+{
+ "gene": "CFTR",
+ "drafted_at": 1793708199,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "hereditary chronic pancreatitis",
+   "omim": [
+    "OMIM:167800"
+   ],
+   "mondo": "MONDO:0008185"
+  },
+  {
+   "label": "cystic fibrosis",
+   "omim": [
+    "OMIM:219700"
+   ],
+   "mondo": "MONDO:0009061"
+  },
+  {
+   "label": "congenital bilateral aplasia of vas deferens from CFTR mutation",
+   "omim": [
+    "OMIM:277180"
+   ],
+   "mondo": "MONDO:0010178"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=CFTR%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "CFTR[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708173,
+   "n_results": 170,
+   "returned_ids": [
+    "31570318",
+    "18456578",
+    "25910067",
+    "27738188",
+    "33369261"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=CFTR%5Btiab%5D+AND+hereditary%5Btiab%5D+AND+chronic%5Btiab%5D+AND+pancreatitis%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "CFTR[tiab] AND hereditary[tiab] AND chronic[tiab] AND pancreatitis[tiab]",
+   "queried_at": 1793708175,
+   "n_results": 69,
+   "returned_ids": [
+    "31860051",
+    "18206817",
+    "17204147",
+    "42933941",
+    "37603299"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=CFTR%5Btiab%5D+AND+cystic%5Btiab%5D+AND+fibrosis%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "CFTR[tiab] AND cystic[tiab] AND fibrosis[tiab]",
+   "queried_at": 1793708176,
+   "n_results": 11999,
+   "returned_ids": [
+    "37558605",
+    "39051188",
+    "34557648",
+    "34090606",
+    "39117676"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=CFTR%5Btiab%5D+AND+congenital%5Btiab%5D+AND+bilateral%5Btiab%5D+AND+aplasia%5Btiab%5D+AND+vas%5Btiab%5D+AND+deferens%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "CFTR[tiab] AND congenital[tiab] AND bilateral[tiab] AND aplasia[tiab] AND vas[tiab] AND deferens[tiab]",
+   "queried_at": 1793708178,
+   "n_results": 13,
+   "returned_ids": [
+    "7686336",
+    "10200050",
+    "39402445",
+    "31823853",
+    "7539210"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1250",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1250/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1250",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1250/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1250",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1250/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "31570318",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31570318/",
+   "accessed_at": 1793708179
+  },
+  {
+   "type": "pmid",
+   "id": "18456578",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/18456578/",
+   "accessed_at": 1793708181
+  },
+  {
+   "type": "pmid",
+   "id": "25910067",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25910067/",
+   "accessed_at": 1793708182
+  },
+  {
+   "type": "pmid",
+   "id": "27738188",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27738188/",
+   "accessed_at": 1793708184
+  },
+  {
+   "type": "pmid",
+   "id": "33369261",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/33369261/",
+   "accessed_at": 1793708185
+  },
+  {
+   "type": "pmid",
+   "id": "31860051",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31860051/",
+   "accessed_at": 1793708187
+  },
+  {
+   "type": "pmid",
+   "id": "18206817",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/18206817/",
+   "accessed_at": 1793708188
+  },
+  {
+   "type": "pmid",
+   "id": "17204147",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/17204147/",
+   "accessed_at": 1793708189
+  },
+  {
+   "type": "pmid",
+   "id": "42933941",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42933941/",
+   "accessed_at": 1793708191
+  },
+  {
+   "type": "pmid",
+   "id": "37603299",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37603299/",
+   "accessed_at": 1793708192
+  },
+  {
+   "type": "pmid",
+   "id": "37558605",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37558605/",
+   "accessed_at": 1793708193
+  },
+  {
+   "type": "pmid",
+   "id": "39051188",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39051188/",
+   "accessed_at": 1793708194
+  },
+  {
+   "type": "pmid",
+   "id": "34557648",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34557648/",
+   "accessed_at": 1793708196
+  },
+  {
+   "type": "pmid",
+   "id": "34090606",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34090606/",
+   "accessed_at": 1793708198
+  },
+  {
+   "type": "pmid",
+   "id": "39117676",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39117676/",
+   "accessed_at": 1793708199
+  }
+ ],
+ "rules": [
+  {
+   "id": "CFTR-1",
+   "gene": "CFTR",
+   "version": 1,
+   "statement": "Isolated congenital bilateral absence of the vas deferens (CFTR-CBAVD), a CFTR-related disorder without additional clinical manifestations of cystic fibrosis, usually results from compound heterozygosity for a severe loss-of-function CFTR variant with a non-CF-causing variant or two non-CF-causing variants.",
+   "applies_when": {
+    "zygosity": [
+     "heterozygous"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:277180"
+    ],
+    "argues_against": [
+     "OMIM:219700"
+    ]
+   },
+   "exceptions": "The text states that a small percentage of individuals diagnosed with isolated CFTR-CBAVD develop adult-onset respiratory or pancreatic disease; the genotype described is compound heterozygosity, not simple heterozygosity.",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK1250",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1250/",
+     "accessed_at": 1793707716,
+     "section": "Genetically Related (Allelic) Disorders",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "CFTR-related disorders (CFTR-RD) include disorders associated with biallelic CFTR pathogenic variants but without additional clinical manifestations of CF [Simmonds et al 2024]. CFTR-related isolated congenital bilateral absence of the vas deferens (CFTR-CBAVD) is the most common CFTR-RD. Isolated CBAVD usually results from compound heterozygosity for a severe loss-of-function CFTR variant with a non-CF-causing variant (e.g., c.1210-12T[5]) or two non-CF-causing variants (see Molecular Genetics, Genetic Modifiers). A small percentage of individuals diagnosed with isolated CFTR-CBAVD develop adult-onset respiratory or pancreatic disease [Cui et al 2020, Fedder et al 2021, Cai & Li 2022].",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "89701b82ad2fdac3815a25d2db5eee0789aaca2bc9e6a3ac1cb60d3cec1f962b"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

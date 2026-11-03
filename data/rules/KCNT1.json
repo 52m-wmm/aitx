@@ -1,0 +1,213 @@
+{
+ "gene": "KCNT1",
+ "drafted_at": 1793708814,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "developmental and epileptic encephalopathy, 14",
+   "omim": [
+    "OMIM:614959"
+   ],
+   "mondo": "MONDO:0013989"
+  },
+  {
+   "label": "autosomal dominant nocturnal frontal lobe epilepsy 5",
+   "omim": [
+    "OMIM:615005"
+   ],
+   "mondo": "MONDO:0014002"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=KCNT1%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "KCNT1[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708790,
+   "n_results": 26,
+   "returned_ids": [
+    "34114611",
+    "26740507",
+    "31618474",
+    "42453761",
+    "34679360"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=KCNT1%5Btiab%5D+AND+developmental%5Btiab%5D+AND+epileptic%5Btiab%5D+AND+encephalopathy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "KCNT1[tiab] AND developmental[tiab] AND epileptic[tiab] AND encephalopathy[tiab]",
+   "queried_at": 1793708792,
+   "n_results": 45,
+   "returned_ids": [
+    "34147500",
+    "39093319",
+    "36740266",
+    "36173683",
+    "29455050"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=KCNT1%5Btiab%5D+AND+nocturnal%5Btiab%5D+AND+frontal%5Btiab%5D+AND+lobe%5Btiab%5D+AND+epilepsy%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "KCNT1[tiab] AND nocturnal[tiab] AND frontal[tiab] AND lobe[tiab] AND epilepsy[tiab]",
+   "queried_at": 1793708793,
+   "n_results": 27,
+   "returned_ids": [
+    "30234941",
+    "30809122",
+    "31872048",
+    "29196579",
+    "31835056"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1169",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1169/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1169",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1169/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1169",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1169/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK525917",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK525917/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK525917",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK525917/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK525917",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK525917/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "34114611",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34114611/",
+   "accessed_at": 1793708794
+  },
+  {
+   "type": "pmid",
+   "id": "26740507",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/26740507/",
+   "accessed_at": 1793708795
+  },
+  {
+   "type": "pmid",
+   "id": "31618474",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31618474/",
+   "accessed_at": 1793708797
+  },
+  {
+   "type": "pmid",
+   "id": "42453761",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/42453761/",
+   "accessed_at": 1793708798
+  },
+  {
+   "type": "pmid",
+   "id": "34679360",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34679360/",
+   "accessed_at": 1793708799
+  },
+  {
+   "type": "pmid",
+   "id": "34147500",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34147500/",
+   "accessed_at": 1793708801
+  },
+  {
+   "type": "pmid",
+   "id": "39093319",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39093319/",
+   "accessed_at": 1793708802
+  },
+  {
+   "type": "pmid",
+   "id": "36740266",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36740266/",
+   "accessed_at": 1793708804
+  },
+  {
+   "type": "pmid",
+   "id": "36173683",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36173683/",
+   "accessed_at": 1793708805
+  },
+  {
+   "type": "pmid",
+   "id": "29455050",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/29455050/",
+   "accessed_at": 1793708807
+  },
+  {
+   "type": "pmid",
+   "id": "30234941",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30234941/",
+   "accessed_at": 1793708809
+  },
+  {
+   "type": "pmid",
+   "id": "30809122",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30809122/",
+   "accessed_at": 1793708810
+  },
+  {
+   "type": "pmid",
+   "id": "31872048",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31872048/",
+   "accessed_at": 1793708812
+  },
+  {
+   "type": "pmid",
+   "id": "29196579",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/29196579/",
+   "accessed_at": 1793708813
+  },
+  {
+   "type": "pmid",
+   "id": "31835056",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31835056/",
+   "accessed_at": 1793708814
+  }
+ ],
+ "rules": [],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": "The KCNT1 sources describe phenotype correlations at the level of protein domains (e.g., EIMFS variants in S5/RCK domains and ADNFLE/SHE variants in the NAD+ binding domain, distal C-terminus, or RCK2) and note overlapping phenotypes and allelic associations, but they do not explicitly assign a numeric protein-position range, exon range, variant class, NMD outcome, or zygosity to developmental and epileptic encephalopathy 14 versus autosomal dominant nocturnal frontal lobe epilepsy 5. The variant tables list individual variants with associated phenotypes, but do not state an allowed variant property that distinguishes the two candidate diseases, so no rule is proposed."
+}

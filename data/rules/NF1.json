@@ -1,0 +1,358 @@
+{
+ "gene": "NF1",
+ "drafted_at": 1793708896,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "neurofibromatosis, familial spinal",
+   "omim": [
+    "OMIM:162210"
+   ],
+   "mondo": "MONDO:0008078"
+  },
+  {
+   "label": "Watson syndrome",
+   "omim": [
+    "OMIM:193520"
+   ],
+   "mondo": "MONDO:0008672"
+  },
+  {
+   "label": "neurofibromatosis-Noonan syndrome",
+   "omim": [
+    "OMIM:601321"
+   ],
+   "mondo": "MONDO:0011035"
+  },
+  {
+   "label": "juvenile myelomonocytic leukemia",
+   "omim": [
+    "OMIM:607785"
+   ],
+   "mondo": "MONDO:0011908"
+  },
+  {
+   "label": "neurofibromatosis type 1",
+   "omim": [
+    "OMIM:162200"
+   ],
+   "mondo": "MONDO:0018975"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708867,
+   "n_results": 215,
+   "returned_ids": [
+    "23913538",
+    "34427956",
+    "31595648",
+    "31370276",
+    "23656349"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+neurofibromatosis%5Btiab%5D+AND+familial%5Btiab%5D+AND+spinal%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND neurofibromatosis[tiab] AND familial[tiab] AND spinal[tiab]",
+   "queried_at": 1793708868,
+   "n_results": 18,
+   "returned_ids": [
+    "17712740",
+    "36612057",
+    "21365283",
+    "25211147",
+    "35350820"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+watson%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND watson[tiab]",
+   "queried_at": 1793708870,
+   "n_results": 12,
+   "returned_ids": [
+    "32107864",
+    "8317503",
+    "10933430",
+    "1770531",
+    "40077991"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+neurofibromatosis-noonan%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND neurofibromatosis-noonan[tiab]",
+   "queried_at": 1793708871,
+   "n_results": 38,
+   "returned_ids": [
+    "36803953",
+    "40289159",
+    "19449407",
+    "19845691",
+    "28971455"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+myelomonocytic%5Btiab%5D+AND+leukemia%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND myelomonocytic[tiab] AND leukemia[tiab]",
+   "queried_at": 1793708873,
+   "n_results": 110,
+   "returned_ids": [
+    "34464969",
+    "35788692",
+    "40644618",
+    "32933826",
+    "22480363"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=NF1%5Btiab%5D+AND+neurofibromatosis%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "NF1[tiab] AND neurofibromatosis[tiab]",
+   "queried_at": 1793708875,
+   "n_results": 6975,
+   "returned_ids": [
+    "23913538",
+    "38406862",
+    "31582003",
+    "36826455",
+    "37710322"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1109",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1109/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1109",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1109/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1109",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1109/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "23913538",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/23913538/",
+   "accessed_at": 1793708876
+  },
+  {
+   "type": "pmid",
+   "id": "34427956",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34427956/",
+   "accessed_at": 1793708877
+  },
+  {
+   "type": "pmid",
+   "id": "31595648",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31595648/",
+   "accessed_at": 1793708879
+  },
+  {
+   "type": "pmid",
+   "id": "31370276",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31370276/",
+   "accessed_at": 1793708880
+  },
+  {
+   "type": "pmid",
+   "id": "23656349",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/23656349/",
+   "accessed_at": 1793708882
+  },
+  {
+   "type": "pmid",
+   "id": "17712740",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/17712740/",
+   "accessed_at": 1793708883
+  },
+  {
+   "type": "pmid",
+   "id": "36612057",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36612057/",
+   "accessed_at": 1793708885
+  },
+  {
+   "type": "pmid",
+   "id": "21365283",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/21365283/",
+   "accessed_at": 1793708886
+  },
+  {
+   "type": "pmid",
+   "id": "25211147",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25211147/",
+   "accessed_at": 1793708888
+  },
+  {
+   "type": "pmid",
+   "id": "35350820",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35350820/",
+   "accessed_at": 1793708889
+  },
+  {
+   "type": "pmid",
+   "id": "32107864",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32107864/",
+   "accessed_at": 1793708891
+  },
+  {
+   "type": "pmid",
+   "id": "8317503",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/8317503/",
+   "accessed_at": 1793708892
+  },
+  {
+   "type": "pmid",
+   "id": "10933430",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/10933430/",
+   "accessed_at": 1793708893
+  },
+  {
+   "type": "pmid",
+   "id": "1770531",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/1770531/",
+   "accessed_at": 1793708895
+  },
+  {
+   "type": "pmid",
+   "id": "40077991",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/40077991/",
+   "accessed_at": 1793708896
+  }
+ ],
+ "rules": [
+  {
+   "id": "NF1-1",
+   "gene": "NF1",
+   "version": 1,
+   "statement": "Missense variants are associated with spinal neurofibromatosis rather than classical neurofibromatosis type 1.",
+   "applies_when": {
+    "variant_class": [
+     "missense"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:162210"
+    ],
+    "argues_against": [
+     "OMIM:162200"
+    ]
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "36612057",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/36612057/",
+     "accessed_at": 1793708885,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=36612057&rettype=abstract&retmode=text",
+     "quote": "The proportion of missense mutations was higher in the SNF cases than in the classical NF1 group (21.40% vs. 7.5%, p = 0.007), conferring an odds ratio (OR) of 3.34 (CI = 1.33−10.78).",
+     "quote_verified": true
+    },
+    {
+     "type": "pmid",
+     "id": "25211147",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/25211147/",
+     "accessed_at": 1793708888,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=25211147&rettype=abstract&retmode=text",
+     "quote": "The risk of developing SNF vs NF1 was increased for missense mutations [p = 0.0001; odds ratio (OR) = 6.16; confidence interval (CI) = 3.14-13.11], which were more frequent in SNF vs MNFSR (p = 0.0271).",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "72a26fa48f07185beb7ffea7b0b52403a4a22f5556f46e5759a726ef6585e27a"
+  },
+  {
+   "id": "NF1-2",
+   "gene": "NF1",
+   "version": 1,
+   "statement": "An in-frame tandem duplication in exon 28 is associated with Watson syndrome (with Noonan features) rather than classical NF1 null alleles.",
+   "applies_when": {
+    "variant_class": [
+     "inframe_insertion"
+    ],
+    "exon": [
+     28,
+     28
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:193520"
+    ],
+    "argues_against": [
+     "OMIM:162200"
+    ]
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "8317503",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/8317503/",
+     "accessed_at": 1793708892,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=8317503&rettype=abstract&retmode=text",
+     "quote": "Here we provide evidence for the former by demonstrating a mutation in the NF1 gene in a family with features of both WS and NS. The mutation is an almost perfect in-frame tandem duplication of 42 bases in exon 28 of the NF1 gene. Unlike the mutations previously described in classical NF1, which show a preponderance of null alleles, the mutation in this family would be expected to result in a mutant neurofibromin product.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "weak",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "50be072844a1e998050122632a10a3d9a6919337de445c1868223e2dddde7fa3"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

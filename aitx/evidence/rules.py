@@ -32,6 +32,10 @@ def content_hash(rule: dict) -> str:
 
 
 def _source_text(src: dict) -> str | None:
+    """The source text a quote is checked against: GeneReviews sections from the local archive, others via HTTP."""
+    if src.get("type") == "nbk":
+        from aitx.evidence import genereviews
+        return genereviews.section_text(src["id"], src.get("section", ""))
     try:
         return http.get(src["text_url"]).text
     except (KeyError, RuntimeError):

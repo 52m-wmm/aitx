@@ -1,0 +1,592 @@
+{
+ "gene": "COL1A1",
+ "drafted_at": 1793708270,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "Caffey disease",
+   "omim": [
+    "OMIM:114000"
+   ],
+   "mondo": "MONDO:0007244"
+  },
+  {
+   "label": "osteogenesis imperfecta type 1",
+   "omim": [
+    "OMIM:166200"
+   ],
+   "mondo": "MONDO:0008146"
+  },
+  {
+   "label": "osteogenesis imperfecta type 2",
+   "omim": [
+    "OMIM:166210"
+   ],
+   "mondo": "MONDO:0008147"
+  },
+  {
+   "label": "osteogenesis imperfecta type 4",
+   "omim": [
+    "OMIM:166220"
+   ],
+   "mondo": "MONDO:0008148"
+  },
+  {
+   "label": "osteogenesis imperfecta type 3",
+   "omim": [
+    "OMIM:259420"
+   ],
+   "mondo": "MONDO:0009804"
+  },
+  {
+   "label": "Ehlers-Danlos syndrome arthrochalasia type 1",
+   "omim": [
+    "OMIM:130060"
+   ],
+   "mondo": "MONDO:0020521"
+  },
+  {
+   "label": "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1",
+   "omim": [
+    "OMIM:619115"
+   ],
+   "mondo": "MONDO:0030854"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=COL1A1%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "COL1A1[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708242,
+   "n_results": 90,
+   "returned_ids": [
+    "17078022",
+    "30715774",
+    "30886339",
+    "37270749",
+    "35327962"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=COL1A1%5Btiab%5D+AND+caffey%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "COL1A1[tiab] AND caffey[tiab]",
+   "queried_at": 1793708243,
+   "n_results": 21,
+   "returned_ids": [
+    "22855962",
+    "15864348",
+    "37799085",
+    "32033218",
+    "31873763"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=COL1A1%5Btiab%5D+AND+osteogenesis%5Btiab%5D+AND+imperfecta%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "COL1A1[tiab] AND osteogenesis[tiab] AND imperfecta[tiab]",
+   "queried_at": 1793708244,
+   "n_results": 745,
+   "returned_ids": [
+    "32621590",
+    "28863000",
+    "28820180",
+    "30715774",
+    "30389107"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=COL1A1%5Btiab%5D+AND+ehlers-danlos%5Btiab%5D+AND+arthrochalasia%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "COL1A1[tiab] AND ehlers-danlos[tiab] AND arthrochalasia[tiab]",
+   "queried_at": 1793708246,
+   "n_results": 8,
+   "returned_ids": [
+    "35162892",
+    "32338564",
+    "21801164",
+    "32091183",
+    "42353838"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=COL1A1%5Btiab%5D+AND+combined%5Btiab%5D+AND+osteogenesis%5Btiab%5D+AND+imperfecta%5Btiab%5D+AND+ehlers-danlos%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "COL1A1[tiab] AND combined[tiab] AND osteogenesis[tiab] AND imperfecta[tiab] AND ehlers-danlos[tiab]",
+   "queried_at": 1793708247,
+   "n_results": 4,
+   "returned_ids": [
+    "24443344",
+    "31239369",
+    "17206620",
+    "28436160"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK99168",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK99168",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK99168",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1244",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1244",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1244",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1295",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1295",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1295",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "17078022",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/17078022/",
+   "accessed_at": 1793708248
+  },
+  {
+   "type": "pmid",
+   "id": "30715774",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30715774/",
+   "accessed_at": 1793708250
+  },
+  {
+   "type": "pmid",
+   "id": "30886339",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30886339/",
+   "accessed_at": 1793708252
+  },
+  {
+   "type": "pmid",
+   "id": "37270749",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37270749/",
+   "accessed_at": 1793708254
+  },
+  {
+   "type": "pmid",
+   "id": "35327962",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35327962/",
+   "accessed_at": 1793708255
+  },
+  {
+   "type": "pmid",
+   "id": "22855962",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/22855962/",
+   "accessed_at": 1793708257
+  },
+  {
+   "type": "pmid",
+   "id": "15864348",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/15864348/",
+   "accessed_at": 1793708258
+  },
+  {
+   "type": "pmid",
+   "id": "37799085",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/37799085/",
+   "accessed_at": 1793708260
+  },
+  {
+   "type": "pmid",
+   "id": "32033218",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32033218/",
+   "accessed_at": 1793708262
+  },
+  {
+   "type": "pmid",
+   "id": "31873763",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31873763/",
+   "accessed_at": 1793708263
+  },
+  {
+   "type": "pmid",
+   "id": "32621590",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/32621590/",
+   "accessed_at": 1793708264
+  },
+  {
+   "type": "pmid",
+   "id": "28863000",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/28863000/",
+   "accessed_at": 1793708265
+  },
+  {
+   "type": "pmid",
+   "id": "28820180",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/28820180/",
+   "accessed_at": 1793708268
+  },
+  {
+   "type": "pmid",
+   "id": "30389107",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/30389107/",
+   "accessed_at": 1793708269
+  },
+  {
+   "type": "pmid",
+   "id": "35162892",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/35162892/",
+   "accessed_at": 1793708270
+  }
+ ],
+ "rules": [
+  {
+   "id": "COL1A1-1",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "The COL1A1 missense change Arg134Cys has been reported in an EDS/OI overlap phenotype.",
+   "applies_when": {
+    "variant_class": [
+     "missense"
+    ],
+    "protein_position": [
+     134,
+     134
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:619115"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK99168",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+     "accessed_at": 1793707716,
+     "section": "Genetically Related (Allelic) Disorders",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007].",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "bec72f9df157ffd579105e7648dcbd774689ec007d2bf98345032edd1c7935d7"
+  },
+  {
+   "id": "COL1A1-2",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "The COL1A1 missense change Arg915Cys has been reported in an EDS/OI overlap phenotype.",
+   "applies_when": {
+    "variant_class": [
+     "missense"
+    ],
+    "protein_position": [
+     915,
+     915
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:619115"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK99168",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+     "accessed_at": 1793707716,
+     "section": "Genetically Related (Allelic) Disorders",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007].",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "6572a85c1177c37d79a3b881c15f009cff7c26a997ec6c0907ccf11b8d51dd0e"
+  },
+  {
+   "id": "COL1A1-3",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "The COL1A1 missense change Arg396Cys has been reported in an EDS/OI overlap phenotype.",
+   "applies_when": {
+    "variant_class": [
+     "missense"
+    ],
+    "protein_position": [
+     396,
+     396
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:619115"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK99168",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK99168/",
+     "accessed_at": 1793707716,
+     "section": "Genetically Related (Allelic) Disorders",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007].",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "fb4eb7d2d832865fa1c106897bba50b00f5792362a3e4ecd0fd413c26eb03641"
+  },
+  {
+   "id": "COL1A1-4",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "Loss of exon 6 of COL1A1 results in arthrochalasia EDS.",
+   "applies_when": {
+    "exon": [
+     6,
+     6
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:130060"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK1295",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
+     "accessed_at": 1793707716,
+     "section": "Genetically Related (Allelic) Disorders",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "Arthrochalasia EDS results from loss of exon 6 of either COL1A1 or COL1A2.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "established",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "d532d2d7d10df82c6edbf41d060a3db79bc22c62dd0ce28fc5aac3696667db43"
+  },
+  {
+   "id": "COL1A1-5",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "A heterozygous COL1A1 missense change altering residue 836 (R836C) in exon 41 has been identified in affected individuals with Caffey disease.",
+   "applies_when": {
+    "variant_class": [
+     "missense"
+    ],
+    "zygosity": [
+     "heterozygous"
+    ],
+    "protein_position": [
+     836,
+     836
+    ],
+    "exon": [
+     41,
+     41
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:114000"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "15864348",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/15864348/",
+     "accessed_at": 1793708258,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=15864348&rettype=abstract&retmode=text",
+     "quote": "Affected individuals and obligate carriers were heterozygous for a missense mutation (3040Ctwo head right arrowT) in exon 41 of the gene encoding the alpha1(I) chain of type I collagen (COL1A1), altering residue 836 (R836C) in the triple-helical domain of this chain.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "f9d37dfb01b6acaf188abbe125110db347feabc00ff4dc69a186e33f8949e4de"
+  },
+  {
+   "id": "COL1A1-6",
+   "gene": "COL1A1",
+   "version": 1,
+   "statement": "Splice site mutations in COL1A1 are rarely lethal and often lead to frameshifts and the mild type I phenotype.",
+   "applies_when": {
+    "variant_class": [
+     "splice"
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:166200"
+    ],
+    "argues_against": []
+   },
+   "exceptions": "",
+   "sources": [
+    {
+     "type": "pmid",
+     "id": "17078022",
+     "url": "https://pubmed.ncbi.nlm.nih.gov/17078022/",
+     "accessed_at": 1793708248,
+     "text_url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=17078022&rettype=abstract&retmode=text",
+     "quote": "Splice site mutations in COL1A1 are rarely lethal; they often lead to frameshifts and the mild type I phenotype.",
+     "quote_verified": true
+    }
+   ],
+   "strength": "reported",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "043735e86b68544e9cf9c6ebcd37b7e537353cd5a3bb17374b75e61dcba089c1"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

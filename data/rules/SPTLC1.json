@@ -1,0 +1,252 @@
+{
+ "gene": "SPTLC1",
+ "drafted_at": 1793709186,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "neuropathy, hereditary sensory and autonomic, type 1A",
+   "omim": [
+    "OMIM:162400"
+   ],
+   "mondo": "MONDO:0008086"
+  },
+  {
+   "label": "amyotrophic lateral sclerosis 27, juvenile",
+   "omim": [
+    "OMIM:620285"
+   ],
+   "mondo": "MONDO:0859529"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=SPTLC1%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "SPTLC1[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793707906,
+   "n_results": 6,
+   "returned_ids": [
+    "34255403",
+    "36895957",
+    "36801857",
+    "19651702",
+    "12633143"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=SPTLC1%5Btiab%5D+AND+neuropathy%5Btiab%5D+AND+hereditary%5Btiab%5D+AND+sensory%5Btiab%5D+AND+autonomic%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "SPTLC1[tiab] AND neuropathy[tiab] AND hereditary[tiab] AND sensory[tiab] AND autonomic[tiab]",
+   "queried_at": 1793707907,
+   "n_results": 46,
+   "returned_ids": [
+    "20301564",
+    "34875719",
+    "38927628",
+    "36964315",
+    "24247255"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=SPTLC1%5Btiab%5D+AND+amyotrophic%5Btiab%5D+AND+lateral%5Btiab%5D+AND+sclerosis%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "SPTLC1[tiab] AND amyotrophic[tiab] AND lateral[tiab] AND sclerosis[tiab]",
+   "queried_at": 1793707909,
+   "n_results": 23,
+   "returned_ids": [
+    "39666121",
+    "36966328",
+    "36801857",
+    "34459874",
+    "34059824"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1390",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1390",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1390",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "34255403",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34255403/",
+   "accessed_at": 1793707910
+  },
+  {
+   "type": "pmid",
+   "id": "36895957",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36895957/",
+   "accessed_at": 1793707911
+  },
+  {
+   "type": "pmid",
+   "id": "36801857",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36801857/",
+   "accessed_at": 1793707913
+  },
+  {
+   "type": "pmid",
+   "id": "19651702",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/19651702/",
+   "accessed_at": 1793707915
+  },
+  {
+   "type": "pmid",
+   "id": "12633143",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/12633143/",
+   "accessed_at": 1793707916
+  },
+  {
+   "type": "pmid",
+   "id": "20301564",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/20301564/",
+   "accessed_at": 1793707917
+  },
+  {
+   "type": "pmid",
+   "id": "34875719",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34875719/",
+   "accessed_at": 1793707918
+  },
+  {
+   "type": "pmid",
+   "id": "38927628",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/38927628/",
+   "accessed_at": 1793707920
+  },
+  {
+   "type": "pmid",
+   "id": "36964315",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36964315/",
+   "accessed_at": 1793707922
+  },
+  {
+   "type": "pmid",
+   "id": "24247255",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/24247255/",
+   "accessed_at": 1793707923
+  },
+  {
+   "type": "pmid",
+   "id": "39666121",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/39666121/",
+   "accessed_at": 1793707924
+  },
+  {
+   "type": "pmid",
+   "id": "36966328",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/36966328/",
+   "accessed_at": 1793707925
+  },
+  {
+   "type": "pmid",
+   "id": "34459874",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34459874/",
+   "accessed_at": 1793707927
+  },
+  {
+   "type": "pmid",
+   "id": "34059824",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/34059824/",
+   "accessed_at": 1793707928
+  }
+ ],
+ "rules": [
+  {
+   "id": "SPTLC1-1",
+   "gene": "SPTLC1",
+   "version": 1,
+   "statement": "SPTLC1 pathogenic variants at Ser331, including p.Ser331Phe and p.Ser331Tyr, are associated with severe childhood-onset motor and sensory neuropathy (generally without skin ulceration as in classic HSAN1A), and a p.Ser331Tyr individual reported in juvenile ALS was most likely a severe early-onset form of HSN.",
+   "applies_when": {
+    "protein_position": [
+     331,
+     331
+    ]
+   },
+   "effect": {
+    "type": "diagnosis",
+    "supports": [
+     "OMIM:162400"
+    ],
+    "argues_against": [
+     "OMIM:620285"
+    ]
+   },
+   "exceptions": "One individual with a Ser331 variant was reported to have skin ulceration.",
+   "sources": [
+    {
+     "type": "nbk",
+     "id": "NBK1390",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+     "accessed_at": 1793707716,
+     "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "SPTLC1 pathogenic variants at Ser331, including p.Ser331Phe [Suh et al 2014] and p.Ser331Tyr [Rotthier et al 2009, Auer-Grumbach 2013], are associated with severe childhood-onset motor and sensory neuropathy (generally without skin ulceration as in classic HSAN1A).",
+     "quote_verified": true
+    },
+    {
+     "type": "nbk",
+     "id": "NBK1390",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+     "accessed_at": 1793707716,
+     "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "An individual with pathogenic variant p.Ser331Tyr was included in a description of SPTLC1-related juvenile ALS by Johnson et al [2021]. The described syndrome was caused by toxic sphingolipids and sensory involvement was demonstrated; thus, it was most likely a severe early-onset form of HSN.",
+     "quote_verified": true
+    },
+    {
+     "type": "nbk",
+     "id": "NBK1390",
+     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1390/",
+     "accessed_at": 1793707716,
+     "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+     "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+     "quote": "(One individual, described by Suh et al [2014], was reported to have skin ulceration.)",
+     "quote_verified": true
+    }
+   ],
+   "strength": "established",
+   "status": "verified",
+   "drafted": {
+    "llm": {
+     "llm": "deepseek-flash",
+     "served_model": "deepseek-flash",
+     "prompt_version": "rules-draft-v1"
+    },
+    "prompt_version": "rules-draft-v1"
+   },
+   "review": {
+    "decision": "not_reviewed"
+   },
+   "content_sha256": "328535970b4c6cde4be833d88c8f65a5a9b80bc8490aba7bb5678b130385105a"
+  }
+ ],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": ""
+}

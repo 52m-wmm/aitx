@@ -1,0 +1,138 @@
+{
+ "gene": "AGXT",
+ "drafted_at": 1793708139,
+ "prompt_version": "rules-draft-v1",
+ "candidates": [
+  {
+   "label": "primary hyperoxaluria type 1",
+   "omim": [
+    "OMIM:259900"
+   ],
+   "mondo": "MONDO:0009823"
+  }
+ ],
+ "searches": [
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=AGXT%5Btiab%5D+AND+%28%22genotype-phenotype%22%5Btiab%5D+OR+%22genotype+phenotype%22%5Btiab%5D+OR+%22phenotypic+spectrum%22%5Btiab%5D%29&retmax=5&sort=relevance&retmode=json",
+   "query": "AGXT[tiab] AND (\"genotype-phenotype\"[tiab] OR \"genotype phenotype\"[tiab] OR \"phenotypic spectrum\"[tiab])",
+   "queried_at": 1793708120,
+   "n_results": 21,
+   "returned_ids": [
+    "27960020",
+    "40225159",
+    "16957746",
+    "27935012",
+    "11562405"
+   ]
+  },
+  {
+   "database": "pubmed",
+   "endpoint": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=AGXT%5Btiab%5D+AND+primary%5Btiab%5D+AND+hyperoxaluria%5Btiab%5D&retmax=5&sort=relevance&retmode=json",
+   "query": "AGXT[tiab] AND primary[tiab] AND hyperoxaluria[tiab]",
+   "queried_at": 1793708121,
+   "n_results": 215,
+   "returned_ids": [
+    "25644115",
+    "26383609",
+    "19479957",
+    "31715429",
+    "41275431"
+   ]
+  }
+ ],
+ "sources": [
+  {
+   "type": "nbk",
+   "id": "NBK1283",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+   "section": "Clinical Characteristics / Genotype-Phenotype Correlations",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1283",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+   "section": "Genetically Related (Allelic) Disorders",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "nbk",
+   "id": "NBK1283",
+   "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+   "section": "Molecular Genetics",
+   "credit": "GeneReviews® © 1993-2026 University of Washington, Seattle (https://www.genereviews.org); excerpt reproduced verbatim for noncommercial research",
+   "accessed_at": 1793707716
+  },
+  {
+   "type": "pmid",
+   "id": "27960020",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27960020/",
+   "accessed_at": 1793708123
+  },
+  {
+   "type": "pmid",
+   "id": "40225159",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/40225159/",
+   "accessed_at": 1793708124
+  },
+  {
+   "type": "pmid",
+   "id": "16957746",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/16957746/",
+   "accessed_at": 1793708126
+  },
+  {
+   "type": "pmid",
+   "id": "27935012",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/27935012/",
+   "accessed_at": 1793708128
+  },
+  {
+   "type": "pmid",
+   "id": "11562405",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/11562405/",
+   "accessed_at": 1793708129
+  },
+  {
+   "type": "pmid",
+   "id": "25644115",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/25644115/",
+   "accessed_at": 1793708130
+  },
+  {
+   "type": "pmid",
+   "id": "26383609",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/26383609/",
+   "accessed_at": 1793708131
+  },
+  {
+   "type": "pmid",
+   "id": "19479957",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/19479957/",
+   "accessed_at": 1793708133
+  },
+  {
+   "type": "pmid",
+   "id": "31715429",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/31715429/",
+   "accessed_at": 1793708135
+  },
+  {
+   "type": "pmid",
+   "id": "41275431",
+   "url": "https://pubmed.ncbi.nlm.nih.gov/41275431/",
+   "accessed_at": 1793708139
+  }
+ ],
+ "rules": [],
+ "rejected_drafts": [],
+ "llm": {
+  "llm": "deepseek-flash",
+  "served_model": "deepseek-flash",
+  "prompt_version": "rules-draft-v1"
+ },
+ "no_rule_reason": "Only one candidate disease is provided. The sources discuss genotype-phenotype correlations within primary hyperoxaluria type 1, including pyridoxine-responsive variants, a milder phenotype for certain variants, and general statements about missense and null variant classes, but no source explicitly states that a variant property is associated with one candidate disease rather than another candidate disease. Therefore no candidate-discriminating rule can be drafted."
+}
