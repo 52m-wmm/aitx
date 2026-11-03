@@ -1,6 +1,6 @@
 {
  "gene": "SYT1",
- "drafted_at": 1793710477,
+ "drafted_at": 1793711433,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,7 +8,10 @@
    "omim": [
     "OMIM:618218"
    ],
-   "mondo": "MONDO:0033864"
+   "mondo": "MONDO:0033864",
+   "synonyms": [
+    "Baker-Gordon syndrome"
+   ]
   }
  ],
  "searches": [

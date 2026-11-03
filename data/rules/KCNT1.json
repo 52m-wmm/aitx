@@ -1,6 +1,6 @@
 {
  "gene": "KCNT1",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711364,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,14 +8,33 @@
    "omim": [
     "OMIM:614959"
    ],
-   "mondo": "MONDO:0013989"
+   "mondo": "MONDO:0013989",
+   "synonyms": [
+    "DEE14",
+    "EIEE14",
+    "KCNT1 early infantile epileptic encephalopathy",
+    "KCNT1-related epilepsy",
+    "developmental and epileptic encephalopathy 14",
+    "early infantile epileptic encephalopathy caused by mutation in KCNT1",
+    "epileptic encephalopathy, early infantile, 14",
+    "epileptic encephalopathy, early infantile, type 14"
+   ]
   },
   {
    "label": "autosomal dominant nocturnal frontal lobe epilepsy 5",
    "omim": [
     "OMIM:615005"
    ],
-   "mondo": "MONDO:0014002"
+   "mondo": "MONDO:0014002",
+   "synonyms": [
+    "ENFL5",
+    "KCNT1 autosomal dominant nocturnal frontal lobe epilepsy",
+    "autosomal dominant nocturnal frontal lobe epilepsy caused by mutation in KCNT1",
+    "autosomal dominant nocturnal frontal lobe epilepsy type 5",
+    "epilepsy nocturnal frontal lobe, 5",
+    "epilepsy, nocturnal frontal lobe, 5",
+    "epilepsy, nocturnal frontal lobe, type 5"
+   ]
   }
  ],
  "searches": [

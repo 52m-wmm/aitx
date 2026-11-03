@@ -1,6 +1,7 @@
 # 第 3a 步：已确立层（Existing Targeted Therapies / Supportive Management / Contraindications & Precautions）
 
-> 状态：**草稿，待审**（2026-11-03）。审定后才写代码。依赖 3.0（`step3.0-accepted`）：证据账本、诊断分支、行动键（1.3）、
+> 状态：**草稿第 2 版，待审**（2026-11-03）。第 1 版的 3 个待定问题已按建议决定（文末）；新增：说明书版本记录（A）、
+> 老版 GeneReviews 章节的归类规则与 Therapies Under Investigation 的排除（B）；验收期望已逐条对照原文核实。审定后才写代码。依赖 3.0（`step3.0-accepted`）：证据账本、诊断分支、行动键（1.3）、
 > 行动记录（1.4）、阴性证据（1.2）、支持度核查模块。
 
 ## 目的
@@ -17,8 +18,8 @@
 
 | 来源 | 用途 | 访问方式 |
 | --- | --- | --- |
-| GeneReviews（本地存档，3.0 已下载） | Management 下各小节：Targeted Therapies、Treatment of Manifestations、Prevention of Primary Manifestations / Secondary Complications、**Agents/Circumstances to Avoid**、Pregnancy Management；**不用 Surveillance** | `aitx/evidence/genereviews.py`，逐字摘录，附版权声明和章节链接 |
-| FDA 药品说明书（openFDA drug label API） | 获批适应症、适用年龄、变异要求、禁忌、儿科用药、特殊人群 | `api.fda.gov/drug/label.json`；按适应症文本检索（分支疾病名）和按药名检索；链接给 DailyMed（SPL set id） |
+| GeneReviews（本地存档，3.0 已下载） | Management 下各小节：Targeted Therapies、Treatment of Manifestations、Prevention of Primary Manifestations / Secondary Complications、**Agents/Circumstances to Avoid**、Pregnancy Management；**不用 Surveillance；不用 Therapies Under Investigation（留给 3b 临床试验 / 3c 超说明书）** | `aitx/evidence/genereviews.py`，逐字摘录，附版权声明和章节链接 |
+| FDA 药品说明书（openFDA drug label API） | 获批适应症、适用年龄、变异要求、禁忌、儿科用药、特殊人群 | `api.fda.gov/drug/label.json`；按适应症文本检索（分支疾病名）和按药名检索；链接给 DailyMed（SPL set id）。**每条说明书证据记录 SPL set ID、版本号（`version`）和生效日期（`effective_time`）**；报告引用说明书时注明版本日期（如 "Rivfloza label, version 4, effective 2025-03-03"） |
 | ClinPGx / PharmGKB（CPIC、DPWG 指南注释） | 与病人基因相关的药物基因组学注意事项 | 按基因查询；没有则记阴性证据 |
 
 全部经 `aitx.http`（缓存、记录访问时间），不过期，提交时冻结。只用 FDA 说明书（美国）；欧洲等地的批准不在范围内，
@@ -32,8 +33,14 @@
    - ClinPGx：按基因查指南注释。
 2. **标准化**：每个行动用 3.0 的行动键（药物 RxNorm → openFDA → ChEMBL → 兜底名；操作类用受控类型）。
 3. **放进哪个章节（代码规则，不由 LLM 决定）**
-   - 说明书适应症**点名了该分支疾病**（或包含它的疾病类别，如 "urea cycle disorders"），或出现在 GeneReviews 的 "Targeted Therapies" 小节 → Existing Targeted。
-   - 出现在 GeneReviews "Treatment of Manifestations" / "Prevention of …" 小节、且说明书适应症未点名该病 → Supportive Management。
+   - 说明书适应症**点名了该分支疾病**（或包含它的疾病类别，如 "urea cycle disorders"），或出现在 GeneReviews 标题为 "Targeted Therapies" / "Targeted Therapy" 的小节
+     （**按小节路径的任何一级判断**：新版章节常把它放在 Treatment of Manifestations 之下，如 PH1 的 "Management / Treatment of Manifestations / Targeted Therapies"）→ Existing Targeted。
+   - **老版章节（Management 下没有任何 Targeted Therapies 小节）**：出现在 "Treatment of Manifestations" / "Prevention of Primary Manifestations" 的疗法，满足以下任一项归 Existing Targeted，否则归 Supportive：
+     (i) 说明书适应症点名该病或其所属类别（如 OTC 章节没有 Targeted Therapies 小节，氮清除剂 Buphenyl 的适应症点名 "ornithine transcarbamylase (OTC)" 缺乏）；
+     (ii) 章节原文**写明**它作用于缺陷的基因产物或疾病机制（如"作为 AGT 的辅因子、化学伴侣"）：LLM 摘出这句机制原文，代码核对逐字，并用支持度核查判断
+     "该疗法作用于 <疾病> 的分子缺陷或疾病机制"这一项；只有核查结果为 supported 才归 Existing Targeted。
+   - 出现在 GeneReviews "Treatment of Manifestations" / "Prevention of …" 小节、且不满足上面任一条 → Supportive Management。
+   - 出自 "Therapies Under Investigation" 小节的条目不归 3a（留给 3b / 3c）。
    - 出现在 GeneReviews "Agents/Circumstances to Avoid"，或说明书禁忌 / 警告中点名该病，或 ClinPGx 指南针对该基因 → Contraindications & Precautions。
    - 同一行动只放一个章节（3.0 校验）：前两条同时成立时放 Existing Targeted。
    - 出自 "Surveillance" 小节、或 LLM 标为监测的条目一律不收。
@@ -72,19 +79,27 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 未知事实 → conditional + 缺失信息；监测类条目被排除；阴性证据；同一行动不跨章节。
 
 **联网验收（`scripts/acceptance_step3a.py`）**：期望答案**必须先从说明书或 GeneReviews 原文核实**，写进验收脚本时附出处。
-下表是待核实的初稿（第 1 行已按现行说明书改正，见下）：
+下表各项已于 2026-11-03 对照原文核实（说明书取自 openFDA，GeneReviews 取自本地存档）：
 
-| 病例 | 期望 | 出处（待核实） |
+| 病例 | 期望 | 出处（已核实） |
 | --- | --- | --- |
-| PRAC-AGXT-c33dup（7 岁） | Lumasiran：Existing Targeted，applicable（说明书："pediatric and adult patients"）；Nedosiran：Existing Targeted，**conditional**（说明书："children 2 years of age and older … relatively preserved kidney function, e.g., eGFR ≥30"，eGFR 未知）；Pyridoxine：不适用于该移码变异（只对特定错义基因型有效） | Oxlumo、Rivfloza 说明书（2026-11-03 实测）；GeneReviews PH1（NBK1283） |
-| PRAC-AGXT-c508GA（G170R，年龄未知） | Pyridoxine：Existing Targeted，applicable（G170R 为已知敏感基因型）；Lumasiran applicable；Nedosiran conditional（年龄、eGFR 未知） | GeneReviews PH1 |
-| PRAC-CFTR-F508del（15 岁，纯合 F508del） | Elexacaftor/tezacaftor/ivacaftor：Existing Targeted，applicable | Trikafta 说明书 |
-| PRAC-COL1A1 | Supportive 含 ascorbic acid（维生素 C）和 desmopressin（易瘀伤） | GeneReviews 相关 EDS 章节 |
-| PRAC-OTC | 氮清除剂（sodium phenylbutyrate 等）在 Existing Targeted；valproic acid 在 Contraindications | 说明书（适应症 "urea cycle disorders"）；GeneReviews UCD |
+| PRAC-AGXT-c33dup（7 岁，纯合移码） | Lumasiran：Existing Targeted，**applicable** | Oxlumo 说明书 v9（2025-12-01）："indicated for the treatment of primary hyperoxaluria type 1 (PH1) … in pediatric and adult patients" |
+| 同上 | Nedosiran：Existing Targeted，**conditional（eGFR 未知）** | Rivfloza 说明书 v4（2025-03-03）："children 2 years of age and older and adults with primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m2" |
+| 同上 | Pyridoxine：Existing Targeted，**not_applicable**（移码不是错义变异） | GeneReviews PH1（NBK1283）"Management / Treatment of Manifestations / Targeted Therapies" 表 7："Persons w/missense AGXT variants, esp homozygotes for p.Phe152Ile, p.Gly170Arg, & p.Ile244Thr" |
+| PRAC-AGXT-c508GA（纯合 p.Gly170Arg，年龄未知） | **Pyridoxine：Existing Targeted，applicable**（B 条的验收用例，见下） | 同上表 7；"Genotype-Phenotype Correlations"："Individuals homozygous for three pathogenic variants (p.Phe152Ile, p.Gly170Arg, or p.Ile244Thr) …" |
+| 同上 | Lumasiran applicable；Nedosiran conditional（年龄、eGFR 均未知） | 同上两份说明书 |
+| PRAC-CFTR-F508del（15 岁，纯合 F508del） | Elexacaftor/tezacaftor/ivacaftor：Existing Targeted，applicable | Trikafta 说明书 v23（2026-06-22）："aged 2 years and older … at least one variant in the … CFTR gene that is either responsive based on clinical and/or in vitro data (see Table 6)"；F508del 须在表 6 中由代码匹配 |
+| PRAC-COL1A1（经典型 EDS 分支） | Supportive：ascorbic acid（维生素 C）、desmopressin | GeneReviews 经典型 EDS（NBK1244）"Management / Treatment of Manifestations"："Ascorbic acid (vitamin C) may ↓ easy bruising"；"DDAVP® (desmopressin) may be useful to normalize bleeding" |
+| PRAC-OTC（3 个月男婴） | Sodium phenylbutyrate：Existing Targeted（老版章节规则 (i)）；Contraindications 含 valproate、haloperidol、systemic corticosteroids | Buphenyl 说明书 v9（2024-10-30）："urea cycle disorders involving deficiencies of … ornithine transcarbamylase (OTC)"；GeneReviews OTC 缺乏症（NBK154378）"Management / Agents/Circumstances to Avoid"："Avoid the following: Valproate Haloperidol … Systemic corticosteroids" |
 | 评测病例 | 只做人工核对，不设期望 | — |
 
-**计划变更**：Notion 中"Nedosiran 只批准 9 岁以上，7 岁病人不适用"与现行说明书不符（现为 2 岁及以上，且要求 eGFR ≥30）。
-按现行说明书，7 岁 PH1 患者的 Nedosiran 应为 conditional（eGFR 未知），不是 not_applicable。
+**B 条（老版章节）的验收说明**：本地存档中的 PH1 章节**已有** "Targeted Therapies" 小节（在 Treatment of Manifestations 之下），
+所以 AGXT c.508G>A 的吡哆醇在真实数据上走的是"按小节路径任一级判断"这条路。老版章节规则 (ii) 另用离线测试覆盖：
+构造一个没有 Targeted Therapies 小节、把吡哆醇写在 Treatment of Manifestations 并附机制原句的合成章节，期望归 Existing Targeted；
+去掉机制原句后期望归 Supportive。真实数据上的老版章节规则由 PRAC-OTC（规则 (i)）验收。
+
+**计划变更**（2026-11-03 确认）：Notion 中"Nedosiran 只批准 9 岁以上，7 岁病人不适用"与现行说明书不符（现为 2 岁及以上，且要求 eGFR ≥30）。
+以现行说明书为准，7 岁 PH1 患者的 Nedosiran 期望为 conditional（eGFR 未知）。
 
 硬性项：上表练习病例全部符合（核实后的版本）；所有账本校验通过；每个 Existing Targeted 行动有说明书或 GeneReviews 原文；
 支持度核查拦下的行动全部列出供审阅。
@@ -95,8 +110,10 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 2. 说明书检索靠疾病名关键词，命名差异可能漏检；用 GeneReviews 中出现的药名做第二路检索来补。
 3. 病例临床描述很短，多数实验室指标（eGFR、体重）未知，很多行动会是 conditional；这是如实反映，不是缺陷。
 
-## 待定问题
+## 已定决策（2026-11-03 审阅）
 
-1. **章节归类规则**（流程第 3 步）是否同意："说明书适应症点名该病或其所属类别，或 GeneReviews Targeted Therapies 小节"即 Existing Targeted。
-2. **指南支持**的范围：目前只把 GeneReviews 当指南来源。是否需要加专业学会指南（如 CPIC 以外的临床指南）？加的话需要指定来源。
-3. ClinPGx 是否纳入 3a，还是先只做 GeneReviews + 说明书。
+1. 章节归类规则按流程第 3 步（含老版章节规则）。
+2. 指南来源暂时只用 GeneReviews，以后需要再加。
+3. ClinPGx 纳入，只用于 Contraindications & Precautions；查不到记阴性证据。
+4. 说明书证据记录 SPL set ID、版本号、生效日期，报告注明版本日期。
+5. Therapies Under Investigation 不归 3a。

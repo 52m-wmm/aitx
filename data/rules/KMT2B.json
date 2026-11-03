@@ -1,6 +1,6 @@
 {
  "gene": "KMT2B",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711364,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,14 +8,26 @@
    "omim": [
     "OMIM:617284"
    ],
-   "mondo": "MONDO:0015004"
+   "mondo": "MONDO:0015004",
+   "synonyms": [
+    "DYT28",
+    "KMT2B dystonic disorder",
+    "dystonia 28, childhood-onset",
+    "dystonia 28, childhood-onset; DYT28",
+    "dystonic disorder caused by mutation in KMT2B"
+   ]
   },
   {
    "label": "intellectual developmental disorder, autosomal dominant 68",
    "omim": [
     "OMIM:619934"
    ],
-   "mondo": "MONDO:0030969"
+   "mondo": "MONDO:0030969",
+   "synonyms": [
+    "MRD68",
+    "intellectual developmental disorder, autosomal dominant 68",
+    "mental retardation, autosomal dominant 68"
+   ]
   }
  ],
  "searches": [

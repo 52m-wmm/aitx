@@ -1,6 +1,6 @@
 {
  "gene": "ACTL6B",
- "drafted_at": 1793710341,
+ "drafted_at": 1793711183,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,14 +8,25 @@
    "omim": [
     "OMIM:618468"
    ],
-   "mondo": "MONDO:0032768"
+   "mondo": "MONDO:0032768",
+   "synonyms": [
+    "DEE76",
+    "EIEE76",
+    "EPILEPTIC ENCEPHALOPATHY, EARLY INFANTILE, 76",
+    "developmental and epileptic encephalopathy 76",
+    "epileptic encephalopathy, early infantile, 76"
+   ]
   },
   {
    "label": "intellectual developmental disorder with severe speech and ambulation defects",
    "omim": [
     "OMIM:618470"
    ],
-   "mondo": "MONDO:0032770"
+   "mondo": "MONDO:0032770",
+   "synonyms": [
+    "ACTL6B-related BAFopathy",
+    "IDDSSAD"
+   ]
   }
  ],
  "searches": [
@@ -134,30 +145,30 @@
      {
       "item": "Condition: the rule is about patients with a single heterozygous variant (one variant, on one allele) in ACTL6B.",
       "verdict": "supported",
-      "reason": "The quote states that the ACTL6B monoallelic variant is responsible for the autosomal dominant disorder, matching a single heterozygous variant."
+      "reason": "The quote explicitly refers to the ACTL6B monoallelic variant, i.e. a single heterozygous variant."
      },
      {
-      "item": "Conclusion: such variants point to intellectual developmental disorder with severe speech and ambulation defects rather than developmental and epileptic encephalopathy, 76.",
+      "item": "Conclusion: such variants point to intellectual developmental disorder with severe speech and ambulation defects (also called: ACTL6B-related BAFopathy; IDDSSAD) rather than developmental and epileptic encephalopathy, 76 (also called: DEE76; EIEE76; EPILEPTIC ENCEPHALOPATHY, EARLY INFANTILE, 76; developmental and epileptic encephalopathy 76; epileptic encephalopathy, early infantile, 76).",
       "verdict": "supported",
-      "reason": "The quote links monoallelic ACTL6B variants to intellectual developmental disorder with speech/ambulation deficits and DEE76 to biallelic variants."
+      "reason": "The quote states monoallelic ACTL6B causes autosomal dominant IDD with severe speech and ambulation deficits, while DEE76 is due to biallelic variants."
      },
      {
       "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quote presents this as a general association from previous studies, not as a single case/family or mere frequency difference."
+      "reason": "The quote presents this as a general association from previous studies, not as a single patient/family report or a frequency difference."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "e60cfb299da4968420f51be296265b0a0ef74f2463f3e8de43e731dc0ed77b4c"
+   "content_sha256": "bf3ceb94119c9be7d2774eb07f9dc0b5677fd12c605eaca990e655256186497e"
   },
   {
    "id": "ACTL6B-2",
@@ -214,30 +225,30 @@
      {
       "item": "Condition: the rule is about patients with a homozygous variant (the same variant on both alleles) in ACTL6B.",
       "verdict": "supported",
-      "reason": "The quotes state that DEE76 is due to ACTL6B biallelic variants and that 12 cases had homozygous variants."
+      "reason": "The quotes explicitly include 12 DEE76 cases with homozygous ACTL6B variants among the 18 autosomal recessive cases."
      },
      {
-      "item": "Conclusion: such variants point to developmental and epileptic encephalopathy, 76 rather than intellectual developmental disorder with severe speech and ambulation defects.",
+      "item": "Conclusion: such variants point to developmental and epileptic encephalopathy, 76 (also called: DEE76; EIEE76; EPILEPTIC ENCEPHALOPATHY, EARLY INFANTILE, 76; developmental and epileptic encephalopathy 76; epileptic encephalopathy, early infantile, 76) rather than intellectual developmental disorder with severe speech and ambulation defects (also called: ACTL6B-related BAFopathy; IDDSSAD).",
       "verdict": "supported",
-      "reason": "The quotes distinguish monoallelic ACTL6B variants causing the intellectual developmental disorder from biallelic variants causing DEE76."
+      "reason": "The quotes state DEE76 is due to ACTL6B biallelic variants, while monoallelic variants cause IDDSSAD, and homozygous variants are a form of biallelic variation."
      },
      {
       "item": "Scope: this is stated as a general association for such ACTL6B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quotes present this as an association across 18 summarized DEE76 cases, not as a single case or only a frequency difference."
+      "reason": "The quotes describe a cohort of 18 DEE76 cases with autosomal recessive inheritance, not a single patient/family or merely a frequency difference."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "verified",
    "review": {
     "decision": "not_reviewed"
    },
-   "content_sha256": "9f9e982a302b677e1b37e8ddda2233ad17afb29876cb5afbeb3916ba3ad8770d"
+   "content_sha256": "3a396f9144b22d925ae5dd1cc77471040fbc6c7c1b676667a9ac3038da6adea0"
   }
  ],
  "rejected_drafts": [],

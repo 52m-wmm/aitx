@@ -1,6 +1,6 @@
 {
  "gene": "NF1",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711364,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,35 +8,79 @@
    "omim": [
     "OMIM:162210"
    ],
-   "mondo": "MONDO:0008078"
+   "mondo": "MONDO:0008078",
+   "synonyms": [
+    "neurofibromatosis, familial spinal"
+   ]
   },
   {
    "label": "Watson syndrome",
    "omim": [
     "OMIM:193520"
    ],
-   "mondo": "MONDO:0008672"
+   "mondo": "MONDO:0008672",
+   "synonyms": [
+    "WTSN",
+    "Watson syndrome"
+   ]
   },
   {
    "label": "neurofibromatosis-Noonan syndrome",
    "omim": [
     "OMIM:601321"
    ],
-   "mondo": "MONDO:0011035"
+   "mondo": "MONDO:0011035",
+   "synonyms": [
+    "NFNS",
+    "Noonan neurofibromatosis syndrome",
+    "neurofibromatosis type 1-Noonan syndrome",
+    "neurofibromatosis-Noonan syndrome"
+   ]
   },
   {
    "label": "juvenile myelomonocytic leukemia",
    "omim": [
     "OMIM:607785"
    ],
-   "mondo": "MONDO:0011908"
+   "mondo": "MONDO:0011908",
+   "synonyms": [
+    "JCML",
+    "JMML",
+    "chronic myelomonocytic leukaemia",
+    "chronic myelomonocytic leukemia",
+    "juvenile chronic myelogenous leukaemia",
+    "juvenile chronic myelogenous leukemia",
+    "juvenile chronic myeloid leukaemia",
+    "juvenile chronic myeloid leukemia",
+    "juvenile chronic myelomonocytic leukaemia",
+    "juvenile chronic myelomonocytic leukemia",
+    "juvenile myelomonocytic leukemia",
+    "juvenile myelomonocytic leukemia, autosomal dominant, somatic mutation",
+    "leukemia, juvenile myelomonocytic, autosomal dominant, somatic mutation",
+    "leukemia, juvenile myelomonocytic, somatic"
+   ]
   },
   {
    "label": "neurofibromatosis type 1",
    "omim": [
     "OMIM:162200"
    ],
-   "mondo": "MONDO:0018975"
+   "mondo": "MONDO:0018975",
+   "synonyms": [
+    "NF1",
+    "Neurofibromatosis 1",
+    "Nf1-Microdeletion syndrome",
+    "Recklinghausen's disease",
+    "neurofibromatosis",
+    "neurofibromatosis 1",
+    "neurofibromatosis type 1",
+    "neurofibromatosis type i",
+    "neurofibromatosis, type 1",
+    "nonmosaic NF1",
+    "nonmosaic neurofibromatosis type 1",
+    "peripheral neurofibromatosis",
+    "type 1 neurofibromatosis"
+   ]
   }
  ],
  "searches": [
@@ -292,38 +336,38 @@
     "prompt_version": "rules-draft-v1"
    },
    "support_check": {
-    "overall": "partially_supported",
+    "overall": "supported",
     "items": [
      {
       "item": "Condition: the rule is about NF1 missense variants.",
       "verdict": "supported",
-      "reason": "The quotes explicitly discuss missense mutations in the context of SNF versus classical NF1."
+      "reason": "The quotes explicitly discuss missense mutations in SNF cases compared with the classical NF1 group."
      },
      {
-      "item": "Conclusion: such variants point to neurofibromatosis, familial spinal rather than neurofibromatosis type 1.",
+      "item": "Conclusion: such variants point to neurofibromatosis, familial spinal rather than neurofibromatosis type 1 (also called: NF1; Neurofibromatosis 1; Nf1-Microdeletion syndrome; Recklinghausen's disease; neurofibromatosis; neurofibromatosis 1; neurofibromatosis type i; neurofibromatosis, type 1).",
       "verdict": "supported",
-      "reason": "The quotes state missense mutations carry increased risk/proportion for SNF rather than classical NF1."
+      "reason": "The quotes report increased odds/risk of SNF versus NF1 for missense mutations."
      },
      {
       "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "partially_supported",
-      "reason": "The quotes report group-level frequency/odds differences, not a general association beyond patient-group frequency comparisons."
+      "verdict": "supported",
+      "reason": "The quotes provide group-level odds ratios and risk estimates, not a single patient/family report or merely raw frequency."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
-   "status": "pending_review",
+   "status": "verified",
    "review": {
     "decision": "vetoed",
     "by": "Mengmeng Wu",
     "at": "2026-11-03",
     "reason": "Over-generalization: the quotes only report that missense variants are more frequent in spinal NF than in classical NF1 (21.4% vs 7.5%; odds ratios). They do not say that a missense variant argues against classical NF1; most NF1 missense carriers have classical NF1."
    },
-   "content_sha256": "b028cb5bbdf44458c4b4514dad8a66fa107d0b4e04cf24b22fa283081a73c578"
+   "content_sha256": "43c68c428f0b39016dcd701be1aafc0c2163841632081d30e9c9d27e5dd845f1"
   },
   {
    "id": "NF1-2",
@@ -380,30 +424,33 @@
      {
       "item": "Condition: the rule is about NF1 variants in exon 28.",
       "verdict": "supported",
-      "reason": "The quotes explicitly locate the NF1 mutation in exon 28."
+      "reason": "The quotes explicitly place the duplication in exon 28 of the NF1 gene."
      },
      {
-      "item": "Conclusion: such variants point to Watson syndrome rather than neurofibromatosis type 1.",
+      "item": "Conclusion: such variants point to Watson syndrome (also called: WTSN) rather than neurofibromatosis type 1 (also called: NF1; Neurofibromatosis 1; Nf1-Microdeletion syndrome; Recklinghausen's disease; neurofibromatosis; neurofibromatosis 1; neurofibromatosis type i; neurofibromatosis, type 1).",
       "verdict": "partially_supported",
-      "reason": "The quotes describe a family with WS and NS features and contrast with classical NF1 null alleles, but do not state that such variants point to WS rather than NF1 generally."
+      "reason": "The quotes associate the variant with WS/NS features and contrast it with classical NF1 null alleles, but do not state it points to WS rather than NF1 overall."
      },
      {
       "item": "Scope: this is stated as a general association for such NF1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "not_supported",
-      "reason": "The evidence is limited to a single family, not a general association across such NF1 variants."
+      "reason": "The evidence is from a single family, not a general association across such variants."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-03",
+    "reason": "Generalized from a single family / individual report."
    },
-   "content_sha256": "2bc022607bfa627a0e867733a3e71a4b3b3994a8ee0097f19ac1afce42ba0954"
+   "content_sha256": "0851233b357d0c35d37466f3cbfb7812722a5b5706c1ea27e63d0e839c4b5f54"
   }
  ],
  "rejected_drafts": [],

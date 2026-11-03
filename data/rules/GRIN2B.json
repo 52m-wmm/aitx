@@ -1,6 +1,6 @@
 {
  "gene": "GRIN2B",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711350,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,14 +8,37 @@
    "omim": [
     "OMIM:613970"
    ],
-   "mondo": "MONDO:0013509"
+   "mondo": "MONDO:0013509",
+   "synonyms": [
+    "GRIN2B autosomal dominant non-syndromic intellectual disability",
+    "GRIN2B encephalopathy",
+    "GRIN2B-related developmental delay, intellectual disability and autism spectrum disorder",
+    "GRIN2B-related neurodevelopmental disorder",
+    "MRD6",
+    "autosomal dominant non-syndromic intellectual disability caused by mutation in GRIN2B",
+    "intellectual developmental disorder, autosomal dominant 6, with or without seizures",
+    "intellectual disability, autosomal dominant 6",
+    "intellectual disability, autosomal dominant type 6",
+    "mental retardation, autosomal dominant 6",
+    "mental retardation, autosomal dominant 6, with or without seizures",
+    "mental retardation, autosomal dominant type 6"
+   ]
   },
   {
    "label": "developmental and epileptic encephalopathy, 27",
    "omim": [
     "OMIM:616139"
    ],
-   "mondo": "MONDO:0014505"
+   "mondo": "MONDO:0014505",
+   "synonyms": [
+    "DEE27",
+    "EIEE27",
+    "GRIN2B early infantile epileptic encephalopathy",
+    "developmental and epileptic encephalopathy 27",
+    "early infantile epileptic encephalopathy caused by mutation in GRIN2B",
+    "epileptic encephalopathy, early infantile, 27",
+    "epileptic encephalopathy, early infantile, type 27"
+   ]
   }
  ],
  "searches": [
@@ -234,23 +257,23 @@
      {
       "item": "Condition: the rule is about GRIN2B nonsense (stop-gain) variants.",
       "verdict": "not_supported",
-      "reason": "The quotes mention a nonsense variant but never identify GRIN2B or state a rule about GRIN2B nonsense variants."
+      "reason": "The quotes mention a single 'nonsense variant' but do not identify it as GRIN2B or state a rule about GRIN2B stop-gain variants."
      },
      {
-      "item": "Conclusion: such variants point to intellectual disability, autosomal dominant 6 rather than developmental and epileptic encephalopathy, 27.",
+      "item": "Conclusion: such variants point to intellectual disability, autosomal dominant 6 (also called: GRIN2B autosomal dominant non-syndromic intellectual disability; GRIN2B encephalopathy; GRIN2B-related developmental delay, intellectual disability and autism spectrum disorder; GRIN2B-related neurodevelopmental disorder; MRD6; autosomal dominant non-syndromic intellectual disability caused by mutation in GRIN2B; intellectual developmental disorder, autosomal dominant 6, with or without seizures; intellectual disability, autosomal dominant type 6) rather than developmental and epileptic encephalopathy, 27 (also called: DEE27; EIEE27; GRIN2B early infantile epileptic encephalopathy; developmental and epileptic encephalopathy 27; early infantile epileptic encephalopathy caused by mutation in GRIN2B; epileptic encephalopathy, early infantile, 27; epileptic encephalopathy, early infantile, type 27).",
       "verdict": "not_supported",
-      "reason": "The quotes describe developmental delay or intellectual disability without epilepsy but do not mention intellectual disability, autosomal dominant 6 or developmental and epileptic encephalopathy 27."
+      "reason": "The quotes do not name MRD6/intellectual disability autosomal dominant 6 or DEE27, nor state that nonsense variants point to one rather than the other."
      },
      {
       "item": "Scope: this is stated as a general association for such GRIN2B variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "not_supported",
-      "reason": "The nonsense-variant evidence is from a single patient, not a general association across such variants."
+      "reason": "The only nonsense-variant evidence is described for one patient, so no general association is stated."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "pending_review",
@@ -260,7 +283,7 @@
     "at": "2026-11-03",
     "reason": "Based on a single patient with a nonsense variant (strength weak); the source does not establish that GRIN2B nonsense variants point to ID6 rather than DEE27."
    },
-   "content_sha256": "1a1faab34eaca677335bb0fa882992d177511a3efd66c7587323308086307a50"
+   "content_sha256": "c8d59af84f630a849ce440c24046fe73b4dbcfa658652d2ff02b8c902a3de4a0"
   }
  ],
  "rejected_drafts": [],

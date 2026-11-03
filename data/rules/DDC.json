@@ -1,6 +1,6 @@
 {
  "gene": "DDC",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711330,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,7 +8,13 @@
    "omim": [
     "OMIM:608643"
    ],
-   "mondo": "MONDO:0012084"
+   "mondo": "MONDO:0012084",
+   "synonyms": [
+    "AADC deficiency",
+    "aromatic L-amino acid decarboxylase deficiency",
+    "aromatic L-amino-acid decarboxylase deficiency",
+    "aromatic amino acid decarboxylase deficiency"
+   ]
   }
  ],
  "searches": [

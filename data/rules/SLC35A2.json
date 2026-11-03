@@ -1,6 +1,6 @@
 {
  "gene": "SLC35A2",
- "drafted_at": 1793710457,
+ "drafted_at": 1793711406,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,7 +8,21 @@
    "omim": [
     "OMIM:300896"
    ],
-   "mondo": "MONDO:0010478"
+   "mondo": "MONDO:0010478",
+   "synonyms": [
+    "CDG syndrome type IIm",
+    "CDG-IIm",
+    "CDG2M",
+    "EIEE22",
+    "SLC35A2-CDG",
+    "SLC35A2-congenital disorder of glycosylation",
+    "congenital disorder of glycosylation type 2m",
+    "congenital disorder of glycosylation type IIm",
+    "congenital disorder of glycosylation, type IIm",
+    "congenital disorder of glycosylation, type IIm, Somatic mosaicism, X-linked dominant",
+    "epileptic encephalopathy, early infantile, 22",
+    "epileptic encephalopathy, early infantile, 22; EIEE22"
+   ]
   }
  ],
  "searches": [

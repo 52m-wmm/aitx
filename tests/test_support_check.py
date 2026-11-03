@@ -46,7 +46,18 @@ def test_bad_verdicts_and_item_numbers_ignored(monkeypatch):
 def test_rule_items_spell_out_conditions_conclusion_scope():
     rule = {"gene": "CFTR", "statement": "s", "applies_when": {"zygosity": ["heterozygous"], "variant_class": ["missense"]},
             "effect": {"supports": ["OMIM:277180"], "argues_against": ["OMIM:219700"]}, "sources": []}
-    items = SC.rule_items(rule, {"OMIM:277180": "CBAVD", "OMIM:219700": "cystic fibrosis"})
+    items = SC.rule_items(rule, {"OMIM:277180": {"label": "CBAVD", "synonyms": ["congenital bilateral aplasia of vas deferens"]},
+                                 "OMIM:219700": {"label": "cystic fibrosis", "synonyms": []}})
     assert any("a single heterozygous variant (one variant, on one allele)" in i for i in items)
-    assert any(i.startswith("Conclusion: such variants point to CBAVD rather than cystic fibrosis") for i in items)
+    assert any(i.startswith("Conclusion: such variants point to CBAVD (also called: congenital bilateral aplasia "
+                            "of vas deferens) rather than cystic fibrosis") for i in items)
+
+
+def test_conclusion_uses_code_supplied_names_not_rule_wording():
+    rule = {"gene": "COL1A1", "statement": "Loss of exon 6 results in arthrochalasia EDS.", "applies_when": {"exon": [6, 6]},
+            "effect": {"supports": ["OMIM:130060"], "argues_against": []}, "sources": []}
+    items = SC.rule_items(rule, {"OMIM:130060": {"label": "Ehlers-Danlos syndrome arthrochalasia type 1",
+                                                 "synonyms": ["EDS VIIA", "arthrochalasia EDS type 1"]}})
+    concl = next(i for i in items if i.startswith("Conclusion"))
+    assert "Ehlers-Danlos syndrome arthrochalasia type 1 (also called: EDS VIIA; arthrochalasia EDS type 1)" in concl
     assert items[-1].startswith("Scope:") and "difference in frequency" in items[-1]

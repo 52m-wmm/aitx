@@ -1,6 +1,6 @@
 {
  "gene": "CFTR",
- "drafted_at": 1793710346,
+ "drafted_at": 1793711197,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,21 +8,49 @@
    "omim": [
     "OMIM:167800"
    ],
-   "mondo": "MONDO:0008185"
+   "mondo": "MONDO:0008185",
+   "synonyms": [
+    "HPC",
+    "Hp",
+    "PCTT",
+    "autosomal dominant hereditary pancreatitis",
+    "familial pancreatitis",
+    "hereditary chronic pancreatitis",
+    "hereditary pancreatitis",
+    "pancreatitis, calcific, included",
+    "pancreatitis, chronic pancreatitis, chronic, susceptibility to, included",
+    "pancreatitis, chronic, protection against, included",
+    "pancreatitis, hereditary"
+   ]
   },
   {
    "label": "cystic fibrosis",
    "omim": [
     "OMIM:219700"
    ],
-   "mondo": "MONDO:0009061"
+   "mondo": "MONDO:0009061",
+   "synonyms": [
+    "CF",
+    "cystic fibrosis",
+    "cystic fibrosis lung disease, modifier of",
+    "fibrocystic disease of the pancreas",
+    "mucoviscidosis",
+    "pseudomonas aeruginosa, susceptibility to chronic infection by, in cystic fibrosis"
+   ]
   },
   {
    "label": "congenital bilateral aplasia of vas deferens from CFTR mutation",
    "omim": [
     "OMIM:277180"
    ],
-   "mondo": "MONDO:0010178"
+   "mondo": "MONDO:0010178",
+   "synonyms": [
+    "CAVD",
+    "CBAVD",
+    "congenital bilateral absence of vas deferens",
+    "congenital bilateral aplasia of the vas deferens",
+    "vas deferens, congenital bilateral aplasia of"
+   ]
   }
  ],
  "searches": [
@@ -247,23 +275,23 @@
      {
       "item": "Condition: the rule is about patients with a single heterozygous variant (one variant, on one allele) in CFTR.",
       "verdict": "not_supported",
-      "reason": "The quotes describe biallelic/compound heterozygous genotypes, not a single heterozygous CFTR variant."
+      "reason": "The quotes describe biallelic/compound heterozygous CFTR variants, not a single heterozygous variant."
      },
      {
-      "item": "Conclusion: such variants point to congenital bilateral aplasia of vas deferens from CFTR mutation rather than cystic fibrosis.",
+      "item": "Conclusion: such variants point to congenital bilateral aplasia of vas deferens from CFTR mutation (also called: CAVD; CBAVD; congenital bilateral absence of vas deferens; congenital bilateral aplasia of the vas deferens; vas deferens, congenital bilateral aplasia of) rather than cystic fibrosis (also called: CF; cystic fibrosis lung disease, modifier of; fibrocystic disease of the pancreas; mucoviscidosis; pseudomonas aeruginosa, susceptibility to chronic infection by, in cystic fibrosis).",
       "verdict": "supported",
-      "reason": "The quotes state CFTR-CBAVD is a CFTR-related disorder without additional CF manifestations and usually results from these variant combinations."
+      "reason": "The quotes state isolated CFTR-CBAVD occurs without additional CF manifestations and usually results from the specified CFTR variant combinations."
      },
      {
       "item": "Scope: this is stated as a general association for such CFTR variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quotes state a general association using 'usually results' and 'most common,' not a single case or only a frequency difference."
+      "reason": "The quote presents isolated CBAVD as usually resulting from such CFTR variants in general, not as a single case or only a frequency difference."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "pending_review",
@@ -273,7 +301,7 @@
     "at": "2026-11-03",
     "reason": "Condition misstates the source: CBAVD results from biallelic (compound heterozygous) CFTR variants, but the rule's condition is a single heterozygous variant, which does not cause CBAVD."
    },
-   "content_sha256": "f9b663e90d4f08ae9dcfc6c2f57d47ab128b0fd488a55e400693251bbf41da51"
+   "content_sha256": "6fab5ff06cc3700bdb28b56d7a19f35bb9644dfaa834f4ffcb964c5031f28e17"
   }
  ],
  "rejected_drafts": [],

@@ -191,7 +191,8 @@ def draft_gene(gene: str, candidates: list[dict], nbks: list[str], *, use_cache:
     """The rule file content for one gene."""
     sources, searches = gather(gene, candidates, nbks)
     out = {"gene": gene, "drafted_at": int(time.time()), "prompt_version": PROMPT_VERSION,
-           "candidates": [{"label": c["label"], "omim": [o["id"] for o in c["omim"]], "mondo": c["key"]} for c in candidates],
+           "candidates": [{"label": c["label"], "omim": [o["id"] for o in c["omim"]], "mondo": c["key"],
+                           "synonyms": c.get("synonyms") or []} for c in candidates],
            "searches": searches,
            "sources": [{k: s[k] for k in ("type", "id", "url", "section", "credit", "accessed_at") if k in s} for s in sources],
            "rules": [], "rejected_drafts": []}
@@ -210,8 +211,8 @@ def draft_gene(gene: str, candidates: list[dict], nbks: list[str], *, use_cache:
         rule = {"id": f"{gene}-{i}", "gene": gene, "version": 1, **rule,
                 "drafted": {"llm": out["llm"], "prompt_version": PROMPT_VERSION}}
         # independent check: do the quotes support each condition, the conclusion and the scope?
-        labels = {o["id"]: c["label"] for c in candidates for o in c["omim"]}
-        rule["support_check"] = SC.check_rule(rule, labels, use_cache=use_cache)
+        names = {o["id"]: {"label": c["label"], "synonyms": c.get("synonyms") or []} for c in candidates for o in c["omim"]}
+        rule["support_check"] = SC.check_rule(rule, names, use_cache=use_cache)
         rule["status"] = "verified" if rule["support_check"]["overall"] == "supported" else "pending_review"
         rule["review"] = {"decision": "not_reviewed"}
         rule["content_sha256"] = content_hash(rule)

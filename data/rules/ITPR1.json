@@ -1,6 +1,6 @@
 {
  "gene": "ITPR1",
- "drafted_at": 1793710433,
+ "drafted_at": 1793711364,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,21 +8,51 @@
    "omim": [
     "OMIM:117360"
    ],
-   "mondo": "MONDO:0007298"
+   "mondo": "MONDO:0007298",
+   "synonyms": [
+    "ACV",
+    "SCA29",
+    "cerebellar ataxia early-onset nonprogressive",
+    "congenital nonprogressive spinocerebellar ataxia",
+    "spinocerebellar ataxia 29",
+    "spinocerebellar ataxia 29, congenital nonprogressive",
+    "spinocerebellar ataxia type 29"
+   ]
   },
   {
    "label": "aniridia-cerebellar ataxia-intellectual disability syndrome",
    "omim": [
     "OMIM:206700"
    ],
-   "mondo": "MONDO:0008795"
+   "mondo": "MONDO:0008795",
+   "synonyms": [
+    "Aniridia Cerebellar Ataxia Mental Deficiency",
+    "GILLESPIE syndrome",
+    "GLSP",
+    "Gillespie syndrome",
+    "aniridia, cerebellar ataxia and mental deficiency",
+    "aniridia, cerebellar ataxia, and intellectual disability",
+    "aniridia, cerebellar ataxia, and mental retardation"
+   ]
   },
   {
    "label": "spinocerebellar ataxia type 15/16",
    "omim": [
     "OMIM:606658"
    ],
-   "mondo": "MONDO:0011694"
+   "mondo": "MONDO:0011694",
+   "synonyms": [
+    "SCA15",
+    "SCA15/16",
+    "SCA16 (formerly)",
+    "SCAR16",
+    "spinocerebellar ataxia 15",
+    "spinocerebellar ataxia 16",
+    "spinocerebellar ataxia 16 (formerly)",
+    "spinocerebellar ataxia type 15",
+    "spinocerebellar ataxia type 15/16",
+    "spinocerebellar ataxia type 16"
+   ]
   }
  ],
  "searches": [

@@ -1,6 +1,6 @@
 {
  "gene": "AGXT",
- "drafted_at": 1793710346,
+ "drafted_at": 1793711197,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,7 +8,20 @@
    "omim": [
     "OMIM:259900"
    ],
-   "mondo": "MONDO:0009823"
+   "mondo": "MONDO:0009823",
+   "synonyms": [
+    "AGXT primary hyperoxaluria",
+    "HP1",
+    "PH1",
+    "glycolic aciduria",
+    "hyperoxaluria, primary, type I",
+    "peroxisomal alanine glyoxylate aminotransferase deficiency",
+    "peroxisomal alanine-glyoxylate aminotransferase deficiency",
+    "primary hyperoxaluria caused by mutation in AGXT",
+    "primary hyperoxaluria type 1",
+    "primary hyperoxaluria type I",
+    "serine pyruvate aminotransferase deficiency"
+   ]
   }
  ],
  "searches": [

@@ -1,6 +1,6 @@
 {
  "gene": "SPTLC1",
- "drafted_at": 1793710457,
+ "drafted_at": 1793711406,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,14 +8,29 @@
    "omim": [
     "OMIM:162400"
    ],
-   "mondo": "MONDO:0008086"
+   "mondo": "MONDO:0008086",
+   "synonyms": [
+    "HSAN1A",
+    "SPTLC1 hereditary sensory and autonomic neuropathy type 1",
+    "hereditary sensory and autonomic neuropathy type 1 caused by mutation in SPTLC1",
+    "neuropathy, hereditary sensory and autonomic, type IA"
+   ]
   },
   {
    "label": "amyotrophic lateral sclerosis 27, juvenile",
    "omim": [
     "OMIM:620285"
    ],
-   "mondo": "MONDO:0859529"
+   "mondo": "MONDO:0859529",
+   "synonyms": [
+    "ALS27",
+    "SPTLC1 amyotrophic lateral sclerosis",
+    "SPTLC1-ALS",
+    "SPTLC1-associated amyotrophic lateral sclerosis",
+    "SPTLC1-related amyotrophic lateral sclerosis",
+    "amyotrophic lateral sclerosis caused by mutation in SPTLC1",
+    "juvenile amyotrophic lateral sclerosis type 27"
+   ]
   }
  ],
  "searches": [
@@ -241,30 +256,33 @@
      {
       "item": "Condition: the rule is about SPTLC1 variants affecting protein residue 331.",
       "verdict": "supported",
-      "reason": "The quotes explicitly discuss SPTLC1 pathogenic variants at Ser331."
+      "reason": "Quote 1 explicitly refers to SPTLC1 pathogenic variants at Ser331, including p.Ser331Phe and p.Ser331Tyr."
      },
      {
-      "item": "Conclusion: such variants point to neuropathy, hereditary sensory and autonomic, type 1A rather than amyotrophic lateral sclerosis 27, juvenile.",
+      "item": "Conclusion: such variants point to neuropathy, hereditary sensory and autonomic, type 1A (also called: HSAN1A; SPTLC1 hereditary sensory and autonomic neuropathy type 1; hereditary sensory and autonomic neuropathy type 1 caused by mutation in SPTLC1; neuropathy, hereditary sensory and autonomic, type IA) rather than amyotrophic lateral sclerosis 27, juvenile (also called: ALS27; SPTLC1 amyotrophic lateral sclerosis; SPTLC1-ALS; SPTLC1-associated amyotrophic lateral sclerosis; SPTLC1-related amyotrophic lateral sclerosis; amyotrophic lateral sclerosis caused by mutation in SPTLC1; juvenile amyotrophic lateral sclerosis type 27).",
       "verdict": "partially_supported",
-      "reason": "Quotes support HSAN1A-like neuropathy and reclassify one p.Ser331Tyr juvenile ALS case as HSN, but do not state this as a general 'rather than ALS27' rule."
+      "reason": "The quotes tie Ser331 variants to neuropathy and mention classic HSAN1A, but they only reclassify one p.Ser331Tyr case as likely HSN, not explicitly all residue-331 variants as HSAN1A rather than juvenile ALS27."
      },
      {
       "item": "Scope: this is stated as a general association for such SPTLC1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "Quote 1 states a general association for SPTLC1 variants at Ser331, not merely one family or a frequency difference."
+      "reason": "Quote 1 states a general association for SPTLC1 pathogenic variants at Ser331, not a single family or a frequency comparison."
      }
     ],
     "llm": {
      "llm": "deepseek-flash",
      "served_model": "deepseek-flash",
-     "prompt_version": "support-check-v2"
+     "prompt_version": "support-check-v3"
     }
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-03",
+    "reason": "Generalized from a single reclassified case / individual report."
    },
-   "content_sha256": "6913c6fa5e3c25a833e7a7f53a8d23043ea48009a72521b7d27a5a8c5b504a82"
+   "content_sha256": "0c7277430b358b46444c4db20ea8f8af6e2ff69482a60ba56650652ece7e3750"
   }
  ],
  "rejected_drafts": [],

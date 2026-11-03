@@ -1,6 +1,6 @@
 {
  "gene": "OTC",
- "drafted_at": 1793710457,
+ "drafted_at": 1793711406,
  "prompt_version": "rules-draft-v1",
  "candidates": [
   {
@@ -8,7 +8,15 @@
    "omim": [
     "OMIM:311250"
    ],
-   "mondo": "MONDO:0010703"
+   "mondo": "MONDO:0010703",
+   "synonyms": [
+    "OCT deficiency",
+    "OTC deficiency",
+    "OTCD",
+    "ornithine carbamoyltransferase deficiency",
+    "ornithine carbamoyltransferase deficiency disease",
+    "ornithine transcarbamylase deficiency"
+   ]
   }
  ],
  "searches": [

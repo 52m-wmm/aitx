@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from aitx.disease import extract as X
 
-PROMPT_VERSION = "support-check-v2"
+PROMPT_VERSION = "support-check-v3"
 VERDICTS = ("supported", "partially_supported", "not_supported")
 
 SYSTEM = """You check whether quoted source text supports each part of a claim. Judge ONLY from the quotes;
@@ -32,6 +32,8 @@ A condition that is the same as, or a special case of, what the quotes state is 
 "in-frame mutations cause X", the condition "in-frame deletions" is supported). A condition broader than the quotes
 is not.
   "not_supported"        the quotes do not state it or contradict it
+Disease names: an item may give a disease's standard name followed by "also called: ..." synonyms; a quote that
+names the disease by any of these names refers to that disease.
 Return only JSON: {"items": [{"item": <number>, "verdict": "...", "reason": "<one short sentence>"}]}"""
 
 
@@ -71,8 +73,18 @@ _ZYG = {"heterozygous": "a single heterozygous variant (one variant, on one alle
         "hemizygous": "a hemizygous variant (single copy, e.g. X-linked in a male)"}
 
 
-def rule_items(rule: dict, labels: dict[str, str]) -> list[str]:
-    """A drafted rule split into separately judged items: each condition, the conclusion, the scope."""
+def disease_name(omim: str, names: dict[str, dict]) -> str:
+    """Standard name plus synonyms, supplied by code (step 2 candidate), never the rule's own wording."""
+    n = names.get(omim) or {}
+    syn = [s for s in n.get("synonyms") or [] if s.lower() != str(n.get("label", "")).lower()][:8]
+    return (n.get("label") or omim) + (f" (also called: {'; '.join(syn)})" if syn else "")
+
+
+def rule_items(rule: dict, names: dict[str, dict]) -> list[str]:
+    """A drafted rule split into separately judged items: each condition, the conclusion, the scope.
+
+    The conclusion is built from the rule's effect (OMIM ids picked from the step 2 candidate list) and the
+    names code supplies for those ids; the rule's free-text statement does not decide anything."""
     gene, c = rule["gene"], rule.get("applies_when") or {}
     items = []
     if c.get("variant_class"):
@@ -87,8 +99,8 @@ def rule_items(rule: dict, labels: dict[str, str]) -> list[str]:
         items.append(f"Condition: the rule is about {gene} variants in exon{'s' if a != b else ''} {a}" + (f"-{b}" if a != b else "") + ".")
     if c.get("nmd_prediction"):
         items.append(f"Condition: the rule is about {gene} variants whose transcript is predicted: {', '.join(c['nmd_prediction'])} (NMD).")
-    sup = [labels.get(o, o) for o in rule["effect"].get("supports", [])]
-    ag = [labels.get(o, o) for o in rule["effect"].get("argues_against", [])]
+    sup = [disease_name(o, names) for o in rule["effect"].get("supports", [])]
+    ag = [disease_name(o, names) for o in rule["effect"].get("argues_against", [])]
     concl = "Conclusion: such variants point to " + (" or ".join(sup) if sup else "(no disease)")
     if ag:
         concl += " rather than " + " or ".join(ag)
@@ -98,6 +110,7 @@ def rule_items(rule: dict, labels: dict[str, str]) -> list[str]:
     return items
 
 
-def check_rule(rule: dict, labels: dict[str, str], *, use_cache: bool = True) -> dict:
-    return check_support(rule["statement"], rule_items(rule, labels), [s["quote"] for s in rule["sources"]],
+def check_rule(rule: dict, names: dict[str, dict], *, use_cache: bool = True) -> dict:
+    """names: OMIM id -> {"label", "synonyms"} from the step 2 candidates."""
+    return check_support(rule["statement"], rule_items(rule, names), [s["quote"] for s in rule["sources"]],
                          use_cache=use_cache)
