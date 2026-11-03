@@ -7,7 +7,9 @@ edited by hand: a reviewer may only veto a rule, with a reason. A rule is loaded
   - every source quote is found verbatim in the source text fetched again now (aitx.http, cached),
   - its conditions use step 1 fields only.
 A loaded rule that matches a variant adds background evidence (the rule's literature) and a
-branch assessment; rules never delete branches, they only reorder them (branch_order).
+branch assessment; rules never delete branches, they only reorder them (branch_order). A rule may
+promote a step 2 candidate it supports to a branch while there are fewer than MAX_BRANCHES branches
+(contract section 2, "rule promotion"); otherwise the promotion is recorded as blocked.
 """
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ from pathlib import Path
 
 from aitx import http
 from aitx.evidence import ledger as LG
+from aitx.evidence.branches import MAX_BRANCHES, make_branch, set_roles
 
 ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = ROOT / "data" / "rules"
@@ -83,14 +86,41 @@ def matches(cond: dict, v: dict) -> bool:
     return all(checks[k](want) for k, want in cond.items())
 
 
-def apply_rules(led: LG.Ledger, rules: dict, step1: dict) -> None:
+def promote(led: LG.Ledger, rule: dict, step2: dict | None) -> list[dict]:
+    """Make step 2 candidates the rule supports into branches (contract section 2). Returns records."""
+    out = []
+    present = {o for b in led.branches if b["diagnosis"] for o in b["diagnosis"]["omim"]}
+    cands = [c for c in (step2 or {}).get("candidates", []) if not c.get("excluded")]
+    for omim in (rule.get("effect") or {}).get("supports", []):
+        if omim in present:
+            continue
+        c = next((c for c in cands if omim in [o["id"] for o in c["omim"]]), None)
+        if c is None:
+            out.append({"omim": omim, "promoted": False, "reason": "not a step 2 candidate"})
+        elif len(led.branches) >= MAX_BRANCHES:
+            out.append({"omim": omim, "candidate": c["key"], "promoted": False,
+                        "reason": f"branch limit ({MAX_BRANCHES}) reached; no branch is removed"})
+        else:
+            b = make_branch(c, led.branches[0]["gene"] if led.branches else rule["gene"],
+                            [f"promoted by rule {rule['id']}: {rule['statement']}"])
+            b["promoted_by"] = rule["id"]
+            led.branches.append(b)
+            present.update(b["diagnosis"]["omim"])
+            out.append({"omim": omim, "candidate": c["key"], "promoted": True})
+    if any(x["promoted"] for x in out):
+        set_roles(led.branches, resolved=False)          # more than one diagnosis now: all are 'ambiguous_N'
+    return out
+
+
+def apply_rules(led: LG.Ledger, rules: dict, step1: dict, step2: dict | None = None) -> None:
     led.rules_applied = []
     led.rules_skipped = rules.get("skipped", [])
-    by_omim = {o: b["id"] for b in led.branches if b["diagnosis"] for o in b["diagnosis"]["omim"]}
     for v in step1["variants"]:
         for r in rules.get("loaded", []):
             if r["gene"] != v["gene"] or not matches(r.get("applies_when") or {}, v):
                 continue
+            promotions = promote(led, r, step2)
+            by_omim = {o: b["id"] for b in led.branches if b["diagnosis"] for o in b["diagnosis"]["omim"]}
             eff = r.get("effect") or {}
             sup = [by_omim[o] for o in eff.get("supports", []) if o in by_omim]
             ag = [by_omim[o] for o in eff.get("argues_against", []) if o in by_omim]
@@ -106,6 +136,7 @@ def apply_rules(led: LG.Ledger, rules: dict, step1: dict) -> None:
             led.rules_applied.append({"rule_id": r["id"], "variant": f"{v['gene']} {v['variant_cdna']}",
                                       "statement": r["statement"], "strength": r.get("strength"),
                                       "supports": sup, "argues_against": ag, "evidence_ids": ev_ids,
+                                      "promotions": promotions,
                                       "branches_not_present": [o for o in eff.get("supports", []) + eff.get("argues_against", [])
                                                                if o not in by_omim]})
             led.branch_assessment += [{"branch": b, "rule_id": r["id"], "effect": "supports", "evidence_ids": ev_ids} for b in sup]

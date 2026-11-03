@@ -18,7 +18,7 @@ def _score(c: dict) -> float:
     return s if s is not None else float("-inf")
 
 
-def _branch(c: dict, gene: str, why: list[str], expanded_from: str | None = None) -> dict:
+def make_branch(c: dict, gene: str, why: list[str], expanded_from: str | None = None) -> dict:
     umbrella = not c["omim"] or not c.get("specific", True)
     return {"id": c["key"], "diagnosis": {"mondo": c["key"], "label": c["label"], "omim": [o["id"] for o in c["omim"]],
                                           "orphanet": c.get("orphanet") or [], "mondo_url": c.get("mondo_url")},
@@ -42,7 +42,7 @@ def build_branches(step2: dict) -> tuple[list[dict], list[dict]]:
     seen: set[str] = set()
     for key, why in picked:
         c = cands[key]
-        b = _branch(c, gene, why)
+        b = make_branch(c, gene, why)
         if b["umbrella"]:
             kids = [cands[k] for k in (c.get("merge") or {}).get("narrower_competing") or []
                     if k in cands and not cands[k].get("excluded")]
@@ -50,7 +50,7 @@ def build_branches(step2: dict) -> tuple[list[dict], list[dict]]:
                 for k in sorted(kids, key=lambda x: (-_score(x), x["key"])):
                     if k["key"] not in seen:
                         seen.add(k["key"])
-                        out.append(_branch(k, gene, why + [f"expanded from umbrella '{c['label']}' ({key})"],
+                        out.append(make_branch(k, gene, why + [f"expanded from umbrella '{c['label']}' ({key})"],
                                            expanded_from=key))
                 continue
             b["not_expandable"] = "no more specific disease for this gene recorded under it in step 2"
@@ -64,9 +64,16 @@ def build_branches(step2: dict) -> tuple[list[dict], list[dict]]:
         dropped = [dict(out[i], dropped_reason=f"more than {MAX_BRANCHES} branches; lower step 2 score")
                    for i in range(len(out)) if i not in keep]
         out = [out[i] for i in keep]
-    for i, b in enumerate(out):
-        b["role"] = "primary" if (i == 0 and p["status"] == "resolved") else f"ambiguous_{i + 1}"
+    set_roles(out, resolved=p["status"] == "resolved")
     return out, dropped
+
+
+def set_roles(branches: list[dict], resolved: bool) -> None:
+    """primary for a single resolved diagnosis, otherwise ambiguous_1..N in order."""
+    for i, b in enumerate(branches):
+        if b.get("role") == "gene_level":
+            continue
+        b["role"] = "primary" if (resolved and len(branches) == 1) else f"ambiguous_{i + 1}"
 
 
 def _score_of(b: dict) -> float:

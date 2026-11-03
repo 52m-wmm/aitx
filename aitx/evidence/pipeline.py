@@ -104,8 +104,8 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     led.patient_context, led.missing_information = patient_context(step1, step2)
     text1 = runmeta.path(1, cid).read_text() if runmeta.path(1, cid).exists() else json.dumps(step1, indent=2, ensure_ascii=False)
     text2 = runmeta.path(2, cid).read_text() if runmeta.path(2, cid).exists() else json.dumps(step2, indent=2, ensure_ascii=False)
+    apply_rules(led, load_rules(), step1, step2)       # may promote a step 2 candidate to a branch
     background(led, cid, step1, step2, text1, text2)
-    apply_rules(led, load_rules(), step1)
     out = led.to_dict()
     out["branches_dropped"] = dropped
     out["ok"] = all(c["status"] != "fail" for c in out["checks"])

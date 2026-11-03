@@ -168,7 +168,7 @@ def evidence_tree(s2: dict, s3: dict | None) -> dict:
         d = b.get("diagnosis") or {}
         branches.append({"diagnosis_id": bid, "label": d.get("label") or b.get("gene"), "role": b["role"],
                          "omim": d.get("omim") or [], "expanded_from": b.get("expanded_from"),
-                         "not_expandable": b.get("not_expandable"), "layers": layers,
+                         "not_expandable": b.get("not_expandable"), "promoted_by": b.get("promoted_by"), "layers": layers,
                          "assessment": [a for a in s3.get("branch_assessment", []) if a["branch"] == bid]})
     return {"status": "filled", "branches": branches, "dropped": s3.get("branches_dropped", []),
             "rules_applied": s3.get("rules_applied", []), "rules_skipped": s3.get("rules_skipped", []),
@@ -902,6 +902,8 @@ def v_tree(c: dict) -> str:
             extra += f" <span class='muted'>{L('由伞状概念展开', 'expanded from umbrella')} {e(b['expanded_from'])}</span>"
         if b.get("not_expandable"):
             extra += " " + tag("warn", L("伞状概念，无法展开", "umbrella, not expandable"))
+        if b.get("promoted_by"):
+            extra += " " + tag("pass", L("由规则提拔", "promoted by rule") + f" {b['promoted_by']}")
         for a in b.get("assessment") or []:
             extra += " " + tag("pass" if a["effect"] == "supports" else "warn",
                                (L("规则支持", "rule supports") if a["effect"] == "supports" else L("规则不支持", "rule argues against"))
@@ -930,7 +932,9 @@ def v_tree(c: dict) -> str:
                      + e(", ".join(f"{d['diagnosis']['label']} ({d['step2_score']})" for d in t["dropped"])) + "</li>")
     for r in t.get("rules_applied") or []:
         miss = f" · {L('规则涉及但不是分支的诊断', 'diagnoses named by the rule but not a branch')}: {', '.join(r['branches_not_present'])}" if r.get("branches_not_present") else ""
-        notes.append(f"<li>{L('生效规则', 'Rule applied')} <code>{e(r['rule_id'])}</code> ({e(r['variant'])}): {e(r['statement'])}{e(miss)}</li>")
+        blocked = "; ".join(f"{p['omim']}: {p['reason']}" for p in r.get("promotions") or [] if not p["promoted"])
+        blocked = f" · {L('未提拔', 'not promoted')}: {blocked}" if blocked else ""
+        notes.append(f"<li>{L('生效规则', 'Rule applied')} <code>{e(r['rule_id'])}</code> ({e(r['variant'])}): {e(r['statement'])}{e(miss)}{e(blocked)}</li>")
     for r in t.get("rules_skipped") or []:
         notes.append(f"<li>{L('未加载的规则', 'Rule not loaded')} <code>{e(str(r['rule_id']))}</code>: {e('; '.join(r['reasons']))}</li>")
     if t.get("missing"):

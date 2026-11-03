@@ -145,3 +145,65 @@ def test_load_rules_reads_files_and_reports_skipped(tmp_path, pubmed):
     got = RU.load_rules(tmp_path)
     assert [r["id"] for r in got["loaded"]] == ["DMD-frame-1"]
     assert got["skipped"] == [{"rule_id": "DMD-frame-2", "file": "DMD.json", "reasons": ["vetoed: duplicate"]}]
+
+
+# ------------------------------------------------- rule promotion (contract section 2)
+
+def _s2(*cands):
+    return {"candidates": [cand(*c) for c in cands]}
+
+
+def _dmd_branches():
+    return [{"id": "M:DMD", "role": "ambiguous_1", "gene": "DMD", "diagnosis": {"omim": ["OMIM:310200"]}},
+            {"id": "M:XLID", "role": "ambiguous_2", "gene": "DMD", "diagnosis": {"omim": []}}]
+
+
+INFRAME = {"variants": [{"gene": "DMD", "variant_cdna": "c.1_3del", "variant_class": "inframe_deletion"}]}
+
+
+def test_rule_promotes_step2_candidate_to_branch(pubmed):
+    led = LG.Ledger("P", _dmd_branches())
+    s2 = _s2(("M:DMD", "Duchenne", ["OMIM:310200"], 5.4), ("M:BMD", "Becker", ["OMIM:300376"], 3.0))
+    RU.apply_rules(led, {"loaded": [rule()], "skipped": []}, INFRAME, s2)
+    ids = [b["id"] for b in led.branches]
+    assert ids == ["M:DMD", "M:XLID", "M:BMD"]                                  # Duchenne kept, Becker added
+    bmd = led.branches[2]
+    assert bmd["promoted_by"] == "DMD-frame-1" and "promoted by rule DMD-frame-1" in bmd["why"][0]
+    assert [b["role"] for b in led.branches] == ["ambiguous_1", "ambiguous_2", "ambiguous_3"]
+    assert led.rules_applied[0]["promotions"] == [{"omim": "OMIM:300376", "candidate": "M:BMD", "promoted": True}]
+    assert led.branch_order[0] == "M:BMD" and led.branch_order[-1] == "M:DMD"   # reordered, nothing removed
+
+
+def test_promotion_blocked_at_branch_limit(pubmed):
+    led = LG.Ledger("P", _dmd_branches() + [{"id": "M:X", "role": "ambiguous_3", "gene": "DMD",
+                                             "diagnosis": {"omim": ["OMIM:100001"]}}])
+    s2 = _s2(("M:BMD", "Becker", ["OMIM:300376"], 3.0))
+    RU.apply_rules(led, {"loaded": [rule()], "skipped": []}, INFRAME, s2)
+    assert len(led.branches) == 3 and "M:BMD" not in [b["id"] for b in led.branches]
+    p = led.rules_applied[0]["promotions"][0]
+    assert not p["promoted"] and "branch limit" in p["reason"]
+
+
+def test_only_step2_candidates_can_be_promoted(pubmed):
+    led = LG.Ledger("P", _dmd_branches())
+    RU.apply_rules(led, {"loaded": [rule()], "skipped": []}, INFRAME, _s2(("M:DMD", "Duchenne", ["OMIM:310200"])))
+    assert [b["id"] for b in led.branches] == ["M:DMD", "M:XLID"]
+    assert led.rules_applied[0]["promotions"][0]["reason"] == "not a step 2 candidate"
+    # an excluded step 2 candidate is not eligible either
+    led2 = LG.Ledger("P", _dmd_branches())
+    s2 = {"candidates": [dict(cand("M:BMD", "Becker", ["OMIM:300376"]), excluded=True)]}
+    RU.apply_rules(led2, {"loaded": [rule()], "skipped": []}, INFRAME, s2)
+    assert "M:BMD" not in [b["id"] for b in led2.branches]
+
+
+def test_matching_rule_without_promotion_keeps_resolved_role(pubmed):
+    led = LG.Ledger("P", [{"id": "M:BMD", "role": "primary", "gene": "DMD", "diagnosis": {"omim": ["OMIM:300376"]}}])
+    RU.apply_rules(led, {"loaded": [rule()], "skipped": []}, INFRAME, _s2(("M:BMD", "Becker", ["OMIM:300376"])))
+    assert led.branches[0]["role"] == "primary"
+
+
+def test_unloaded_rule_promotes_nothing(pubmed):
+    led = LG.Ledger("P", _dmd_branches())
+    RU.apply_rules(led, {"loaded": [], "skipped": [{"rule_id": "x", "reasons": ["vetoed: y"]}]}, INFRAME,
+                   _s2(("M:BMD", "Becker", ["OMIM:300376"])))
+    assert [b["id"] for b in led.branches] == ["M:DMD", "M:XLID"]
