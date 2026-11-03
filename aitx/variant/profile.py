@@ -11,8 +11,9 @@ from dataclasses import asdict, dataclass, field
 
 from aitx.variant.hgvs import AA3_TO_1, CVariant, PVariant, parse_cdna, parse_protein
 from aitx.variant.transcript import Transcript
+from aitx.variant.translate import aa3, retranslate
 
-SCHEMA_VERSION = "variant-profile-v1"
+SCHEMA_VERSION = "variant-profile-v1.1"
 NMD_RULES = "nmd-v1"
 NMD_JUNCTION_NT = 50
 NMD_START_PROXIMAL_NT = 150
@@ -48,6 +49,7 @@ class VariantProfile:
     checks: list[Check]
     evidence: list[dict]
     notes: list[str] = field(default_factory=list)
+    retranslation: dict = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
@@ -129,6 +131,82 @@ def _check_kind_consistency(cv: CVariant, pv: PVariant) -> Check | None:
     if pv.kind.startswith("inframe") and frameshifting:
         return Check("cdna_protein_consistency", "fail", f"protein says in-frame but c. net change is {net}")
     return Check("cdna_protein_consistency", "pass", f"c. net change {net:+d} nt agrees with {pv.kind}")
+
+
+def _check_retranslation(pv: PVariant, rt: dict) -> Check:
+    """Self-check 6: the p. notation must agree with the protein re-translated from the c. change.
+
+    Records rt["comparison"] = {what, stated, computed, agree} for the viewer.
+    """
+    def done(what: str, stated, computed, agree: bool, extra: str = "") -> Check:
+        rt["comparison"] = {"what": what, "stated": stated, "computed": computed, "agree": agree}
+        status = "pass" if agree else "fail"
+        if agree and extra:
+            status = "warn"
+        return Check("independent_translation", status,
+                     f"{what}: stated {stated}, computed {computed}" + (f"; {extra}" if extra else ""))
+
+    if not rt.get("reference_translation_matches_record", True):
+        return Check("independent_translation", "fail",
+                     "translating the RefSeq mRNA does not reproduce the record's protein; cannot re-check")
+    if rt["status"] == "not_computable":
+        rt["comparison"] = {"what": "not computable", "stated": pv.raw, "computed": None, "agree": None}
+        return Check("independent_translation", "warn", rt["reason"])
+    fc = rt.get("first_changed_aa") or {}
+    if pv.kind == "start_lost" or rt["status"] == "start_lost":
+        agree = pv.kind == "start_lost" and rt["status"] == "start_lost"
+        alt_note = ""
+        if agree and pv.alt_aa and fc.get("variant") != pv.alt_aa:
+            alt_note = f"start codon now reads {fc.get('variant')}, notation says {pv.alt_aa}"
+        return done("start codon", f"{pv.ref_aa}{pv.pos}{pv.alt_aa}",
+                    f"{rt['start_codon']['reference']}>{rt['start_codon']['variant']} ({fc.get('variant')})",
+                    agree, alt_note)
+    first_note = ""
+    if fc and pv.pos is not None and fc["position"] != pv.pos:
+        first_note = f"first changed residue stated {pv.pos}, computed {fc['position']}"
+    if pv.kind in ("frameshift", "nonsense"):
+        stop = rt.get("stop_position")
+        if pv.kind == "frameshift":
+            stated = f"Ter{pv.fs_ter}" if pv.fs_ter else "Ter?"
+            computed = f"Ter{stop - fc['position'] + 1}" if stop and fc else "no stop in transcript"
+            agree = (pv.fs_ter is None and stop is None) or (stop is not None and fc and pv.pos is not None
+                                                             and stop == pv.pos + (pv.fs_ter or 0) - 1)
+            if agree and pv.alt_aa and fc.get("variant") != pv.alt_aa:
+                first_note = "; ".join(x for x in (first_note, f"first new residue stated {pv.alt_aa}, computed {fc.get('variant')}") if x)
+            if stop:
+                computed += f" (stop at residue {stop})"
+            if pv.fs_ter and pv.pos is not None:
+                stated += f" (stop at residue {pv.pos + pv.fs_ter - 1})"
+            return done("stop position", stated, computed, bool(agree), first_note)
+        return done("stop position", f"Ter at {pv.pos}", f"Ter at {stop}" if stop else "no stop", stop == pv.pos)
+    if pv.kind == "missense":
+        stated, computed = f"{pv.ref_aa}{pv.pos}{pv.alt_aa}", f"{fc.get('reference')}{fc.get('position')}{fc.get('variant')}"
+        one = rt.get("reference_span", [0, -1])[1] - rt.get("reference_span", [0, -1])[0] == 0 and len(rt.get("inserted", "")) == 3
+        return done("new amino acid", stated, computed, stated == computed and one)
+    if pv.kind == "synonymous":
+        return done("protein change", "none", rt.get("change", "changed"), rt.get("change") == "none")
+    span = rt.get("reference_span")
+    if pv.kind == "inframe_deletion":
+        stated = f"del {pv.ref_aa}{pv.pos}_{pv.end_ref_aa}{pv.end_pos}"
+        computed = f"del {span[0]}_{span[1]} ({len(rt['deleted']) // 3} aa)" + (f" ins {rt['inserted']}" if rt["inserted"] else "")
+        return done("deleted residues", stated, computed, span == [pv.pos, pv.end_pos] and not rt["inserted"])
+    if pv.kind == "inframe_duplication":
+        stated = f"dup {pv.ref_aa}{pv.pos}_{pv.end_ref_aa}{pv.end_pos}"
+        computed = f"ins {rt['inserted']} after residue {span[0] - 1}"
+        copied = "".join(aa3(a) for a in rt["variant_protein"][pv.pos - 1:pv.end_pos])   # same as normal up to here
+        agree = span[0] == pv.end_pos + 1 and not rt["deleted"] and rt["inserted"] == copied
+        return done("inserted residues", stated, computed, agree)
+    if pv.kind in ("inframe_insertion", "inframe_delins"):
+        ins = pv.extra.get("inserted", "")
+        stated = f"{pv.kind} {pv.pos}_{pv.end_pos} {ins}"
+        computed = f"{span[0]}_{span[1]} del {rt['deleted'] or '-'} ins {rt['inserted'] or '-'}"
+        if pv.kind == "inframe_insertion":
+            agree = span[0] == pv.end_pos and not rt["deleted"] and rt["inserted"] == ins
+        else:
+            agree = span == [pv.pos, pv.end_pos] and rt["inserted"] == ins
+        return done("inserted residues", stated, computed, agree)
+    rt["comparison"] = {"what": pv.kind, "stated": pv.raw, "computed": None, "agree": None}
+    return Check("independent_translation", "warn", f"no comparison rule for {pv.kind}")
 
 
 # ------------------------------------------------------------- derivations
@@ -295,6 +373,8 @@ def build_profile(variant: dict, t: Transcript) -> VariantProfile:
     for c in (_check_codon_math(cv, pv), _check_kind_consistency(cv, pv)):
         if c:
             checks.append(c)
+    rt = retranslate(t, cv)
+    checks.append(_check_retranslation(pv, rt))
 
     vclass, notes = _classify(cv, pv)
     ptc_aa = _ptc(pv)
@@ -328,6 +408,7 @@ def build_profile(variant: dict, t: Transcript) -> VariantProfile:
         evidence=[{"source": t.source_url, "time_accessed": t.accessed_at,
                    "what": f"RefSeq record {t.accession}: exon structure, CDS, translation"}],
         notes=notes + t.notes,
+        retranslation=rt,
     )
 
 

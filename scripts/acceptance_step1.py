@@ -4,6 +4,9 @@ Runs the four challenge cases and the official Phase 0 example variants
 against the real RefSeq records and checks:
   HARD  every variant passes all consistency checks (reference base,
         reference amino acid, codon math, transcript version)
+  HARD  self-check 6: the protein re-translated from the c. change agrees with
+        the stated p. notation (pass, not just "not fail"), for every variant
+  HARD  reverse validation: a deliberately wrong p. notation per variant must fail
   HARD  results that the official examples or UniProt state explicitly
   SOFT  values printed for a human to eyeball (no single right answer here)
 
@@ -19,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from aitx.variant.hgvs import AA1_TO_3, parse_protein  # noqa: E402
 from aitx.variant.profile import build_profile  # noqa: E402
 from aitx.variant.transcript import fetch_transcript  # noqa: E402
 
@@ -51,6 +55,23 @@ def get(d: dict, path: str):
     return d
 
 
+def wrong_notation(p_raw: str, protein: str) -> str:
+    """A deliberately wrong version of a correct p. notation (for reverse validation)."""
+    pv = parse_protein(p_raw)
+    if pv.kind == "frameshift":
+        return f"p.({pv.ref_aa}{pv.pos}{pv.alt_aa}fsTer{(pv.fs_ter or 0) + 1})"
+    if pv.kind == "nonsense":
+        return f"p.{AA1_TO_3[protein[pv.pos]]}{pv.pos + 1}Ter"
+    if pv.kind == "missense":
+        return f"p.{pv.ref_aa}{pv.pos}{'Gly' if pv.alt_aa != 'Gly' else 'Ala'}"
+    if pv.kind == "inframe_deletion":
+        a, b = pv.pos + 1, pv.end_pos + 1
+        return f"p.{AA1_TO_3[protein[a - 1]]}{a}" + (f"_{AA1_TO_3[protein[b - 1]]}{b}" if b != a else "") + "del"
+    if pv.kind == "start_lost":
+        return f"p.{AA1_TO_3[protein[1]]}2Val"
+    raise ValueError(f"no wrong-notation rule for {pv.kind}")
+
+
 def load_cases() -> list[dict]:
     cases = json.loads((ROOT / "data/cases/aitx_final_patients.json").read_text())
     cases += json.loads((ROOT / "data/cases/practice/official_examples.json").read_text())
@@ -59,12 +80,15 @@ def load_cases() -> list[dict]:
 
 def main() -> int:
     results: dict[str, dict] = {}
+    variants: dict[str, tuple[dict, object]] = {}
     hard_fail = 0
     print("== consistency checks (HARD) ==")
     for case in load_cases():
         v = case["patient"]["genotype"][0]
         try:
-            p = build_profile(v, fetch_transcript(v["transcript"])).to_dict()
+            t = fetch_transcript(v["transcript"])
+            variants[case["id"]] = (v, t)
+            p = build_profile(v, t).to_dict()
         except Exception as e:  # noqa: BLE001
             print(f"FAIL {case['id']:<20} could not build profile: {e}")
             hard_fail += 1
@@ -78,6 +102,21 @@ def main() -> int:
               f"NMD {p['nmd']['prediction']}")
         for c in bad:
             print(f"       {c['status'].upper()} {c['name']}: {c['detail']}")
+
+    print("\n== self-check 6: independent re-translation (HARD) ==")
+    for cid, p in results.items():
+        c = next(c for c in p["checks"] if c["name"] == "independent_translation")
+        ok = c["status"] == "pass"
+        hard_fail += not ok
+        print(f"{'PASS' if ok else 'FAIL'} {cid:<20} {c['detail']}")
+
+    print("\n== reverse validation: wrong p. notation must fail (HARD) ==")
+    for cid, (v, t) in variants.items():
+        bad = dict(v, variant_protein=wrong_notation(v["variant_protein"], t.protein))
+        c = next(c for c in build_profile(bad, t).checks if c.name == "independent_translation")
+        ok = c.status == "fail"
+        hard_fail += not ok
+        print(f"{'PASS' if ok else 'FAIL'} {cid:<20} {bad['variant_protein']:<28} -> {c.status}: {c.detail}")
 
     print("\n== stated expectations (HARD) ==")
     for cid, path, want, why in HARD:

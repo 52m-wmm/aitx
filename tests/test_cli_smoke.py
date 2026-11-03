@@ -21,7 +21,7 @@ def test_cli_end_to_end(tmp_path):
 
     case = {"id": "TEST-1", "patient": {"genotype": [
         {"gene": "TEST1", "transcript": "NM_TEST01.1", "variant_cdna": "c.300dup",
-         "variant_protein": f"p.({S.aa3(101)}101AlafsTer20)", "zygosity": "homozygous"}],
+         "variant_protein": f"p.({S.aa3(101)}101CysfsTer3)", "zygosity": "homozygous"}],
         "clinical_context": "synthetic"}}
     cases = tmp_path / "case.json"
     cases.write_text(json.dumps(case))

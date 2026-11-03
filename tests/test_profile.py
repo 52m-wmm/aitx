@@ -43,11 +43,11 @@ def test_c_to_mrna(tx):
 # ------------------------------------------------------- NMD / classes
 
 def test_frameshift_mid_transcript_triggers_nmd(tx):
-    # dup at c.300 (codon 100); first changed residue 101; Ter 20 -> PTC at 120
-    p = build_profile(v("c.300dup", f"p.({S.aa3(101)}101AlafsTer20)", "homozygous"), tx)
+    # dup at c.300 (codon 100); first changed residue 101 (Ala -> Cys); Ter3 -> PTC at 103
+    p = build_profile(v("c.300dup", f"p.({S.aa3(101)}101CysfsTer3)", "homozygous"), tx)
     assert p.ok, p.checks
     assert p.variant_class == "frameshift"
-    assert p.ptc_aa_position == 120 and p.truncated_protein_length == 119
+    assert p.ptc_aa_position == 103 and p.truncated_protein_length == 102
     assert p.fraction_of_protein_retained == 0.5          # 100 normal residues of 200
     assert p.nmd["prediction"] == "likely_triggers"
     assert p.nmd["ptc_exon"] == 3
@@ -97,8 +97,8 @@ def test_start_proximal_ptc_uncertain(tx):
 
 def test_missense(tx):
     alt = "G" if S.cbase(149) != "G" else "C"
-    p = build_profile(v(f"c.149{S.cbase(149)}>{alt}", f"p.{S.aa3(50)}50Pro"), tx)
-    assert p.ok
+    p = build_profile(v(f"c.149{S.cbase(149)}>{alt}", f"p.{S.aa3(50)}50Ser"), tx)     # ATT -> AGT
+    assert p.ok, p.checks
     assert p.variant_class == "missense"
     assert p.nmd["prediction"] == "not_applicable"
     assert p.mechanism_hypothesis["hypothesis"] == "unknown"
@@ -155,7 +155,7 @@ def test_transcript_version_mismatch_fails(tx):
 
 
 def test_patient_summary_biallelic(tx):
-    a = build_profile(v("c.300dup", f"p.({S.aa3(101)}101AlafsTer20)"), tx)
+    a = build_profile(v("c.300dup", f"p.({S.aa3(101)}101CysfsTer3)"), tx)
     b = build_profile(v("c.31_33del", f"p.{S.aa3(11)}11del"), tx)
     s = patient_summary([a, b])
     assert s["genes"]["TEST1"]["allelic_model"].startswith("biallelic")
