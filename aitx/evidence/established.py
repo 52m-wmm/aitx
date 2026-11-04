@@ -103,6 +103,12 @@ def facts(step1: dict, step2: dict) -> dict:
             "excluded": [x for x in step2["phenotypes"] if x["status"] == "excluded"]}
 
 
+# values a variant_class / zygosity requirement can be compared on; anything else is unknown, never "not met"
+VARIANT_CLASS_WORDS = ("missense", "nonsense", "frameshift", "synonymous", "splice", "inframe", "in-frame", "in_frame",
+                       "start_loss", "start loss", "stop_gain", "stop gain", "deletion", "duplication", "insertion", "delins")
+ZYGOSITY_WORDS = ("homozygous", "heterozygous", "hemizygous", "compound")
+
+
 def _years(value, unit) -> float | None:
     try:
         v = float(value)
@@ -133,7 +139,8 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
             return ("satisfies" if hit else "unknown"), fact, (f"named as {hit}" if hit else "patient's variant not found in the text")
         want = [str(x).lower() for x in (value if isinstance(value, list) else [value]) if x]
         have = v["class"] if field == "variant_class" else v["zygosity"]
-        if not want:
+        known = VARIANT_CLASS_WORDS if field == "variant_class" else ZYGOSITY_WORDS
+        if not want or not all(any(k in w for k in known) for w in want):
             return "unknown", fact, "requirement not comparable"
         return ("satisfies" if any(w.replace(" ", "_") in have or have in w for w in want) else "does_not_satisfy"), fact, ""
     if field == "sex" and pf["sex"] in ("male", "female"):
@@ -269,8 +276,10 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                     reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
                                  "spec": _spec(claim, src, it["manifestation"], text, acc_book, llm, f"3a genereviews {nbk}")})
                 if pregnancy:
+                    for r in reqs:
+                        r["pregnancy_passage"] = True       # applies to the pregnancy recommendation only
                     title = path.split(" / ")[-1]
-                    reqs.append({"kind": "other", "text": title, "field": "pregnancy",
+                    reqs.append({"kind": "other", "text": title, "field": "pregnancy", "pregnancy_passage": True,
                                  "spec": _spec(f"GeneReviews section '{title}'", src, title, path, acc_book, "code",
                                                f"3a genereviews {nbk}")})
                 why = path
@@ -393,7 +402,11 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
         if not any(e["status"] == "verified" for e in evs):
             continue
         lines, reasons, dedupe = [], {}, set()
-        for r in a["reqs"]:
+        # conditions written for pregnancy decide only pregnancy-only actions; a drug that also has a general
+        # recommendation keeps them as notes (2026-11-04: "known to be pyridoxine responsive" from Pregnancy
+        # Management had made pyridoxine not applicable for a homozygous p.Gly170Arg patient)
+        preg_notes = [r["text"] for r in a["reqs"] if r.get("pregnancy_passage") and not a["pregnancy_only"]]
+        for r in [r for r in a["reqs"] if a["pregnancy_only"] or not r.get("pregnancy_passage")]:
             sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]))
             if sig in dedupe:
                 continue
@@ -426,6 +439,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             reasons[b] = (f"not met: {bad[0][:80]}" if bad else f"depends on: {unk[0][:80]}" if unk else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        if preg_notes:
+            rec["pregnancy_notes"] = sorted(set(preg_notes))
         if a["pregnancy_only"] and all(v["status"] == "not_applicable" for v in rec["status_by_branch"].values()):
             rec["report"] = False            # kept in the ledger, not written to the report (Step 4 decides the rules)
             rec["report_note"] = "pregnancy-specific management; patient is male or under 12"

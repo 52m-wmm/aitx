@@ -155,3 +155,45 @@ def test_pregnancy_item_for_a_boy_kept_but_not_reported():
     E._records(led, found, PF_FS, [])                       # PF: 7-year-old boy
     a = next(a for a in led.actions if a["action_key"] == "procedure:iv_fluids")
     assert a["status_by_branch"]["b1"]["status"] == "not_applicable" and a["report"] is False
+
+
+def test_pregnancy_passage_conditions_are_notes_for_a_drug_with_a_general_recommendation():
+    # 2026-11-04 regression: "known to be pyridoxine responsive" (Pregnancy Management) made pyridoxine not
+    # applicable for a homozygous p.Gly170Arg patient
+    pf = dict(PF, variants=[dict(PF["variants"][0], protein="p.(Gly170Arg)", **{"class": "missense"})])
+    general = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["missense"]}
+    preg = {"kind": "label_condition", "text": "given throughout pregnancy", "field": "variant_class", "op": "in",
+            "value": ["pyridoxine responsive"], "pregnancy_passage": True}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("existing_targeted_therapies", reqs=[general])
+    src = found["drug:rxcui:684879"]["specs"][0]["src"]
+    text = "Pyridoxine (vitamin B6) for persons w/missense AGXT variants. Also given throughout pregnancy."
+    found["drug:rxcui:684879"]["reqs"].append(dict(preg, spec=E._spec("GeneReviews lists pyridoxine (pregnancy)", src,
+                                                                     "Also given throughout pregnancy.", text, 1)))
+    E._records(led, found, pf, [])
+    a = next(a for a in led.actions if a["action_key"] == "drug:rxcui:684879")
+    assert a["status_by_branch"]["b1"]["status"] == "applicable"
+    assert [r["requirement"] for r in a["requirements"]] == ["missense AGXT variants"]
+    assert a["pregnancy_notes"] == ["given throughout pregnancy"]
+
+
+def test_unrecognized_variant_class_value_is_unknown_not_unmet():
+    st, _, note = E.evaluate({"field": "variant_class", "op": "in", "value": ["pyridoxine responsive"],
+                              "text": "known to be pyridoxine responsive"}, PF, BR)
+    assert st == "unknown" and note == "requirement not comparable"
+
+
+def test_requirement_points_to_its_own_quote_when_claims_coincide():
+    # 2026-11-04 regression: a manifestation item with the same claim replaced the item's evidence
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    src = {"type": "nbk", "id": "NBK1283", "url": "u", "section": "s", "credit": "c"}
+    text = "Potassium citrate if the GFR is preserved, to reduce calcium oxalate crystallization."
+    a = led.add(LG.sourced("GeneReviews lists potassium citrate", "supportive_management", ["b1"], src,
+                           "Potassium citrate if the GFR is preserved", text, 1, action={"key": "k"}))
+    b = led.add(LG.sourced("GeneReviews lists potassium citrate", "supportive_management", ["b1"], src,
+                           "calcium oxalate crystallization", text, 1, action={"key": "k"}))
+    assert a["id"] != b["id"] and led.evidence[a["id"]]["quote"] == "Potassium citrate if the GFR is preserved"
+    assert led.add(dict(a))["id"] == a["id"]                 # identical content: same item
+    bad = dict(a, claim="something else")
+    with pytest.raises(ValueError):
+        led.add(bad)

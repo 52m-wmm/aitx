@@ -89,7 +89,10 @@ def sourced(claim: str, section: str, applies_to: list[str], source: dict, quote
     """Evidence from a fetched record. `source_text` is the fetched text the quote must appear in."""
     e = _base("sourced", claim, section, applies_to, produced_by, retrieved_by, action, conditions)
     e.update(source=source, quote=quote, accessed_at=accessed_at, quote_verified=quote_in(quote, source_text))
-    e["id"] = evidence_id(source.get("type"), source.get("id"), claim, section, (action or {}).get("key"), e["applies_to"])
+    # the quote is part of the identity: two passages behind the same claim are two items (2026-11-04: without it,
+    # a later item with the same claim silently replaced an earlier one and a requirement pointed at the wrong quote)
+    e["id"] = evidence_id(source.get("type"), source.get("id"), claim, section, (action or {}).get("key"), e["applies_to"],
+                          _norm(quote))
     if not source_ok(source):
         e["reasons"].append(f"source id {source.get('id')!r} is not a valid {source.get('type')!r} id")
     if not e["quote_verified"]:
@@ -196,6 +199,11 @@ class Ledger:
             e["status"] = "verified" if not bad and e["premises"] else "rejected"
             if not e["premises"]:
                 e["reasons"].append("reasoning without premises")
+        old = self.evidence.get(e["id"])
+        if old is not None:
+            if old.get("quote") != e.get("quote") or old.get("claim") != e.get("claim"):
+                raise ValueError(f"evidence id {e['id']} already holds different content")
+            return old
         self.evidence[e["id"]] = e
         return e
 

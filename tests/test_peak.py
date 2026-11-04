@@ -42,3 +42,37 @@ def test_cache_only_blocks_real_calls(monkeypatch):
     monkeypatch.setattr(llm.urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("network")))
     with pytest.raises(llm.CacheOnly):
         llm.chat([{"role": "user", "content": "x"}])
+
+
+def test_streamed_response_is_assembled(monkeypatch, tmp_path):
+    import io
+    import json as J
+    from aitx import llm
+    chunks = [{"id": "c1", "model": "deepseek-flash", "choices": [{"delta": {"reasoning_content": "think"}}]},
+              {"id": "c1", "model": "deepseek-flash", "choices": [{"delta": {"content": '{"a": '}}]},
+              {"id": "c1", "model": "deepseek-flash", "choices": [{"delta": {"content": "1}"}, "finish_reason": "stop"}]},
+              {"id": "c1", "model": "deepseek-flash", "choices": [], "usage": {"prompt_tokens": 5, "completion_tokens": 3}}]
+    body = b": keep-alive\n\n" + b"".join(b"data: " + J.dumps(c).encode() + b"\n\n" for c in chunks) + b"data: [DONE]\n\n"
+    sent = {}
+
+    class R(io.BytesIO):
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake(req, timeout):
+        sent.update(J.loads(req.data))
+        return R(body)
+
+    monkeypatch.delenv("AITX_LLM_CACHE_ONLY", raising=False)
+    monkeypatch.setenv("AITX_LLM_API_KEY", "k")
+    monkeypatch.setattr(llm, "LOG", tmp_path / "calls.jsonl")
+    monkeypatch.setattr(llm.urllib.request, "urlopen", fake)
+    r = llm.chat([{"role": "user", "content": "x"}])
+    assert sent["stream"] is True and sent["stream_options"] == {"include_usage": True}
+    m = r["choices"][0]
+    assert m["message"]["content"] == '{"a": 1}' and m["message"]["reasoning_content"] == "think"
+    assert m["finish_reason"] == "stop" and r["model"] == "deepseek-flash" and r["usage"]["completion_tokens"] == 3
+    assert J.loads((tmp_path / "calls.jsonl").read_text())["usage"]["prompt_tokens"] == 5

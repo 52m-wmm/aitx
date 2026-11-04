@@ -6,6 +6,7 @@ Switching models is configuration only — no code changes:
                              https://openrouter.ai/api/v1
     AITX_LLM_MODEL      e.g. deepseek-flash, deepseek/deepseek-v4-flash-0423
     AITX_LLM_API_KEY    your key
+    AITX_LLM_STREAM=0      ask for a non-streamed response (default: streamed, assembled here)
     AITX_LLM_CACHE_ONLY=1  never call the server: callers' cached answers are used and any
                            uncached call raises CacheOnly (lets checks run during peak-price hours)
 
@@ -25,6 +26,34 @@ from pathlib import Path
 LOG = Path(os.environ.get("AITX_RUN_DIR", "runs")) / "llm_calls.jsonl"
 # one call's time limit: fail early and retry rather than wait on a stalled connection (2026-11-03: 600 -> 120 s)
 TIMEOUT_S = int(os.environ.get("AITX_LLM_TIMEOUT", "120"))
+
+
+STREAM = os.environ.get("AITX_LLM_STREAM", "1") != "0"
+
+
+def _read_stream(r) -> dict:
+    """Server-sent events (OpenAI-compatible chunks) -> the same shape as a non-streamed response."""
+    content, reasoning, finish, model, usage, rid = [], [], None, "", None, None
+    for raw in r:
+        line = raw.decode("utf-8", errors="replace").strip()
+        if not line.startswith("data:"):
+            continue                      # blank lines and ': keep-alive' comments
+        data = line[5:].strip()
+        if data == "[DONE]":
+            break
+        chunk = json.loads(data)
+        model = chunk.get("model") or model
+        rid = chunk.get("id") or rid
+        usage = chunk.get("usage") or usage
+        for ch in chunk.get("choices") or []:
+            d = ch.get("delta") or {}
+            content.append(d.get("content") or "")
+            reasoning.append(d.get("reasoning_content") or "")
+            finish = ch.get("finish_reason") or finish
+    msg = {"role": "assistant", "content": "".join(content)}
+    if any(reasoning):
+        msg["reasoning_content"] = "".join(reasoning)
+    return {"id": rid, "model": model, "choices": [{"index": 0, "message": msg, "finish_reason": finish}], "usage": usage}
 
 
 class ModelMismatch(RuntimeError):
@@ -56,6 +85,11 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
             "max_tokens": max_tokens, **extra}
     if tools:
         body["tools"] = tools
+    elif STREAM:
+        # streamed: bytes keep flowing while the model reasons, so long calls are not cut as idle connections
+        # (2026-11-04: non-streamed calls over ~60 s ended in IncompleteRead(0 bytes read) on every retry)
+        body["stream"] = True
+        body["stream_options"] = {"include_usage": True}
     req = urllib.request.Request(
         cfg["base_url"] + "/chat/completions",
         data=json.dumps(body).encode(),
@@ -63,7 +97,7 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
     )
     t0 = time.time()
     with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
-        resp = json.loads(r.read().decode())
+        resp = _read_stream(r) if body.get("stream") else json.loads(r.read().decode())
     served = resp.get("model", "")
 
     LOG.parent.mkdir(parents=True, exist_ok=True)
