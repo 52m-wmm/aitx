@@ -43,3 +43,13 @@ def test_shipped_table_factors_have_sources():
             assert f.get("source"), (k, u)
         if a["status"] == "verified":
             assert LB.usable(a) and "PENDING" not in a["plausible"]["source"]
+
+
+def test_ambiguous_unit_gives_one_scenario_per_unit():
+    p = LB.interpret("hemoglobin", 5, None, table=HB_MMOL)
+    th = LB.interpret("hemoglobin", 7, "mg/dL", table=HB_MMOL, who="threshold")    # registry unit implausible -> g/dL
+    assert th["status"] == "assumed" and LB.compare(p, "<", th) == "unknown"
+    sc = {s["unit"]: s for s in LB.scenarios(p, "<", th)}
+    assert sc["g/dL"]["result"] == "satisfies" and sc["mmol/L"]["result"] == "does_not_satisfy"
+    assert abs(sc["mmol/L"]["value"] - 8.057) < 0.01
+    assert LB.scenarios(LB.interpret("hemoglobin", 5, None, table=HB), "<", th) == []

@@ -76,7 +76,7 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 | 病例 | 期望 | 出处 |
 | --- | --- | --- |
 | PRAC-SLC35A2-ex7（年龄未知） | AVTX-801 试验 NCT05402384（NOT_YET_RECRUITING）出现在章节中，状态 conditional（年龄、血红蛋白未知） | 登记记录：年龄 1 Month 以上；排除 "Hemoglobin \< 7 mg/dL" |
-| PRAC-SLC35A2-ex8（2 个月，"Hemoglobin 5"） | NCT05402384：年龄条目通过；病例 "Hemoglobin 5" 按 g/dL 理解（唯一合理单位），登记 "\< 7 mg/dL" 按 g/dL 理解（注明），符合排除标准 → **not_applicable，注明两处单位假设** | 同上；病例原文 "Hemoglobin 5"（无单位） |
+| PRAC-SLC35A2-ex8（2 个月，"Hemoglobin 5"） | NCT05402384：年龄条目通过；排除条目 "Hemoglobin \< 7 mg/dL" 的登记单位不合理，在同一量纲内理解为 g/dL（注明）；病例 "Hemoglobin 5" 没写单位，g/dL 与 mmol/L 都合理 → **conditional**，报告分别写明两种情况：按 g/dL（5 \< 7，符合排除标准，不能入组）、按 mmol/L（约 8.1 g/dL，不符合排除标准）。**与官网 Phase 0 答案（不能入组）不同**，原因见下方计划变更 | 同上；病例原文 "Hemoglobin 5"（无单位） |
 | PRAC-AGXT-c33dup（7 岁） | 在招募的 PH1 试验中，ABO-101（NCT06839235，6–64 岁）、YOLT-203（NCT07587021，≥6 岁）年龄条目通过；DCR-PHXC（NCT04580420，Condition 含 ESRD）中要求终末期肾病的条目为 unknown | 登记记录 |
 | PRAC-CFTR-F508del（15 岁） | 相关性过滤后数量与原因有记录；逐条分析不超过 K 个；Condition 不含 CF 的试验被过滤 | 检索实测：CF 在招募 183 个 |
 | PRAC-OTC | ARCT-810（NCT06488313）要求年龄 ≥12 岁，3 个月男婴 → not_applicable；OTC-HOPE（DTX301，NCT05345171）现为 ACTIVE_NOT_RECRUITING：**不列为可报名试验**，出现在阴性证据的被排除列表中（原因：状态） | 登记记录（2026-11-03）；不加状态过滤的检索实测 |
@@ -84,6 +84,12 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 
 **计划变更**：Phase 0 示例中"OTC-HOPE 试验因胎龄不合格"的考点，在当前登记中该试验已不再招募，不能作为在招募试验的验收用例；
 胎龄条目的比较改由离线测试覆盖。
+
+**计划变更（2026-11-03 决定）**：ex8 的期望由 not_applicable 改为 conditional。血红蛋白在临床上也以 mmol/L 报告（如荷兰），
+"Hemoglobin 5" 按 mmol/L 约为 8.1 g/dL，同样生理合理；按决定 3（两种以上单位合理 → conditional），不能假定 g/dL。
+官网 Phase 0 示例默认按 g/dL 理解而判为不能入组；本系统不做这个未经证实的假设，改为在报告中分别写出两种情况（`labs.scenarios`）。
+登记单位不合理时只在**同一量纲**内重新理解（mg/dL ↔ g/dL ↔ g/L；mmol/L 等摩尔单位之间），因为质量单位与摩尔单位的混用不是笔误式错误。
+化验值合理范围在 ABIM 参考值表核实填入之前一律"待核实 → 判为未知"，此时 ex8 的血红蛋白条目同样为 unknown（状态 conditional）。
 
 ## 费用与运行
 
@@ -94,7 +100,7 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 
 1. **观察性研究**（自然史、登记、样本库）放进本章节，排在干预性试验之后，标明研究类型。
 2. **行政类条目**标为"筛选时评估"（`not_assessed`），不参与适用状态计算，不进缺失信息。
-3. **化验值单位**：按生理合理范围表推断唯一合理单位并明确写出假设；两种以上合理才判 conditional；登记单位明显不合理时同样处理并注明。
+3. **化验值单位**：按生理合理范围表推断唯一合理单位并明确写出假设；两种以上合理才判 conditional，报告分别写出各单位下的结论；登记单位明显不合理时在同一量纲内同样处理并注明。
 4. **每分支逐条分析上限 10 个**。
 5. **病人事实补充**在 3b 做，写成通用模块 `aitx/evidence/patient_facts.py` 供后续子节点复用。
 6. OTC-HOPE 不再招募：期望改为"不列为可报名试验"，记录为因状态排除的阴性证据。

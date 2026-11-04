@@ -1,0 +1,33 @@
+{
+ "description": "Step 3b acceptance expectations (docs/step3b_contract.md, 验收), checked against the ClinicalTrials.gov records on 2026-11-03. For a future scripts/acceptance_step3b.py; the viewer will only display its result. match: NCT id of the trial action; expect.status per the contract; expect.unknown: regexes for requirements whose result must be unknown; expect.pass: regexes for requirements that must pass.",
+ "verified_on": "2026-11-03",
+ "items": [
+  {"id": "ex7-avtx801", "case": "PRAC-SLC35A2-ex7", "match": "NCT05402384", "expect": {"status": "conditional", "unknown": ["[Aa]ge", "Hemoglobin"]},
+   "what": {"zh": "SLC35A2 ex7（年龄未知）/ AVTX-801 NCT05402384 → 有条件（年龄、血红蛋白未知）", "en": "SLC35A2 ex7 (age unknown) / AVTX-801 NCT05402384 → conditional (age, hemoglobin unknown)"},
+   "source": {"doc": "ClinicalTrials.gov NCT05402384", "url": "https://clinicaltrials.gov/study/NCT05402384", "quote": "Age \\> 1 month; Exclusion: Hemoglobin \\< 7 mg/dL"}},
+  {"id": "ex8-avtx801", "case": "PRAC-SLC35A2-ex8", "match": "NCT05402384", "expect": {"status": "conditional", "pass": ["Age"], "unknown": ["Hemoglobin"],
+    "scenarios": {"g/dL": "satisfies", "mmol/L": "does_not_satisfy"}},
+   "what": {"zh": "SLC35A2 ex8（2 个月，\"Hemoglobin 5\"）/ AVTX-801 → 有条件：按 g/dL 符合排除标准（不能入组），按 mmol/L（约 8.1 g/dL）不符合",
+            "en": "SLC35A2 ex8 (2 months, \"Hemoglobin 5\") / AVTX-801 → conditional: excluded if g/dL; not excluded if mmol/L (about 8.1 g/dL)"},
+   "differs_from_official": "The official Phase 0 answer reads 'Hemoglobin 5' as g/dL and excludes the patient. Hemoglobin is also reported in mmol/L (e.g. the Netherlands), where 5 mmol/L is about 8.1 g/dL and equally plausible; with two plausible units the rule (contract decision 3) gives conditional and the report states both outcomes. Decided 2026-11-03.",
+   "source": {"doc": "ClinicalTrials.gov NCT05402384", "url": "https://clinicaltrials.gov/study/NCT05402384", "quote": "Hemoglobin \\< 7 mg/dL"}},
+  {"id": "agxt33-abo101", "case": "PRAC-AGXT-c33dup", "match": "NCT06839235", "expect": {"status": "any", "pass": ["[Aa]ge|years"]},
+   "what": {"zh": "AGXT c.33dup（7 岁）/ ABO-101 NCT06839235（6–64 岁）→ 年龄条目通过", "en": "AGXT c.33dup (7 y) / ABO-101 NCT06839235 (6-64 y) → age criterion met"},
+   "source": {"doc": "ClinicalTrials.gov NCT06839235", "url": "https://clinicaltrials.gov/study/NCT06839235", "quote": "minimumAge 6 Years, maximumAge 64 Years"}},
+  {"id": "agxt33-yolt203", "case": "PRAC-AGXT-c33dup", "match": "NCT07587021", "expect": {"status": "any", "pass": ["[Aa]ge|years"]},
+   "what": {"zh": "AGXT c.33dup（7 岁）/ YOLT-203 NCT07587021（≥6 岁）→ 年龄条目通过", "en": "AGXT c.33dup (7 y) / YOLT-203 NCT07587021 (>= 6 y) → age criterion met"},
+   "source": {"doc": "ClinicalTrials.gov NCT07587021", "url": "https://clinicaltrials.gov/study/NCT07587021", "quote": "minimumAge 6 Years"}},
+  {"id": "agxt33-dcrphxc", "case": "PRAC-AGXT-c33dup", "match": "NCT04580420", "expect": {"status": "any", "unknown": ["GFR|ESRD|end.stage"]},
+   "what": {"zh": "AGXT c.33dup / DCR-PHXC NCT04580420（PH1 合并 ESRD）→ 终末期肾病条目未知", "en": "AGXT c.33dup / DCR-PHXC NCT04580420 (PH1 with ESRD) → end-stage kidney disease criterion unknown"},
+   "source": {"doc": "ClinicalTrials.gov NCT04580420", "url": "https://clinicaltrials.gov/study/NCT04580420", "quote": "Estimated GFR at Screening \\<30mL/min normalized to 1.73m\\^2 BSA"}},
+  {"id": "otc-arct810", "case": "PRAC-OTC", "match": "NCT06488313", "expect": {"status": "not_applicable"},
+   "what": {"zh": "OTC 缺乏症（3 个月男婴）/ ARCT-810 NCT06488313（≥12 岁）→ 不适用", "en": "OTC deficiency (3-month-old boy) / ARCT-810 NCT06488313 (>= 12 y) → not applicable"},
+   "source": {"doc": "ClinicalTrials.gov NCT06488313", "url": "https://clinicaltrials.gov/study/NCT06488313", "quote": "minimumAge 12 Years"}},
+  {"id": "otc-hope-excluded", "case": "PRAC-OTC", "match": "NCT05345171", "expect": {"status": "excluded_by_status"},
+   "what": {"zh": "OTC-HOPE（DTX301）NCT05345171 → 不列为可报名试验（ACTIVE_NOT_RECRUITING），在阴性证据的被排除列表中", "en": "OTC-HOPE (DTX301) NCT05345171 → not listed as enrollable (ACTIVE_NOT_RECRUITING); in the negative evidence's excluded list"},
+   "source": {"doc": "ClinicalTrials.gov NCT05345171", "url": "https://clinicaltrials.gov/study/NCT05345171", "quote": "overallStatus ACTIVE_NOT_RECRUITING"}},
+  {"id": "cftr-cap", "case": "PRAC-CFTR-F508del", "match": "*", "expect": {"status": "cap", "max_analysed": 10, "relevance_filtered_recorded": true},
+   "what": {"zh": "CFTR（15 岁）→ 逐条分析不超过 10 个；Condition 不含 CF 的试验被过滤并记录原因", "en": "CFTR (15 y) → at most 10 analysed; trials whose Conditions do not name CF are filtered with the reason recorded"},
+   "source": {"doc": "ClinicalTrials.gov search 'cystic fibrosis' (no status filter)", "url": "https://clinicaltrials.gov/api/v2/studies?query.cond=cystic+fibrosis", "quote": "totalCount 1782 (2026-11-03)"}}
+ ]
+}
