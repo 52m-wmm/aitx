@@ -35,16 +35,40 @@ def test_variant_class_requirement_frameshift_is_not_missense():
     assert E.evaluate({"field": "variant_class", "op": "in", "value": ["missense"], "text": "missense"}, pf, BR)[0] == "satisfies"
 
 
-def test_variant_named_in_label_text():
+def test_variant_looked_up_only_in_the_requirement_and_the_tables_it_cites():
     pf = dict(PF, variants=[{"gene": "CFTR", "protein": "p.Phe508del", "class": "inframe_deletion",
                              "zygosity": "homozygous", "quote": "CFTR c.1521_1523del"}])
     br = dict(BR, gene="CFTR")
-    req = {"field": "variant", "text": "at least one variant ... responsive (see Table 6)",
-           "_label_text": "Table 6: CFTR Gene Mutations Responsive: ... F508del ... G551D"}
+    full = ("1 INDICATIONS ... at least one variant that is responsive (see Table 6). 14 CLINICAL STUDIES Trial 1 enrolled "
+            "patients homozygous for F508del. Table 6: List of CFTR Gene Variants Responsive to TRIKAFTA F508del G551D "
+            "R117H Table 7: Adverse reactions")
+    text = "at least one variant that is responsive (see Table 6)"
+    req = {"field": "variant", "text": text, "_label_tables": E.label_tables(full, text)}
     st, _, note = E.evaluate(req, pf, br)
-    assert st == "satisfies" and "F508del" in note
-    req["_label_text"] = "Table 6: G551D R117H"
-    assert E.evaluate(req, pf, br)[0] == "unknown"           # not listed -> unknown, never a guess
+    assert st == "satisfies" and "Table 6" in note
+    # 2026-11-04 regression: Kalydeco names F508del only in its trial descriptions; the whole label is never searched
+    full2 = "Trial 3 enrolled patients homozygous for F508del. Table 6: G551D R117H Table 7: other F508del"
+    req = {"field": "variant", "text": text, "_label_tables": E.label_tables(full2, text)}
+    assert E.evaluate(req, pf, br)[0] == "unknown"
+    req = {"field": "variant", "text": "responsive to ivacaftor based on clinical data [see Clinical Pharmacology]"}
+    assert E.evaluate(req, pf, br)[0] == "unknown"
+
+
+@pytest.mark.parametrize("text,zyg,want", [
+    # GeneReviews ETI row: the homozygous patient may qualify by the second alternative -> unknown, not unmet
+    ("heterozygous for p.Phe508del & a minimal function variant or other known responsive PV", "homozygous", "unknown"),
+    ("homozygous for p.Phe508del or heterozygous for p.Phe508del & a residual function variant", "homozygous", "satisfies"),
+    ("homozygous for p.Phe508del or hemizygous for p.Phe508del", "heterozygous", "does_not_satisfy"),
+    # a part naming another variant cannot be judged from the case -> unknown, never unmet
+    ("homozygous for p.Phe508del or homozygous for p.Gly551Asp", "heterozygous", "unknown"),
+])
+def test_or_in_a_requirement_is_alternatives(text, zyg, want):
+    st, _, note = E.evaluate({"field": "variant", "text": text}, cf_pf(zyg), CF_BR)
+    assert st == want and "alternatives" in note
+
+
+def test_or_older_is_not_split():
+    assert E.or_parts("children 2 years of age or older") == ["children 2 years of age or older"]
 
 
 def test_diagnosis_requirement_by_name_or_synonym():
@@ -489,3 +513,48 @@ def test_label_only_supportive_action_needs_the_complication():
     rec = next(a for a in led.actions if a["action_key"] == "drug:k")
     assert rec["status_by_branch"]["b1"]["status"] == "conditional"
     assert [m["variable"] for m in led.missing_information].count(E.MISSING_MANIFESTATIONS) == 1
+
+
+def _label_found(reqs, pf_section="existing_targeted_therapies"):
+    found = _found(pf_section)
+    a = found["drug:rxcui:684879"]
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "B"}
+    ltext = " ".join(r["text"] for r in reqs)
+    a["specs"].append(dict(E._spec("label", lsrc, ltext, ltext, 1), label_section="existing_targeted_therapies"))
+    a["reqs"] += [dict(r, spec=E._spec("req", lsrc, r["text"], ltext, 1), alternative="B label") for r in reqs]
+    return found
+
+
+def test_label_conditions_outside_indications_are_precautions():
+    # decision 2026-11-04: Trikafta "Should not be used in patients with severe hepatic impairment" (Dosage and
+    # Administration) is a precaution: ETI stays applicable, nothing is added to the missing information
+    reqs = [{"kind": "label_condition", "text": "aged 2 years and older", "field": "age", "op": ">=", "value": 2, "unit": "year",
+             "label_part": "indications_and_usage"},
+            {"kind": "label_condition", "text": "Should not be used in patients with severe hepatic impairment.",
+             "field": "liver_function", "op": "", "value": "", "label_part": "dosage_and_administration"}]
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _label_found(reqs), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert rec["precautions"] == ["Should not be used in patients with severe hepatic impairment."]
+    assert not any("liver" in m["variable"] for m in led.missing_information)
+
+
+def test_precaution_the_patient_is_known_to_have_makes_it_not_applicable():
+    reqs = [{"kind": "label_condition", "text": "not recommended in patients less than 10 years of age", "field": "age",
+             "op": "<", "value": 10, "unit": "year", "label_part": "dosage_and_administration"}]
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _label_found(reqs), PF_FS, [])                 # PF: 7 years old
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+    assert all(c["status"] == "pass" for c in led.checks() if "action" in c["name"])
+
+
+def test_eligibility_in_indications_still_decides():
+    reqs = [{"kind": "label_condition", "text": "relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m 2",
+             "field": "kidney_function", "op": ">=", "value": 30, "label_part": "indications_and_usage"}]
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _label_found(reqs), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional" and "precautions" not in rec

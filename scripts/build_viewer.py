@@ -1090,6 +1090,8 @@ def _card(a: dict, s3: dict, cols: list[dict], span: str = "") -> str:
     key = f"<code>{e(a['action_key'])}</code>" if a.get("action_key") else ""
     for fld, title in (("genereviews_notes", L("备注：GeneReviews 条件（以 FDA 说明书条件为准，不参与判定）",
                                                "Notes: GeneReviews conditions (the FDA label decides; not evaluated)")),
+                       ("precautions", L("注意事项（说明书适应证以外章节的条件，不改变适用状态）",
+                                         "Precautions (label conditions outside Indications and Usage; no effect on the status)")),
                        ("pregnancy_notes", L("备注：孕期条件（只用于孕期措施，不参与判定）",
                                              "Notes: pregnancy conditions (pregnancy measures only; not evaluated)"))):
         if a.get(fld):

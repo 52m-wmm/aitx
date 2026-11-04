@@ -192,3 +192,16 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
    - 看板按组显示，标注"满足其一即可"。
 4. **复方药检索说明书。** 用其中一个成分检索，再按全部成分完全一致筛选。原因：用 "Elexacaftor/tezacaftor/ivacaftor" 整串检索，返回 0 条。
 5. **只有说明书来源的支持治疗。** 把适应证句作为"针对的症状 / 并发症"条件。症状未报告时为有条件适用，缺失信息合并到"manifestations not reported"一行。
+
+### 第四次运行后的修改（2026-11-04 批准）
+
+1. **变异只在要求原文和它引用的表格里查找。** 要求原文写了 "see Table N" 时，只在说明书的 Table N 里找（从 "Table N:" 标题到下一个表格标题）；其他情况判为未知，不再搜索整份说明书。
+   - 起因：Kalydeco 只在临床试验描述里提到 F508del，代码却因此判 ivacaftor 的"对 ivacaftor 有反应的变异"为满足，但 F508del 对 ivacaftor 单药没有反应。
+2. **说明书条件按所在章节区分。**
+   - Indications and Usage 里的条件（年龄、基因型、器官功能等）是资格条件，决定适用状态。例如 Rivfloza 的 eGFR ≥30 写在适应证句里，所以 nedosiran 判为有条件适用。
+   - 其他章节（Dosage and Administration、Warnings and Precautions、Contraindications、Use in Specific Populations 等）里的条件是安全注意事项：不改变适用状态，不进缺失信息表，写入 `precautions`，在卡片上显示为"注意事项"。
+   - 例外：病例里已知病人有该情况，且原文是"不应 / 避免 / 禁用"之类的措辞时，判为不适用（记为排除型要求行）。
+   - 例子：Trikafta 的"Should not be used in patients with severe hepatic impairment"在 Dosage and Administration 里，ETI 判为适用，并带这条注意事项。
+3. **要求原文中的 "or" 拆成多个情况。** 任一情况满足 → 满足；没有满足、但有无法判断的情况 → 未知；全部不满足 → 不满足。
+   - 只拆变异、变异类型、合子状态这几类要求。
+   - "or older / or younger / or more / or less" 等不拆。

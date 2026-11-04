@@ -110,7 +110,29 @@ VARIANT_CLASS_WORDS = ("missense", "nonsense", "frameshift", "synonymous", "spli
 ZYGOSITY_WORDS = ("homozygous", "heterozygous", "hemizygous", "compound")
 
 
+# a precaution describes whom to avoid; only then does "the patient has it" make the action not applicable
+PRECAUTION_AVOID = re.compile(r"\b(?:not|avoid|contraindicated|should\s+not|must\s+not|do\s+not)\b", re.I)
 SECOND_ALLELE = re.compile(r"&|\+|\b(?:and|plus)\s+(?:a|an|one|another|1)\b", re.I)
+
+
+_OR = re.compile(r"\s+or\s+(?!older\b|younger\b|more\b|less\b|greater\b|above\b|below\b|over\b|under\b)", re.I)
+
+
+def or_parts(text: str) -> list[str]:
+    """Alternatives joined by "or" in one requirement ("... & a minimal function variant or other known responsive
+    PV"); "2 years or older" is one requirement."""
+    return [t.strip(" ,;") for t in _OR.split(text or "") if t.strip(" ,;")]
+
+
+def label_tables(full_text: str, text: str) -> dict[str, str]:
+    """The label tables a requirement cites ("see Table 6"): from the table's caption ("Table 6:") to the next caption."""
+    out = {}
+    for n in dict.fromkeys(re.findall(r"\bTable\s+(\d+)\b", text or "")):
+        m = re.search(rf"\bTable\s+{n}\s*:", full_text or "")
+        if m:
+            nxt = re.search(r"\bTable\s+(?!" + n + r"\b)\d+\s*:", full_text[m.end():])
+            out[n] = full_text[m.start(): m.end() + (nxt.start() if nxt else 8000)][:12000]
+    return out
 
 
 def zygosity_words(text: str) -> list[str]:
@@ -144,12 +166,29 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
         v = vs[0]
         fact = {"field": field, "value": v["protein"], "quote": v["quote"], "step": 1}
         zyg = zygosity_words(req["text"])
+        parts = or_parts(req["text"])
+        if len(parts) > 1:                   # "A or B": any part met is enough; a part that cannot be judged -> unknown
+            got = [evaluate(dict(req, text=t), pf, branch) for t in parts]
+            for want_st in ("satisfies", "unknown"):
+                hit_ = next((g for g in got if g[0] == want_st), None)
+                if hit_:
+                    return hit_[0], hit_[1], f"one of {len(parts)} alternatives ('or'): {hit_[2]}"
+            return got[0][0], got[0][1], f"none of {len(parts)} alternatives ('or') met"
         if field == "variant" or (field == "zygosity" and zyg and V.mentioned(v["protein"], req["text"])):
-            hit = V.mentioned(v["protein"], req.get("_label_text") or req["text"])
+            # only the requirement's own words and the label tables it cites ("see Table 6"); never the whole label
+            # (2026-11-04: Kalydeco mentions F508del in its trial descriptions; F508del is not ivacaftor-responsive)
+            hit = V.mentioned(v["protein"], req["text"])
+            where = ""
             if not hit:
-                return "unknown", fact, "patient's variant not found in the text"
+                for n, table in (req.get("_label_tables") or {}).items():
+                    hit = V.mentioned(v["protein"], table)
+                    if hit:
+                        where = f" in label Table {n}"
+                        break
+            if not hit:
+                return "unknown", fact, "patient's variant not named in the requirement or the tables it cites"
             if not zyg:
-                return "satisfies", fact, f"named as {hit}"
+                return "satisfies", fact, f"named as {hit}{where}"
             # the requirement states a zygosity (2026-11-04: "heterozygous for p.Phe508del & a minimal function
             # variant" had passed for a homozygous patient because only the variant name was compared)
             have = str(v.get("zygosity") or "").lower()
@@ -160,7 +199,7 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
                 return "does_not_satisfy", fact, f"zygosity differs: requires {'/'.join(zyg)}"
             if SECOND_ALLELE.search(req["text"]) and "homozygous" not in zyg:
                 return "unknown", fact, "second allele requirement not compared"
-            return "satisfies", fact, f"named as {hit}, {have}"
+            return "satisfies", fact, f"named as {hit}{where}, {have}"
         want = [str(x).lower() for x in (value if isinstance(value, list) else [value]) if x]
         have = v["class"] if field == "variant_class" else v["zygosity"]
         known = VARIANT_CLASS_WORDS if field == "variant_class" else ZYGOSITY_WORDS
@@ -567,7 +606,10 @@ def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str],
     for r in _reqs(raw_reqs, None, lt):
         r["spec"] = _spec(f"{name} label requirement: {r['text']}", src, r["text"], lt, lb["accessed_at"], "code",
                           "3a openfda requirement")
-        r["_label_text"] = lb["full_text"]
+        r["_label_tables"] = label_tables(lb["full_text"], r["text"])
+        # Indications and Usage: eligibility; any other part (dosage, warnings, specific populations): safety precaution
+        r["label_part"] = next((sec for sec in ("indications_and_usage", "dosage_and_administration", "pediatric_use")
+                                if LG.quote_in(r["text"], lb["sections"].get(sec, ""))), "")
         reqs.append(r)
     for r in reqs:
         r["alternative"] = f"{name} label version {lb['version']}"
@@ -629,14 +671,26 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             sp = next(sp for sp in a["specs"] if sp.get("label_section") == "supportive_management") if any(
                 sp.get("label_section") == "supportive_management" for sp in a["specs"]) else a["specs"][0]
             use.append({"kind": "other", "text": sp["quote"], "field": "manifestation", "spec": sp})
+        precautions = []
         for r in use:
             sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]),
                    r.get("alternative"))
             if sig in dedupe:
                 continue
             dedupe.add(sig)
-            ev = make(r["spec"])
             rb = branches
+            # label conditions outside Indications and Usage are safety precautions (decision 2026-11-04): shown on the
+            # card, no effect on the status and no missing information - unless the case states the patient has it
+            if "label_part" in r and r["label_part"] != "indications_and_usage":
+                st, fact, note = evaluate(r, pf, by_id[rb[0]])
+                if st == "satisfies" and PRECAUTION_AVOID.search(r["text"]):
+                    ev = make(r["spec"])
+                    lines.append(LG.requirement(f"r{len(lines) + 1}", "exclusion", r["text"], ev["id"], fact, "satisfies", rb,
+                                                "safety precaution: the case states the patient has this condition"))
+                elif r["text"] not in precautions:
+                    precautions.append(r["text"])
+                continue
+            ev = make(r["spec"])
             if r.get("field") == "manifestation":
                 st, fact = manifestation_status(r["text"], pf)
                 note = ""
@@ -672,6 +726,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             rec["pregnancy_notes"] = sorted(set(preg_notes))
         if gr_notes:
             rec["genereviews_notes"] = sorted(set(gr_notes))
+        if precautions:
+            rec["precautions"] = precautions
         if a["pregnancy_only"] and all(v["status"] == "not_applicable" for v in rec["status_by_branch"].values()):
             rec["report"] = False            # kept in the ledger, not written to the report (Step 4 decides the rules)
             rec["report_note"] = "pregnancy-specific management; patient is male or under 12"
