@@ -134,7 +134,7 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
    - 证据标记 `quote_repaired`（含 LLM 原抄写），看板显示"引用经代码修复"。
 
    反例（必须拒绝）："≥ 2" 对 "≥ 12"、"indicated" 对 "not indicated"。
-2. **说明书条件优先。** 现有靶向治疗里的药物有 FDA 说明书证据时，由说明书的条件决定状态；GeneReviews 的条件写入 `genereviews_notes`，在看板卡片上作为备注显示，不参与判定。
+2. **说明书条件优先。** 现有靶向治疗里的药物有一份**按第 3 条判为靶向**的 FDA 说明书时（只有这种说明书会提取条件），由说明书的条件决定状态；GeneReviews 的条件写入 `genereviews_notes`，在看板卡片上作为备注显示，不参与判定。
 3. **说明书适应证按句子判断**（替代原来的"适应证文本里出现病名"）。只看含 "indicated" 的句子，跳过使用限制和 "not indicated / not recommended"。病名须以整词出现；"<X> deficiency" 也匹配同一分句中的 "deficiency/deficiencies of … <X>"。
    - 病名是所治疗的疾病（"indicated for the treatment / management of <病名>"，中间允许 "patients with" 之类）→ 现有靶向治疗。
    - 病名只是并发症或症状的背景 → 支持治疗。判断依据：
@@ -144,3 +144,5 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
    - GeneReviews 列出的药物只会被说明书**升为**现有靶向治疗，前提是说明书通用名与该药完全一致（不能是复方）；否则保留 GeneReviews 证据。
 4. **用全部病名查说明书。** 适应证和禁忌检索用分支的全部病名和同义词，跳过 4 个字符以下的名称和单词缩写（如 CF、OTCD）。按通用名查说明书也扩展到支持治疗里的药物。都是普通接口调用。
 5. **输出截断。** `finish_reason=length` 时只重试一次，上限提到 32768；仍然截断就报错，不再原样重试。重试结果连同实际参数缓存。
+
+   实施中发现（同日，AGXT 两例从缓存重跑）：Rivfloza 的适应证 "indicated to lower urinary oxalate levels in children … with PH1" 按第 3 条读作支持治疗类，没有提取条件；如果仍按"有说明书证据"处理，GeneReviews 的 eGFR、年龄条件会被转成备注，nedosiran 被误判为适用。已改为只有靶向类说明书才决定条件，并补回归测试。曾试过把 "in children … with" 视为人群而非并发症背景，但会把 "lung infections in patients with CF" 误判为靶向，已撤回，没有采用。

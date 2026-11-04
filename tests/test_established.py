@@ -104,7 +104,11 @@ OTC = ["ornithine carbamoyltransferase deficiency", "OTC deficiency", "ornithine
     ("Sodium Phenylbutyrate Tablets is indicated as adjunctive therapy in the chronic management of patients with urea "
      "cycle disorders involving deficiencies of carbamylphosphate synthetase (CPS), ornithine transcarbamylase (OTC), "
      "or argininosuccinic acid synthetase (AS).", OTC, "targeted"),
+    # read as supportive by the sentence rule; GeneReviews keeps nedosiran in Targeted with its own conditions
+    ("RIVFLOZA is indicated to lower urinary oxalate levels in children 2 years of age and older and adults with primary "
+     "hyperoxaluria type 1 (PH1) and relatively preserved kidney function.", ["primary hyperoxaluria type 1"], "supportive"),
     # a symptom or complication in patients with the diagnosis
+    ("AZLI is indicated for the treatment of lung infections in patients with cystic fibrosis.", CF, "supportive"),
     ("CAYSTON is indicated to improve respiratory symptoms in cystic fibrosis (CF) patients with Pseudomonas aeruginosa.", CF, "supportive"),
     ("Phytonadione is indicated in: • hemorrhagic disease of the newborn; • hypoprothrombinemia secondary to factors "
      "limiting absorption of vitamin K, e.g., obstructive jaundice, cystic fibrosis of the pancreas.", CF, "supportive"),
@@ -302,7 +306,7 @@ def test_label_conditions_decide_and_genereviews_conditions_become_notes():
     lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
             "effective_date": "20250101", "brand": "B"}
     ltext = "B is indicated for the treatment of primary hyperoxaluria type 1 in patients 2 years and older."
-    a["specs"].append(E._spec("B label indicated", lsrc, ltext, ltext, 1))
+    a["specs"].append(dict(E._spec("B label indicated", lsrc, ltext, ltext, 1), label_section="existing_targeted_therapies"))
     a["reqs"].append({"kind": "label_condition", "text": "2 years and older", "field": "age", "op": ">=", "value": 2,
                       "unit": "year", "spec": E._spec("B label requirement", lsrc, "2 years and older", ltext, 1)})
     E._records(led, found, PF_FS, [])                        # PF: 7-year-old
@@ -327,3 +331,18 @@ def test_repaired_quote_marked_on_the_evidence():
     E._records(led, found, PF_FS, [])
     ev = [x for x in led.evidence.values() if x.get("quote_repaired")]
     assert ev and ev[0]["status"] == "verified"
+
+
+def test_a_supportive_role_label_does_not_override_genereviews_conditions():
+    # 2026-11-04 regression: Rivfloza "indicated to lower urinary oxalate levels in ... PH1" (read as supportive, no
+    # conditions extracted) turned the GeneReviews eGFR and age conditions into notes -> nedosiran "applicable"
+    gr = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["missense"]}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("existing_targeted_therapies", reqs=[gr])
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "B"}
+    ltext = "B is indicated to lower urinary oxalate levels in patients with primary hyperoxaluria type 1."
+    found["drug:rxcui:684879"]["specs"].append(dict(E._spec("B label", lsrc, ltext, ltext, 1), label_section="supportive_management"))
+    E._records(led, found, PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert [r["requirement"] for r in rec["requirements"]] == ["missense AGXT variants"] and "genereviews_notes" not in rec

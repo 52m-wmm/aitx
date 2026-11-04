@@ -512,8 +512,11 @@ def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str],
            "effective_date": lb["effective_date"], "brand": lb["brand"]}
     name = lb["brand"] or lb["generic"]
     claim = (f"{name} label (version {lb['version']}, effective {lb['effective_date']}): "
-             + ("indicated" if section == "existing_targeted_therapies" else "contraindicated or cautioned") + f" in {disease}.")
+             + {"existing_targeted_therapies": f"indicated for {disease}.",
+                "supportive_management": f"indicated in patients with {disease}."}.get(
+                 section, f"contraindicated or cautioned in {disease}."))
     spec = _spec(claim, src, q, text, lb["accessed_at"], "code", f"3a openfda {why}")
+    spec["label_section"] = section          # only a label that treats the diagnosis itself decides the conditions
     lt = _label_text(lb)
     reqs = []
     for r in _reqs(raw_reqs, None, lt):
@@ -560,7 +563,10 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
         # a targeted drug with an FDA label: the label's conditions decide; GeneReviews conditions are kept as notes
         # (decision 2026-11-04: the GeneReviews ETI row "heterozygous for p.Phe508del & a minimal function variant"
         # would otherwise have overruled the label's "at least one F508del" for a homozygous patient)
-        label_rules = section == "existing_targeted_therapies" and any(sp["src"]["type"] == "spl_setid" for sp in a["specs"])
+        # (2026-11-04: a Rivfloza label read as "lowers urinary oxalate in PH1" -> supportive had no conditions extracted;
+        # it must not turn the GeneReviews eGFR and age conditions into notes)
+        label_rules = section == "existing_targeted_therapies" and any(
+            sp["src"]["type"] == "spl_setid" and sp.get("label_section") == "existing_targeted_therapies" for sp in a["specs"])
         gr_notes = [r["text"] for r in a["reqs"] if label_rules and r["spec"]["src"]["type"] != "spl_setid"
                     and not r.get("pregnancy_passage")]
         for r in [r for r in a["reqs"] if (a["pregnancy_only"] or not r.get("pregnancy_passage"))
