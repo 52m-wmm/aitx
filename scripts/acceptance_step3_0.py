@@ -15,6 +15,7 @@ Usage:  python3 scripts/acceptance_step3_0.py
 from __future__ import annotations
 
 import json
+import re
 import sys
 import time
 import urllib.error
@@ -39,7 +40,38 @@ _last_hit: dict[str, float] = {}
 HOST_INTERVAL_S = 1.0          # be polite: at most one request per second to the same host
 
 
+# PubMed now answers every automated client with a cookie / proof-of-work check page (HTTP 203, seen 2026-11-04);
+# the check is never bypassed: a PubMed link is confirmed through NCBI's official E-utilities (esummary) instead.
+# Reports keep the pubmed.ncbi.nlm.nih.gov address; every other site must still answer HTTP 200.
+PUBMED = re.compile(r"^https?://pubmed\.ncbi\.nlm\.nih\.gov/(\d+)/?$")
+ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json&id={pmid}"
+
+
+def check_url(url: str) -> str:
+    """The URL actually requested to confirm `url`: the E-utilities record for a PubMed article, else the URL itself."""
+    m = PUBMED.match(url or "")
+    return ESUMMARY.format(pmid=m.group(1)) if m else url
+
+
+def pubmed_record_ok(body: str, pmid: str) -> bool:
+    """esummary JSON names the PMID with no error (an unknown PMID comes back with an "error" field)."""
+    try:
+        rec = json.loads(body).get("result", {}).get(pmid) or {}
+    except (ValueError, AttributeError):
+        return False
+    return bool(rec) and "error" not in rec and str(rec.get("uid")) == pmid
+
+
 def url_ok(url: str) -> bool:
+    m = PUBMED.match(url or "")
+    if m:
+        body = _fetch(check_url(url))
+        return body is not None and pubmed_record_ok(body, m.group(1))
+    return _fetch(url) is not None
+
+
+def _fetch(url: str) -> str | None:
+    """Body of an HTTP 200 answer, else None (paced per host, retried on 429/5xx and network errors)."""
     req = urllib.request.Request(url, headers={"User-Agent": http.USER_AGENT})
     host = urllib.parse.urlparse(url).netloc
     for attempt in range(4):                       # many links in a row get rate-limited: pace, back off, retry
@@ -49,14 +81,38 @@ def url_ok(url: str) -> bool:
         _last_hit[host] = time.time()
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
-                return r.status == 200
+                return r.read().decode("utf-8", "replace") if r.status == 200 else None
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 502, 503):
-                return False
+                return None
         except (urllib.error.URLError, TimeoutError):
             pass
         time.sleep(3 * (attempt + 1))
-    return False
+    return None
+
+
+LINK_CHECK = "distinct source links resolve"
+OUT = ROOT / "out" / "acceptance_step3_0.json"
+
+
+def background_urls(ledgers: dict) -> list[str]:
+    items = [e for l in ledgers.values() for e in l["evidence"] if e["section"] == "background"]
+    return sorted({(e.get("source") or {}).get("url") for e in items} - {None})
+
+
+def links_only() -> int:
+    """Recheck the link HARD item on the saved ledgers; the other results of that run are kept as they were."""
+    saved = json.loads(OUT.read_text())
+    urls = background_urls(saved["ledgers"])
+    bad = [u for u in urls if not url_ok(u)]
+    what = f"{len(urls)} {LINK_CHECK}" + (f" -> {bad[:6]}" if bad else "")
+    print(f"  [{'PASS' if not bad else 'FAIL'}] {what}  (PubMed via E-utilities esummary)")
+    saved["failed"] = [f for f in saved["failed"] if LINK_CHECK not in f] + ([what] if bad else [])
+    saved["links_rechecked_at"] = int(time.time())
+    OUT.write_text(json.dumps(saved, indent=1, ensure_ascii=False))
+    failed = saved["failed"]
+    print("\nALL HARD CHECKS PASSED" if not failed else f"\n{len(failed)} HARD CHECK(S) FAILED: {failed}")
+    return 1 if saved["failed"] else 0
 
 
 def main() -> int:
@@ -64,7 +120,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--offpeak-only", action="store_true",
                     help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
-    if ap.parse_args().offpeak_only:
+    ap.add_argument("--links-only", action="store_true",
+                    help="recheck only the source links of the ledgers saved by the last full run (no LLM)")
+    args = ap.parse_args()
+    if args.links_only:
+        return links_only()
+    if args.offpeak_only:
         from aitx import peak
         peak.guard()
     fails = []
@@ -103,9 +164,9 @@ def main() -> int:
     items = [e for l in ledgers.values() for e in l["evidence"] if e["section"] == "background"]
     unver = [e["id"] for e in items if e["status"] != "verified"]
     hard(not unver, f"{len(items)} background items verified" + (f" -> not verified {unver[:5]}" if unver else ""))
-    urls = sorted({(e.get("source") or {}).get("url") for e in items} - {None})
+    urls = background_urls(ledgers)
     bad_urls = [u for u in urls if not url_ok(u)]
-    hard(not bad_urls, f"{len(urls)} distinct source links resolve" + (f" -> {bad_urls[:6]}" if bad_urls else ""))
+    hard(not bad_urls, f"{len(urls)} {LINK_CHECK}" + (f" -> {bad_urls[:6]}" if bad_urls else ""))
 
     print("\n== rules (HARD) ==")
     rules = load_rules()
@@ -160,7 +221,7 @@ def main() -> int:
     for s in rules["skipped"]:
         print(f"  skipped rule {s['rule_id']}: {s['reasons']}")
 
-    out = ROOT / "out" / "acceptance_step3_0.json"
+    out = OUT
     out.write_text(json.dumps({"failed": fails, "ledgers": ledgers}, indent=1, ensure_ascii=False))
     print(f"\n{'ALL HARD CHECKS PASSED' if not fails else f'{len(fails)} HARD CHECK(S) FAILED'}  (details: {out})")
     return 1 if fails else 0

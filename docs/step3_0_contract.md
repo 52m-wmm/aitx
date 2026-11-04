@@ -336,7 +336,7 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 | --- | --- |
 | 硬性 | 18 个病例都生成账本，全部校验通过；`--from-step 3` 能复用 Step 1/2 输出 |
 | 硬性 | 分支：COL1A1、DMD 等 ambiguous 练习病例分支数 = min(候选数, 3)；有伞状概念的分支都已展开或注明原因 |
-| 硬性 | 背景证据的引用 100% 逐字核对通过；来源链接可解析（HTTP 200 或已知的需登录页） |
+| 硬性 | 背景证据的引用 100% 逐字核对通过；来源链接可解析（HTTP 200 或已知的需登录页）。PubMed 链接改用 NCBI 官方 E-utilities（esummary）确认记录存在（2026-11-04 起）：PubMed 网站对所有自动化访问启用了 Cookie / 人机验证页面（HTTP 203），验收不绕过它；报告里仍使用 pubmed.ncbi.nlm.nih.gov 网址；其他网站仍要求 HTTP 200。只重查链接：`python3 scripts/acceptance_step3_0.py --links-only`（读取上次完整运行保存的账本，不调用 LLM） |
 | 硬性 | 第一批规则：加载的每条规则都有核对过的文献引用；DMD 读码框规则在 PRAC-DMD-del 上生效，贝克型被提拔为分支、杜氏型分支保留（若规则调研结论为不成立，则改为汇报，不算通过） |
 | 硬性 | ClinicalTrials.gov 缓存过期和强制刷新在真实 API 上验证一次 |
 | 人工审查 | 查看页面上每个病例的证据树（分支 + 背景证据）；40003 的分支展开结果和 SPTLC1 调研结论（**只汇报，不据此调参**） |
