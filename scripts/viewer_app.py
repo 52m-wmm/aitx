@@ -263,7 +263,7 @@ class Watcher:
         self._stop = threading.Event()
 
     def scan(self) -> dict[str, float]:
-        files = list((self.root / "out").glob("step*/*.json")) + [self.root / "scripts" / "build_viewer.py",
+        files = list((self.root / "out").glob("step*/*.json")) + list((self.root / "out").glob("acceptance/*.json")) + [self.root / "scripts" / "build_viewer.py",
                                                                     self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}
 
