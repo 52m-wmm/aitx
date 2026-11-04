@@ -7,6 +7,7 @@ and for the "sources manifest with snapshot date" the organizers ask for).
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
 import os
 import time
@@ -75,7 +76,7 @@ def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3
             if 400 <= e.code < 500 and e.code != 429:
                 raise RuntimeError(f"HTTP {e.code} for {url}") from e
             last_err = e
-        except (urllib.error.URLError, TimeoutError) as e:
-            last_err = e
+        except (urllib.error.URLError, TimeoutError, http.client.HTTPException, ConnectionError) as e:
+            last_err = e                      # includes IncompleteRead: a large response cut off mid-transfer
         time.sleep(1.5 * (attempt + 1))
     raise RuntimeError(f"failed to fetch {url}: {last_err}")

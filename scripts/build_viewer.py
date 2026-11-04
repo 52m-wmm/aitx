@@ -175,10 +175,10 @@ def evidence_tree(s2: dict, s3: dict | None) -> dict:
             "missing": s3.get("missing_information", []), "sections_status": s3.get("sections_status", {})}
 
 
-def load_case(cid: str) -> dict:
+def load_case(cid: str, out: Path | None = None) -> dict:
     steps = {}
     for k in STEPS:
-        p = runmeta.path(k, cid)
+        p = runmeta.path(k, cid, out or OUT)
         steps[k] = json.loads(p.read_text()) if p.exists() else None
     return {"id": cid, "group": group_of(cid), "steps": steps,
             "status": {k: step_status(k, steps[k]) for k in STEPS},
@@ -1098,19 +1098,59 @@ def contexts() -> dict[str, str]:
     return out
 
 
-def collect() -> tuple[list[dict], list[str]]:
+def collect(out: Path | None = None) -> tuple[list[dict], list[str]]:
     """All cases with a step 2 output, in overview order, plus problems found while loading.
 
+    `out`: an out/ directory (default the live one; an accepted archive's out/ for comparisons).
     Step status texts are in the current LANG (set LANG before calling)."""
-    ids = sorted(p.stem for p in (OUT / "step2").glob("*.json") if p.stem != "sources_manifest")
+    out = out or OUT
+    ids = sorted(p.stem for p in (out / "step2").glob("*.json") if p.stem != "sources_manifest")
     cases, problems = [], []
     for cid in ids:
-        c = load_case(cid)
+        c = load_case(cid, out)
         if not c["steps"][2] or "_meta" not in c["steps"][2]:
             problems.append(f"{cid}: step 2 output has no provenance; regenerate with scripts/run_pipeline.py")
             continue
         cases.append(c)
     return sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"])), problems
+
+
+SNAPSHOTS = ROOT / ".cache" / "snapshots"      # archives written by scripts/tag_accepted.py
+
+
+def accepted_archives() -> list[dict]:
+    """Manifests of the accepted-version archives, newest first."""
+    ms = [json.loads(p.read_text()) for p in SNAPSHOTS.glob("*/manifest.json")] if SNAPSHOTS.exists() else []
+    return sorted(ms, key=lambda m: -m["created_at"])
+
+
+def rows_from_archive(tag: str) -> list[dict] | None:
+    d = SNAPSHOTS / tag / "out"
+    if not d.exists():
+        return None
+    return [summary_row(c) for c in collect(d)[0]]
+
+
+def compare_rows(against: str | None) -> tuple[list[dict] | None, str | None]:
+    """(rows, label) to compare with: 'tag:<accepted tag>', a review snapshot name, or None = latest snapshot."""
+    if against and against.startswith("tag:"):
+        tag = against[4:]
+        return rows_from_archive(tag), (L(f"验收版本 {tag}", f"accepted version {tag}") if rows_from_archive(tag) is not None else None)
+    name = against or latest_snapshot()
+    if name and (REVIEW / name / "review.json").exists():
+        return json.loads((REVIEW / name / "review.json").read_text())["cases"], name
+    return None, None
+
+
+def compare_choices(current: str | None) -> str:
+    """Links to the comparison bases (live app only)."""
+    items = [(f"tag:{m['tag']}", L(f"验收 {m['tag']}", f"accepted {m['tag']}") + f" ({m['created'][:10]})")
+             for m in accepted_archives()]
+    snap = latest_snapshot()
+    if snap:
+        items.append((snap, L(f"最新快照 {snap}", f"latest snapshot {snap}")))
+    links = [f"<b>{e(t)}</b>" if k == current else f"<a href='{fn('compare')}?against={e(k)}'>{e(t)}</a>" for k, t in items]
+    return f"<p>{L('对比基准', 'Compare against')}: " + " · ".join(links) + "</p>" if links else ""
 
 
 def latest_snapshot(exclude: str | None = None) -> str | None:
@@ -1120,9 +1160,10 @@ def latest_snapshot(exclude: str | None = None) -> str | None:
                  if p.is_dir() and p.name != exclude and (p / "review.json").exists()), None)
 
 
-def render_page(rel: str) -> str | None:
+def render_page(rel: str, against: str | None = None) -> str | None:
     """Render one page live from out/ (paths as in a snapshot: index.html, cases/<id>.en.html, ...).
 
+    against: comparison base for the compare page ('tag:<accepted tag>' or a review snapshot name).
     Used by scripts/viewer_app.py; None if there is no such page. Not thread-safe (LANG is global)."""
     global LANG
     LANG = "en" if rel.endswith(".en.html") else "zh"
@@ -1136,9 +1177,9 @@ def render_page(rel: str) -> str | None:
     if base == "index":
         return index_page(rows, live, runmeta.code_commit())
     if base == "compare":
-        prev_name = latest_snapshot()
-        prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
-        return compare_page(rows, prev, live, prev_name)
+        prev, prev_name = compare_rows(against)
+        out = compare_page(rows, prev, live, prev_name)
+        return out.replace("</h1>", "</h1>" + compare_choices(against or latest_snapshot()), 1)
     return None
 
 
@@ -1149,6 +1190,8 @@ def main() -> int:
                     help="default UI language when the browser has no stored choice (both are always built)")
     ap.add_argument("--compare", help="snapshot name under out/review/ to compare with (default: previous one, same language)")
     ap.add_argument("--review-dir", type=Path, default=REVIEW, help="where snapshots go (default out/review)")
+    ap.add_argument("--compare-accepted", metavar="TAG", help="compare with the archive of an accepted tag "
+                                                             "(.cache/snapshots/<TAG>, made by scripts/tag_accepted.py)")
     args = ap.parse_args()
     DEFAULT_LANG = args.lang
     REVIEW = args.review_dir
@@ -1170,8 +1213,14 @@ def main() -> int:
     (d / "review.json").write_text(json.dumps({"schema": "review-v1", "snapshot": snap, "code_commit": commit,
                                                "cases": rows, "trees": {c["id"]: c["tree"] for c in ordered}},
                                               indent=1, ensure_ascii=False))
-    prev_name = args.compare or latest_snapshot(exclude=snap)
-    prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
+    if args.compare_accepted:
+        prev, prev_name = rows_from_archive(args.compare_accepted), f"accepted {args.compare_accepted}"
+        if prev is None:
+            print(f"no archive for {args.compare_accepted} under {SNAPSHOTS}")
+            return 2
+    else:
+        prev_name = args.compare or latest_snapshot(exclude=snap)
+        prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
     for lang in ("zh", "en"):
         LANG = lang
         for c in ordered:

@@ -70,14 +70,14 @@ class Templates:
     def _src_mtime() -> float:
         return Path(build_viewer.__file__).stat().st_mtime
 
-    def render(self, rel: str) -> str | None:
+    def render(self, rel: str, against: str | None = None) -> str | None:
         with self.lock:
             m = self._src_mtime()
             if m != self.mtime:
                 importlib.reload(build_viewer)
                 self.mtime = m
             out = runs_page("en" if rel.endswith(".en.html") else "zh") if rel.startswith("runs.") \
-                else build_viewer.render_page(rel)
+                else build_viewer.render_page(rel, against) if against else build_viewer.render_page(rel)
         return None if out is None else inject(out, rel, "en" if rel.endswith(".en.html") else "zh")
 
 
@@ -399,8 +399,8 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
     app = FastAPI(title="AI-Tx review viewer", lifespan=lifespan)
     app.state.runner, app.state.watcher = runner, watcher
 
-    def page(rel: str) -> HTMLResponse:
-        out = templates.render(rel)
+    def page(rel: str, against: str | None = None) -> HTMLResponse:
+        out = templates.render(rel, against)
         if out is None:
             raise HTTPException(404, f"no page {rel}")
         return HTMLResponse(out)
@@ -414,8 +414,8 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
         return page(f"cases/{name}")
 
     @app.get("/{name}.html")
-    def top(name: str):
-        return page(f"{name}.html")
+    def top(name: str, against: Optional[str] = None):
+        return page(f"{name}.html", against)
 
     @app.get("/events")
     async def events():

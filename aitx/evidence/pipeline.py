@@ -12,6 +12,7 @@ import json
 from aitx import runmeta
 from aitx.evidence import ledger as LG
 from aitx.evidence.branches import build_branches, patient_context
+from aitx.evidence.established import add_established
 from aitx.evidence.rules import apply_rules, load_rules
 
 
@@ -106,6 +107,7 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     text2 = runmeta.path(2, cid).read_text() if runmeta.path(2, cid).exists() else json.dumps(step2, indent=2, ensure_ascii=False)
     apply_rules(led, load_rules(), step1, step2)       # may promote a step 2 candidate to a branch
     background(led, cid, step1, step2, text1, text2)
+    add_established(led, step1, step2)                 # 3a: Tier 1 sections
     out = led.to_dict()
     out["branches_dropped"] = dropped
     out["ok"] = all(c["status"] != "fail" for c in out["checks"])
