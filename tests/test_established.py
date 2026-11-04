@@ -333,16 +333,63 @@ def test_repaired_quote_marked_on_the_evidence():
     assert ev and ev[0]["status"] == "verified"
 
 
-def test_a_supportive_role_label_does_not_override_genereviews_conditions():
-    # 2026-11-04 regression: Rivfloza "indicated to lower urinary oxalate levels in ... PH1" (read as supportive, no
-    # conditions extracted) turned the GeneReviews eGFR and age conditions into notes -> nedosiran "applicable"
+def test_any_label_naming_the_disease_decides_conditions_whatever_its_wording():
+    # decision 2026-11-04: Rivfloza "indicated to lower urinary oxalate levels in children 2 years ... with PH1 and
+    # relatively preserved kidney function" gives nedosiran's conditions; nedosiran stays Targeted (GeneReviews)
+    gr = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["nonsense"]}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("existing_targeted_therapies", reqs=[gr])
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "RIVFLOZA"}
+    ltext = ("RIVFLOZA is indicated to lower urinary oxalate levels in children 2 years of age and older and adults with "
+             "primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function.")
+    found["drug:rxcui:684879"]["specs"].append(dict(E._spec("label", lsrc, ltext, ltext, 1), label_section="supportive_management"))
+    found["drug:rxcui:684879"]["reqs"] += [
+        {"kind": "label_condition", "text": "2 years of age and older", "field": "age", "op": ">=", "value": 2, "unit": "year",
+         "spec": E._spec("req", lsrc, "2 years of age and older", ltext, 1)},
+        {"kind": "label_condition", "text": "relatively preserved kidney function", "field": "kidney_function", "op": "", "value": "",
+         "spec": E._spec("req", lsrc, "relatively preserved kidney function", ltext, 1)}]
+    E._records(led, found, PF_FS, [])                        # 7-year-old, eGFR not given
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["section"] == "existing_targeted_therapies"
+    assert [r["requirement"] for r in rec["requirements"]] == ["2 years of age and older", "relatively preserved kidney function"]
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+    assert rec["genereviews_notes"] == ["missense AGXT variants"]
+
+
+def test_contraindication_label_supplies_no_conditions():
     gr = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["missense"]}
     led = LG.Ledger("P", [dict(BR, id="b1")])
     found = _found("existing_targeted_therapies", reqs=[gr])
     lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
             "effective_date": "20250101", "brand": "B"}
-    ltext = "B is indicated to lower urinary oxalate levels in patients with primary hyperoxaluria type 1."
-    found["drug:rxcui:684879"]["specs"].append(dict(E._spec("B label", lsrc, ltext, ltext, 1), label_section="supportive_management"))
+    found["drug:rxcui:684879"]["specs"].append(dict(E._spec("c", lsrc, "Contraindicated in PH1.", "Contraindicated in PH1.", 1),
+                                                    label_section="contraindications_precautions"))
     E._records(led, found, PF_FS, [])
     rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
-    assert [r["requirement"] for r in rec["requirements"]] == ["missense AGXT variants"] and "genereviews_notes" not in rec
+    assert rec["requirements"] and "genereviews_notes" not in rec
+
+
+SPEC = {"src": {"type": "nbk"}}
+KEY = {"key": "drug:x", "normalized": True}
+
+
+def test_genereviews_decides_the_section_over_a_label():
+    found = {}
+    E.place(found, KEY, "supportive_management", "dornase alfa", ["b1"], SPEC, [], "Management / Treatment of Manifestations")
+    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", from_genereviews=False)
+    assert found["drug:x"]["section"] == "supportive_management" and len(found["drug:x"]["specs"]) == 2
+    found = {}                                              # same when the label comes first
+    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", from_genereviews=False)
+    E.place(found, KEY, "supportive_management", "dornase alfa", ["b1"], SPEC, [], "Management / Treatment of Manifestations")
+    assert found["drug:x"]["section"] == "supportive_management"
+
+
+def test_label_decides_the_section_only_for_an_action_genereviews_does_not_list():
+    found = {}
+    E.place(found, KEY, "supportive_management", "CAYSTON", ["b1"], SPEC, [], "label", from_genereviews=False)
+    E.place(found, KEY, "existing_targeted_therapies", "X", ["b1"], SPEC, [], "label", from_genereviews=False)
+    assert found["drug:x"]["section"] == "existing_targeted_therapies"
+    E.place(found, KEY, "existing_targeted_therapies", "y", ["b1"], SPEC, [], "Targeted Therapies")
+    E.place(found, KEY, "supportive_management", "y", ["b1"], SPEC, [], "Treatment of Manifestations")
+    assert found["drug:x"]["section"] == "existing_targeted_therapies"     # within GeneReviews: targeted first

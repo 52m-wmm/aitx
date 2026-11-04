@@ -364,6 +364,25 @@ def _repaired_item(it: dict, name: str, path: str, text: str, use_cache: bool, n
             "quote_repaired": {"llm_quote": it.get("quote"), "check": why}, "_llm": llm}
 
 
+def place(found: dict, key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict],
+          why: str, pregnancy: bool = False, from_genereviews: bool = True) -> None:
+    """Add one finding to its action. The section is decided by GeneReviews when GeneReviews lists the action
+    (decision 2026-11-04: sections follow the mechanism, which is the GeneReviews experts' classification; a label
+    supplies conditions, not the section); a label decides the section only for an action GeneReviews does not list.
+    Within the same kind of source: targeted before supportive before precautions."""
+    a = found.setdefault(key["key"], {"key": key, "section": section, "label": label, "branches": set(), "specs": [],
+                                      "reqs": [], "why": why, "pregnancy_only": pregnancy,
+                                      "from_genereviews": from_genereviews})
+    if from_genereviews and not a["from_genereviews"]:
+        a["section"], a["why"], a["from_genereviews"] = section, why, True
+    elif from_genereviews == a["from_genereviews"] and SECTIONS_3A.index(section) < SECTIONS_3A.index(a["section"]):
+        a["section"], a["why"] = section, why
+    a["pregnancy_only"] = a["pregnancy_only"] and pregnancy
+    a["branches"].update(branch_ids)
+    a["specs"].append(spec)
+    a["reqs"] += reqs
+
+
 def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool = True) -> None:
     pf = facts(step1, step2)
     for b in led.branches:
@@ -374,15 +393,8 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     searches: list[dict] = []
 
     def put(key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict], why: str,
-            pregnancy: bool = False):
-        a = found.setdefault(key["key"], {"key": key, "section": section, "label": label, "branches": set(),
-                                          "specs": [], "reqs": [], "why": why, "pregnancy_only": pregnancy})
-        if SECTIONS_3A.index(section) < SECTIONS_3A.index(a["section"]):
-            a["section"], a["why"] = section, why          # targeted before supportive before precautions
-        a["pregnancy_only"] = a["pregnancy_only"] and pregnancy
-        a["branches"].update(branch_ids)
-        a["specs"].append(spec)
-        a["reqs"] += reqs
+            pregnancy: bool = False, from_genereviews: bool = True):
+        place(found, key, section, label, branch_ids, spec, reqs, why, pregnancy, from_genereviews)
 
     # GeneReviews: one LLM call per section (a whole chapter at once is too long for the API), in parallel
     for nbk in sorted({n for ns in ch_map.values() for n in ns}):
@@ -471,14 +483,14 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 if m:
                     job = (lb, lb["sections"].get("contraindications", ""), name, bids, section, why, m.group(0).strip())
             else:
-                # the indication sentence decides: the diagnosis as the condition treated -> targeted; as the setting of
-                # a complication or symptom -> supportive; a drug GeneReviews lists is promoted only to targeted, and only
-                # by a label of exactly that drug (not a combination product); otherwise it keeps its GeneReviews evidence
+                # an indication sentence that names the diagnosis: its label supplies the conditions (any wording); its
+                # wording places the action only when GeneReviews does not list it (place()). By drug name, only a label
+                # of exactly that drug counts (not a combination product)
                 names = [n for b in led.branches if b["id"] in bids for n in disease_names(b, step2)]
                 if field == "openfda.generic_name" and A.components(lb.get("generic") or "") != A.components(name):
                     continue
                 role = indication_role(ind, names)
-                if role and (field == "indications_and_usage" or role[0] == "targeted"):
+                if role:
                     sec = "existing_targeted_therapies" if role[0] == "targeted" else "supportive_management"
                     why_ = why + ("" if role[0] == "targeted" else " (complication or symptom of the diagnosis)")
                     job = (lb, ind, role[2], bids, sec, why_, role[1])
@@ -487,7 +499,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 jobs.append(job)
     with ThreadPoolExecutor(max_workers=X.CONCURRENCY) as pool:
         parsed = list(pool.map(lambda j: _label_requirements(j[0], j[2], use_cache)
-                               if j[4] == "existing_targeted_therapies" else None, jobs))
+                               if j[4] != "contraindications_precautions" else None, jobs))
     for (lb, text, name, bids, section, why, quote), reqs in zip(jobs, parsed):
         _label_action(put, lb, text, name, bids, section, why, reqs, quote=quote)
 
@@ -524,7 +536,7 @@ def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str],
                           "3a openfda requirement")
         r["_label_text"] = lb["full_text"]
         reqs.append(r)
-    put(key, section, name, branch_ids, spec, reqs, why)
+    put(key, section, name, branch_ids, spec, reqs, why, from_genereviews=False)
 
 
 def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
@@ -563,14 +575,16 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
         # a targeted drug with an FDA label: the label's conditions decide; GeneReviews conditions are kept as notes
         # (decision 2026-11-04: the GeneReviews ETI row "heterozygous for p.Phe508del & a minimal function variant"
         # would otherwise have overruled the label's "at least one F508del" for a homozygous patient)
-        # (2026-11-04: a Rivfloza label read as "lowers urinary oxalate in PH1" -> supportive had no conditions extracted;
-        # it must not turn the GeneReviews eGFR and age conditions into notes)
-        label_rules = section == "existing_targeted_therapies" and any(
-            sp["src"]["type"] == "spl_setid" and sp.get("label_section") == "existing_targeted_therapies" for sp in a["specs"])
+        # any label whose indication sentence names the diagnosis decides, whatever its wording or the action's section
+        # (decision 2026-11-04: Rivfloza "indicated to lower urinary oxalate levels in ... PH1" gives nedosiran's
+        # conditions, age >= 2 and eGFR >= 30; contraindication labels supply no conditions)
+        label_rules = section != "contraindications_precautions" and any(
+            sp["src"]["type"] == "spl_setid" and sp.get("label_section") in ("existing_targeted_therapies", "supportive_management")
+            for sp in a["specs"])
         gr_notes = [r["text"] for r in a["reqs"] if label_rules and r["spec"]["src"]["type"] != "spl_setid"
-                    and not r.get("pregnancy_passage")]
+                    and not r.get("pregnancy_passage") and r.get("field") != "manifestation"]
         for r in [r for r in a["reqs"] if (a["pregnancy_only"] or not r.get("pregnancy_passage"))
-                  and not (label_rules and r["spec"]["src"]["type"] != "spl_setid")]:
+                  and not (label_rules and r["spec"]["src"]["type"] != "spl_setid" and r.get("field") != "manifestation")]:
             sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]))
             if sig in dedupe:
                 continue

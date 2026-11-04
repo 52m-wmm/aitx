@@ -146,3 +146,22 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 5. **输出截断。** `finish_reason=length` 时只重试一次，上限提到 32768；仍然截断就报错，不再原样重试。重试结果连同实际参数缓存。
 
    实施中发现（同日，AGXT 两例从缓存重跑）：Rivfloza 的适应证 "indicated to lower urinary oxalate levels in children … with PH1" 按第 3 条读作支持治疗类，没有提取条件；如果仍按"有说明书证据"处理，GeneReviews 的 eGFR、年龄条件会被转成备注，nedosiran 被误判为适用。已改为只有靶向类说明书才决定条件，并补回归测试。曾试过把 "in children … with" 视为人群而非并发症背景，但会把 "lung infections in patients with CF" 误判为靶向，已撤回，没有采用。
+
+### 设计变更：章节归类和适用条件分开判断（2026-11-04，替代上面第 2 条的限制和第 3 条的分章节作用）
+
+**理由：** 章节按作用机制归类，交给 GeneReviews 的专家分类；说明书只提供条件，不负责分类。
+
+- **章节（靶向 / 支持）**
+  - GeneReviews 收录的行动由 GeneReviews 决定：出现在 Targeted Therapies 小节，或按老版规则 (ii) 经支持度核查确认作用于机制 → 靶向；出现在 Treatment of Manifestations 等小节 → 支持。
+  - 说明书不再把 GeneReviews 收录的药升为靶向。流程第 3 步的老版规则 (i) 对 GeneReviews 收录的药不再适用。
+  - 只有 GeneReviews 未收录的药，才用第 3 条的句式规则决定章节。
+- **适用条件**
+  - 说明书适应证句只要点名了该病，就提取该说明书的条件，由它决定适用状态。句式不限，"treatment of …" 和 "to lower / improve …" 都算。
+  - GeneReviews 的条件写入 `genereviews_notes` 作为备注。
+  - 撤掉"只有判为靶向的说明书才决定条件"的限制。
+  - 禁忌类说明书不提供条件。
+  - 支持治疗的"针对某症状"（manifestation）不是用药资格条件，仍参与判定：症状未报告时为有条件适用。
+- **验收：**
+  - nedosiran 为靶向，条件取自 Rivfloza 说明书（≥2 岁、eGFR ≥30）；AGXT 7 岁 → 有条件（eGFR 未知）。
+  - Pulmozyme（dornase alfa）为支持治疗。
+- **待定：** 验收期望 `otc-phenylbutyrate` 原按老版规则 (i) 期望为靶向。按本设计，OTC 章节把苯丁酸钠放在 Treatment of Manifestations，结果将是支持治疗。期望是否修改，等审阅决定。
