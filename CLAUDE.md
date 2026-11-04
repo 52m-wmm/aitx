@@ -36,7 +36,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
 | 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：难题测试集、缺失类术语否定规则（修复 CBAVD）、起病年龄由代码映射到 HPO 起病术语；语义检索暂缓（剩余漏提不是检索问题）。详见 Step 2 契约 v2.5 |
 | 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查（4 条加载、8 条待审、3 条否决）。契约 `docs/step3_0_contract.md` |
-| 3a–3e | 按章节检索证据 | 下一步（每个子节点单独契约；行动记录字段见 3.0 契约 1.4 节） |
+| 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）：5 个练习病例 13/13 核实期望成立；3.0 验收 18 例硬性项全过（账本 v3，PubMed 链接经 E-utilities 核对）。规则变更见 3a 契约文末 |
+| 3b–3e | 按章节检索证据 | 3b 进行中（检索、分组、化验单位已完成；逐条标准映射与病人事实模块待做） |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
