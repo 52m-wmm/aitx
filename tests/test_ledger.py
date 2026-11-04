@@ -175,6 +175,48 @@ def test_requirement_results_invert_exclusion():
     assert LG.requirement_result("exclusion", "satisfies") == "fail"        # meets an exclusion -> not eligible
     assert LG.requirement_result("exclusion", "does_not_satisfy") == "pass"
     assert LG.requirement_result("exclusion", "unknown") == "unknown"
+    assert LG.requirement_result("inclusion", "not_assessed") == "not_assessed"
+    assert LG.requirement_result("exclusion", "not_assessed") == "not_assessed"
+
+
+def test_schema_version_v2():
+    assert LG.SCHEMA_VERSION == "evidence-ledger-v2"
+    assert LG.Ledger("P", B).to_dict()["schema_version"] == "evidence-ledger-v2"
+
+
+def test_status_from_ignores_not_assessed():
+    assert LG.status_from(["pass", "not_assessed"]) == "applicable"
+    assert LG.status_from(["not_assessed"]) == "applicable"
+    assert LG.status_from(["unknown", "not_assessed"]) == "conditional"
+    assert LG.status_from(["fail", "not_assessed"]) == "not_applicable"
+
+
+def test_administrative_criterion_not_assessed_and_not_missing():
+    text = "Inclusion Criteria: Age 2 to 18 years. Signed informed consent."
+    led = LG.Ledger("P", B)
+    ev = _ev(led, text, text, "trial:NCT01234567", "clinical_trial_eligibility")
+    reqs = [LG.requirement("inc1", "inclusion", "Age 2 to 18 years", ev["id"], AGE7, "satisfies", ["b1"]),
+            LG.requirement("inc2", "inclusion", "Signed informed consent", ev["id"], None, "not_assessed", ["b1"],
+                           note=LG.NOT_ASSESSED_NOTE)]
+    a = LG.action_record("trial:NCT01234567", "clinical_trial_eligibility", "Trial X", ["b1"], reqs, [ev["id"]],
+                         {"b1": "age criterion met"})
+    led.actions.append(a)
+    assert a["status_by_branch"]["b1"]["status"] == "applicable"
+    assert check(led, "action_records_consistent")["status"] == "pass"     # not required in missing_information
+    assert led.missing_information == []
+
+
+def test_not_assessed_misuse_is_caught():
+    text = "Inclusion Criteria: Signed informed consent."
+    for kind, note, fact in (("label_condition", LG.NOT_ASSESSED_NOTE, None),   # only trial criteria
+                             ("inclusion", "", None),                           # must be noted
+                             ("inclusion", LG.NOT_ASSESSED_NOTE, AGE7)):        # no patient fact
+        led = LG.Ledger("P", B)
+        ev = _ev(led, text, text, "trial:NCT01234567", "clinical_trial_eligibility")
+        req = LG.requirement("inc1", kind, "Signed informed consent", ev["id"], fact, "not_assessed", ["b1"], note=note)
+        led.actions.append(LG.action_record("trial:NCT01234567", "clinical_trial_eligibility", "Trial X", ["b1"], [req],
+                                            [ev["id"]], {"b1": "x"}))
+        assert "not_assessed must be" in check(led, "action_records_consistent")["detail"], kind
 
 
 def test_label_age_limit_makes_action_not_applicable():

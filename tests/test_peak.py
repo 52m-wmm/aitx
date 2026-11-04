@@ -33,3 +33,12 @@ def test_guard_exits_with_wait_time(capsys):
     out = capsys.readouterr().out
     assert "1 h 45 min" in out and "20:00" in out
     peak.guard(dt.datetime(2026, 11, 3, 21, 0, tzinfo=PT))  # off-peak: returns
+
+
+def test_cache_only_blocks_real_calls(monkeypatch):
+    import pytest
+    from aitx import llm
+    monkeypatch.setenv("AITX_LLM_CACHE_ONLY", "1")
+    monkeypatch.setattr(llm.urllib.request, "urlopen", lambda *a, **k: (_ for _ in ()).throw(AssertionError("network")))
+    with pytest.raises(llm.CacheOnly):
+        llm.chat([{"role": "user", "content": "x"}])

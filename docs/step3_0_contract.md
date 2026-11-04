@@ -33,7 +33,7 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 
 ```json
 {
-  "schema_version": "evidence-ledger-v1",
+  "schema_version": "evidence-ledger-v2",   // v2（2026-11-03）：要求结果新增 not_assessed
   "patient_id": "AITX-40003",
   "branches": [ ... ],            // 诊断分支，见第 2 节
   "patient_context": { ... },     // 第 3 节
@@ -163,7 +163,7 @@ Step 3 完成后，查看页面以"行动看板"为主视图（树状图保留�
 | `section`、`label` | 所属章节；显示名（英文，如 "Lumasiran"） |
 | `applies_to` | 适用的诊断分支（有歧义时看板并排对比各分支） |
 | `status_by_branch` | 每个分支一项：`{status, reason}`。status ∈ `applicable` / `not_applicable` / `conditional` / `searched_none`；reason 是一句简短英文理由（如 "approved only for age ≥ 9"） |
-| `requirements` | 条件核对，**每条要求一行**（临床试验的入组、排除标准逐条拆开）：`{id, kind: inclusion / exclusion / label_condition / other, requirement: 要求原文（逐字）, requirement_evidence: 证据 id, applies_to, patient_fact: {field, value, quote, step} 或 null, patient_status: satisfies / does_not_satisfy / unknown, result: pass / fail / unknown, note}` |
+| `requirements` | 条件核对，**每条要求一行**（临床试验的入组、排除标准逐条拆开）：`{id, kind: inclusion / exclusion / label_condition / other, requirement: 要求原文（逐字）, requirement_evidence: 证据 id, applies_to, patient_fact: {field, value, quote, step} 或 null, patient_status: satisfies / does_not_satisfy / unknown / not_assessed, result: pass / fail / unknown / not_assessed, note}` |
 | `evidence_ids` | 支撑这个行动的证据条目 |
 
 **规则（3.0 的校验，第 8 节）：**
@@ -172,9 +172,11 @@ Step 3 完成后，查看页面以"行动看板"为主视图（树状图保留�
 2. `patient_fact` 只能来自 Step 1 / Step 2 的结果，带原文引用；病例没写的事实为 null，`patient_status = unknown`。
 3. `result` 由代码推出，不由 LLM 填：入组 / 说明书条件 / 其他要求 `satisfies → pass`、`does_not_satisfy → fail`；
    **排除标准反过来**：`satisfies → fail`（病人符合排除标准即不合格）、`does_not_satisfy → pass`；`unknown → unknown`。
+   `not_assessed → not_assessed`（账本 v2，3b 契约决定 2）：试验的行政类条目（知情同意、依从性、能按时随访），留给试验筛选时评估；
+   只用于入组 / 排除条目，`note` 必须是 "screening assessment"，`patient_fact` 为 null。
 4. 状态与逐条结果一致：某分支下有任何 `fail` → `not_applicable`；没有 `fail` 但有 `unknown` → `conditional`；
-   全部 `pass`（或没有要求）→ `applicable`；`searched_none` 只用于没有找到行动的章节，必须引用阴性证据（1.2 节）。
-5. 结果为 `unknown` 的要求，其 `patient_fact.field` 必须登记在 `missing_information` 里（Summary 的缺失信息由此生成）。
+   全部 `pass`（或没有要求）→ `applicable`；`not_assessed` 不参与计算；`searched_none` 只用于没有找到行动的章节，必须引用阴性证据（1.2 节）。
+5. 结果为 `unknown` 的要求（`not_assessed` 不算），其 `patient_fact.field` 必须登记在 `missing_information` 里（Summary 的缺失信息由此生成）。
 6. `applies_to`、`status_by_branch` 的键都必须是本账本的分支；`status_by_branch` 覆盖 `applies_to` 的每个分支。
 
 ## 2. 诊断分支（branches）

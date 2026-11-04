@@ -16,7 +16,7 @@ import re
 
 from aitx.evidence.actions import same_action
 
-SCHEMA_VERSION = "evidence-ledger-v1"
+SCHEMA_VERSION = "evidence-ledger-v2"   # v2: requirement result not_assessed (screening assessment, 3b contract)
 
 SECTIONS = {   # report sections (template order, Summary excluded) -> evidence tier
     "existing_targeted_therapies": "established",
@@ -33,7 +33,8 @@ KINDS = ("sourced", "reasoning", "negative")
 STATUSES = ("candidate", "verified", "rejected")
 ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none")
 REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
-PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown")
+PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown", "not_assessed")
+NOT_ASSESSED_NOTE = "screening assessment"   # administrative criteria (consent, adherence, visits): left to trial screening
 
 SOURCE_ID = {   # source type -> id format
     "url": r"https?://\S+",
@@ -132,15 +133,17 @@ def negative(section: str, applies_to: list[str], *, database: str, endpoint: st
 # ------------------------------------------------------------ action records (contract 1.4)
 
 def requirement_result(kind: str, patient_status: str) -> str:
-    """pass / fail / unknown for one requirement line; exclusion criteria are inverted."""
-    if patient_status == "unknown":
-        return "unknown"
+    """pass / fail / unknown / not_assessed for one requirement line; exclusion criteria are inverted.
+    not_assessed: an administrative criterion assessed at trial screening, never from the case."""
+    if patient_status in ("unknown", "not_assessed"):
+        return patient_status
     meets = patient_status == "satisfies"
     return ("fail" if meets else "pass") if kind == "exclusion" else ("pass" if meets else "fail")
 
 
 def status_from(results: list[str]) -> str:
-    """Branch status from its requirement results: any fail -> not applicable; else any unknown -> conditional."""
+    """Branch status from its requirement results: any fail -> not applicable; else any unknown -> conditional.
+    not_assessed results are ignored."""
     if "fail" in results:
         return "not_applicable"
     if "unknown" in results:
@@ -275,6 +278,11 @@ class Ledger:
                     bad.append(f"{tag}: requirement {r['id']} not verbatim in verified evidence {r['requirement_evidence']}")
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
                     bad.append(f"{tag}: requirement {r['id']} result inconsistent")
+                if r["result"] == "not_assessed":
+                    if r["kind"] not in ("inclusion", "exclusion") or r.get("note") != NOT_ASSESSED_NOTE or r.get("patient_fact"):
+                        bad.append(f"{tag}: requirement {r['id']} not_assessed must be a trial criterion noted "
+                                   f"'{NOT_ASSESSED_NOTE}' with no patient fact")
+                    continue
                 if r["patient_status"] != "unknown" and not (r.get("patient_fact") or {}).get("quote"):
                     bad.append(f"{tag}: requirement {r['id']} has no quoted patient fact")
                 if r["result"] == "unknown" and (r.get("patient_fact") or {}).get("field", r["id"]) not in missing:
