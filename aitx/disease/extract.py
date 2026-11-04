@@ -89,6 +89,9 @@ Return only JSON: {"choices": [{"feature": <feature number>, "candidate": <candi
 # ------------------------------------------------------------------ LLM call
 
 CALL_PARAMS = {"temperature": 0, "max_tokens": 16384, "response_format": {"type": "json_object"}}
+# a truncated answer (finish_reason=length) is retried once with a larger budget, then fails: at temperature 0
+# the identical request runs away the same way again (2026-11-04: five identical retries, 16384 tokens each)
+LENGTH_RETRY_PARAMS = {**CALL_PARAMS, "max_tokens": 32768}
 
 
 def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_version: str | None = None) -> str:
@@ -106,7 +109,7 @@ def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_vers
 def _cache_usable(entry: dict, cfg: dict) -> bool:
     """Reuse only answers made with the current call parameters and, if an expected model
     prefix is set, served by that model (guards against a silent alias switch)."""
-    if entry.get("call_params") != CALL_PARAMS:
+    if entry.get("call_params") not in (CALL_PARAMS, LENGTH_RETRY_PARAMS):
         return False
     prefix = cfg.get("expect_model_prefix")
     return not prefix or str(entry.get("served_model", "")).startswith(prefix)
@@ -120,11 +123,11 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
         entry = json.loads(path.read_text())
         if _cache_usable(entry, cfg):
             return entry
-    attempts = 5
+    attempts, params = 5, CALL_PARAMS
     for attempt in range(attempts):
         try:
             with _SLOTS:
-                resp = llm.chat(messages, **CALL_PARAMS)
+                resp = llm.chat(messages, **params)
         except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
             if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
                 raise RuntimeError(f"LLM API refused the request: HTTP {e.code} {e.reason}") from e
@@ -135,12 +138,20 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
             continue
         choice = resp["choices"][0]
         content = choice["message"].get("content") or ""
-        if content.strip() and choice.get("finish_reason") != "length":
+        if choice.get("finish_reason") == "length":
+            if params is LENGTH_RETRY_PARAMS:          # never cache a truncated answer; never retry it again
+                raise RuntimeError(f"LLM output truncated twice (max_tokens {CALL_PARAMS['max_tokens']}, "
+                                   f"then {LENGTH_RETRY_PARAMS['max_tokens']})")
+            params = LENGTH_RETRY_PARAMS
+            print(f"[llm] output truncated at {CALL_PARAMS['max_tokens']} tokens; one retry with "
+                  f"{LENGTH_RETRY_PARAMS['max_tokens']}", flush=True)
+            continue
+        if content.strip():
             break
-    else:  # never cache a truncated or empty answer
+    else:  # never cache an empty answer
         raise RuntimeError(f"LLM returned no usable content (finish_reason={choice.get('finish_reason')})")
     out = {"requested_model": cfg["model"], "served_model": resp.get("model", ""),
-           "content": content, "sample": k, "call_params": CALL_PARAMS, "call_params_source": "recorded",
+           "content": content, "sample": k, "call_params": params, "call_params_source": "recorded",
            "prompt_version": prompt_version or PROMPT_VERSION}
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))

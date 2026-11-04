@@ -808,3 +808,32 @@ def test_ranked_above_counts_only_compared_candidates():
     s = R.select([cand("A", 3.0), merged, lower], ["HP:1"], [], [])
     line = next(r for r in s["reasons"] if "ranked above" in r)
     assert "ranked above 1 candidate(s)" in line                        # L only, not the merged M
+
+
+def _chat_seq(finishes, calls):
+    def chat(m, **kw):
+        calls.append(kw["max_tokens"])
+        fr = finishes[len(calls) - 1]
+        return {"model": "deepseek-flash", "choices": [{"message": {"content": "{}" if fr == "stop" else '{"a'},
+                                                         "finish_reason": fr}]}
+    return chat
+
+
+def test_truncated_answer_retried_once_with_larger_budget_then_cached(tmp_path, monkeypatch):
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(X.llm, "config", lambda: CFG)
+    calls = []
+    monkeypatch.setattr(X.llm, "chat", _chat_seq(["length", "stop"], calls))
+    out = X._cached_chat(MSG, 0, True)
+    assert calls == [16384, 32768] and out["call_params"] == X.LENGTH_RETRY_PARAMS
+    assert X._cached_chat(MSG, 0, True)["content"] == "{}" and len(calls) == 2      # served from the cache
+
+
+def test_truncated_twice_fails_without_more_identical_retries(tmp_path, monkeypatch):
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(X.llm, "config", lambda: CFG)
+    calls = []
+    monkeypatch.setattr(X.llm, "chat", _chat_seq(["length"] * 5, calls))
+    with pytest.raises(RuntimeError, match="truncated twice"):
+        X._cached_chat(MSG, 0, True)
+    assert calls == [16384, 32768] and not list(tmp_path.iterdir())

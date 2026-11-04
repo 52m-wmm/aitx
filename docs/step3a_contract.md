@@ -117,3 +117,30 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 3. ClinPGx 纳入，只用于 Contraindications & Precautions；查不到记阴性证据。
 4. 说明书证据记录 SPL set ID、版本号、生效日期，报告注明版本日期。
 5. Therapies Under Investigation 不归 3a。
+
+## 规则变更（2026-11-04，3a 验收第二次运行后批准）
+
+第二次运行 13 条期望成立 9 条；以下 5 处按批准实施（规则只在代码里，提示词未改，`3a-v2` 不变）。
+
+1. **引用修复。** LLM 引用不能逐字匹配时，代码在原文里找最接近的片段，满足以下全部条件才修复：
+   - 相似度 ≥0.95；
+   - 药名逐字出现在片段里；
+   - 数字、比较符号（≥ ≤ < > = ± %）和否定词（not、no、non、without、never、none、nor、neither、cannot、unless、except）与原文片段逐个一致，只允许字母层面的抄写差异。
+
+   修复后：
+   - 引用改为原文片段；
+   - 用该片段**重新调用一次 GeneReviews 摘取提示词**提取结构化条件，不沿用抄错的那句；
+   - 重新提取的任何一条要求不能在片段里逐字找到，就整条丢弃（漏掉条件会让行动看起来无条件适用）；
+   - 证据标记 `quote_repaired`（含 LLM 原抄写），看板显示"引用经代码修复"。
+
+   反例（必须拒绝）："≥ 2" 对 "≥ 12"、"indicated" 对 "not indicated"。
+2. **说明书条件优先。** 现有靶向治疗里的药物有 FDA 说明书证据时，由说明书的条件决定状态；GeneReviews 的条件写入 `genereviews_notes`，在看板卡片上作为备注显示，不参与判定。
+3. **说明书适应证按句子判断**（替代原来的"适应证文本里出现病名"）。只看含 "indicated" 的句子，跳过使用限制和 "not indicated / not recommended"。病名须以整词出现；"<X> deficiency" 也匹配同一分句中的 "deficiency/deficiencies of … <X>"。
+   - 病名是所治疗的疾病（"indicated for the treatment / management of <病名>"，中间允许 "patients with" 之类）→ 现有靶向治疗。
+   - 病名只是并发症或症状的背景 → 支持治疗。判断依据：
+     - 病名前、最近的 "indicated / treatment of" 之后，出现 in、secondary to、due to、caused by、associated with 等；
+     - 或病名后紧跟目的从句 "to improve / reduce / relieve / prevent …"，例如 Pulmozyme："patients with cystic fibrosis to improve pulmonary function"。
+   - 其他情况不使用。
+   - GeneReviews 列出的药物只会被说明书**升为**现有靶向治疗，前提是说明书通用名与该药完全一致（不能是复方）；否则保留 GeneReviews 证据。
+4. **用全部病名查说明书。** 适应证和禁忌检索用分支的全部病名和同义词，跳过 4 个字符以下的名称和单词缩写（如 CF、OTCD）。按通用名查说明书也扩展到支持治疗里的药物。都是普通接口调用。
+5. **输出截断。** `finish_reason=length` 时只重试一次，上限提到 32768；仍然截断就报错，不再原样重试。重试结果连同实际参数缓存。

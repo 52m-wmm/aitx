@@ -1041,6 +1041,10 @@ def _evidence_item(x: dict | None, eid: str) -> str:
     if isinstance(pb, dict) and pb.get("prompt_version"):
         meta.append(e(f"{pb.get('served_model')} · {pb['prompt_version']}"))
     why = f"<div class='fail'>{e('; '.join(x['reasons']))}</div>" if x.get("reasons") else ""
+    if x.get("quote_repaired"):
+        qr = x["quote_repaired"]
+        why += (f"<div class='warn'>{L('引用经代码修复', 'quote repaired by code')} ({e(qr.get('check', ''))})："
+                f"{L('LLM 原抄写', 'LLM copy')} “{e(str(qr.get('llm_quote', '')))}”</div>")
     return (f"<li>{st} {e(x['claim'])}{body}<div class='muted'>{' · '.join(meta)}</div>{why}</li>")
 
 
@@ -1077,6 +1081,12 @@ def _card(a: dict, s3: dict, cols: list[dict], span: str = "") -> str:
     ev = {x["id"]: x for x in s3["evidence"]}
     note = f"<p class='muted'>{L('不写入报告', 'Not written to the report')}: {e(a.get('report_note', ''))}</p>" if a.get("report") is False else ""
     key = f"<code>{e(a['action_key'])}</code>" if a.get("action_key") else ""
+    for fld, title in (("genereviews_notes", L("备注：GeneReviews 条件（以 FDA 说明书条件为准，不参与判定）",
+                                               "Notes: GeneReviews conditions (the FDA label decides; not evaluated)")),
+                       ("pregnancy_notes", L("备注：孕期条件（只用于孕期措施，不参与判定）",
+                                             "Notes: pregnancy conditions (pregnancy measures only; not evaluated)"))):
+        if a.get(fld):
+            note += f"<p class='muted'>{title}</p><ul>" + "".join(f"<li>{e(t)}</li>" for t in a[fld]) + "</ul>"
     return (f"<details class='acard st-{ACT_CLS[overall]}'{span}><summary><b>{e(a['label'])}</b>{lines}</summary>"
             f"<div class='abody'>{note}<p class='muted'>{key}</p><h4>{L('条件核对', 'Condition check')}</h4>{_req_table(a, s3, cols)}"
             f"<h4>{L('证据', 'Evidence')}</h4><ul class='evl'>{''.join(_evidence_item(ev.get(i), i) for i in a['evidence_ids'])}</ul>"

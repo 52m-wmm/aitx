@@ -91,15 +91,108 @@ def label(generic, indication):
     return {"generic": generic, "sections": {"indications_and_usage": indication}}
 
 
-def test_generic_label_must_be_the_drug_and_name_the_disease():
-    names = ["primary hyperoxaluria type 1", "PH1"]
-    assert E.label_matches_drug(label("LUMASIRAN", "treatment of primary hyperoxaluria type 1 (PH1)"), "lumasiran", names) \
-        == "primary hyperoxaluria type 1"
-    # a prenatal multivitamin that contains pyridoxine is not the pyridoxine label
-    multi = label("ALPHA-TOCOPHEROL, ASCORBIC ACID, PYRIDOXINE, FOLIC ACID", "nutritional supplement in pregnancy")
-    assert E.label_matches_drug(multi, "pyridoxine", names) is None
-    # pyridoxine alone, but not labelled for PH1: not used
-    assert E.label_matches_drug(label("PYRIDOXINE HYDROCHLORIDE", "vitamin B6 deficiency"), "pyridoxine", names) is None
+# --- label indication sentences (decision 2026-11-04)
+
+CF = ["cystic fibrosis", "CF"]
+OTC = ["ornithine carbamoyltransferase deficiency", "OTC deficiency", "ornithine transcarbamylase deficiency", "OTCD"]
+
+
+@pytest.mark.parametrize("ind,names,want", [
+    ("TRIKAFTA is indicated for the treatment of cystic fibrosis (CF) in patients aged 2 years and older.", CF, "targeted"),
+    ("Lumasiran is indicated for the treatment of primary hyperoxaluria type 1 (PH1).", ["primary hyperoxaluria type 1"], "targeted"),
+    # the diagnosis written as "deficiencies of ... <enzyme>" in the treated condition
+    ("Sodium Phenylbutyrate Tablets is indicated as adjunctive therapy in the chronic management of patients with urea "
+     "cycle disorders involving deficiencies of carbamylphosphate synthetase (CPS), ornithine transcarbamylase (OTC), "
+     "or argininosuccinic acid synthetase (AS).", OTC, "targeted"),
+    # a symptom or complication in patients with the diagnosis
+    ("CAYSTON is indicated to improve respiratory symptoms in cystic fibrosis (CF) patients with Pseudomonas aeruginosa.", CF, "supportive"),
+    ("Phytonadione is indicated in: • hemorrhagic disease of the newborn; • hypoprothrombinemia secondary to factors "
+     "limiting absorption of vitamin K, e.g., obstructive jaundice, cystic fibrosis of the pancreas.", CF, "supportive"),
+    ("PULMOZYME is indicated, in conjunction with standard therapies, for the management of pediatric and adult patients "
+     "with cystic fibrosis to improve pulmonary function.", CF, "supportive"),
+    # not an "indicated" sentence, or negated
+    ("Azithromycin is indicated for mild infections. Azithromycin is not recommended in patients with pneumonia who have "
+     "risk factors such as cystic fibrosis.", CF, None),
+    ("X is not indicated for the treatment of cystic fibrosis.", CF, None),
+    # a short abbreviation alone is never used; the name must be whole words
+    ("Y is indicated for the treatment of CF.", CF, None),
+    ("Z is indicated for the treatment of cystic fibrosis-like syndromes.", ["cystic fibrosis"], "targeted"),
+    ("W is indicated for the treatment of chronic hypoxanthine excess.", ["hypoxanthine excess"], "targeted"),
+    ("V is indicated for vitamin B6 deficiency.", ["primary hyperoxaluria type 1", "PH1"], None),
+])
+def test_indication_role(ind, names, want):
+    got = E.indication_role(ind, names)
+    assert (got[0] if got else None) == want
+
+
+def test_searchable_names_skip_short_abbreviations():
+    assert [n for n in CF + OTC if E.searchable_name(n)] == ["cystic fibrosis", "ornithine carbamoyltransferase deficiency",
+                                                           "OTC deficiency", "ornithine transcarbamylase deficiency"]
+
+
+# --- quote repair (decision 2026-11-04)
+
+ROW = ("Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≥2 years who are heterozygous for p.Phe508del & a "
+       "minimal function variant. Ivacaftor is indicated for persons with gating variants.")
+ETI = "Elexacaftor/tezacaftor/ivacaftor"
+
+
+def test_quote_with_a_letter_typo_is_repaired_to_the_source_span():
+    q = ("Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≥2 years who are heterozygous for p.Phe508el & a "
+         "minimal function variant.")
+    span, why = E.repair_quote(q, ROW, ETI)
+    assert span is not None and "p.Phe508del" in span and LG.quote_in(span, ROW) and span.startswith(ETI)
+
+
+@pytest.mark.parametrize("q", [
+    # a different number: never repaired
+    "Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≥12 years who are heterozygous for p.Phe508del & a minimal function variant.",
+    # a different comparison sign
+    "Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≤2 years who are heterozygous for p.Phe508del & a minimal function variant.",
+])
+def test_quote_with_a_different_number_or_sign_is_not_repaired(q):
+    span, why = E.repair_quote(q, ROW, ETI)
+    assert span is None and "differ" in why
+
+
+def test_quote_that_adds_or_drops_a_negation_is_not_repaired():
+    src = ("Drug X is not indicated for persons with a creatinine clearance below thirty milliliters per minute "
+           "according to the label of the drug")
+    q = ("Drug X is indicated for persons with a creatinine clearance below thirty milliliters per minute "
+         "according to the label of the drug")
+    span, why = E.repair_quote(q, src, "Drug X")
+    assert span is None
+    span, why = E.repair_quote(src.replace("label", "lable"), q, "Drug X")
+    assert span is None
+
+
+def test_quote_repair_needs_the_name_verbatim_and_high_similarity():
+    assert E.repair_quote("Ivacaftor is indicated for persons with gating variants.", ROW, "lumacaftor")[0] is None
+    assert E.repair_quote("Something entirely different from the row text here.", ROW, ETI)[0] is None
+
+
+def test_repaired_item_extracts_conditions_again_from_the_span(monkeypatch):
+    seen = {}
+
+    def fake_llm(system, user, use_cache, what=""):
+        seen["user"] = user
+        return {"items": [{"name": "elexacaftor/tezacaftor/ivacaftor", "kind": "drug", "quote": "x",
+                           "requirements": [{"text": "age ≥2 years", "field": "age", "op": ">=", "value": 2, "unit": "year"}]}]}, {"m": 1}
+    monkeypatch.setattr(E, "_llm", fake_llm)
+    it = {"name": ETI, "kind": "drug", "requirements": [{"text": "age ≥2 yeras", "field": "age"}],
+          "quote": "Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≥2 years who are heterozygous for p.Phe508el & a minimal function variant."}
+    got = E._repaired_item(it, ETI, "Management / Targeted Therapies", ROW, True, "NBK1250")
+    assert got and LG.quote_in(got["quote"], ROW) and "p.Phe508del" in seen["user"]
+    assert [r["text"] for r in got["requirements"]] == ["age ≥2 years"]        # from the second extraction
+    assert got["quote_repaired"]["llm_quote"] == it["quote"]
+
+
+def test_repaired_item_dropped_when_requirement_words_are_not_in_the_span(monkeypatch):
+    monkeypatch.setattr(E, "_llm", lambda *a, **k: ({"items": [{"name": ETI, "kind": "drug", "requirements": [
+        {"text": "age ≥2 yeras", "field": "age", "op": ">=", "value": 2}]}]}, {}))
+    it = {"name": ETI, "kind": "drug",
+          "quote": "Elexacaftor/tezacaftor/ivacaftor: approved for persons age ≥2 years who are heterozygous for p.Phe508el & a minimal function variant."}
+    assert E._repaired_item(it, ETI, "s", ROW, True, "NBK1250") is None
 
 
 def _found(section, *, reqs=(), specs=None, pregnancy=False, label="pyridoxine", key="drug:rxcui:684879"):
@@ -197,3 +290,40 @@ def test_requirement_points_to_its_own_quote_when_claims_coincide():
     bad = dict(a, claim="something else")
     with pytest.raises(ValueError):
         led.add(bad)
+
+
+def test_label_conditions_decide_and_genereviews_conditions_become_notes():
+    # 2026-11-04: GeneReviews "heterozygous for p.Phe508del & a minimal function variant" would have overruled the
+    # label's "at least one F508del" for a homozygous patient
+    gr = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["nonsense"]}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("existing_targeted_therapies", reqs=[gr])
+    a = found["drug:rxcui:684879"]
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "B"}
+    ltext = "B is indicated for the treatment of primary hyperoxaluria type 1 in patients 2 years and older."
+    a["specs"].append(E._spec("B label indicated", lsrc, ltext, ltext, 1))
+    a["reqs"].append({"kind": "label_condition", "text": "2 years and older", "field": "age", "op": ">=", "value": 2,
+                      "unit": "year", "spec": E._spec("B label requirement", lsrc, "2 years and older", ltext, 1)})
+    E._records(led, found, PF_FS, [])                        # PF: 7-year-old
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert [r["requirement"] for r in rec["requirements"]] == ["2 years and older"]
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert rec["genereviews_notes"] == ["missense AGXT variants"]
+
+
+def test_without_a_label_genereviews_conditions_still_decide():
+    gr = {"kind": "label_condition", "text": "missense AGXT variants", "field": "variant_class", "op": "in", "value": ["missense"]}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("existing_targeted_therapies", reqs=[gr]), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["requirements"] and "genereviews_notes" not in rec
+
+
+def test_repaired_quote_marked_on_the_evidence():
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("existing_targeted_therapies")
+    found["drug:rxcui:684879"]["specs"][0]["quote_repaired"] = {"llm_quote": "Pyridoxine (vitamin B6) for persons w/misense", "check": "similarity 0.99"}
+    E._records(led, found, PF_FS, [])
+    ev = [x for x in led.evidence.values() if x.get("quote_repaired")]
+    assert ev and ev[0]["status"] == "verified"

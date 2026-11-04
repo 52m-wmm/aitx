@@ -12,6 +12,7 @@ Existing Targeted Therapies, Supportive Management, Contraindications & Precauti
 """
 from __future__ import annotations
 
+import difflib
 import json
 import re
 import time
@@ -27,7 +28,7 @@ from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 
-PROMPT_VERSION = "3a-v2"
+PROMPT_VERSION = "3a-v2"          # prompts unchanged on 2026-11-04 (rules in code only)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
@@ -217,6 +218,152 @@ def _reqs(raw: list, spec: dict, where: str) -> list[dict]:
     return out
 
 
+# --- quote repair (decision 2026-11-04) ---------------------------------------------------------------------
+# An LLM quote that is not verbatim is dropped unless the closest span of the source differs from it only in
+# letters: similarity >= REPAIR_MIN_RATIO, the item's name verbatim in the span, and the same numbers,
+# comparison signs and negation words in the same order ("≥ 2" vs "≥ 12" and "indicated" vs "not indicated"
+# are never repaired). The source span then replaces the quote and the conditions are extracted again from it.
+REPAIR_MIN_RATIO = 0.95
+_CRITICAL = re.compile(r"\d+(?:[.,]\d+)*|[≥≤<>=±%]|\b(?:not|no|non|without|never|none|nor|neither|cannot|unless|except)\b|n't",
+                       re.I)
+
+
+def critical_tokens(text: str) -> list[str]:
+    return [t.lower() for t in _CRITICAL.findall(text)]
+
+
+def _words_at(text: str, i: int, j: int) -> tuple[int, int]:
+    """Widen [i, j) to whole words."""
+    while i > 0 and text[i - 1].isalnum():
+        i -= 1
+    while j < len(text) and text[j].isalnum():
+        j += 1
+    return i, j
+
+
+def repair_quote(quote: str, source_text: str, name: str) -> tuple[str | None, str]:
+    """(source span, reason) when `quote` is a letter-level miscopy of one span of `source_text`; (None, reason) otherwise."""
+    src = re.sub(r"\s+", " ", source_text).strip()
+    q = re.sub(r"\s+", " ", quote or "").strip()
+    if not q or not src:
+        return None, "empty quote or source"
+    sl, ql = src.lower(), q.lower()
+    sm = difflib.SequenceMatcher(None, sl, ql, autojunk=False)
+    blocks = [b for b in sm.get_matching_blocks() if b.size >= 8]
+    if not blocks:
+        return None, "no matching span"
+    anchor = max(blocks, key=lambda b: b.size)
+    start0 = anchor.a - anchor.b
+    best = (0.0, 0, 0)
+    for ds in range(-8, 9):
+        for de in range(-8, 9):
+            i, j = max(0, start0 + ds), min(len(src), start0 + len(q) + de)
+            if j - i < 1:
+                continue
+            r = difflib.SequenceMatcher(None, sl[i:j], ql, autojunk=False).ratio()
+            if r > best[0]:
+                best = (r, i, j)
+    ratio, i, j = best
+    i, j = _words_at(src, i, j)
+    span = src[i:j].strip()
+    if ratio < REPAIR_MIN_RATIO:
+        return None, f"similarity {ratio:.3f} below {REPAIR_MIN_RATIO}"
+    if not re.search(rf"(?<![a-z0-9]){re.escape(name.lower())}(?![a-z0-9])", span.lower()):
+        return None, f"name {name!r} not verbatim in the source span"
+    if critical_tokens(span) != critical_tokens(q):
+        return None, f"numbers, signs or negations differ: {critical_tokens(q)} vs source {critical_tokens(span)}"
+    return span, f"similarity {ratio:.3f}"
+
+
+# --- label indications, sentence by sentence (decision 2026-11-04) ------------------------------------------
+# A label names the diagnosis as the condition it treats ("indicated for the treatment of <disease>") -> targeted;
+# as the setting of a complication or symptom ("symptoms in <disease>", "secondary to <disease>") -> supportive;
+# outside an "indicated" sentence (limitations of use, warnings) or after "not indicated" -> not used.
+_ANCHOR = re.compile(r"\bindicated(?:\s+(?:for|in|as))?\b|\b(?:treatment|management|therapy|prophylaxis|prevention)\s+of\b", re.I)
+_CONTEXT = re.compile(r"\b(?:in|secondary\s+to|due\s+to|caused\s+by|associated\s+with|from|during|following|because\s+of)\b", re.I)
+# "... patients with <disease> to improve pulmonary function": the purpose is a symptom or function -> supportive
+_PURPOSE = re.compile(r"^[^.;•]{0,80}?\bto\s+(?:improve|reduce|relieve|prevent|control|decrease|increase|maintain)\b", re.I)
+_NEGATED = re.compile(r"\b(?:not|never)\s+(?:be\s+)?(?:indicated|recommended|approved)\b", re.I)
+
+
+def searchable_name(name: str) -> bool:
+    """Names used to search and match labels: not shorter than 4 characters, not a one-word abbreviation."""
+    n = (name or "").strip()
+    return len(n) >= 4 and not (" " not in n and n.upper() == n and len(n) <= 6)
+
+
+def name_in(name: str, text: str) -> int | None:
+    """Position of the diagnosis name in `text` as whole words (case-insensitive); "<X> deficiency" also matches
+    "deficiency/deficiencies of ... <X>" in the same clause. None when absent."""
+    low = re.sub(r"\s+", " ", text.lower())
+    n = re.sub(r"\s+", " ", name.lower().strip())
+    m = re.search(rf"(?<![a-z0-9]){re.escape(n)}(?![a-z0-9])", low)
+    if m:
+        return m.start()
+    core = re.fullmatch(r"(.+?) deficiency", n)
+    if core:
+        for m in re.finditer(rf"(?<![a-z0-9]){re.escape(core.group(1))}(?![a-z0-9])", low):
+            if re.search(r"deficienc(?:y|ies) of\b[^.;•]{0,160}$", low[:m.start()]):
+                return m.start()
+    return None
+
+
+def _sentences(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r"(?<=[.])\s+(?=[A-Z0-9•])", re.sub(r"\s+", " ", text or "")) if s.strip()]
+
+
+def indication_role(indications: str, names: list[str]) -> tuple[str, str, str] | None:
+    """(role, sentence, name) for the first diagnosis name an indication sentence treats; role is "targeted" or
+    "supportive". None when no "indicated" sentence names a diagnosis."""
+    found = None
+    for sent in _sentences(indications):
+        if "indicated" not in sent.lower() or "limitation" in sent.lower():
+            continue
+        for name in [n for n in names if searchable_name(n)]:
+            pos = name_in(name, sent)
+            if pos is None:
+                continue
+            before = re.sub(r"\s+", " ", sent)[:pos]
+            if _NEGATED.search(before):
+                continue
+            anchors = list(_ANCHOR.finditer(before))
+            if not anchors:
+                continue
+            gap = before[anchors[-1].end():]
+            gap = re.split(r"[•;]", gap)[-1]          # in a list, the item that names the diagnosis decides
+            after = re.sub(r"\s+", " ", sent)[pos + len(name):]
+            role = "supportive" if _CONTEXT.search(gap) or _PURPOSE.search(after) else "targeted"
+            if role == "targeted":
+                return role, sent, name
+            found = found or (role, sent, name)
+    return found
+
+
+def _repaired_item(it: dict, name: str, path: str, text: str, use_cache: bool, nbk: str) -> dict | None:
+    """The item with its quote replaced by the source span it miscopied, and its conditions extracted again from that
+    span (the miscopied sentence is not reused). None when the quote cannot be repaired, the second extraction does
+    not list the item, or any of its requirement words are not verbatim in the span (a dropped condition would make
+    the action look unconditionally applicable)."""
+    span, why = repair_quote(str(it.get("quote") or ""), text, name)
+    if span is None:
+        print(f"[3a] quote not verbatim, not repaired ({name}, {nbk}): {why}", flush=True)
+        return None
+    parsed, llm = _llm(EXTRACT_SYSTEM, f"Section: {path}\n{span}", use_cache, f"GeneReviews {nbk} repaired quote")
+    items = [x for x in parsed.get("items") or [] if isinstance(x, dict)]
+    again = next((x for x in items if A.components(str(x.get("name") or "")) == A.components(name)), None) \
+        or (items[0] if len(items) == 1 else None)
+    if again is None:
+        print(f"[3a] repaired quote for {name} ({nbk}): second extraction does not list it", flush=True)
+        return None
+    reqs = [r for r in again.get("requirements") or [] if isinstance(r, dict)]
+    if any(not LG.quote_in(str(r.get("text") or ""), span) for r in reqs):
+        print(f"[3a] repaired quote for {name} ({nbk}): requirement words not verbatim in the span", flush=True)
+        return None
+    return {"name": name, "kind": it.get("kind"), "quote": span, "requirements": reqs,
+            "manifestation": again.get("manifestation") or "", "mechanism_quote": again.get("mechanism_quote") or "",
+            "quote_repaired": {"llm_quote": it.get("quote"), "check": why}, "_llm": llm}
+
+
 def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool = True) -> None:
     pf = facts(step1, step2)
     for b in led.branches:
@@ -255,8 +402,13 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
             for it in parsed.get("items") or []:
                 name = str(it.get("name") or "").strip()
                 kind = it.get("kind")
-                if not name or name.lower() in NOT_A_THERAPY or not LG.quote_in(str(it.get("quote") or ""), text):
+                if not name or name.lower() in NOT_A_THERAPY:
                     continue
+                if not LG.quote_in(str(it.get("quote") or ""), text):
+                    it = _repaired_item(it, name, path, text, use_cache, nbk)
+                    if it is None:
+                        continue
+                    llm = it.pop("_llm")
                 if not avoid and kind not in ("drug", "procedure", "diet", "device"):
                     continue
                 if avoid:
@@ -271,6 +423,8 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
+                if it.get("quote_repaired"):
+                    spec["quote_repaired"] = it["quote_repaired"]
                 reqs = _reqs(it.get("requirements"), spec, it["quote"])
                 if section == "supportive_management" and it.get("manifestation") and LG.quote_in(it["manifestation"], text):
                     reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
@@ -294,15 +448,16 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                             section, why = "existing_targeted_therapies", path + " (older chapter; mechanism stated and supported)"
                 put(key, section, name, branch_ids, spec, reqs, why, pregnancy)
 
-    # FDA labels: by indication, by contraindication, and by exact generic name for drugs GeneReviews places in Targeted.
+    # FDA labels: by indication and contraindication for every diagnosis name (names shorter than 4 characters and
+    # one-word abbreviations skipped), and by exact generic name for drugs GeneReviews lists in Targeted or Supportive
     tasks = []
     for b in [b for b in led.branches if b.get("diagnosis")]:
-        for name in disease_names(b, step2)[:3]:
-            tasks.append(("indications_and_usage", name, 10, [b["id"]], "existing_targeted_therapies", "label indication names the diagnosis"))
+        for name in dict.fromkeys(n for n in disease_names(b, step2) if searchable_name(n)):
+            tasks.append(("indications_and_usage", name, 10, [b["id"]], None, "label indication names the diagnosis"))
             tasks.append(("contraindications", name, 5, [b["id"]], "contraindications_precautions", "label contraindication names the diagnosis"))
     for k, a in list(found.items()):
-        if a["key"].get("normalized") and k.startswith("drug:") and a["section"] == "existing_targeted_therapies":
-            tasks.append(("openfda.generic_name", a["label"], 5, sorted(a["branches"]), a["section"], "label for a drug GeneReviews lists"))
+        if a["key"].get("normalized") and k.startswith("drug:") and a["section"] in ("existing_targeted_therapies", "supportive_management"):
+            tasks.append(("openfda.generic_name", a["label"], 5, sorted(a["branches"]), None, "label for a drug GeneReviews lists"))
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(lambda t: LB.search(t[0], t[1], limit=t[2]), tasks))
     jobs, seen = [], set()               # (label, text, disease, branch ids, section, why, quote)
@@ -310,22 +465,25 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         searches.append(rec)
         for lb in LB.latest(labels)[:5]:
             ind = lb["sections"].get("indications_and_usage", "")
-            if field == "indications_and_usage":
-                hit = name.lower() in ind.lower()
-                job = (lb, ind, name, bids, section, why, None)
-            elif field == "contraindications":
-                m = re.search(rf"[^.]*{re.escape(name)}[^.]*\.", lb["sections"].get("contraindications", ""), re.I)
-                hit, job = bool(m), (lb, lb["sections"].get("contraindications", ""), name, bids, section, why,
-                                     m.group(0).strip() if m else None)
+            job = None
+            if field == "contraindications":
+                m = re.search(rf"[^.]*(?<![A-Za-z0-9]){re.escape(name)}(?![A-Za-z0-9])[^.]*\.", lb["sections"].get("contraindications", ""), re.I)
+                if m:
+                    job = (lb, lb["sections"].get("contraindications", ""), name, bids, section, why, m.group(0).strip())
             else:
-                # exact generic name (not a combination product) and an indication that names one of the diagnoses;
-                # a drug without such a label keeps its GeneReviews evidence (e.g. pyridoxine for PH1)
+                # the indication sentence decides: the diagnosis as the condition treated -> targeted; as the setting of
+                # a complication or symptom -> supportive; a drug GeneReviews lists is promoted only to targeted, and only
+                # by a label of exactly that drug (not a combination product); otherwise it keeps its GeneReviews evidence
                 names = [n for b in led.branches if b["id"] in bids for n in disease_names(b, step2)]
-                disease = label_matches_drug(lb, name, names)
-                hit = disease is not None
-                job = (lb, ind, disease or name, bids, section, why, None)
-            if hit and (lb["set_id"], section) not in seen:
-                seen.add((lb["set_id"], section))
+                if field == "openfda.generic_name" and A.components(lb.get("generic") or "") != A.components(name):
+                    continue
+                role = indication_role(ind, names)
+                if role and (field == "indications_and_usage" or role[0] == "targeted"):
+                    sec = "existing_targeted_therapies" if role[0] == "targeted" else "supportive_management"
+                    why_ = why + ("" if role[0] == "targeted" else " (complication or symptom of the diagnosis)")
+                    job = (lb, ind, role[2], bids, sec, why_, role[1])
+            if job and (lb["set_id"], job[4]) not in seen:
+                seen.add((lb["set_id"], job[4]))
                 jobs.append(job)
     with ThreadPoolExecutor(max_workers=X.CONCURRENCY) as pool:
         parsed = list(pool.map(lambda j: _label_requirements(j[0], j[2], use_cache)
@@ -334,16 +492,6 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         _label_action(put, lb, text, name, bids, section, why, reqs, quote=quote)
 
     _records(led, found, pf, searches)
-
-
-def label_matches_drug(lb: dict, drug: str, disease_names_: list[str]) -> str | None:
-    """The diagnosis name a label can be used for, for a drug GeneReviews lists: the label's generic name must be
-    exactly the drug (not a combination product) and its indication must name the diagnosis. None otherwise; the
-    drug then keeps its GeneReviews evidence only (e.g. pyridoxine for PH1 has no PH1 label)."""
-    if A.components(lb.get("generic") or "") != A.components(drug):
-        return None
-    ind = lb["sections"].get("indications_and_usage", "").lower()
-    return next((n for n in disease_names_ if n and n.lower() in ind), None)
 
 
 def _label_text(lb: dict) -> str:
@@ -359,7 +507,7 @@ def _label_requirements(lb: dict, disease: str, use_cache: bool) -> list[dict]:
 def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str], section: str, why: str,
                   raw_reqs: list[dict] | None, quote: str | None = None) -> None:
     key = A.drug_key(lb["generic"] or lb["brand"])
-    q = quote or next((s.strip() for s in re.split(r"(?<=\.)\s+", text) if disease.lower() in s.lower()), text[:300])
+    q = quote or text[:300]
     src = {"type": "spl_setid", "id": lb["set_id"], "url": lb["url"], "version": lb["version"],
            "effective_date": lb["effective_date"], "brand": lb["brand"]}
     name = lb["brand"] or lb["generic"]
@@ -395,9 +543,12 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
         section, branches = a["section"], sorted(a["branches"])
 
         def make(spec):                                # evidence in the action's final section
-            return led.add(LG.sourced(spec["claim"], section, branches, spec["src"], spec["quote"], spec["source_text"],
-                                      spec["accessed_at"], produced_by=spec["produced_by"],
-                                      retrieved_by=spec["retrieved_by"], action=a["key"]))
+            ev = LG.sourced(spec["claim"], section, branches, spec["src"], spec["quote"], spec["source_text"],
+                            spec["accessed_at"], produced_by=spec["produced_by"], retrieved_by=spec["retrieved_by"],
+                            action=a["key"])
+            if spec.get("quote_repaired"):
+                ev["quote_repaired"] = spec["quote_repaired"]      # quote is the source span; marked for review
+            return led.add(ev)
         evs = [make(sp) for sp in a["specs"]]
         if not any(e["status"] == "verified" for e in evs):
             continue
@@ -406,7 +557,14 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
         # recommendation keeps them as notes (2026-11-04: "known to be pyridoxine responsive" from Pregnancy
         # Management had made pyridoxine not applicable for a homozygous p.Gly170Arg patient)
         preg_notes = [r["text"] for r in a["reqs"] if r.get("pregnancy_passage") and not a["pregnancy_only"]]
-        for r in [r for r in a["reqs"] if a["pregnancy_only"] or not r.get("pregnancy_passage")]:
+        # a targeted drug with an FDA label: the label's conditions decide; GeneReviews conditions are kept as notes
+        # (decision 2026-11-04: the GeneReviews ETI row "heterozygous for p.Phe508del & a minimal function variant"
+        # would otherwise have overruled the label's "at least one F508del" for a homozygous patient)
+        label_rules = section == "existing_targeted_therapies" and any(sp["src"]["type"] == "spl_setid" for sp in a["specs"])
+        gr_notes = [r["text"] for r in a["reqs"] if label_rules and r["spec"]["src"]["type"] != "spl_setid"
+                    and not r.get("pregnancy_passage")]
+        for r in [r for r in a["reqs"] if (a["pregnancy_only"] or not r.get("pregnancy_passage"))
+                  and not (label_rules and r["spec"]["src"]["type"] != "spl_setid")]:
             sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]))
             if sig in dedupe:
                 continue
@@ -441,6 +599,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                                reasons)
         if preg_notes:
             rec["pregnancy_notes"] = sorted(set(preg_notes))
+        if gr_notes:
+            rec["genereviews_notes"] = sorted(set(gr_notes))
         if a["pregnancy_only"] and all(v["status"] == "not_applicable" for v in rec["status_by_branch"].values()):
             rec["report"] = False            # kept in the ledger, not written to the report (Step 4 decides the rules)
             rec["report_note"] = "pregnancy-specific management; patient is male or under 12"
