@@ -837,3 +837,19 @@ def test_truncated_twice_fails_without_more_identical_retries(tmp_path, monkeypa
     with pytest.raises(RuntimeError, match="truncated twice"):
         X._cached_chat(MSG, 0, True)
     assert calls == [16384, 32768] and not list(tmp_path.iterdir())
+
+
+def test_socket_read_timeout_is_retried(tmp_path, monkeypatch):
+    import socket
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setattr(X.llm, "config", lambda: CFG)
+    monkeypatch.setattr(X.time, "sleep", lambda s: None)
+    calls = []
+
+    def chat(m, **kw):
+        calls.append(1)
+        if len(calls) == 1:
+            raise socket.timeout("The read operation timed out")
+        return {"model": "deepseek-flash", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+    monkeypatch.setattr(X.llm, "chat", chat)
+    assert X._cached_chat(MSG, 0, True)["content"] == "{}" and len(calls) == 2

@@ -22,6 +22,7 @@ import json
 import os
 import re
 import threading
+import socket
 import time
 import urllib.error
 from collections import Counter
@@ -128,7 +129,8 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
         try:
             with _SLOTS:
                 resp = llm.chat(messages, **params)
-        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as e:
+        except (urllib.error.URLError, TimeoutError, socket.timeout, ConnectionError, http.client.HTTPException) as e:
+            # socket.timeout is not a TimeoutError before Python 3.10 (2026-11-04: a read timeout ended COL1A1 unretried)
             if isinstance(e, urllib.error.HTTPError) and 400 <= e.code < 500 and e.code != 429:
                 raise RuntimeError(f"LLM API refused the request: HTTP {e.code} {e.reason}") from e
             if attempt == attempts - 1:
