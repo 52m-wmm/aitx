@@ -1,0 +1,67 @@
+{
+ "description": "Lab values: units, conversion to a canonical unit, and the physiologically plausible range in the canonical unit (3b contract, decision 3). Used to infer an unstated unit (only one unit gives a plausible value -> use it and state the assumption) and to reinterpret an implausible registry unit. An analyte is used only when status is 'verified' (every factor and the plausible range have a checked source); otherwise every comparison involving it is unknown.",
+ "analytes": {
+  "hemoglobin": {
+   "aliases": ["hemoglobin", "haemoglobin", "hgb", "hb"],
+   "canonical_unit": "g/dL",
+   "units": {
+    "g/dL": {"factor": 1, "source": "definition"},
+    "g/L": {"factor": 0.1, "source": "definition (1 g/L = 0.1 g/dL)"},
+    "mg/dL": {"factor": 0.001, "source": "definition (1 mg/dL = 0.001 g/dL)"},
+    "mmol/L": {"factor": null, "source": "PENDING: needs the hemoglobin monomer molar mass from a checked source (mmol/L is used clinically, e.g. in the Netherlands)"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING: reference interval source not yet checked (ABIM reference ranges PDF refused automated download; Merck Manual page has no numeric table)"},
+   "status": "pending"
+  },
+  "creatinine": {
+   "aliases": ["creatinine", "serum creatinine", "scr"],
+   "canonical_unit": "mg/dL",
+   "units": {
+    "mg/dL": {"factor": 1, "source": "definition"},
+    "umol/L": {"factor": 0.011312, "source": "PubChem CID 588 creatinine, molecular weight 113.12 g/mol (read 2026-11-03): 1 umol/L = 113.12 ug/L = 0.011312 mg/dL"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING"},
+   "status": "pending"
+  },
+  "bilirubin": {
+   "aliases": ["bilirubin", "total bilirubin", "tbil"],
+   "canonical_unit": "mg/dL",
+   "units": {
+    "mg/dL": {"factor": 1, "source": "definition"},
+    "umol/L": {"factor": 0.05847, "source": "PubChem CID 5280352 bilirubin, molecular weight 584.7 g/mol (read 2026-11-03): 1 umol/L = 0.05847 mg/dL"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING"},
+   "status": "pending"
+  },
+  "glucose": {
+   "aliases": ["glucose", "blood glucose", "plasma glucose"],
+   "canonical_unit": "mg/dL",
+   "units": {
+    "mg/dL": {"factor": 1, "source": "definition"},
+    "mmol/L": {"factor": 18.016, "source": "PubChem CID 5793 D-glucose, molecular weight 180.16 g/mol (read 2026-11-03): 1 mmol/L = 18.016 mg/dL"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING"},
+   "status": "pending"
+  },
+  "ammonia": {
+   "aliases": ["ammonia", "plasma ammonia", "nh3"],
+   "canonical_unit": "umol/L",
+   "units": {
+    "umol/L": {"factor": 1, "source": "definition"},
+    "ug/dL": {"factor": 0.58717, "source": "PubChem CID 222 ammonia, molecular weight 17.031 g/mol (read 2026-11-03): 1 ug/dL = 10 ug/L = 0.58717 umol/L"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING"},
+   "status": "pending"
+  },
+  "albumin": {
+   "aliases": ["albumin", "serum albumin"],
+   "canonical_unit": "g/dL",
+   "units": {
+    "g/dL": {"factor": 1, "source": "definition"},
+    "g/L": {"factor": 0.1, "source": "definition"}
+   },
+   "plausible": {"low": null, "high": null, "source": "PENDING"},
+   "status": "pending"
+  }
+ }
+}
