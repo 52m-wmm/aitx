@@ -350,6 +350,13 @@ _PURPOSE = re.compile(r"^[^.;•]{0,80}?\bto\s+(?:improve|reduce|relieve|prevent
 _NEGATED = re.compile(r"\b(?:not|never)\s+(?:be\s+)?(?:indicated|recommended|approved)\b", re.I)
 
 
+def label_names(names: list[str]) -> list[str]:
+    """Diagnosis names for label searches: OMIM titles join aliases with ";" ("epileptic encephalopathy, early
+    infantile, 22; EIEE22"), which openFDA rejects (HTTP 400); each alias is its own name. Quotes are dropped."""
+    out = [part.replace('"', "").strip() for n in names for part in str(n or "").split(";")]
+    return [n for n in dict.fromkeys(out) if searchable_name(n)]
+
+
 def searchable_name(name: str) -> bool:
     """Names used to search and match labels: not shorter than 4 characters, not a one-word abbreviation."""
     n = (name or "").strip()
@@ -383,7 +390,7 @@ def indication_role(indications: str, names: list[str]) -> tuple[str, str, str] 
     for sent in _sentences(indications):
         if "indicated" not in sent.lower() or "limitation" in sent.lower():
             continue
-        for name in [n for n in names if searchable_name(n)]:
+        for name in label_names(names):
             pos = name_in(name, sent)
             if pos is None:
                 continue
@@ -533,7 +540,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     # one-word abbreviations skipped), and by exact generic name for drugs GeneReviews lists in Targeted or Supportive
     tasks = []
     for b in [b for b in led.branches if b.get("diagnosis")]:
-        for name in dict.fromkeys(n for n in disease_names(b, step2) if searchable_name(n)):
+        for name in label_names(disease_names(b, step2)):
             tasks.append(("indications_and_usage", name, 10, [b["id"]], None, "label indication names the diagnosis", name))
             tasks.append(("contraindications", name, 5, [b["id"]], "contraindications_precautions", "label contraindication names the diagnosis", name))
     for k, a in list(found.items()):

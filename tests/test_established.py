@@ -558,3 +558,9 @@ def test_eligibility_in_indications_still_decides():
     E._records(led, _label_found(reqs), PF_FS, [])
     rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
     assert rec["status_by_branch"]["b1"]["status"] == "conditional" and "precautions" not in rec
+
+
+def test_omim_alias_lists_split_for_label_search():
+    # 2026-11-04: openFDA answers HTTP 400 to a ";" in the phrase
+    assert E.label_names(["epileptic encephalopathy, early infantile, 22; EIEE22", 'x "quoted" name', "CF"]) == \
+        ["epileptic encephalopathy, early infantile, 22", "x quoted name"]
