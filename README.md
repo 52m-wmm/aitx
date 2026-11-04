@@ -186,8 +186,8 @@ export AITX_LLM_MODEL=deepseek-flash
 export AITX_LLM_API_KEY=你的key
 # 可选：服务端返回的模型名不以此开头就报错，防止别名被悄悄切换
 export AITX_EXPECT_MODEL_PREFIX=deepseek-v4.1-flash
-# 可选：同时在途的 LLM 请求数（默认 4）；结果与串行完全相同，只影响速度
-export AITX_LLM_CONCURRENCY=4
+# 可选：同时在途的 LLM 请求数（默认 16，DeepSeek 上限 2500）；结果与串行完全相同，只影响速度
+export AITX_LLM_CONCURRENCY=16
 ```
 
 每次调用都会记录到 `runs/llm_calls.jsonl`，包括服务端实际返回的模型名。

@@ -34,7 +34,7 @@ from aitx.disease.hpo import Ontology
 N_SAMPLES = 3
 # LLM requests in flight at once across all threads (cache hits are not limited). Results do not depend on it:
 # cache keys and sample numbers are the same as in a serial run.
-CONCURRENCY = max(1, int(os.environ.get("AITX_LLM_CONCURRENCY", "4")))
+CONCURRENCY = max(1, int(os.environ.get("AITX_LLM_CONCURRENCY", "16")))   # provider limit is 2500
 _SLOTS = threading.BoundedSemaphore(CONCURRENCY)
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
 PROMPT_VERSION = "step2-extract-v5"
