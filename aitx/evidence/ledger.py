@@ -16,7 +16,7 @@ import re
 
 from aitx.evidence.actions import same_action
 
-SCHEMA_VERSION = "evidence-ledger-v2"   # v2: requirement result not_assessed (screening assessment, 3b contract)
+SCHEMA_VERSION = "evidence-ledger-v3"   # v2: requirement result not_assessed (3b contract); v3: requirement alternatives (rows)
 
 SECTIONS = {   # report sections (template order, Summary excluded) -> evidence tier
     "existing_targeted_therapies": "established",
@@ -154,13 +154,36 @@ def status_from(results: list[str]) -> str:
     return "applicable"
 
 
+_RANK = {"applicable": 2, "conditional": 1, "not_applicable": 0}
+
+
+def status_of(lines: list[dict], branch: str) -> tuple[str, str | None]:
+    """(status, deciding alternative) for one branch. Lines without an `alternative` apply in every case; lines that
+    share an `alternative` id are one alternative (e.g. one GeneReviews table row: "F508del homozygous"; another row:
+    "F508del heterozygous + minimal function variant"). Any alternative met -> applicable; the best alternative decides.
+    Without alternatives this is status_from() over all lines."""
+    mine = [l for l in lines if branch in l["applies_to"]]
+    common = [l["result"] for l in mine if not l.get("alternative")]
+    alts: dict[str, list[str]] = {}
+    for l in mine:
+        if l.get("alternative"):
+            alts.setdefault(l["alternative"], []).append(l["result"])
+    if not alts:
+        return status_from(common), None
+    best = max(alts, key=lambda a: _RANK[status_from(common + alts[a])])
+    return status_from(common + alts[best]), best
+
+
 def requirement(rid: str, kind: str, text: str, evidence_id: str, patient_fact: dict | None, patient_status: str,
-                applies_to: list[str], note: str = "") -> dict:
+                applies_to: list[str], note: str = "", alternative: str | None = None) -> dict:
     if kind not in REQ_KINDS or patient_status not in PATIENT_STATUSES:
         raise ValueError(f"bad requirement kind/status {kind!r}/{patient_status!r}")
-    return {"id": rid, "kind": kind, "requirement": text, "requirement_evidence": evidence_id,
-            "applies_to": sorted(applies_to), "patient_fact": patient_fact, "patient_status": patient_status,
-            "result": requirement_result(kind, patient_status), "note": note}
+    out = {"id": rid, "kind": kind, "requirement": text, "requirement_evidence": evidence_id,
+           "applies_to": sorted(applies_to), "patient_fact": patient_fact, "patient_status": patient_status,
+           "result": requirement_result(kind, patient_status), "note": note}
+    if alternative:
+        out["alternative"] = alternative
+    return out
 
 
 def action_record(action_key: str | None, section: str, label: str, applies_to: list[str],
@@ -169,8 +192,7 @@ def action_record(action_key: str | None, section: str, label: str, applies_to: 
     """Status per branch is derived from the requirement lines (or searched_none); reasons: branch -> short text."""
     by_branch = {}
     for b in sorted(applies_to):
-        res = [r["result"] for r in requirements if b in r["applies_to"]]
-        st = "searched_none" if searched_none else status_from(res)
+        st = "searched_none" if searched_none else status_of(requirements, b)[0]
         by_branch[b] = {"status": st, "reason": reasons.get(b, "")}
     return {"action_key": action_key, "section": section, "label": label, "applies_to": sorted(applies_to),
             "status_by_branch": by_branch, "requirements": requirements, "evidence_ids": evidence_ids}
@@ -301,7 +323,7 @@ class Ledger:
                            and self.evidence[e]["status"] == "verified"]
                     if a.get("action_key") or not neg:
                         bad.append(f"{tag}: searched_none needs no action key and a verified negative search")
-                elif st["status"] != status_from([r["result"] for r in a["requirements"] if b in r["applies_to"]]):
+                elif st["status"] != status_of(a["requirements"], b)[0]:
                     bad.append(f"{tag}: status for {b} does not follow its requirements")
                 if not st.get("reason"):
                     bad.append(f"{tag}: no reason for {b}")

@@ -1054,7 +1054,14 @@ def _req_table(a: dict, s3: dict, cols: list[dict]) -> str:
     multi = len(cols) > 1
     idx = {b["id"]: i + 1 for i, b in enumerate(cols)}
     rows = []
-    for r in a["requirements"]:
+    alts = list(dict.fromkeys(r["alternative"] for r in a["requirements"] if r.get("alternative")))
+    last = object()
+    for r in sorted(a["requirements"], key=lambda r: (r.get("alternative") is not None, alts.index(r["alternative"]) if r.get("alternative") in alts else -1)):
+        if alts and r.get("alternative") != last:          # rows of the source table: any one met is enough
+            last = r.get("alternative")
+            head_txt = (L("所有情况都需满足", "Applies in every case") if last is None
+                        else L(f"情况 {alts.index(last) + 1}（满足其一即可）：", f"Alternative {alts.index(last) + 1} (any one is enough): ") + last)
+            rows.append(f"<tr><td colspan='{6 if multi else 5}' class='muted'><b>{e(head_txt)}</b></td></tr>")
         pf = r.get("patient_fact") or {}
         fact = (f"{e(str(pf.get('value')))}<div class='muted'>“{e(str(pf['quote']))}” (step {pf.get('step')})</div>"
                 if pf.get("quote") else f"<span class='muted'>{e(str(pf.get('field') or L('病例未提供', 'not in the case')))}</span>")

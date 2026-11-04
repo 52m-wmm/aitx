@@ -180,8 +180,8 @@ def test_requirement_results_invert_exclusion():
 
 
 def test_schema_version_v2():
-    assert LG.SCHEMA_VERSION == "evidence-ledger-v2"
-    assert LG.Ledger("P", B).to_dict()["schema_version"] == "evidence-ledger-v2"
+    assert LG.SCHEMA_VERSION == "evidence-ledger-v3"
+    assert LG.Ledger("P", B).to_dict()["schema_version"] == "evidence-ledger-v3"
 
 
 def test_status_from_ignores_not_assessed():

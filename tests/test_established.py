@@ -374,22 +374,118 @@ SPEC = {"src": {"type": "nbk"}}
 KEY = {"key": "drug:x", "normalized": True}
 
 
-def test_genereviews_decides_the_section_over_a_label():
+def test_new_version_chapter_decides_the_section_over_a_label():
     found = {}
     E.place(found, KEY, "supportive_management", "dornase alfa", ["b1"], SPEC, [], "Management / Treatment of Manifestations")
-    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", from_genereviews=False)
+    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", source="label")
     assert found["drug:x"]["section"] == "supportive_management" and len(found["drug:x"]["specs"]) == 2
     found = {}                                              # same when the label comes first
-    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", from_genereviews=False)
+    E.place(found, KEY, "existing_targeted_therapies", "PULMOZYME", ["b1"], SPEC, [], "label", source="label")
     E.place(found, KEY, "supportive_management", "dornase alfa", ["b1"], SPEC, [], "Management / Treatment of Manifestations")
     assert found["drug:x"]["section"] == "supportive_management"
 
 
+def test_old_version_chapter_label_naming_the_disease_promotes_to_targeted():
+    # correction 2026-11-04: OTC chapter has no Targeted Therapies section; the sodium phenylbutyrate label treats
+    # urea cycle disorders involving OTC deficiency -> targeted (old rule i)
+    found = {}
+    E.place(found, KEY, "supportive_management", "sodium phenylbutyrate", ["b1"], SPEC, [], "Treatment of Manifestations",
+            source="gr_old")
+    E.place(found, KEY, "existing_targeted_therapies", "BUPHENYL", ["b1"], SPEC, [], "label", source="label")
+    assert found["drug:x"]["section"] == "existing_targeted_therapies"
+
+
 def test_label_decides_the_section_only_for_an_action_genereviews_does_not_list():
     found = {}
-    E.place(found, KEY, "supportive_management", "CAYSTON", ["b1"], SPEC, [], "label", from_genereviews=False)
-    E.place(found, KEY, "existing_targeted_therapies", "X", ["b1"], SPEC, [], "label", from_genereviews=False)
+    E.place(found, KEY, "supportive_management", "CAYSTON", ["b1"], SPEC, [], "label", source="label")
+    E.place(found, KEY, "existing_targeted_therapies", "X", ["b1"], SPEC, [], "label", source="label")
     assert found["drug:x"]["section"] == "existing_targeted_therapies"
+    found = {}
     E.place(found, KEY, "existing_targeted_therapies", "y", ["b1"], SPEC, [], "Targeted Therapies")
     E.place(found, KEY, "supportive_management", "y", ["b1"], SPEC, [], "Treatment of Manifestations")
     assert found["drug:x"]["section"] == "existing_targeted_therapies"     # within GeneReviews: targeted first
+
+
+# --- zygosity and alternatives (decision 2026-11-04)
+
+CF_BR = {"id": "b1", "gene": "CFTR", "diagnosis": {"label": "cystic fibrosis"}, "synonyms": []}
+
+
+def cf_pf(zyg):
+    return dict(PF, age_months=180, variants=[{"gene": "CFTR", "protein": "p.Phe508del", "class": "inframe_deletion",
+                                                "zygosity": zyg, "quote": f"CFTR p.Phe508del ({zyg})"}])
+
+
+@pytest.mark.parametrize("text,field,zyg,want", [
+    ("heterozygous for p.Phe508del & a minimal function variant", "variant", "homozygous", "does_not_satisfy"),
+    ("heterozygous for p.Phe508del & a minimal function variant", "variant", "heterozygous", "unknown"),
+    ("homozygous for p.Phe508del", "variant", "homozygous", "satisfies"),
+    ("homozygous for p.Phe508del", "zygosity", "homozygous", "satisfies"),     # value held the variant name
+    ("homozygous for p.Phe508del", "zygosity", "heterozygous", "does_not_satisfy"),
+    ("at least one F508del", "variant", "homozygous", "satisfies"),
+    ("at least one F508del", "variant", "heterozygous", "satisfies"),
+])
+def test_variant_requirement_respects_zygosity(text, field, zyg, want):
+    st, _, _ = E.evaluate({"field": field, "op": "in", "value": ["p.Phe508del"], "text": text}, cf_pf(zyg), CF_BR)
+    assert st == want
+
+
+def _rows(*rows):
+    """One action with several GeneReviews rows, each its own alternative."""
+    src = {"type": "nbk", "id": "NBK1250", "url": "u", "section": "Management / Targeted Therapies", "credit": "c"}
+    text = " ".join(q for q, _ in rows)
+    specs, reqs = [], []
+    for q, rr in rows:
+        sp = E._spec(f"GeneReviews lists ETI: {q[:20]}", src, q, text, 1)
+        specs.append(sp)
+        reqs += [dict(r, spec=E._spec("req", src, r["text"], text, 1), alternative=q) for r in rr]
+    return {"drug:eti": {"key": {"key": "drug:eti", "normalized": True}, "section": "existing_targeted_therapies",
+                         "label": "ETI", "branches": {"b1"}, "specs": specs, "reqs": reqs, "why": "Targeted", "pregnancy_only": False}}
+
+
+HOM_ROW = ("ETI: age ≥2 yrs & homozygous for p.Phe508del",
+           [{"kind": "label_condition", "text": "age ≥2 yrs", "field": "age", "op": ">=", "value": 2, "unit": "year"},
+            {"kind": "label_condition", "text": "homozygous for p.Phe508del", "field": "zygosity", "op": "in", "value": ["p.Phe508del"]}])
+HET_ROW = ("ETI: age ≥2 yrs & heterozygous for p.Phe508del & a minimal function variant",
+           [{"kind": "label_condition", "text": "age ≥2 yrs", "field": "age", "op": ">=", "value": 2, "unit": "year"},
+            {"kind": "label_condition", "text": "heterozygous for p.Phe508del & a minimal function variant", "field": "variant",
+             "op": "in", "value": ["p.Phe508del"]}])
+
+
+def test_any_row_met_makes_the_action_applicable_and_names_that_row():
+    led = LG.Ledger("P", [CF_BR])
+    E._records(led, _rows(HET_ROW, HOM_ROW), cf_pf("homozygous"), [])
+    rec = next(a for a in led.actions if a["action_key"] == "drug:eti")
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert "homozygous for p.Phe508del" in rec["status_by_branch"]["b1"]["reason"]
+    assert {r["alternative"] for r in rec["requirements"]} == {HOM_ROW[0], HET_ROW[0]}
+    assert all(c["status"] == "pass" for c in led.checks() if "action" in c["name"]), led.checks()
+
+
+def test_no_row_met_is_not_applicable():
+    led = LG.Ledger("P", [CF_BR])
+    E._records(led, _rows(HET_ROW), cf_pf("homozygous"), [])
+    rec = next(a for a in led.actions if a["action_key"] == "drug:eti")
+    assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+
+
+def test_status_of_alternatives():
+    line = lambda res, alt=None: {"applies_to": ["b"], "result": res, **({"alternative": alt} if alt else {})}
+    assert LG.status_of([line("fail", "a"), line("pass", "b")], "b") == ("applicable", "b")
+    assert LG.status_of([line("fail", "a"), line("unknown", "b")], "b") == ("conditional", "b")
+    assert LG.status_of([line("fail"), line("pass", "b")], "b")[0] == "not_applicable"    # common lines apply to all
+    assert LG.status_of([line("pass"), line("unknown")], "b") == ("conditional", None)
+
+
+def test_label_only_supportive_action_needs_the_complication():
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "Phytonadione"}
+    ltext = "Phytonadione is indicated in: • hypoprothrombinemia secondary to factors limiting absorption, e.g., cystic fibrosis of the pancreas."
+    sp = dict(E._spec("label", lsrc, ltext, ltext, 1), label_section="supportive_management")
+    found = {"drug:k": {"key": {"key": "drug:k", "normalized": True}, "section": "supportive_management", "label": "Phytonadione",
+                        "branches": {"b1"}, "specs": [sp], "reqs": [], "why": "label", "pregnancy_only": False}}
+    E._records(led, found, PF_FS, [])
+    rec = next(a for a in led.actions if a["action_key"] == "drug:k")
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+    assert [m["variable"] for m in led.missing_information].count(E.MISSING_MANIFESTATIONS) == 1

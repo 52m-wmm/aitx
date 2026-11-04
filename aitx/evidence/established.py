@@ -110,6 +110,14 @@ VARIANT_CLASS_WORDS = ("missense", "nonsense", "frameshift", "synonymous", "spli
 ZYGOSITY_WORDS = ("homozygous", "heterozygous", "hemizygous", "compound")
 
 
+SECOND_ALLELE = re.compile(r"&|\+|\b(?:and|plus)\s+(?:a|an|one|another|1)\b", re.I)
+
+
+def zygosity_words(text: str) -> list[str]:
+    low = (text or "").lower()
+    return [w for w in ZYGOSITY_WORDS if re.search(rf"\b{w}", low)]
+
+
 def _years(value, unit) -> float | None:
     try:
         v = float(value)
@@ -135,12 +143,29 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
             return "unknown", None, "no variant"
         v = vs[0]
         fact = {"field": field, "value": v["protein"], "quote": v["quote"], "step": 1}
-        if field == "variant":
+        zyg = zygosity_words(req["text"])
+        if field == "variant" or (field == "zygosity" and zyg and V.mentioned(v["protein"], req["text"])):
             hit = V.mentioned(v["protein"], req.get("_label_text") or req["text"])
-            return ("satisfies" if hit else "unknown"), fact, (f"named as {hit}" if hit else "patient's variant not found in the text")
+            if not hit:
+                return "unknown", fact, "patient's variant not found in the text"
+            if not zyg:
+                return "satisfies", fact, f"named as {hit}"
+            # the requirement states a zygosity (2026-11-04: "heterozygous for p.Phe508del & a minimal function
+            # variant" had passed for a homozygous patient because only the variant name was compared)
+            have = str(v.get("zygosity") or "").lower()
+            if not have:
+                return "unknown", dict(fact, field="zygosity"), "patient's zygosity not stated"
+            fact = dict(fact, field="zygosity", value=f"{v['protein']} {have}")
+            if not any(w in have for w in zyg):
+                return "does_not_satisfy", fact, f"zygosity differs: requires {'/'.join(zyg)}"
+            if SECOND_ALLELE.search(req["text"]) and "homozygous" not in zyg:
+                return "unknown", fact, "second allele requirement not compared"
+            return "satisfies", fact, f"named as {hit}, {have}"
         want = [str(x).lower() for x in (value if isinstance(value, list) else [value]) if x]
         have = v["class"] if field == "variant_class" else v["zygosity"]
         known = VARIANT_CLASS_WORDS if field == "variant_class" else ZYGOSITY_WORDS
+        if field == "zygosity" and zyg and not all(any(k in w for k in known) for w in want):
+            want = zyg                       # the value held something else (a variant name): use the requirement's words
         if not want or not all(any(k in w for k in known) for w in want):
             return "unknown", fact, "requirement not comparable"
         return ("satisfies" if any(w.replace(" ", "_") in have or have in w for w in want) else "does_not_satisfy"), fact, ""
@@ -365,17 +390,19 @@ def _repaired_item(it: dict, name: str, path: str, text: str, use_cache: bool, n
 
 
 def place(found: dict, key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict],
-          why: str, pregnancy: bool = False, from_genereviews: bool = True) -> None:
-    """Add one finding to its action. The section is decided by GeneReviews when GeneReviews lists the action
-    (decision 2026-11-04: sections follow the mechanism, which is the GeneReviews experts' classification; a label
-    supplies conditions, not the section); a label decides the section only for an action GeneReviews does not list.
-    Within the same kind of source: targeted before supportive before precautions."""
+          why: str, pregnancy: bool = False, source: str = "gr_new") -> None:
+    """Add one finding to its action. source: "gr_new" (a GeneReviews chapter with a Targeted Therapies section),
+    "gr_old" (a chapter without one) or "label".
+    The section (decision 2026-11-04, corrected the same day):
+      - a new-version chapter decides for the actions it lists: sections follow the mechanism, which is the GeneReviews
+        experts' classification; a label supplies conditions, not the section;
+      - otherwise (old-version chapter, or a label only) the old rules: a label whose indication treats the diagnosis
+        (rule i) or a supported mechanism sentence (rule ii) -> targeted; targeted before supportive before precautions."""
     a = found.setdefault(key["key"], {"key": key, "section": section, "label": label, "branches": set(), "specs": [],
-                                      "reqs": [], "why": why, "pregnancy_only": pregnancy,
-                                      "from_genereviews": from_genereviews})
-    if from_genereviews and not a["from_genereviews"]:
-        a["section"], a["why"], a["from_genereviews"] = section, why, True
-    elif from_genereviews == a["from_genereviews"] and SECTIONS_3A.index(section) < SECTIONS_3A.index(a["section"]):
+                                      "reqs": [], "why": why, "pregnancy_only": pregnancy, "source": source})
+    if source == "gr_new" and a["source"] != "gr_new":
+        a["section"], a["why"], a["source"] = section, why, "gr_new"
+    elif (source == "gr_new" or a["source"] != "gr_new") and SECTIONS_3A.index(section) < SECTIONS_3A.index(a["section"]):
         a["section"], a["why"] = section, why
     a["pregnancy_only"] = a["pregnancy_only"] and pregnancy
     a["branches"].update(branch_ids)
@@ -393,8 +420,8 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     searches: list[dict] = []
 
     def put(key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict], why: str,
-            pregnancy: bool = False, from_genereviews: bool = True):
-        place(found, key, section, label, branch_ids, spec, reqs, why, pregnancy, from_genereviews)
+            pregnancy: bool = False, source: str = "gr_new"):
+        place(found, key, section, label, branch_ids, spec, reqs, why, pregnancy, source)
 
     # GeneReviews: one LLM call per section (a whole chapter at once is too long for the API), in parallel
     for nbk in sorted({n for ns in ch_map.values() for n in ns}):
@@ -458,22 +485,28 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                                               [it["mechanism_quote"]], use_cache=use_cache)
                         if sc["overall"] == "supported":
                             section, why = "existing_targeted_therapies", path + " (older chapter; mechanism stated and supported)"
-                put(key, section, name, branch_ids, spec, reqs, why, pregnancy)
+                row = f"{nbk} {path}: {it['quote']}"            # one table row or sentence = one alternative
+                for r in reqs:
+                    r["alternative"] = row
+                put(key, section, name, branch_ids, spec, reqs, why, pregnancy, "gr_new" if has_targeted else "gr_old")
 
     # FDA labels: by indication and contraindication for every diagnosis name (names shorter than 4 characters and
     # one-word abbreviations skipped), and by exact generic name for drugs GeneReviews lists in Targeted or Supportive
     tasks = []
     for b in [b for b in led.branches if b.get("diagnosis")]:
         for name in dict.fromkeys(n for n in disease_names(b, step2) if searchable_name(n)):
-            tasks.append(("indications_and_usage", name, 10, [b["id"]], None, "label indication names the diagnosis"))
-            tasks.append(("contraindications", name, 5, [b["id"]], "contraindications_precautions", "label contraindication names the diagnosis"))
+            tasks.append(("indications_and_usage", name, 10, [b["id"]], None, "label indication names the diagnosis", name))
+            tasks.append(("contraindications", name, 5, [b["id"]], "contraindications_precautions", "label contraindication names the diagnosis", name))
     for k, a in list(found.items()):
         if a["key"].get("normalized") and k.startswith("drug:") and a["section"] in ("existing_targeted_therapies", "supportive_management"):
-            tasks.append(("openfda.generic_name", a["label"], 5, sorted(a["branches"]), None, "label for a drug GeneReviews lists"))
+            comps = A.components(a["label"])   # a combination is searched by one ingredient, then matched on all of them
+            if comps:                          # ("Elexacaftor/tezacaftor/ivacaftor" as a phrase finds nothing)
+                tasks.append(("openfda.generic_name", comps[0], 10 if len(comps) > 1 else 5, sorted(a["branches"]), None,
+                              "label for a drug GeneReviews lists", a["label"]))
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(lambda t: LB.search(t[0], t[1], limit=t[2]), tasks))
     jobs, seen = [], set()               # (label, text, disease, branch ids, section, why, quote)
-    for (field, name, _, bids, section, why), (labels, rec) in zip(tasks, results):
+    for (field, _, _, bids, section, why, name), (labels, rec) in zip(tasks, results):
         searches.append(rec)
         for lb in LB.latest(labels)[:5]:
             ind = lb["sections"].get("indications_and_usage", "")
@@ -536,7 +569,9 @@ def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str],
                           "3a openfda requirement")
         r["_label_text"] = lb["full_text"]
         reqs.append(r)
-    put(key, section, name, branch_ids, spec, reqs, why, from_genereviews=False)
+    for r in reqs:
+        r["alternative"] = f"{name} label version {lb['version']}"
+    put(key, section, name, branch_ids, spec, reqs, why, source="label")
 
 
 def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
@@ -583,9 +618,20 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             for sp in a["specs"])
         gr_notes = [r["text"] for r in a["reqs"] if label_rules and r["spec"]["src"]["type"] != "spl_setid"
                     and not r.get("pregnancy_passage") and r.get("field") != "manifestation"]
-        for r in [r for r in a["reqs"] if (a["pregnancy_only"] or not r.get("pregnancy_passage"))
-                  and not (label_rules and r["spec"]["src"]["type"] != "spl_setid" and r.get("field") != "manifestation")]:
-            sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]))
+        use = [r for r in a["reqs"] if (a["pregnancy_only"] or not r.get("pregnancy_passage"))
+               and not (label_rules and r["spec"]["src"]["type"] != "spl_setid" and r.get("field") != "manifestation")]
+        if label_rules:                      # the label's conditions are the alternatives; the symptom treated applies to all
+            use = [dict(r, alternative=None) if r["spec"]["src"]["type"] != "spl_setid" else r for r in use]
+        # a supportive action found only in a label: the indication sentence names the complication or symptom it is for
+        # (decision 2026-11-04: phytonadione "hypoprothrombinemia secondary to ... cystic fibrosis" was unconditional)
+        if section == "supportive_management" and all(sp["src"]["type"] == "spl_setid" for sp in a["specs"]) \
+                and not any(r.get("field") == "manifestation" for r in use):
+            sp = next(sp for sp in a["specs"] if sp.get("label_section") == "supportive_management") if any(
+                sp.get("label_section") == "supportive_management" for sp in a["specs"]) else a["specs"][0]
+            use.append({"kind": "other", "text": sp["quote"], "field": "manifestation", "spec": sp})
+        for r in use:
+            sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]),
+                   r.get("alternative"))
             if sig in dedupe:
                 continue
             dedupe.add(sig)
@@ -603,7 +649,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                 note = "pregnancy-specific management"
             else:
                 st, fact, note = evaluate(r, pf, by_id[rb[0]])
-            line = LG.requirement(f"r{len(lines) + 1}", r["kind"], r["text"], ev["id"], fact, st, rb, note)
+            line = LG.requirement(f"r{len(lines) + 1}", r["kind"], r["text"], ev["id"], fact, st, rb, note,
+                                  alternative=r.get("alternative"))
             if line["result"] == "unknown" and (fact or {}).get("field") != MISSING_MANIFESTATIONS:
                 var = (fact or {}).get("field") or f"{r.get('field')}: {r['text'][:60]}"
                 line["patient_fact"] = fact or {"field": var, "value": None, "quote": None, "step": None}
@@ -612,9 +659,13 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                                                     "affects": [], "asked_by": "3a"})
             lines.append(line)
         for b in branches:
-            bad = [l["requirement"] for l in lines if b in l["applies_to"] and l["result"] == "fail"]
-            unk = [l["requirement"] for l in lines if b in l["applies_to"] and l["result"] == "unknown"]
-            reasons[b] = (f"not met: {bad[0][:80]}" if bad else f"depends on: {unk[0][:80]}" if unk else a["why"][:90])
+            st, alt = LG.status_of(lines, b)
+            mine = [l for l in lines if b in l["applies_to"] and l.get("alternative") in (None, alt)]
+            bad = [l["requirement"] for l in mine if l["result"] == "fail"]
+            unk = [l["requirement"] for l in mine if l["result"] == "unknown"]
+            met = [l["requirement"] for l in mine if l["result"] == "pass" and l.get("alternative")]
+            reasons[b] = (f"not met: {bad[0][:80]}" if bad else f"depends on: {unk[0][:80]}" if unk
+                          else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
         if preg_notes:

@@ -33,7 +33,7 @@ Step 3 要为报告模板中 Summary 之外的 8 个章节分别找证据（3a�
 
 ```json
 {
-  "schema_version": "evidence-ledger-v2",   // v2（2026-11-03）：要求结果新增 not_assessed
+  "schema_version": "evidence-ledger-v3",   // v2（2026-11-03）：要求结果新增 not_assessed；v3（2026-11-04）：要求行可带 alternative（任一组满足即适用，见 1.4）
   "patient_id": "AITX-40003",
   "branches": [ ... ],            // 诊断分支，见第 2 节
   "patient_context": { ... },     // 第 3 节
