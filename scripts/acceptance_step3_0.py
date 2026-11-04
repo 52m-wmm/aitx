@@ -60,6 +60,13 @@ def url_ok(url: str) -> bool:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
+    if ap.parse_args().offpeak_only:
+        from aitx import peak
+        peak.guard()
     fails = []
 
     def hard(ok, what):

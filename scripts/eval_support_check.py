@@ -110,7 +110,12 @@ def report(r: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--collect", action="store_true", help="only collect new reviews")
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
     args = ap.parse_args()
+    if args.offpeak_only:
+        from aitx import peak
+        peak.guard()
     added = collect()
     print(f"collected {len(added)} new case(s): {added}")
     if args.collect:

@@ -63,7 +63,12 @@ def omims(r: dict, key: str) -> set[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fresh-llm", action="store_true", help="use an empty LLM cache (3 new calls per case)")
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
     args = ap.parse_args()
+    if args.offpeak_only:
+        from aitx import peak
+        peak.guard()
     if args.fresh_llm:
         extract.CACHE_DIR = Path(tempfile.mkdtemp(prefix="aitx-llm-"))
     if not os.environ.get("AITX_LLM_API_KEY"):

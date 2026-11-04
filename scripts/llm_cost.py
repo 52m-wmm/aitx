@@ -1,0 +1,69 @@
+"""LLM token use and cost from runs/llm_calls.jsonl (every real call is logged there with its usage).
+
+Usage:  python3 scripts/llm_cost.py --since 1793760000      # calls at or after this Unix time
+        python3 scripts/llm_cost.py --last-minutes 30
+
+Prices: DeepSeek pricing page (api-docs.deepseek.com/quick_start/pricing, read 2026-11-03), model deepseek-flash,
+USD per 1M tokens. Peak windows come from config/llm_peak_hours.json (US Pacific time), the same file the
+--offpeak-only guard reads (Chinese public holidays are not handled: billed off-peak, so a holiday run is overstated). Cached LLM answers cost nothing and are not logged.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import sys
+import time
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+LOG = ROOT / "runs" / "llm_calls.jsonl"
+PRICE = {   # (off-peak, peak) per 1M tokens
+    "cache_hit": (0.003, 0.006), "cache_miss": (0.15, 0.30), "output": (0.60, 1.20),
+}
+
+
+def peak(ts: float) -> bool:
+    """Same windows as the --offpeak-only guard (config/llm_peak_hours.json)."""
+    from aitx import peak as P
+    return P.current_window(dt.datetime.fromtimestamp(ts, dt.timezone.utc)) is not None
+
+
+def summarize(since: float, log: Path = LOG) -> dict:
+    out = {"calls": 0, "cache_hit": 0, "cache_miss": 0, "output": 0, "reasoning": 0, "usd": 0.0, "peak_calls": 0}
+    for line in log.read_text().splitlines():
+        r = json.loads(line)
+        if r.get("ts", 0) < since:
+            continue
+        u = r.get("usage") or {}
+        hit = u.get("prompt_cache_hit_tokens", 0)
+        miss = u.get("prompt_cache_miss_tokens", u.get("prompt_tokens", 0) - hit)
+        outp = u.get("completion_tokens", 0)
+        i = 1 if peak(r["ts"]) else 0
+        out["peak_calls"] += i
+        out["calls"] += 1
+        out["cache_hit"] += hit
+        out["cache_miss"] += miss
+        out["output"] += outp
+        out["reasoning"] += (u.get("completion_tokens_details") or {}).get("reasoning_tokens", 0)
+        out["usd"] += (hit * PRICE["cache_hit"][i] + miss * PRICE["cache_miss"][i] + outp * PRICE["output"][i]) / 1e6
+    out["usd"] = round(out["usd"], 4)
+    return out
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--since", type=float)
+    ap.add_argument("--last-minutes", type=float)
+    args = ap.parse_args()
+    since = args.since if args.since is not None else time.time() - 60 * (args.last_minutes or 60)
+    s = summarize(since)
+    print(f"{s['calls']} LLM calls ({s['peak_calls']} at peak rates): input {s['cache_hit']:,} cached + "
+          f"{s['cache_miss']:,} uncached tokens, output {s['output']:,} tokens ({s['reasoning']:,} reasoning) "
+          f"-> ${s['usd']}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

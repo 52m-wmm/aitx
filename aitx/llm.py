@@ -21,6 +21,8 @@ import urllib.request
 from pathlib import Path
 
 LOG = Path(os.environ.get("AITX_RUN_DIR", "runs")) / "llm_calls.jsonl"
+# one call's time limit: fail early and retry rather than wait on a stalled connection (2026-11-03: 600 -> 120 s)
+TIMEOUT_S = int(os.environ.get("AITX_LLM_TIMEOUT", "120"))
 
 
 class ModelMismatch(RuntimeError):
@@ -52,7 +54,7 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
         headers={"Authorization": f"Bearer {cfg['api_key']}", "Content-Type": "application/json"},
     )
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=600) as r:
+    with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
         resp = json.loads(r.read().decode())
     served = resp.get("model", "")
 

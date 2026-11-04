@@ -1,0 +1,9 @@
+{
+ "description": "DeepSeek peak-price hours, in US Pacific time. Runs started with --offpeak-only refuse to start inside these windows. A window that ends after midnight belongs to the day it starts.",
+ "provider": "DeepSeek (api-docs.deepseek.com/quick_start/pricing)",
+ "timezone": "America/Los_Angeles",
+ "windows": [
+  {"days": ["Sun", "Mon", "Tue", "Wed", "Thu"], "start": "17:00", "end": "20:00"},
+  {"days": ["Sun", "Mon", "Tue", "Wed", "Thu"], "start": "22:00", "end": "02:00"}
+ ]
+}

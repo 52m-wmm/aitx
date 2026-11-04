@@ -59,7 +59,12 @@ def keep_reviews(new: dict, path: Path) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--gene", action="append")
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
     args = ap.parse_args()
+    if args.offpeak_only:
+        from aitx import peak
+        peak.guard()
     import eval_support_check
     added = eval_support_check.collect()          # reviews made by hand since the last run become regression cases
     if added:

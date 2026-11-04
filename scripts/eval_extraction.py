@@ -124,7 +124,12 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--set", choices=["basic", "hard", "all"], default="all")
     ap.add_argument("--fresh-llm", action="store_true")
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
     args = ap.parse_args()
+    if args.offpeak_only:
+        from aitx import peak
+        peak.guard()
     if args.fresh_llm:
         extract.CACHE_DIR = Path(tempfile.mkdtemp(prefix="aitx-llm-"))
     ont = load_ontology()

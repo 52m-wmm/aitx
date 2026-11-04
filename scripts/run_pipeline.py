@@ -115,7 +115,12 @@ def main() -> int:
     ap.add_argument("--no-cache", action="store_true", help="bypass LLM and API caches")
     ap.add_argument("--refresh-trials", action="store_true",
                     help="refetch ClinicalTrials.gov even if cached < 1 day ago (required before final reports)")
+    ap.add_argument("--offpeak-only", action="store_true",
+                    help="exit without LLM calls during the provider's peak-price hours (config/llm_peak_hours.json)")
     args = ap.parse_args()
+    if args.offpeak_only:
+        from aitx import peak
+        peak.guard()
     for k in (args.from_step, args.to_step):
         if k not in STEPS:
             note = f" ({PLANNED[k]}, not implemented yet)" if k in PLANNED else ""
