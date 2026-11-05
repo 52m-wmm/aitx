@@ -1,6 +1,7 @@
 # Step 3c 契约：待办（契约正文待写）
 
-> 本文件收集写 3c（Off-label / Expanded-Access Therapies，新兴层）契约时必须纳入的事项。起草契约时逐条并入，并在这里注明去处。
+> 本文件收集写 3c（Off-label / Expanded-Access Therapies，新兴层）契约时必须纳入的事项。
+> **已并入 `docs/step3c_contract.md` 草案第 1 版（2026-11-05）**：D-半乳糖 → 验收表；不沿用 L3 文献类型过滤 → 来源第 1 条。
 
 ## SLC35A2-CDG 的 D-半乳糖（2026-11-05 记录）
 
