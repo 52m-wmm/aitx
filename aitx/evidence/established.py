@@ -22,6 +22,7 @@ from aitx.disease import datasets as D
 from aitx.disease import extract as X
 from aitx.disease.hpo import Ontology
 from aitx.evidence import actions as A
+from aitx.evidence import fallback as F
 from aitx.evidence import genereviews as GR
 from aitx.evidence import labels as LB
 from aitx.evidence import ledger as LG
@@ -577,7 +578,9 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     pf = facts(step1, step2)
     for b in led.branches:
         b["synonyms"] = disease_names(b, step2)[1:]
-    ch_map = chapters_for(led, step2, use_cache)
+    # supportive fallback chain (contract docs/supportive_fallback_contract.md): per branch, a single-gene chapter (L1)
+    # or else a multi-gene overview that lists the gene (L2); L3 / L4 below
+    ch_map, tier_rec = F.branch_tiers(chapters_for(led, step2, use_cache), step2, led.branches)
     acc_book = D.ensure("genereviews_book").downloaded_at
     found: dict[str, dict] = {}          # action key -> {key, section, label, branches, specs, reqs, why}
     dropped_conditions: list[dict] = []  # requirements code refused (purpose clauses), kept for review
@@ -591,6 +594,9 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     for nbk in sorted({n for ns in ch_map.values() for n in ns}):
         secs = mgmt_sections(nbk)
         branch_ids = [b for b, ns in ch_map.items() if nbk in ns]
+        tier = F.chapter_tier(nbk, step2)
+        own_genes = {b.get("gene") for b in led.branches if b["id"] in branch_ids}
+        ch_genes = GR.chapter_genes(nbk) if tier == "overview" else []
         searches.append({"database": "genereviews", "endpoint": GR.BOOK_URL.format(nbk=nbk),
                          "query": f"{nbk} Management sections", "queried_at": acc_book, "n_results": len(secs)})
         if not secs:
@@ -651,6 +657,16 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
+                spec["tier_source"] = tier
+                if tier == "overview":            # overview advice about another gene of the chapter is not for this one
+                    sc = " | ".join(row_cells(shown.get(path, ""), it["quote"]) or []) or \
+                        (GR.paragraph_scope(shown.get(path, ""), it["quote"]) or it["quote"])
+                    other = next((g for g in [F.other_gene_named(sc, ch_genes, own) for own in own_genes] if g), None) \
+                        if len(own_genes) == 1 else F.other_gene_named(sc, ch_genes, next(iter(own_genes), None))
+                    if other:
+                        dropped_conditions.append({"text": it["quote"][:200], "action": name, "source": f"{nbk} {path}",
+                                                   "rule": f"overview advice names another gene of the chapter ({other})"})
+                        continue
                 if it.get("quote_repaired"):
                     spec["quote_repaired"] = it["quote_repaired"]
                 # a table item's conditions may sit in other cells of its row (the manifestation it treats, the
@@ -744,6 +760,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     for (lb, text, name, bids, section, why, quote), reqs in zip(jobs, parsed):
         _label_action(put, lb, text, name, bids, section, why, reqs, quote=quote)
 
+    supportive_fallback(led, found, tier_rec, pf, step2, put, use_cache)
     led.patient_context["action_synonyms"] = merge_synonyms(found, use_cache)
     seen_drop = set()                  # the same clause can be refused twice (item quote, then its row)
     led.dropped_conditions = [d for d in dropped_conditions
@@ -858,6 +875,105 @@ def merge_synonyms(found: dict, use_cache: bool) -> list[dict]:
     return log
 
 
+def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, step2: dict, put, use_cache: bool) -> None:
+    """L3 and L4 of the fallback chain, per branch (contract v2). Records every tier decision in led.supportive_tiers."""
+    def results(bid, tiers):
+        return [a for a in found.values() if a["section"] == "supportive_management" and bid in a["branches"]
+                and any(sp.get("tier_source") in tiers for sp in a["specs"])]
+
+    table = F.load_guidelines()
+    ont = ontology()
+    present_ids = {x["hpo_id"] for x in pf["present"]}
+
+    def matches(text, symptom):
+        ids = set(ont.exact_lookup(text)) or {c["hpo_id"] for c in ont.search(text, 1)}
+        return symptom["hpo_id"] in ids or bool(ids & set(ont.ancestors(symptom["hpo_id"])))
+
+    for b in [b for b in led.branches if b.get("diagnosis")]:
+        rec = tier_rec.setdefault(b["id"], {"tier": None, "chapters": []})
+        rec["present_ids"] = sorted(present_ids)
+        above = results(b["id"], ("chapter", "overview"))
+        if not above:                                       # L3 only when L1 and L2 give nothing (contract)
+            _literature(led, b, rec, put, step2, use_cache)
+            above = results(b["id"], ("chapter", "overview", "literature"))
+            if above:
+                rec["tier"] = "literature"
+        rec["results_above"] = bool(above)
+        texts = [r["text"] for a in above for r in a["reqs"] if r.get("field") == "manifestation"]
+        targets = pf["present"] if not above else F.uncovered_symptoms(pf["present"], texts, matches)
+        rec["gap_filled" if above else "symptoms"] = [{"hpo_id": x["hpo_id"], "label": x["label"]} for x in targets]
+        cats = F.symptom_categories(targets, table, ont.ancestors)
+        rec["symptomatic"] = {"configured": bool(table.get("categories")), "categories": sorted(cats)}
+        for cat, symptoms in cats.items():
+            for g in table["categories"][cat].get("guidelines") or []:
+                text = F.verified_text(g)
+                if text is None:
+                    rec["symptomatic"].setdefault("not_verified", []).append(g.get("id"))
+                    continue
+                for rec_ in g.get("recommendations") or []:
+                    if not LG.quote_in(rec_.get("quote", ""), text):
+                        continue
+                    src = {"type": "url", "id": g["url"], "url": g["url"], "guideline": g.get("title"), "version": g.get("version")}
+                    for x in symptoms:
+                        name = rec_["name"]
+                        tt = A.therapy_type(name)
+                        key = {"key": A.strategy_key("therapy", tt) if tt else A.strategy_key("supportive_measure", f"{cat} {name}"),
+                               "normalized": True}
+                        spec = _spec(f"{g.get('title')} recommends {name} for {x['label']} (symptomatic management).", src,
+                                     rec_["quote"], text, int(time.time()), "code", f"3a symptomatic {g.get('id')}")
+                        spec.update(tier_source="symptomatic", verified_manually=g["verified"].get("date"))
+                        put(key, "supportive_management", name, [b["id"]], spec, [], f"symptomatic: {x['label']}", source="symptomatic")
+                        found[key["key"]]["for_symptom"] = {"hpo_id": x["hpo_id"], "label": x["label"], "quote": x["quote"]}
+        if not rec.get("tier") and not above:
+            rec["tier"] = "symptomatic" if any(a.get("for_symptom") for a in found.values() if b["id"] in a["branches"]) else "none"
+    led.supportive_tiers = tier_rec
+
+
+def _literature(led, b, rec, put, step2, use_cache) -> None:
+    """L3 for one branch: PubMed abstracts and PMC open-access full text; LLM lifts verbatim recommendations, code
+    checks the quote, the publication type and the support check."""
+    names = disease_names(b, step2)
+    try:
+        lit = F.search_literature(b.get("gene"), names)
+    except (RuntimeError, ValueError, KeyError) as e:     # e.g. NCBI search unavailable: recorded, nothing assumed
+        rec["literature"] = {"error": f"{type(e).__name__}: {e}"[:300]}
+        return
+    rec["literature"] = {k: v for k, v in lit.items() if k != "papers"} | {
+        "papers": [{k: v for k, v in p.items() if k not in ("abstract", "full_text")} for p in lit["papers"]]}
+    for p in lit["papers"]:
+        if p.get("excluded"):
+            continue
+        text = " ".join(x for x in (p["abstract"], p["full_text"]) if x)
+        if not text:
+            continue
+        parsed, llm = _llm(F.LIT_SYSTEM, f"Disease: {b['diagnosis']['label']}\nArticle PMID {p['pmid']}:\n{text[:12000]}",
+                           use_cache, f"literature PMID {p['pmid']}")
+        for it in parsed.get("items") or []:
+            name, q = str(it.get("name") or "").strip(), str(it.get("quote") or "")
+            if not name or not LG.quote_in(q, text):
+                continue
+            sc = SC.check_support(f"{name} for {b['diagnosis']['label']}",
+                                  [f"The article recommends {name} for patients with {b['diagnosis']['label']}."], [q],
+                                  use_cache=use_cache)
+            if sc["overall"] != "supported":
+                continue
+            tt = A.therapy_type(name)
+            kind = it.get("kind")
+            key = {"key": A.strategy_key("therapy", tt), "normalized": True} if tt else \
+                A.drug_key(name) if kind == "drug" else \
+                {"key": A.strategy_key({"procedure": "procedure", "diet": "diet"}.get(kind, "supportive_measure"), name), "normalized": True}
+            src = {"type": "pmid", "id": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/"}
+            spec = _spec(f"PMID {p['pmid']} ({', '.join(p['pub_types'][:2])}, {p['year']}) recommends {name}.", src, q, text,
+                         rec["literature"]["queried_at"], llm, "3a literature")
+            spec.update(tier_source="literature", literature={"pub_types": p["pub_types"], "year": p["year"],
+                                                              "open_access_full_text": bool(p["full_text"])})
+            reqs = []
+            if it.get("manifestation") and LG.quote_in(it["manifestation"], text):
+                reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
+                             "spec": _spec(spec["claim"], src, it["manifestation"], text, spec["accessed_at"], llm, "3a literature")})
+            put(key, "supportive_management", name, [b["id"]], spec, reqs, f"literature PMID {p['pmid']}", source="literature")
+
+
 def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
     """Pregnancy-specific management (decision 2026-11-03): male or under 12 -> not applicable;
     female 12 or older, or sex unknown and older than 12 -> conditional (pregnancy status unknown)."""
@@ -882,6 +998,9 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                             action=a["key"])
             if spec.get("quote_repaired"):
                 ev["quote_repaired"] = spec["quote_repaired"]      # quote is the source span; marked for review
+            for fld in ("tier_source", "literature", "verified_manually"):
+                if spec.get(fld):
+                    ev[fld] = spec[fld]
             return led.add(ev)
         evs = [make(sp) for sp in a["specs"]]
         if not any(e["status"] == "verified" for e in evs):
@@ -965,6 +1084,10 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                           else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        if section == "supportive_management":
+            rec["tier_source"] = F.best_tier(a["specs"])
+            if a.get("for_symptom"):
+                rec["for_symptom"] = a["for_symptom"]
         if preg_notes:
             rec["pregnancy_notes"] = sorted(set(preg_notes))
         if gr_notes:

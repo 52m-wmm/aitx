@@ -216,7 +216,8 @@ class Ledger:
         self.branch_order: list[str] = [b["id"] for b in branches]
         self.actions: list[dict] = []
         self.dropped_conditions: list[dict] = []
-        self.reextracted_rows: list[dict] = []     # 3a: table rows no extracted action covered, extracted again   # 3a: requirements refused by a code rule (text, rule, source)
+        self.reextracted_rows: list[dict] = []
+        self.supportive_tiers: dict = {}             # fallback chain: tier, chapters, literature, symptoms, per branch     # 3a: table rows no extracted action covered, extracted again   # 3a: requirements refused by a code rule (text, rule, source)
         self.trial_searches: dict = {}         # 3b: per branch, every search, filtered study (with reason) and over-cap study
 
     def add(self, e: dict) -> dict:
@@ -295,6 +296,11 @@ class Ledger:
             [b["id"] for b in self.branches if b.get("umbrella") and not (b.get("expanded_from") or b.get("not_expandable"))],
             "no unexpanded umbrella branch")
         chk("action_records_consistent", self._action_problems(), "every action record is traceable and consistent")
+        if self.supportive_tiers:
+            from aitx.evidence import fallback as F            # local import: fallback imports this module
+            present = {i for r in self.supportive_tiers.values() for i in r.get("present_ids") or []}
+            chk("supportive_tiers_consistent", F.tier_problems(self.supportive_tiers, self.actions, present),
+                "supportive actions carry their tier; tiers follow the fallback chain")
         chk("drug_keys_normalized",
             [f"{e['action']['key']} ({e['section']})" for s in SECTIONS for e in self.in_section(s)
              if e["action"].get("normalized") is False], "all drugs normalized to RxNorm / ChEMBL", level="warn")
@@ -361,5 +367,6 @@ class Ledger:
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
                 "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
+                "supportive_tiers": self.supportive_tiers,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}

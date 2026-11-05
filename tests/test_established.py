@@ -705,6 +705,8 @@ def _gr_item(monkeypatch, items):
                                                               "queried_at": 1, "n_results": 0, "returned": 0}))
     monkeypatch.setattr(E, "disease_names", lambda b, s2: ["dystonia 28"])
     monkeypatch.setattr(E, "facts", lambda s1, s2: dict(PF, age_months=None, age_quote=None))
+    monkeypatch.setattr(E, "ontology", lambda: type("O", (), {"exact_lookup": lambda self, t: [], "search": lambda self, t, k: [],
+                                                         "ancestors": lambda self, h: []})())
     led = LG.Ledger("P", [dict(BR, id="b1")])
     E.add_established(led, {}, {}, use_cache=True)
     return led
@@ -795,6 +797,8 @@ def test_uncovered_row_extracted_again_and_logged(monkeypatch):
                                                               "queried_at": 1, "n_results": 0, "returned": 0}))
     monkeypatch.setattr(E, "disease_names", lambda b, s2: ["primary hyperoxaluria type 1"])
     monkeypatch.setattr(E, "facts", lambda s1, s2: PF)
+    monkeypatch.setattr(E, "ontology", lambda: type("O", (), {"exact_lookup": lambda self, t: [], "search": lambda self, t, k: [],
+                                                         "ancestors": lambda self, h: []})())
     led = LG.Ledger("P", [dict(BR, id="b1")])
     E.add_established(led, {}, {}, use_cache=True)
     labels = {a["label"] for a in led.actions}

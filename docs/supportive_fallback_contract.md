@@ -116,3 +116,12 @@
 1. L3 每个分支取前 10 篇；文本只用摘要和 PMC 开放获取全文。
 2. L4 首批症状：癫痫、发育迟缓 / 智力障碍、喂养困难。每份指南先人工核实原文和出处，写进配置前先把配置清单交审阅。
 3. L1 与 L2 并存（有专章，同时有总论）时，不取总论的通用建议。
+
+## 实现记录（2026-11-05）
+
+- 代码：`aitx/evidence/fallback.py`（判层、L3 检索、L4 配置与补漏、校验），在 `established.add_established` 中按分支执行（`supportive_fallback`）。
+- L1 / L2 判层用 Step 2 的 GeneReviews 章节元数据（`scope`：single_gene → L1，multi_gene → L2）。总论的基因列表来自 GeneReviews 索引（`genereviews.chapter_genes`）。总论里点名本章其他基因的建议不用，丢弃记录在 `dropped_conditions`。
+- 账本新增 `supportive_tiers`（每个分支的层级、所用章节、L3 检索记录、补漏或对症的症状），以及支持治疗行动的 `tier_source`、`for_symptom`。新校验 `supportive_tiers_consistent`。
+- L3 检索服务出错时（如 NCBI 返回 500）记录错误，不做任何推断。
+- L4 配置表 `config/symptom_guidelines.json` 还没建（等指南清单审定），所以目前 L4 只记录需要补漏的症状，不生成行动。
+- 离线测试：`tests/test_fallback.py`，14 条，含反向用例。

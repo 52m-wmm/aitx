@@ -32,6 +32,16 @@ def shortname(nbk: str) -> str | None:
     return None
 
 
+def chapter_genes(nbk: str) -> list[str]:
+    """Gene symbols the GeneReviews index lists for a chapter (one for a single-gene chapter, many for an overview)."""
+    out = []
+    for raw in D.ensure("genereviews").path.read_text(encoding="utf-8").splitlines():
+        parts = raw.split("|")
+        if len(parts) == 4 and parts[1] == nbk and parts[2] and parts[2] not in out:
+            out.append(parts[2])
+    return out
+
+
 def _chapter_dir() -> Path:
     lf = D.ensure("genereviews_book")
     d = lf.path.parent / "chapters"
