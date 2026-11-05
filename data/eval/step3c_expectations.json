@@ -1,0 +1,169 @@
+{
+ "description": "Step 3c acceptance expectations (docs/step3c_contract.md, verified against PubMed abstracts on 2026-11-05). blocked_by: an item that cannot hold until a pending decision is made; it is reported, never counted as a code failure.",
+ "verified_on": "2026-11-05",
+ "items": [
+  {
+   "id": "ex7-galactose",
+   "case": "PRAC-SLC35A2-ex7",
+   "match": "galactose",
+   "expect": {
+    "status": "present",
+    "product_class": "dietary_supplement",
+    "precedent_pmids": [
+     "32103184"
+    ],
+    "n_disease": {
+     "32103184": 10
+    },
+    "efficacy_direction": "reported_improvement"
+   },
+   "blocked_by": "config/supplements.json not approved yet (DSLD candidate list under review; D-galactose has no single-ingredient DSLD product)",
+   "what": {
+    "zh": "SLC35A2 ex7 / D-半乳糖进 3c：PMID 32103184，10 例，结论不强于原文",
+    "en": "SLC35A2 ex7 / D-galactose in 3c: PMID 32103184, 10 patients, conclusion no stronger than the source"
+   },
+   "source": {
+    "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020), abstract",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "Ten patients with SLC35A2-CDG were supplemented with oral D-galactose for 18 weeks in escalating doses up to 1.5 g/kg/day. ... Oral galactose is well tolerated and shows promise as dietary therapy."
+   },
+   "note": "design from PubMed fields is 'not stated' (only Journal Article); the contract's 'single-arm, open-label' is not derivable from PubMed fields or design words in the abstract"
+  },
+  {
+   "id": "ex8-galactose",
+   "case": "PRAC-SLC35A2-ex8",
+   "match": "galactose",
+   "expect": {
+    "status": "present",
+    "product_class": "dietary_supplement",
+    "precedent_pmids": [
+     "32103184"
+    ],
+    "n_disease": {
+     "32103184": 10
+    },
+    "efficacy_direction": "reported_improvement"
+   },
+   "blocked_by": "config/supplements.json not approved yet (DSLD candidate list under review; D-galactose has no single-ingredient DSLD product)",
+   "what": {
+    "zh": "SLC35A2 ex8 / D-半乳糖进 3c：PMID 32103184，10 例，结论不强于原文",
+    "en": "SLC35A2 ex8 / D-galactose in 3c: PMID 32103184, 10 patients, conclusion no stronger than the source"
+   },
+   "source": {
+    "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020), abstract",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "Ten patients with SLC35A2-CDG were supplemented with oral D-galactose for 18 weeks in escalating doses up to 1.5 g/kg/day. ... Oral galactose is well tolerated and shows promise as dietary therapy."
+   },
+   "note": "design from PubMed fields is 'not stated' (only Journal Article); the contract's 'single-arm, open-label' is not derivable from PubMed fields or design words in the abstract"
+  },
+  {
+   "id": "grin2b-lserine",
+   "case": "PRAC-GRIN2B",
+   "match": "serine",
+   "expect": {
+    "status": "conditional",
+    "product_class": "dietary_supplement",
+    "precedent_pmids_any": [
+     "38380699",
+     "36758276"
+    ],
+    "unknown": [
+     "variant function"
+    ]
+   },
+   "blocked_by": "config/supplements.json not approved yet (DSLD candidate list under review; D-galactose has no single-ingredient DSLD product)",
+   "what": {
+    "zh": "GRIN2B p.Gln919Ter / L-丝氨酸进 3c，有条件（功能效应未知：末位外显子截短，预测逃逸 NMD）",
+    "en": "GRIN2B p.Gln919Ter / L-serine in 3c, conditional (variant function unknown: last-exon truncation predicted to escape NMD)"
+   },
+   "source": {
+    "doc": "PubMed PMID 38380699 (phase 2A), PMID 36758276 (observational); Step 1 NMD prediction",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38380699/",
+    "quote": "the first non-randomized, open-label, single-arm trial (NCT04646447) designed to evaluate the tolerability and efficacy of L-serine in children with GRIN genetic variants leading to loss-of-function"
+   }
+  },
+  {
+   "id": "ano10-coq10",
+   "case": "PRAC-ANO10",
+   "match": "coenzyme|CoQ10|ubiquin",
+   "expect": {
+    "status": "present",
+    "product_class": "dietary_supplement",
+    "precedent_pmids": [
+     "30838263"
+    ],
+    "efficacy_direction": "insufficient"
+   },
+   "blocked_by": "config/supplements.json not approved yet (DSLD candidate list under review; D-galactose has no single-ingredient DSLD product)",
+   "what": {
+    "zh": "ANO10 / 辅酶 Q10 进 3c：3 名同胞不设盲用药，结果在可获取的文本中未报告",
+    "en": "ANO10 / coenzyme Q10 in 3c: unblinded use in 3 siblings; outcome not reported in the accessible text"
+   },
+   "source": {
+    "doc": "PubMed PMID 30838263 (2020), abstract; full text not open access",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/30838263/",
+    "quote": "Data also are provided on unblinded therapy with coenzyme Q10, previously reported as a possible therapy in ANO10 -related ataxia."
+   }
+  },
+  {
+   "id": "agxt33-stiripentol",
+   "case": "PRAC-AGXT-c33dup",
+   "match": "stiripentol",
+   "expect": {
+    "status": "present",
+    "product_class": "approved_off_label",
+    "precedent_pmids": [
+     "32418144"
+    ],
+    "efficacy_direction": "reported_ineffective",
+    "conclusion": "not recommended"
+   },
+   "what": {
+    "zh": "PH1 / 司替戊醇进 3c（超说明书，FDA 批准用于 Dravet）：没有支持有效的证据（1 篇阴性，1 篇合并 lumasiran 无法归因）",
+    "en": "PH1 / stiripentol in 3c (off-label; FDA-approved for Dravet): no evidence supporting efficacy (1 negative, 1 combined with lumasiran)"
+   },
+   "source": {
+    "doc": "PubMed PMID 32418144 (case report), PMID 36693470 (case report), abstracts",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32418144/",
+    "quote": "Stiripentol may not be useful to reduce P Ox in PH patients with advanced chronic kidney disease"
+   }
+  },
+  {
+   "id": "grin2b-dserine-absent",
+   "case": "PRAC-GRIN2B",
+   "match": "\\bD-serine|d-serine",
+   "expect": {
+    "status": "absent",
+    "excluded_pmid": {
+     "28734458": "retracted"
+    }
+   },
+   "what": {
+    "zh": "GRIN2B / D-丝氨酸不进 3c：唯一的人体报告已撤稿",
+    "en": "GRIN2B / D-serine not in 3c: the only human report is retracted"
+   },
+   "source": {
+    "doc": "PubMed PMID 28734458 (Retracted Publication; retraction Biol Psychiatry 2018;83(8):715)",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/28734458/",
+    "quote": "Retracted Publication"
+   }
+  },
+  {
+   "id": "grin2b-pam-absent",
+   "case": "PRAC-GRIN2B",
+   "match": "tobramycin|pregnenolone|hydroxycholesterol",
+   "expect": {
+    "status": "absent"
+   },
+   "what": {
+    "zh": "GRIN2B / NMDA 受体正向变构调节剂不进 3c（只有体外研究，归 3e）",
+    "en": "GRIN2B / NMDA receptor positive allosteric modulators not in 3c (in vitro only; step 3e)"
+   },
+   "source": {
+    "doc": "PubMed PMID 32712275, abstract",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32712275/",
+    "quote": "We have evaluated whether three positive allosteric modulators of NMDAR receptor function (24(S)-hydroxycholesterol, pregnenolone sulfate, tobramycin) and three co-agonists (d-serine, l-serine, and d-cycloserine) can mitigate the diminished function of NMDARs harboring GRIN variants."
+   }
+  }
+ ]
+}

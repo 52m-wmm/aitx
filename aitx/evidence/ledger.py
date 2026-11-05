@@ -217,7 +217,8 @@ class Ledger:
         self.actions: list[dict] = []
         self.dropped_conditions: list[dict] = []
         self.reextracted_rows: list[dict] = []
-        self.supportive_tiers: dict = {}             # fallback chain: tier, chapters, literature, symptoms, per branch     # 3a: table rows no extracted action covered, extracted again   # 3a: requirements refused by a code rule (text, rule, source)
+        self.supportive_tiers: dict = {}
+        self.offlabel_searches: dict = {}            # 3c: per branch, PubMed search, papers and why each was not used             # fallback chain: tier, chapters, literature, symptoms, per branch     # 3a: table rows no extracted action covered, extracted again   # 3a: requirements refused by a code rule (text, rule, source)
         self.trial_searches: dict = {}         # 3b: per branch, every search, filtered study (with reason) and over-cap study
 
     def add(self, e: dict) -> dict:
@@ -296,6 +297,9 @@ class Ledger:
             [b["id"] for b in self.branches if b.get("umbrella") and not (b.get("expanded_from") or b.get("not_expandable"))],
             "no unexpanded umbrella branch")
         chk("action_records_consistent", self._action_problems(), "every action record is traceable and consistent")
+        if any(a["section"] == "off_label_expanded_access" for a in self.actions):
+            from aitx.evidence import offlabel as O             # local import: offlabel imports this module
+            chk("offlabel_consistent", O.problems(self.actions), "3c actions: valid precedents, efficacy summary, US status")
         if self.supportive_tiers:
             from aitx.evidence import fallback as F            # local import: fallback imports this module
             present = {i for r in self.supportive_tiers.values() for i in r.get("present_ids") or []}
@@ -367,6 +371,6 @@ class Ledger:
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
                 "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
-                "supportive_tiers": self.supportive_tiers,
+                "supportive_tiers": self.supportive_tiers, "offlabel_searches": self.offlabel_searches,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}

@@ -105,6 +105,7 @@ def _record(led, study, bs: dict, mapped: dict | None, pf, extra, by_id, step2) 
     label = f"{study.get('acronym') or study.get('title') or nct} ({nct})"
     rec = LG.action_record(A.trial_key(nct), SECTION, label, branches, lines, evs, reasons)
     rec.update(nct=nct, url=T.study_url(nct), title=study.get("title"), study_type=study.get("study_type"),
+               interventions=study.get("interventions") or [],
                overall_status=study.get("status"), phases=study.get("phases"), relevance=study.get("relevance"),
                specific=study.get("specific"), analysed_in=[b for b in branches if bs[b] == "analysed"])
     if mapped:
