@@ -9,6 +9,14 @@ def test_ckd_epi_2021_reference_values():
     assert D.egfr(0.7, 40, "female")["value"] == pytest.approx(112.1, abs=0.2)     # 142 x 0.9938^40 x 1.012
 
 
+@pytest.mark.parametrize("scr,age,sex,nkf", [
+    (1.0, 50, "male", 92),        # NKF eGFR Calculator (kidney.org/professionals/gfr_calculator), CKD-EPI Creatinine (2021):
+    (2.5, 70, "female", 20),      # serum creatinine in mg/dL, no cystatin C; checked 2026-11-04; the calculator shows whole numbers
+])
+def test_ckd_epi_2021_matches_the_nkf_calculator(scr, age, sex, nkf):
+    assert round(D.egfr(scr, age, sex)["value"]) == nkf
+
+
 def test_bedside_schwartz_needs_height():
     assert D.egfr(0.5, 7, "male", height_cm=120)["value"] == pytest.approx(99.1, abs=0.1)
     r = D.egfr(0.5, 7, "male")

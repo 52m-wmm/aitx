@@ -61,6 +61,11 @@ def compare(item: dict, led: dict | None) -> dict:
                if s["unit"] == unit]
         if not got or got[0]["result"] != outcome:
             probs.append(f"scenario {unit}: {got[0]['result'] if got else 'missing'} (want {outcome})")
+    for unit, pat in (want.get("scenario_reason") or {}).items():
+        why = " ".join(f"{l.get('note') or ''} {(((l.get('details') or {}).get('lab') or {}).get('patient') or {}).get('why') or ''}"
+                       for l in rec["requirements"] if (l.get("details") or {}).get("lab"))
+        if not (re.search(re.escape(unit) + r".{0,40}" + pat, why) or (unit in why and re.search(pat, why))):
+            probs.append(f"scenario {unit}: reason /{pat}/ not stated")
     lines = [{"requirement": l["requirement"], "result": l["result"], "note": l.get("note")} for l in rec["requirements"]]
     return {"ok": not probs, "actual": {"status": sts, "reasons": {b: v["reason"] for b, v in rec["status_by_branch"].items()},
                                         "requirements": lines}, "problem": "; ".join(probs) or None}

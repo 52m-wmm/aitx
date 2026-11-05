@@ -76,7 +76,7 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 | 病例 | 期望 | 出处 |
 | --- | --- | --- |
 | PRAC-SLC35A2-ex7（年龄未知） | AVTX-801 试验 NCT05402384（NOT_YET_RECRUITING）出现在章节中，状态 conditional（年龄、血红蛋白未知） | 登记记录：年龄 1 Month 以上；排除 "Hemoglobin \< 7 mg/dL" |
-| PRAC-SLC35A2-ex8（2 个月，"Hemoglobin 5"） | NCT05402384：年龄条目通过；排除条目 "Hemoglobin \< 7 mg/dL" 的登记单位不合理，在同一量纲内理解为 g/dL（注明）；病例 "Hemoglobin 5" 没写单位，g/dL 与 mmol/L 都合理 → **conditional**，报告分别写明两种情况：按 g/dL（5 \< 7，符合排除标准，不能入组）、按 mmol/L（约 8.1 g/dL，不符合排除标准）。**与官网 Phase 0 答案（不能入组）不同**，原因见下方计划变更 | 同上；病例原文 "Hemoglobin 5"（无单位） |
+| PRAC-SLC35A2-ex8（2 个月，"Hemoglobin 5"） | NCT05402384：年龄条目通过；排除条目 "Hemoglobin \< 7 mg/dL" 的登记单位不合理，在同一量纲内理解为 g/dL（注明）；病例 "Hemoglobin 5" 没写单位，g/dL 与 mmol/L 都合理 → **conditional**，报告分别写明两种情况：按 g/dL（5 \< 7，符合排除标准，不能入组）、按 mmol/L 为未知（换算系数未核实；2026-11-04 修改，见下方待办）。**与官网 Phase 0 答案（不能入组）不同**，原因见下方计划变更 | 同上；病例原文 "Hemoglobin 5"（无单位） |
 | PRAC-AGXT-c33dup（7 岁） | 在招募的 PH1 试验中，ABO-101（NCT06839235，6–64 岁）、YOLT-203（NCT07587021，≥6 岁）年龄条目通过；DCR-PHXC（NCT04580420，Condition 含 ESRD）中要求终末期肾病的条目为 unknown | 登记记录 |
 | PRAC-CFTR-F508del（15 岁） | 相关性过滤后数量与原因有记录；逐条分析不超过 K 个；Condition 不含 CF 的试验被过滤 | 检索实测：CF 在招募 183 个 |
 | PRAC-OTC | ARCT-810（NCT06488313）要求年龄 ≥12 岁，3 个月男婴 → not_applicable；OTC-HOPE（DTX301，NCT05345171）现为 ACTIVE_NOT_RECRUITING：**不列为可报名试验**，出现在阴性证据的被排除列表中（原因：状态） | 登记记录（2026-11-03）；不加状态过滤的检索实测 |
@@ -100,6 +100,8 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 | 登记单位不合理时改读 | 只改读成同一量纲、换算倍数 ≥100 倍、且落入合理范围的唯一单位，并写明假设；否则 unknown | 只纠正笔误式错误；g/dL ↔ g/L（10 倍）、mg/dL ↔ µmol/L（肌酐约 88 倍）这类差距可能是真实病理值，不改读 |
 | 病例数值没写单位 | 合理单位唯一时采用并写明假设；两个以上、或有换算系数未核实的单位无法排除时 → unknown，报告按单位分别写出结论 | 决定 3 |
 | 换算系数未核实 | 该单位既不能被假定，也不能被排除 | 写错比不写更糟 |
+
+**待办（2026-11-04）**：找到血红蛋白 mmol/L 换算系数的权威出处（如 AMA Manual of Style 的 SI 换算表或同等来源），核实后写入配置，再按登记原文阈值（"Hemoglobin \< 7 mg/dL"）重新推导 ex8 的 mmol/L 情形期望。在此之前 ex8 期望为：总体有条件适用；g/dL → 符合排除标准；mmol/L → 未知（理由：换算系数未核实）。代码不使用未核实的系数。
 
 **已知局限**：透析病人的肌酐（>13 mg/dL）、高氨血症危象的血氨（>约 411 µmol/L）等真实的极端值会超出 ×10 上限，此时判为 unknown（状态 conditional），**不会判错**，只是少给一个结论。
 血红蛋白的 mmol/L 换算系数尚无可引用的权威出处：AMA Manual of Style SI 换算表（第 11 版）只列 g/dL → g/L，二手资料存在 0.6206（按单体）和 0.155（按四聚体）两种约定，因此保持待核实；
