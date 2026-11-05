@@ -42,6 +42,16 @@ def chapter_genes(nbk: str) -> list[str]:
     return out
 
 
+def chapter_title(nbk: str) -> str | None:
+    """The chapter's own title from the archive ("Hereditary Ataxia Overview"), or None if the chapter is not local."""
+    path = extract_chapters([nbk]).get(nbk)
+    if not path:
+        return None
+    r = ET.parse(path).getroot()
+    t = r.find(".//book-part-meta//title") or r.find(".//title-group/title") or r.find(".//title")
+    return _text(t) if t is not None else None
+
+
 def _chapter_dir() -> Path:
     lf = D.ensure("genereviews_book")
     d = lf.path.parent / "chapters"

@@ -133,3 +133,13 @@
 2. 分支所用专章或总论的治疗类管理小节（`mgmt_sections`，不含监测、初诊评估、亲属评估、在研疗法）的正文中，写出了该症状的 HPO 名称或同义词，即算已覆盖。整词匹配；短的大写缩写（如 CKD）区分大小写。结果记在 `supportive_tiers[分支].covered_by_chapter_text`。
 
 起因：AGXT 有专章，但"肾钙质沉着""慢性肾病"被判为未覆盖。专章 Supportive Care 和 Targeted Therapies 小节其实写了 "Nephrocalcinosis"、"chronic kidney disease (CKD)"。反向测试：专章没提到的症状（如癫痫发作）仍判为未覆盖。
+
+### L4 配置与总论判定（2026-11-05）
+
+- **配置** `config/symptom_guidelines.json` 已按审定写入，每份指南写明级别、出处、版本 / 现行状态，第 ③ 级写明理由。本地核实记录在 `.cache/guidelines/<编号>/verified.json`（不进仓库），sha256 写在配置里。
+  - 癫痫：AES 2016 癫痫持续状态指南（②；AES 官网仍列为现行，新版在制定中），推荐带使用情境 "seizures lasting at least 5 minutes"，判为有条件；AAN/AES 2018（②；2024-10-19 复审确认），药物推荐只在病例写明对应发作类型时使用（配置的 `hpo` 限定为失神发作）；NICE NG217（③，理由：一般管理在 ①② 级没有现行指南）。
+  - 发育迟缓 / 智力障碍：**不启用**（`enabled: false`）。AAP 2013 核实前不用 IAP 临时代替。
+  - 喂养困难：ESPGHAN 2017（①），3 条推荐，其中 2 条带使用情境。
+- **新增配置项**：类别 `enabled`；推荐 `hpo`（只对病人已有的该症状或其下位症状使用）；推荐 `requires`（使用情境，原文逐字，判为有条件）。
+- **总论判定改为按章节原文标题**（契约原文"标题含 Overview"）。实现时曾按基因数判断，把"Classic Ehlers-Danlos Syndrome"（3 个基因）误标为总论；现在按标题判断，取不到标题时才退回按基因数。
+- **新发现的候选（未写入配置）**：AES 官网列出 "American Epilepsy Society Clinical Practice Guideline: Infantile Epilepsy"（2026 年 4 月）。这是第 ② 级的婴儿癫痫管理指南，待核实原文后再决定是否加入。

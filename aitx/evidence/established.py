@@ -912,16 +912,22 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
         cats = F.symptom_categories(targets, table, ont.ancestors)
         rec["symptomatic"] = {"configured": bool(table.get("categories")), "categories": sorted(cats)}
         for cat, symptoms in cats.items():
+            if table["categories"][cat].get("enabled") is False:      # e.g. not yet verified: never a stand-in
+                rec["symptomatic"].setdefault("disabled", []).append(cat)
+                continue
             for g in table["categories"][cat].get("guidelines") or []:
                 text = F.verified_text(g)
                 if text is None:
                     rec["symptomatic"].setdefault("not_verified", []).append(g.get("id"))
                     continue
                 for rec_ in g.get("recommendations") or []:
-                    if not LG.quote_in(rec_.get("quote", ""), text):
+                    if not LG.quote_in(rec_.get("quote", ""), text) or \
+                            any(not LG.quote_in(w, rec_["quote"]) for w in rec_.get("requires") or []):
                         continue
                     src = {"type": "url", "id": g["url"], "url": g["url"], "guideline": g.get("title"), "version": g.get("version")}
-                    for x in symptoms:
+                    # a recommendation for one seizure type (or other narrower symptom) only when the case states it
+                    only = set(rec_.get("hpo") or [])
+                    for x in [x for x in symptoms if not only or x["hpo_id"] in only or only & set(ont.ancestors(x["hpo_id"]))]:
                         name = rec_["name"]
                         tt = A.therapy_type(name)
                         key = {"key": A.strategy_key("therapy", tt) if tt else A.strategy_key("supportive_measure", f"{cat} {name}"),
@@ -929,7 +935,10 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
                         spec = _spec(f"{g.get('title')} recommends {name} for {x['label']} (symptomatic management).", src,
                                      rec_["quote"], text, int(time.time()), "code", f"3a symptomatic {g.get('id')}")
                         spec.update(tier_source="symptomatic", verified_manually=g["verified"].get("date"))
-                        put(key, "supportive_management", name, [b["id"]], spec, [], f"symptomatic: {x['label']}", source="symptomatic")
+                        reqs = [{"kind": "other", "text": w, "field": "situation",
+                                 "spec": _spec(f"{g.get('title')}: used only {w}", src, w, text, int(time.time()), "code",
+                                               f"3a symptomatic {g.get('id')}")} for w in rec_.get("requires") or []]
+                        put(key, "supportive_management", name, [b["id"]], spec, reqs, f"symptomatic: {x['label']}", source="symptomatic")
                         found[key["key"]]["for_symptom"] = {"hpo_id": x["hpo_id"], "label": x["label"], "quote": x["quote"]}
         if not rec.get("tier") and not above:
             rec["tier"] = "symptomatic" if any(a.get("for_symptom") for a in found.values() if b["id"] in a["branches"]) else "none"

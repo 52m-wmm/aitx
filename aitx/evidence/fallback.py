@@ -33,19 +33,37 @@ CASE_ONLY = {"Case Reports"}                    # a single-patient report is nev
 
 # ------------------------------------------------------------------ L1 / L2: chapters per branch
 
-def branch_tiers(ch_map: dict[str, list[str]], step2: dict, branches: list[dict]) -> tuple[dict, dict]:
-    """(chapters to use per branch, tier record per branch). A branch with a single-gene chapter uses only those
-    (L1; an overview is not added - decision 3); otherwise its multi-gene chapters that list the branch gene (L2)."""
+def is_overview(nbk: str, step2: dict, title_of=None) -> bool:
+    """An overview is a chapter whose own title says "Overview" (contract L2: "Hereditary Ataxia Overview"); a
+    multi-gene chapter on one disease ("Classic Ehlers-Danlos Syndrome", 3 genes) is a chapter. Without the title
+    (chapter not in the local archive), the Step 2 gene count decides."""
+    title = (title_of or GR_title)(nbk)
+    if title:
+        return "overview" in title.lower()
     meta = {ch["nbk"]: ch for chs in (step2.get("genereviews") or {}).values() for ch in chs}
+    return (meta.get(nbk) or {}).get("scope") == "multi_gene"
+
+
+def GR_title(nbk: str) -> str | None:
+    from aitx.evidence import genereviews as GR
+    try:
+        return GR.chapter_title(nbk)
+    except (OSError, KeyError, ValueError, AttributeError, RuntimeError):   # chapter not available locally
+        return None
+
+
+def branch_tiers(ch_map: dict[str, list[str]], step2: dict, branches: list[dict], title_of=None) -> tuple[dict, dict]:
+    """(chapters to use per branch, tier record per branch). A branch with a disease chapter uses only those (L1; an
+    overview is not added - decision 3); otherwise its overview chapters that list the branch gene (L2)."""
     by_id = {b["id"]: b for b in branches}
     use, record = {}, {}
     for bid, nbks in ch_map.items():
-        single = [n for n in nbks if (meta.get(n) or {}).get("scope") != "multi_gene"]     # no metadata: a chapter
-        multi = [n for n in nbks if (meta.get(n) or {}).get("scope") == "multi_gene"]
+        single = [n for n in nbks if not is_overview(n, step2, title_of)]
+        multi = [n for n in nbks if is_overview(n, step2, title_of)]
         if single:
             use[bid] = single
             record[bid] = {"tier": "chapter", "chapters": single, "not_used": [{"nbk": n, "why": "overview not used: the "
-                           "branch has a single-gene chapter"} for n in multi]}
+                           "branch has a disease chapter"} for n in multi]}
         elif multi:
             use[bid] = multi
             record[bid] = {"tier": "overview", "chapters": multi, "gene": by_id.get(bid, {}).get("gene"),
@@ -56,9 +74,8 @@ def branch_tiers(ch_map: dict[str, list[str]], step2: dict, branches: list[dict]
     return use, record
 
 
-def chapter_tier(nbk: str, step2: dict) -> str:
-    meta = {ch["nbk"]: ch for chs in (step2.get("genereviews") or {}).values() for ch in chs}
-    return "overview" if (meta.get(nbk) or {}).get("scope") == "multi_gene" else "chapter"
+def chapter_tier(nbk: str, step2: dict, title_of=None) -> str:
+    return "overview" if is_overview(nbk, step2, title_of) else "chapter"
 
 
 def other_gene_named(scope: str, chapter_genes: list[str], own_gene: str | None) -> str | None:

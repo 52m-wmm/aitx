@@ -17,8 +17,12 @@ BRS = [{"id": "b1", "gene": "AGXT", "diagnosis": {"label": "primary hyperoxaluri
 
 # --- L1 / L2
 
+TITLES = {"NBK1283": "Primary Hyperoxaluria Type 1", "NBK1138": "Hereditary Ataxia Overview",
+          "NBK1244": "Classic Ehlers-Danlos Syndrome"}
+
+
 def test_branch_tiers_chapter_overview_none_per_branch():
-    use, rec = F.branch_tiers({"b1": ["NBK1283", "NBK1138"], "b2": ["NBK1138"], "b3": []}, S2, BRS)
+    use, rec = F.branch_tiers({"b1": ["NBK1283", "NBK1138"], "b2": ["NBK1138"], "b3": []}, S2, BRS, TITLES.get)
     assert use == {"b1": ["NBK1283"], "b2": ["NBK1138"], "b3": []}         # one case, three different tiers
     assert rec["b1"]["tier"] == "chapter" and rec["b1"]["not_used"][0]["nbk"] == "NBK1138"   # decision 3: no overview
     assert rec["b2"]["tier"] == "overview" and "disease-group" in rec["b2"]["label"]
@@ -289,3 +293,48 @@ def test_hpo_up_and_down_matching(monkeypatch):
             pass
         E.supportive_fallback(led, found, {}, dict(PF, present=[{"hpo_id": present, "label": "s", "quote": "q"}]), {}, put, True)
         assert led.supportive_tiers["b3"]["gap_filled"] == []
+
+
+# --- the approved table and the new L4 options (2026-11-05)
+
+def test_config_is_well_formed_and_every_quote_is_in_its_verified_record():
+    t = F.load_guidelines()
+    cats = t["categories"]
+    assert set(cats) == {"epilepsy", "developmental_delay_intellectual_disability", "feeding_difficulties"}
+    assert cats["developmental_delay_intellectual_disability"]["enabled"] is False          # AAP 2013 not verified yet
+    nice = next(g for g in cats["epilepsy"]["guidelines"] if g["id"] == "nice_ng217")
+    assert nice["level"] == 3 and nice["reason_level_3"]
+    for c in cats.values():
+        for g in c.get("guidelines") or []:
+            text = F.verified_text(g)
+            if text is None:                       # records live in .cache (not committed): skip where absent
+                continue
+            for r in g["recommendations"]:
+                assert E.LG.quote_in(r["quote"], text), (g["id"], r["name"])
+                assert all(E.LG.quote_in(w, r["quote"]) for w in r.get("requires") or [])
+
+
+def test_disabled_category_and_seizure_type_restriction(monkeypatch, tmp_path):
+    table = _table(tmp_path, monkeypatch, ["Ethosuximide should be considered before LTG for absence seizures. Benzodiazepines stop seizures lasting at least 5 minutes."])
+    g = table["categories"]["epilepsy"]["guidelines"][0]
+    g["recommendations"] = [
+        {"name": "ethosuximide before lamotrigine", "quote": "Ethosuximide should be considered before LTG for absence seizures", "hpo": ["HP:0002121"]},
+        {"name": "benzodiazepine rescue", "quote": "Benzodiazepines stop seizures lasting at least 5 minutes",
+         "requires": ["seizures lasting at least 5 minutes"]}]
+    table["categories"]["dd"] = {"hpo": ["HP:0001263"], "enabled": False, "guidelines": []}
+    _stub_common(monkeypatch, lit={**LIT, "papers": []}, table=table)
+    found = {}
+    led = _run_fallback(found)                     # PF: febrile seizure (not an absence seizure) and developmental delay
+    labels = {a["label"]: a for a in found.values()}
+    assert "ethosuximide before lamotrigine" not in labels                                   # seizure type not stated
+    assert labels["benzodiazepine rescue"]["reqs"][0]["field"] == "situation"                # conditional on the situation
+    assert led.supportive_tiers["b3"]["symptomatic"]["disabled"] == ["dd"]                   # no stand-in guideline
+
+
+def test_multi_gene_disease_chapter_is_a_chapter_not_an_overview():
+    # 2026-11-05: Classic Ehlers-Danlos Syndrome (3 genes) had been labelled "disease-group advice"
+    s2 = {"genereviews": {"COL1A1": [{"nbk": "NBK1244", "scope": "multi_gene"}]}}
+    assert F.chapter_tier("NBK1244", s2, TITLES.get) == "chapter"
+    assert F.chapter_tier("NBK1138", S2, TITLES.get) == "overview"
+    assert F.chapter_tier("NBK9999", s2, lambda n: None) == "chapter"            # no title, no metadata: a chapter
+    assert F.chapter_tier("NBK1244", s2, lambda n: None) == "overview"           # no title: the gene count decides

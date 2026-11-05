@@ -1,0 +1,128 @@
+{
+ "description": "L4 symptomatic guidelines (supportive fallback contract v2). Reviewed and approved 2026-11-05. Source priority: (1) international societies, (2) US societies, (3) other national bodies only when (1)-(2) have no usable management guideline, with the reason. Every quote is checked against the local verified record (.cache/guidelines/<id>/verified.json, not committed; sha256 below).",
+ "approved": "2026-11-05",
+ "categories": {
+  "epilepsy": {
+   "hpo": [
+    "HP:0001250"
+   ],
+   "guidelines": [
+    {
+     "id": "aes2016",
+     "level": 2,
+     "title": "AES evidence-based guideline: treatment of convulsive status epilepticus in children and adults",
+     "body": "American Epilepsy Society",
+     "version": "Epilepsy Curr 2016;16(1):48-61 (PMC4749120)",
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4749120/",
+     "status": "listed among current AES evidence-based guidelines on aesnet.org (checked 2026-11-05); an AES status epilepticus guideline revision is listed as in development",
+     "verified": {
+      "file": ".cache/guidelines/aes2016/verified.json",
+      "sha256": "1e4fcc0277545e01bef8f8c9b46e5db9017657c287221911523d54b97e3266bf",
+      "date": "2026-11-05"
+     },
+     "recommendations": [
+      {
+       "name": "benzodiazepine rescue for prolonged seizures (IV lorazepam or IV diazepam)",
+       "quote": "In children, intravenous lorazepam and intravenous diazepam are established as efficacious at stopping seizures lasting at least 5 minutes (Level A)",
+       "requires": [
+        "seizures lasting at least 5 minutes"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "aan2018",
+     "level": 2,
+     "title": "AAN/AES practice guideline update: efficacy and tolerability of the new antiepileptic drugs I: treatment of new-onset epilepsy",
+     "body": "American Academy of Neurology and American Epilepsy Society",
+     "version": "Neurology 2018 (PMC6145382); reaffirmed 2024-10-19 (aan.com, checked 2026-11-05)",
+     "url": "https://www.aan.com/Guidelines/home/GuidelineDetail/915",
+     "verified": {
+      "file": ".cache/guidelines/aan2018/verified.json",
+      "sha256": "5cab377c9ced509c6037a5b3fa46fec8208f6312c4d733e907ae7a1f7b727611",
+      "date": "2026-11-05"
+     },
+     "rule": "drug recommendations only when the case states the matching seizure type (decision 2026-11-05)",
+     "recommendations": [
+      {
+       "name": "ethosuximide or valproic acid before lamotrigine for absence seizures",
+       "quote": "ethosuximide (ETS) or valproic acid (VPA) should be considered before LTG to decrease seizure frequency in treating absence seizures in childhood absence epilepsy (Level B)",
+       "hpo": [
+        "HP:0002121"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "nice_ng217",
+     "level": 3,
+     "title": "Epilepsies in children, young people and adults (NG217)",
+     "body": "NICE",
+     "version": "published 2022-04-27, last updated 2026-08-05",
+     "url": "https://www.nice.org.uk/guidance/ng217",
+     "reason_level_3": "no current international or US-society guideline on general epilepsy management (individualised treatment plan) was found (checked 2026-11-05: ILAE has neonatal, infantile-seizure and psychiatric topics only; AES 2016 covers status epilepticus and AAN/AES 2018 drug choice)",
+     "verified": {
+      "file": ".cache/guidelines/nice_ng217/verified.json",
+      "sha256": "a0b80ce54d30f7dee6b9403cfbb6882ceea6cbdcaf698f9f8876913baeb98fbf",
+      "date": "2026-11-05"
+     },
+     "recommendations": [
+      {
+       "name": "individualised antiseizure medication treatment strategy",
+       "quote": "Develop an individualised antiseizure medication treatment strategy with the person, and their family and carers if appropriate"
+      }
+     ]
+    }
+   ]
+  },
+  "developmental_delay_intellectual_disability": {
+   "hpo": [
+    "HP:0001263",
+    "HP:0001249"
+   ],
+   "enabled": false,
+   "why_disabled": "first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: publisher page behind a Cloudflare check, NCBI search unavailable (2026-11-05); IAP 2022 is not used as a stand-in (decision 2026-11-05). After verification, IAP 2022 may supplement rehabilitation advice for ages over 3, with the reason.",
+   "guidelines": []
+  },
+  "feeding_difficulties": {
+   "hpo": [
+    "HP:0011968"
+   ],
+   "guidelines": [
+    {
+     "id": "espghan2017",
+     "level": 1,
+     "title": "ESPGHAN guidelines for the evaluation and treatment of gastrointestinal and nutritional complications in children with neurological impairment",
+     "body": "ESPGHAN",
+     "version": "J Pediatr Gastroenterol Nutr 2017;65(2):242-264; DOI 10.1097/MPG.0000000000001646 (author accepted manuscript)",
+     "url": "https://discovery.ucl.ac.uk/id/eprint/1563689/",
+     "verified": {
+      "file": ".cache/guidelines/espghan2017/verified.json",
+      "sha256": "e4eb9433d00f01ae7679c2717188240fb5483cde6b216e8e5cf32fb14e366986",
+      "date": "2026-11-05"
+     },
+     "recommendations": [
+      {
+       "name": "multidisciplinary nutritional evaluation and management",
+       "quote": "ESPGHAN WG suggests that nutritional evaluation and management should be performed by a multidisciplinary team"
+      },
+      {
+       "name": "speech and language therapy for oropharyngeal dysfunction",
+       "quote": "ESPGHAN WG suggests considering speech and language interventions in the treatment of NI children with oropharyngeal dysfunction",
+       "requires": [
+        "oropharyngeal dysfunction"
+       ]
+      },
+      {
+       "name": "enteral tube feeding",
+       "quote": "ESPGHAN WG recommends using enteral tube feeding in cases of unsafe or inefficient oral feeding, preferably before the development of undernutrition",
+       "requires": [
+        "unsafe or inefficient oral feeding"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
