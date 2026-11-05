@@ -125,3 +125,11 @@
 - L3 检索服务出错时（如 NCBI 返回 500）记录错误，不做任何推断。
 - L4 配置表 `config/symptom_guidelines.json` 还没建（等指南清单审定），所以目前 L4 只记录需要补漏的症状，不生成行动。
 - 离线测试：`tests/test_fallback.py`，14 条，含反向用例。
+
+### 覆盖判断修改（2026-11-05）
+
+上层的覆盖范围（决定哪些 present 症状要走 L4 补漏）改为两条：
+1. 行动"针对的症状"与病人症状按 HPO 上下位关系匹配，向上、向下都算：同一术语、上位术语或下位术语。
+2. 分支所用专章或总论的治疗类管理小节（`mgmt_sections`，不含监测、初诊评估、亲属评估、在研疗法）的正文中，写出了该症状的 HPO 名称或同义词，即算已覆盖。整词匹配；短的大写缩写（如 CKD）区分大小写。结果记在 `supportive_tiers[分支].covered_by_chapter_text`。
+
+起因：AGXT 有专章，但"肾钙质沉着""慢性肾病"被判为未覆盖。专章 Supportive Care 和 Targeted Therapies 小节其实写了 "Nephrocalcinosis"、"chronic kidney disease (CKD)"。反向测试：专章没提到的症状（如癫痫发作）仍判为未覆盖。

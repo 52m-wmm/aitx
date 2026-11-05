@@ -228,3 +228,64 @@ def test_tier_checks_catch_violations():
     assert F.tier_problems(ok, [act("symptomatic", {"hpo_id": "HP:9"})], {"HP:1"})          # symptom not present
     bad = {"b1": {"tier": "chapter", "results_above": True, "literature": {"query": "q"}}}
     assert F.tier_problems(bad, [], set())                                                  # literature despite a chapter
+
+
+# --- coverage (2026-11-05): HPO up / down, and symptoms the chapter's management sections name
+
+AGXT_MGMT = ("Supportive Care. Maintain high oral fluid intake. Nephrocalcinosis and stones are managed by a urologist. "
+             "Targeted therapy is effective in persons with chronic kidney disease (CKD).")
+
+
+def test_chapter_text_names_the_symptom():
+    assert F.names_symptom(AGXT_MGMT, ["Nephrocalcinosis", "Too much calcium deposited in kidneys"]) == "Nephrocalcinosis"
+    assert F.names_symptom(AGXT_MGMT, ["Chronic kidney disease", "CKD"]) == "Chronic kidney disease"
+    assert F.names_symptom("in persons with CKD", ["Chronic renal failure", "CKD"]) == "CKD"
+    # reverse: not named -> not covered; short abbreviations only in upper case; whole words only
+    assert F.names_symptom(AGXT_MGMT, ["Seizure", "Seizures", "Epilepsy"]) is None
+    assert F.names_symptom("ckd is lower case here", ["CKD"]) is None
+    assert F.names_symptom("nephrocalcinosis-like", ["calcinosis"]) is None
+
+
+def test_agxt_like_symptoms_covered_by_the_chapter_and_seizure_is_not(monkeypatch, tmp_path):
+    table = _table(tmp_path, monkeypatch, ["Develop an individualised antiseizure medication treatment strategy with the person."])
+    _stub_common(monkeypatch, lit=LIT, table=table)
+    names = {"HP:0000121": ["Nephrocalcinosis"], "HP:0012622": ["Chronic kidney disease", "CKD"], "HP:0002373": ["Febrile seizure"]}
+    monkeypatch.setattr(E, "ontology", lambda: type("O", (), {
+        "exact_lookup": lambda self, t: [], "search": lambda self, t, k: [],
+        "ancestors": lambda self, h: ["HP:0001250"] if h == "HP:0002373" else [], "names": lambda self, h: names.get(h, [])})())
+    monkeypatch.setattr(E, "mgmt_sections", lambda nbk: [("Management / Treatment of Manifestations / Supportive Care", AGXT_MGMT)])
+    pf = dict(PF, present=[{"hpo_id": "HP:0000121", "label": "Nephrocalcinosis", "quote": "nephrocalcinosis"},
+                           {"hpo_id": "HP:0012622", "label": "Chronic kidney disease", "quote": "chronic kidney disease"},
+                           {"hpo_id": "HP:0002373", "label": "Febrile seizure", "quote": "seizures"}])
+    found = {"diet:fluids": {"key": {"key": "diet:fluids"}, "section": "supportive_management", "label": "high oral fluid intake",
+                             "branches": {"b1"}, "specs": [{"tier_source": "chapter", "src": {"type": "nbk"}}],
+                             "reqs": [{"field": "manifestation", "text": "Prevent crystal injury to kidneys"}], "why": "",
+                             "pregnancy_only": False, "source": "gr_new"}}
+    led = LG.Ledger("P", [BRS[0]])
+
+    def put(key, section, label, bids, spec, reqs, why, pregnancy=False, source="gr_new"):
+        E.place(found, key, section, label, bids, spec, reqs, why, pregnancy, source)
+    E.supportive_fallback(led, found, {"b1": {"tier": "chapter", "chapters": ["NBK1283"]}}, pf, {}, put, True)
+    rec = led.supportive_tiers["b1"]
+    assert {x["label"] for x in rec["covered_by_chapter_text"]} == {"Nephrocalcinosis", "Chronic kidney disease"}
+    assert [x["label"] for x in rec["gap_filled"]] == ["Febrile seizure"]               # reverse: not named -> still a gap
+
+
+def test_hpo_up_and_down_matching(monkeypatch):
+    calls = _stub_common(monkeypatch, lit=LIT)
+    # action treats "Seizure" (broader) -> covers a present "Febrile seizure"; action treats "Febrile seizure" (narrower)
+    # -> covers a present "Seizure"
+    anc = {"HP:0002373": ["HP:0001250"]}
+    monkeypatch.setattr(E, "ontology", lambda: type("O", (), {
+        "exact_lookup": lambda self, t: ["HP:0001250"] if t == "Seizure" else ["HP:0002373"] if t == "Febrile seizure" else [],
+        "search": lambda self, t, k: [], "ancestors": lambda self, h: anc.get(h, []), "names": lambda self, h: []})())
+    for treats, present in (("Seizure", "HP:0002373"), ("Febrile seizure", "HP:0001250")):
+        found = {"drug:x": {"key": {"key": "drug:x"}, "section": "supportive_management", "label": "x", "branches": {"b3"},
+                            "specs": [{"tier_source": "chapter", "src": {"type": "nbk"}}],
+                            "reqs": [{"field": "manifestation", "text": treats}], "why": "", "pregnancy_only": False, "source": "gr_new"}}
+        led = LG.Ledger("P", [BRS[2]])
+
+        def put(*a, **k):
+            pass
+        E.supportive_fallback(led, found, {}, dict(PF, present=[{"hpo_id": present, "label": "s", "quote": "q"}]), {}, put, True)
+        assert led.supportive_tiers["b3"]["gap_filled"] == []

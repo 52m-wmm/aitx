@@ -179,6 +179,19 @@ def symptom_categories(present: list[dict], table: dict, ancestors) -> dict[str,
     return out
 
 
+def names_symptom(text: str, names: list[str]) -> str | None:
+    """The HPO name or synonym of a symptom that a chapter's management text names (whole words; a short upper-case
+    abbreviation such as CKD only in that case), or None."""
+    for n in names:
+        n = (n or "").strip()
+        if len(n) < 3:
+            continue
+        flags = 0 if (n.isupper() and len(n) <= 5) else re.I
+        if re.search(rf"(?<![A-Za-z0-9]){re.escape(n)}(?![A-Za-z0-9])", text or "", flags):
+            return n
+    return None
+
+
 def uncovered_symptoms(present: list[dict], manifestation_texts: list[str], matches) -> list[dict]:
     """Present symptoms no higher-tier action covers. matches(text, symptom) -> bool is the same HPO matching that
     decides a supportive action's manifestation condition (same term or an ancestor)."""

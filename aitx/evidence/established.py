@@ -886,8 +886,10 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
     present_ids = {x["hpo_id"] for x in pf["present"]}
 
     def matches(text, symptom):
+        """HPO up / down: the action treats the symptom, a broader term of it, or a narrower one (2026-11-05)."""
         ids = set(ont.exact_lookup(text)) or {c["hpo_id"] for c in ont.search(text, 1)}
-        return symptom["hpo_id"] in ids or bool(ids & set(ont.ancestors(symptom["hpo_id"])))
+        h = symptom["hpo_id"]
+        return h in ids or bool(ids & set(ont.ancestors(h))) or any(h in ont.ancestors(i) for i in ids)
 
     for b in [b for b in led.branches if b.get("diagnosis")]:
         rec = tier_rec.setdefault(b["id"], {"tier": None, "chapters": []})
@@ -901,6 +903,11 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
         rec["results_above"] = bool(above)
         texts = [r["text"] for a in above for r in a["reqs"] if r.get("field") == "manifestation"]
         targets = pf["present"] if not above else F.uncovered_symptoms(pf["present"], texts, matches)
+        if above and rec.get("chapters"):     # a symptom the chapter's management sections name is covered (2026-11-05)
+            mgmt = " ".join(t for nbk in rec["chapters"] for _, t in mgmt_sections(nbk))
+            named = [x for x in targets if F.names_symptom(mgmt, list(ont.names(x["hpo_id"])))]
+            rec["covered_by_chapter_text"] = [{"hpo_id": x["hpo_id"], "label": x["label"]} for x in named]
+            targets = [x for x in targets if x not in named]
         rec["gap_filled" if above else "symptoms"] = [{"hpo_id": x["hpo_id"], "label": x["label"]} for x in targets]
         cats = F.symptom_categories(targets, table, ont.ancestors)
         rec["symptomatic"] = {"configured": bool(table.get("categories")), "categories": sorted(cats)}
