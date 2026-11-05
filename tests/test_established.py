@@ -1,6 +1,7 @@
 """Step 3a: code-side comparisons (contract docs/step3a_contract.md). Offline."""
 import pytest
 
+from aitx.evidence import actions as A
 from aitx.evidence import established as E
 from aitx.evidence import variants as V
 
@@ -671,3 +672,52 @@ def test_dropped_purpose_clauses_are_logged_with_the_rule():
     assert log == [{"text": "to reduce hepatic oxalate production", "field": "situation", "rule": E.PURPOSE_RULE,
                     "pattern": E.PURPOSE_CLAUSE.pattern, "source": "NBK1283 s", "action": "x"}]
     assert "dropped_conditions" in LG.Ledger("P", [dict(BR, id="b1")]).to_dict()
+
+
+# --- therapy programs (decision 2026-11-04): code vocabulary decides, the LLM gives the name only
+
+@pytest.mark.parametrize("name,want", [
+    ("early intervention program", "early_intervention"),
+    ("Referral to an early intervention program", "early_intervention"),
+    ("physical therapy", "physical_therapy"), ("physiotherapy", "physical_therapy"), ("PT", "physical_therapy"),
+    ("occupational therapy", "occupational_therapy"), ("speech-language therapy", "speech_language_therapy"),
+    ("speech therapy", "speech_language_therapy"), ("feeding therapy", "feeding_therapy"),
+    ("developmental preschool", "other_rehabilitation"),
+    # reverse checks: evaluation / counselling referrals, airway clearance, unknown programs, lower-case abbreviations
+    ("referral to a developmental pediatrician for evaluation", None), ("genetic counseling", None),
+    ("speech and language assessment", None), ("chest physical therapy", None), ("music class", None), ("pt", None),
+])
+def test_therapy_vocabulary(name, want):
+    assert A.therapy_type(name) == want
+
+
+def _gr_item(monkeypatch, items):
+    """Run the GeneReviews part of add_established on one fake section with the given LLM items."""
+    text = ("Ages 0-3 years. Referral to an early intervention program is recommended. "
+            "Referral to a developmental pediatrician for evaluation is recommended. Chest physical therapy daily.")
+    monkeypatch.setattr(E, "chapters_for", lambda led, s2, uc: {"b1": ["NBK1"]})
+    monkeypatch.setattr(E, "mgmt_sections", lambda nbk: [("Management / Treatment of Manifestations", text)])
+    monkeypatch.setattr(E.GR, "sections_for_llm", lambda nbk: {})
+    monkeypatch.setattr(E.D, "ensure", lambda name: type("S", (), {"downloaded_at": 1})())
+    monkeypatch.setattr(E, "_llm", lambda system, user, uc, what="": ({"items": items}, {"m": 1}) if "management actions" in system
+                        else ({"same": [], "broader": []}, {}))
+    monkeypatch.setattr(E.LB, "search", lambda *a, **k: ([], {"database": "openfda", "endpoint": "e", "query": "q",
+                                                              "queried_at": 1, "n_results": 0, "returned": 0}))
+    monkeypatch.setattr(E, "disease_names", lambda b, s2: ["dystonia 28"])
+    monkeypatch.setattr(E, "facts", lambda s1, s2: dict(PF, age_months=None, age_quote=None))
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E.add_established(led, {}, {}, use_cache=True)
+    return led
+
+
+def test_therapy_referral_kept_evaluation_referral_dropped(monkeypatch):
+    led = _gr_item(monkeypatch, [
+        {"name": "early intervention program", "kind": "therapy", "quote": "Referral to an early intervention program is recommended.",
+         "requirements": [{"text": "Ages 0-3 years", "field": "age", "op": "<=", "value": 3, "unit": "year"}]},
+        {"name": "developmental pediatrician evaluation", "kind": "therapy",
+         "quote": "Referral to a developmental pediatrician for evaluation is recommended."},
+        {"name": "chest physical therapy", "kind": "therapy", "quote": "Chest physical therapy daily."}])
+    keys = {a["action_key"]: a for a in led.actions if a.get("action_key")}
+    assert "therapy:early_intervention" in keys                         # treatment referral kept, keyed by the vocabulary
+    assert not any("pediatrician" in a["label"] for a in led.actions)  # evaluation referral excluded
+    assert "procedure:chest_physical_therapy" in keys                   # airway clearance stays a procedure

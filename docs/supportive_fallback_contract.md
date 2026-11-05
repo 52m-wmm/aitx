@@ -73,7 +73,13 @@
 
 - 物理治疗、作业治疗、言语 / 语言治疗、早期干预、喂养治疗等康复类行动，行动键 `therapy:<类型>`，受控类型表：
   `physical_therapy`、`occupational_therapy`、`speech_language_therapy`、`early_intervention`、`feeding_therapy`、`other_rehabilitation`。
-- 归类由代码按受控词表（含常见写法："PT"、"physiotherapy"、"OT"、"speech therapy"、"SLP"）判断，LLM 只给原文名称。
+- 归类由代码按受控词表（含常见写法："PT"、"physiotherapy"、"OT"、"speech therapy"、"SLP"；缩写只认大写）判断，LLM 只给原文名称。
+- **已在 3a 实施（2026-11-04，提示词 `3a-v4`）**：
+  - "转介去接受治疗"（早期干预、物理 / 作业 / 言语治疗、喂养治疗等）作为行动保留，归 `therapy:<类型>`。
+  - "转介去做评估或咨询"（专科评估、遗传咨询、随访）仍排除。
+  - LLM 标为 therapy、但对不上词表的条目不收。
+  - 胸部物理治疗（气道廓清）是操作，不归 therapy。
+  - 代码在 `aitx/evidence/actions.py`（`THERAPY_TYPES`、`NOT_THERAPY`、`therapy_type`）。
 - 现有 3a 中被归为 `supportive_measure` 的同类行动改用 `therapy` 键；同类行动在多层或多处出现时按行动键合并（与 3a 小修第 4 条的同义合并一致）。
 - 适用条件：通常以"针对的症状"（manifestation）为条件，与现有支持治疗相同。
 

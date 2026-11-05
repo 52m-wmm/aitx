@@ -28,7 +28,7 @@ from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 
-PROMPT_VERSION = "3a-v3"          # v3 (2026-11-04): table rows with headers, usage situations, purpose clauses
+PROMPT_VERSION = "3a-v4"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs (2026-11-04)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
@@ -50,11 +50,15 @@ _REQ_SHAPE = """{"text": "<exact words>", "field": "age" | "sex" | "variant" | "
  "value": <number or list of strings or "">, "unit": "year" | "month" | ""}"""
 
 EXTRACT_SYSTEM = """You list the management actions in one GeneReviews Management section. Use only the text given.
-List only specific treatments: a named drug, a procedure, a diet, a device - or, in a section about agents or
-circumstances to avoid, each agent or circumstance to avoid. Do not list section headings, symptoms, conditions,
-tests, surveillance, follow-up or referrals. For each, return one item:
-{"name": "<generic drug name or short procedure name, no brand names, no doses>",
- "kind": "drug" | "procedure" | "diet" | "device" | "avoid",
+List only specific treatments: a named drug, a procedure, a diet, a device, a therapy or intervention program
+(early intervention, physical / occupational / speech / feeding therapy, developmental preschool, special education
+services) - or, in a section about agents or circumstances to avoid, each agent or circumstance to avoid. A referral
+to RECEIVE a therapy or intervention program is listed with kind "therapy" and the program's name as written
+("Referral to an early intervention program" -> "early intervention program"). Do not list section headings,
+symptoms, conditions, tests, surveillance, follow-up, or referrals for evaluation, consultation or counseling
+(specialist evaluation, genetic counseling). For each, return one item:
+{"name": "<generic drug name or short procedure / program name, no brand names, no doses>",
+ "kind": "drug" | "procedure" | "diet" | "device" | "therapy" | "avoid",
  "quote": "<the exact sentence or table row that names it, copied character for character>",
  "manifestation": "<the exact words naming the symptom or complication it treats, or empty>",
  "requirements": [<restrictions on WHICH PATIENTS should get it, by a patient characteristic; each """ + _REQ_SHAPE + """>],
@@ -532,7 +536,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                     if it is None:
                         continue
                     llm = it.pop("_llm")
-                if not avoid and kind not in ("drug", "procedure", "diet", "device"):
+                if not avoid and kind not in ("drug", "procedure", "diet", "device", "therapy"):
                     continue
                 if avoid:
                     section = "contraindications_precautions"
@@ -540,7 +544,17 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                     section = "existing_targeted_therapies"
                 else:
                     section = "supportive_management"
-                key = A.drug_key(name) if kind == "drug" or (avoid and kind == "avoid" and A.drug_key(name)["normalized"]) \
+                # therapy programs: the code's controlled vocabulary decides (the LLM gives only the name as written);
+                # a "therapy" that matches no type, or an evaluation / counselling referral, is not collected
+                if A.AIRWAY_CLEARANCE.search(name):
+                    kind = "procedure"         # chest physiotherapy is airway clearance, not a rehabilitation program
+                ttype = A.therapy_type(name) if not avoid and kind in ("therapy", "procedure", "device") else None
+                if kind == "therapy" and ttype is None:
+                    continue
+                if ttype:
+                    key = {"key": A.strategy_key("therapy", ttype), "normalized": True, "therapy_type": ttype}
+                else:
+                    key = A.drug_key(name) if kind == "drug" or (avoid and kind == "avoid" and A.drug_key(name)["normalized"]) \
                     else {"key": A.strategy_key({"procedure": "procedure", "diet": "diet"}.get(kind, "supportive_measure"), name),
                           "normalized": True}
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}

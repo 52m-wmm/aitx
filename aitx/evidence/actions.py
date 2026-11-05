@@ -29,8 +29,44 @@ CHEMBL_SEARCH = "https://www.ebi.ac.uk/chembl/api/data/molecule/search.json"
 STRATEGY_TYPES = {
     "aso_splice_modulation", "aso_exon_skipping", "aso_knockdown_allele_specific", "aso_knockdown_total", "sirna",
     "gene_replacement", "base_editing", "prime_editing", "gene_editing_other", "cell_therapy", "organ_transplant",
-    "diet", "procedure", "supportive_measure",
+    "diet", "procedure", "supportive_measure", "therapy",
 }
+
+# therapy:<type> - controlled vocabulary (supportive fallback contract, 2026-11-04); code decides, the LLM only gives the
+# name as written. A therapy name that matches none of these is not collected.
+THERAPY_TYPES = (
+    ("early_intervention", r"\bearly\s+intervention\b"),
+    ("feeding_therapy", r"\bfeeding\s+(?:therapy|therapist|intervention)\b|\bswallow(?:ing)?\s+therapy\b"),
+    ("speech_language_therapy", r"\bspeech(?:[\s/-]+(?:and\s+)?language)?\s+(?:therapy|therapist|services|intervention)s?\b|"
+                                r"\blanguage\s+therapy\b"),
+    ("occupational_therapy", r"\boccupational\s+therap(?:y|ist)\b"),
+    ("physical_therapy", r"\bphysi(?:cal\s+therap(?:y|ist)|otherap(?:y|ist))\b"),
+    ("other_rehabilitation", r"\brehabilitation\b|\bdevelopmental\s+preschool\b|\bspecial\s+education\b"),
+)
+THERAPY_ABBREVIATIONS = {"PT": "physical_therapy", "OT": "occupational_therapy", "SLP": "speech_language_therapy"}  # upper case only
+# referrals to be evaluated, counselled or followed up are never a therapy (excluded even when a word above matches)
+NOT_THERAPY = r"\b(?:evaluat\w*|assess\w*|consult\w*|counsel\w*|follow[\s-]?up|genetic|surveillance|screening)\b"
+
+
+AIRWAY_CLEARANCE = re.compile(r"\bchest\s+(?:physical\s+therap\w*|physiotherap\w*|PT)\b|\bairway\s+clearance\b", re.I)
+
+
+def therapy_type(name: str) -> str | None:
+    """Controlled therapy type of a name as written, or None (not a therapy, or an evaluation / counselling referral)."""
+    n = name or ""
+    if re.search(NOT_THERAPY, n, re.I) or AIRWAY_CLEARANCE.search(n):
+        return None
+    for t, rx in THERAPY_TYPES:
+        if re.search(rx, n, re.I):
+            return t
+    for abbr, t in THERAPY_ABBREVIATIONS.items():
+        if re.search(rf"(?<![A-Za-z]){abbr}(?![A-Za-z])", n):
+            return t
+    return None
+    for t, rx in THERAPY_TYPES:
+        if re.search(rx, n, 0 if t in () else re.I) if rx.find("\\b(?:") < 0 else re.search(rx, n, re.I):
+            return t
+    return None
 ORGANS = {"liver", "kidney", "heart", "lung", "pancreas", "intestine", "bone_marrow", "cornea", "skin"}
 SALTS = {"hydrochloride", "hcl", "dihydrochloride", "sodium", "disodium", "potassium", "calcium", "magnesium",
          "sulfate", "sulphate", "mesylate", "mesilate", "maleate", "acetate", "citrate", "tartrate", "phosphate",
@@ -158,6 +194,10 @@ def strategy_key(kind: str, target: str | list[str], qualifier: str | None = Non
         if bad:
             raise ValueError(f"unknown organ(s) {bad}")
         tgt = "+".join(sorted(t.lower() for t in targets))
+    elif kind == "therapy":
+        if any(t not in [x for x, _ in THERAPY_TYPES] for t in targets):
+            raise ValueError(f"unknown therapy type(s) {targets}")
+        tgt = "+".join(sorted(targets))
     elif kind in ("diet", "procedure", "supportive_measure"):
         tgt = "+".join(sorted(re.sub(r"[^a-z0-9]+", "_", t.lower()).strip("_") for t in targets))
     else:
