@@ -1,0 +1,54 @@
+{
+ "description": "3c controlled dietary-supplement list (contract docs/step3c_contract.md, decision 2026-11-05). Source: NIH ODS Dietary Supplement Label Database (DSLD, api.ods.od.nih.gov/dsld/v9), exact ingredient-name match, single-ingredient products on the market. Approved 2026-11-05.",
+ "approved": "2026-11-05",
+ "source": "NIH ODS DSLD v9 API, queried 2026-11-05 (raw results .cache/dsld/candidates.json, not committed)",
+ "supplements": [
+  {
+   "name": "L-serine",
+   "aliases": [
+    "l-serine"
+   ],
+   "dsld_examples": [
+    {
+     "dsld_id": "254751",
+     "product": "L-Serine",
+     "brand": "BulkSupplements.com"
+    },
+    {
+     "dsld_id": "274249",
+     "product": "L-Serine Unflavored",
+     "brand": "California Gold Nutrition"
+    }
+   ]
+  },
+  {
+   "name": "coenzyme Q10",
+   "aliases": [
+    "coq10",
+    "coq 10",
+    "coenzyme q10",
+    "coenzyme q-10",
+    "ubiquinone",
+    "ubiquinol"
+   ],
+   "dsld_examples": [
+    {
+     "dsld_id": "330644",
+     "product": "CoQ10 (Coenzyme Q10) 200mg",
+     "brand": "BulkSupplements.com"
+    },
+    {
+     "dsld_id": "330641",
+     "product": "Coenzyme Q10 Powder 200mg",
+     "brand": "BulkSupplements.com"
+    }
+   ]
+  }
+ ],
+ "not_listed": [
+  {
+   "name": "D-galactose",
+   "why": "no single-ingredient product in DSLD (only as an ingredient of multivitamins and enzyme blends); no FDA GRAS notice for the substance; access route stays 'unconfirmed'"
+  }
+ ]
+}

@@ -48,6 +48,11 @@ def compare(item: dict, led: dict | None) -> dict:
     for pmid, want_design in (want.get("design") or {}).items():
         if pmid in pm and pm[pmid].get("design") != want_design:
             probs.append(f"PMID {pmid} design {pm[pmid].get('design')} (want {want_design})")
+    for pmid, q in (want.get("design_quote") or {}).items():
+        if pmid in pm and q.lower() not in str(pm[pmid].get("design_quote") or "").lower():
+            probs.append(f"PMID {pmid} design quote {pm[pmid].get('design_quote')!r} lacks {q!r}")
+    if want.get("see_also_3b") and not a.get("see_also"):
+        probs.append("no cross-reference to 3b")
     for k in ("access_route", "efficacy_direction"):
         if want.get(k) and a.get(k) != want[k]:
             probs.append(f"{k} {a.get(k)} (want {want[k]})")

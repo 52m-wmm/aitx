@@ -143,3 +143,13 @@
 3. **32103184 的设计**：PubMed 只标 Journal Article，摘要无设计词；全文 PMC7275909 是作者稿，不在开放获取子集，当前不用（作者稿是否加为可用来源待审），因此设计为"原文未说明"，病例数 10。原期望的"单臂、开放标签"是未经原文核实的推断。
 4. **已知局限：20 篇上限会截断大病种**。PH1 检索 355 篇（只看病例报告 / 试验 / 观察性也有 64 篇），两篇司替戊醇病例报告排在 20 名之后，没有读到；账本标"已截断"。是否放宽上限待审。
 5. **用来源别名去重**（2026-11-05 实施中发现）：RxNorm 把 "vitamin B6"（42954）和 pyridoxine（684879）编成不同代码，"vitamin B6" 因此进了 3c，与 3a 的吡哆醇重复。现在只要 Tier 1 行动的证据原文在**行动名紧随的括号里**写出该名称（如 GeneReviews "Pyridoxine (vitamin B6 analog)"），就视为同一行动，不进 3c，决定记录里附原文；句中其他位置出现的名称不算。同一篇文献只算一条先例。
+
+## 修改（2026-11-05，第二批决定）
+
+1. **补充剂受控名单已批准**（`config/supplements.json`，出处 NIH ODS DSLD）：L-丝氨酸、辅酶 Q10 列入；D-半乳糖不列，获取途径保持"未确认"。别名只收确定同义的写法（"serine" 不作为 L-丝氨酸的别名）。
+2. **两步检索**（替代单纯的 20 篇上限）：
+   - 第 1 步：按相关度取前 200 篇的摘要（只用 E-utilities，不调 LLM），代码用药物词典（RxNorm 全部成分名，RxNav allconcepts，本地缓存；加补充剂名单；排除水、钠、葡萄糖等普遍物质）筛出标题或摘要里出现具体药名的文献。
+   - 第 2 步：筛出的文献里，含"Tier 1 以外的新药名"的排在前面，其余按相关度；最多 20 篇交给 LLM 抽取。
+   - 账本记每步数量：命中总数、筛查篇数、含药名篇数、来自综述参考文献的篇数、交给 LLM 的篇数。
+3. **PMC 作者稿可用**（L3 与 3c 都适用）：PMC 记录带正文，且有知识共享许可、PMC 作者稿标记（`pmc-prop-manuscript`）或开放获取标记之一即可用；依据写进许可字段（如 "[PMC author manuscript] …"）。许可原文见 PMC 版权声明页："available free to read, text mine, and for other uses consistent with the principles of Fair Use."
+4. **综述不算先例，只作线索**：PubMed 类型为 Review / Systematic Review / Meta-Analysis 的文献不交给 LLM 抽先例，在账本里记为背景（`reviews`，role = background）；用 E-utilities elink（pubmed_pubmed_refs）取其参考文献，原始报告中标题或摘要同时出现本病（或本基因）和药名的进入候选池，以原始报告为先例；原始报告拿不到原文的不算。

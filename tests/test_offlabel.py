@@ -113,44 +113,72 @@ def test_function_tiers(cls, nmd, req, want):
         assert note.startswith("reasoning")
 
 
-# --- search: retracted, no accessible text, truncation
+# --- search: two steps, reviews as clues, retracted, no accessible text (2026-11-05)
 
 class R:
     def __init__(self, text):
         self.text = text
 
 
-XML = ("<PubmedArticleSet>"
-       "<PubmedArticle><MedlineCitation><PMID>1</PMID><Article><ArticleTitle>D-serine in GRIN2B</ArticleTitle><Abstract><AbstractText>"
-       "A GRIN2B patient received D-serine.</AbstractText></Abstract></Article><CommentsCorrectionsList><CommentsCorrections RefType=\"RetractionIn\">"
-       "<RefSource>Biol Psychiatry. 2018</RefSource></CommentsCorrections></CommentsCorrectionsList></MedlineCitation></PubmedArticle>"
-       "<PubmedArticle><MedlineCitation><PMID>2</PMID><Article><ArticleTitle>A comment</ArticleTitle></Article></MedlineCitation></PubmedArticle>"
-       "<PubmedArticle><MedlineCitation><PMID>3</PMID><Article><ArticleTitle>L-serine in GRIN2B</ArticleTitle><Abstract><AbstractText>"
-       "GRIN2B patients were treated with L-serine.</AbstractText></Abstract></Article></MedlineCitation></PubmedArticle></PubmedArticleSet>")
+def _art(pmid, title, abstract, types=("Journal Article",), retracted=None, pmc=None):
+    rt = (f'<CommentsCorrectionsList><CommentsCorrections RefType="RetractionIn"><RefSource>{retracted}</RefSource>'
+          "</CommentsCorrections></CommentsCorrectionsList>") if retracted else ""
+    pc = f'<ArticleIdList><ArticleId IdType="pmc">{pmc}</ArticleId></ArticleIdList>' if pmc else ""
+    ab = f"<Abstract><AbstractText>{abstract}</AbstractText></Abstract>" if abstract else ""
+    pt = "".join(f"<PublicationType>{t}</PublicationType>" for t in types)
+    return (f"<PubmedArticle><MedlineCitation><PMID>{pmid}</PMID><Article><ArticleTitle>{title}</ArticleTitle>{ab}"
+            f"<PublicationTypeList>{pt}</PublicationTypeList></Article>{rt}</MedlineCitation><PubmedData>{pc}</PubmedData></PubmedArticle>")
 
 
-def _http(monkeypatch, count=25):
+ARTS = {"1": _art("1", "D-serine in GRIN2B", "A GRIN2B patient received D-serine.", retracted="Biol Psychiatry. 2018"),
+        "2": _art("2", "A GRIN2B comment", ""),
+        "3": _art("3", "L-serine in GRIN2B", "GRIN2B patients were treated with L-serine.", ("Case Reports",)),
+        "4": _art("4", "GRIN2B genetics", "GRIN2B variants cause intellectual disability."),           # no drug: screened out
+        "5": _art("5", "GRIN2B therapies: a review", "Memantine was used in GRIN2B patients.", ("Review",)),
+        "6": _art("6", "Memantine in a GRIN2B child", "A GRIN2B child was treated with memantine.", ("Case Reports",))}
+
+
+def _http(monkeypatch, count=250, refs=("6",)):
+    lex = {"memantine", "l-serine", "d-serine", "stiripentol"}
+    monkeypatch.setattr(O, "drug_lexicon", lambda: lex)
+
     def get(url, timeout=30, **k):
         if "esearch" in url:
-            return R(json.dumps({"esearchresult": {"count": str(count), "idlist": ["1", "2", "3"]}}))
-        if "esummary" in url:
-            return R(json.dumps({"result": {"1": {"pubtype": ["Journal Article"], "pubdate": "2018"},
-                                            "2": {"pubtype": ["Comment"], "pubdate": "2019"},
-                                            "3": {"pubtype": ["Case Reports"], "pubdate": "2019"}}}))
+            return R(json.dumps({"esearchresult": {"count": str(count), "idlist": ["1", "2", "3", "4", "5"]}}))
+        if "elink" in url:
+            return R(json.dumps({"linksets": [{"linksetdbs": [{"links": list(refs)}]}]}))
         if "efetch.fcgi?db=pubmed" in url:
-            return R(XML)
+            ids = url.split("id=")[1].split(",")
+            return R("<PubmedArticleSet>" + "".join(ARTS[i] for i in ids if i in ARTS) + "</PubmedArticleSet>")
         raise AssertionError(url)
     monkeypatch.setattr(O.http, "get", get)
 
 
-def test_search_excludes_retracted_and_textless_and_marks_truncation(monkeypatch):
+def test_two_step_search_counts_and_exclusions(monkeypatch):
     _http(monkeypatch)
     rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"])
     p = {x["pmid"]: x for x in rec["papers"]}
+    assert rec["steps"] == {"found": 250, "screened": 5, "with_drug": 2, "from_review_references": 1, "to_llm_cap": 3}
+    assert set(p) == {"1", "3", "6"}                                      # 2 (no abstract, no drug) and 4 (no drug) screened out
     assert p["1"]["excluded"].startswith("retracted (Biol Psychiatry")
-    assert p["2"]["excluded"].startswith("no accessible text")
-    assert "excluded" not in p["3"] and rec["truncated"] and rec["count"] == 25
-    assert "[pt]" not in rec["query"]                                   # no publication-type filter (contract)
+    assert p["6"]["via_review"] and "5" not in p                           # the review is background, its cited report is the lead
+    assert rec["reviews"] == [{"pmid": "5", "title": "GRIN2B therapies: a review", "role": "background", "references": 1}]
+    assert rec["truncated"] and "[pt]" not in rec["query"]
+
+
+def test_only_a_review_mentions_the_drug_no_precedent(monkeypatch):
+    # reverse: the review's cited reports are unavailable -> memantine has no precedent at all
+    _http(monkeypatch, refs=("99",))
+    rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"])
+    assert not any("memantine" in (x.get("drugs_in_abstract") or []) for x in rec["papers"])
+    assert rec["reviews"][0]["role"] == "background"
+
+
+def test_new_drugs_come_before_tier_1_drugs(monkeypatch):
+    _http(monkeypatch)
+    rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"], exclude_drugs={"l-serine"})
+    order = [x["pmid"] for x in rec["papers"]]
+    assert order.index("6") < order.index("3")                              # memantine (new) before L-serine (Tier 1)
 
 
 # --- end to end with stubs
@@ -160,7 +188,7 @@ PF = {"age_months": 60, "age_quote": "5-year-old", "sex": "female", "sex_quote":
 
 
 def _run(monkeypatch, items, *, fda=False, supplement=None, trials=(), earlier=()):
-    _http(monkeypatch, count=3)
+    _http(monkeypatch, count=5)
     monkeypatch.setattr(O, "_llm", lambda user, uc, what: ({"items": items if "PMID 3" in user else []}, {"llm": "m", "served_model": "m", "prompt_version": "3c-v1"}))
     monkeypatch.setattr(O.SC, "check_support", lambda *a, **k: {"overall": "supported"})
     monkeypatch.setattr(O.E, "facts", lambda s1, s2: PF)

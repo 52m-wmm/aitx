@@ -92,7 +92,7 @@ def test_search_fetches_open_access_full_text_only_and_drops_case_reports(monkey
     assert p["111"]["oa"] is True and "speech therapy" in p["111"]["full_text"]
     assert p["222"]["excluded"] == "case report" and not any("PMC2" in u for u in fetched)       # never fetched
     assert p["333"]["oa"] is False and p["333"]["full_text"] == ""                               # not OA: abstract only
-    assert p["111"]["license"].startswith("CC BY")
+    assert p["111"]["license"].startswith("[open-access license]") and "CC BY" in p["111"]["license"]
 
 
 def _stub_common(monkeypatch, *, lit=None, llm_items=(), support="supported", table=None):
@@ -364,3 +364,20 @@ def test_long_full_text_puts_management_sections_first():
     out = F.text_for_llm("Abstract text.", full, limit=2000)
     assert out.startswith("Abstract text.") and "We recommend a ketogenic diet." in out and len(out) <= 2000
     assert F.text_for_llm("A.", "") == "A."
+
+
+def test_author_manuscript_is_usable_and_plain_abstract_record_is_not(monkeypatch):
+    # decision 2026-11-05: PMC author manuscripts may be text-mined (PMC copyright notice); basis recorded
+    class R:
+        def __init__(self, t):
+            self.text = t
+    am = ('<article><front><custom-meta><meta-name>pmc-prop-manuscript</meta-name><meta-value>yes</meta-value></custom-meta>'
+          '<permissions><license><license-p>Users may view, print, copy, and download text and data-mine the content</license-p>'
+          "</license></permissions></front><body><p>non-blinded observational pilot study</p></body></article>")
+    closed = ('<article><front><custom-meta><meta-name>pmc-prop-manuscript</meta-name><meta-value>no</meta-value></custom-meta>'
+              "</front><body><p>text</p></body></article>")
+    monkeypatch.setattr(F.http, "get", lambda url, timeout=30, **k: R(am if url.endswith("id=1") else closed))
+    ok, text, lic = F.pmc_open_access_text("PMC1")
+    assert ok and "non-blinded observational pilot study" in text and lic.startswith("[PMC author manuscript]")
+    ok, text, lic = F.pmc_open_access_text("PMC2")                       # reverse: no license, no flag -> not used
+    assert not ok and text == ""

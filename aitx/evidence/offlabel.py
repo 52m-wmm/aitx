@@ -55,35 +55,124 @@ def _json(url: str) -> dict:
     return json.loads(http.get(url, timeout=60).text)
 
 
-def search(gene: str | None, names: list[str]) -> dict:
-    """{query, url, queried_at, count, truncated, papers}. Retracted papers and papers without accessible text are kept
-    in the record with the reason; they never become precedents."""
+N_SCREEN = 200                                    # step 1: abstracts screened by code (decision 2026-11-05)
+REVIEW_TYPES = {"Review", "Systematic Review", "Meta-Analysis"}
+# ubiquitous substances that are RxNorm ingredients but never "a specific drug" in an abstract
+_NOT_A_DRUG = {"water", "oxygen", "sodium", "potassium", "calcium", "chloride", "glucose", "alcohol", "ethanol", "protein",
+               "nitrogen", "carbon", "hydrogen", "iron", "zinc", "magnesium", "phosphate", "lactate", "urea", "creatinine",
+               "oxalate", "glycine", "albumin", "insulin glargine"}
+
+
+def drug_lexicon(path: Path = ROOT / ".cache" / "rxnorm" / "ingredients.json") -> set[str]:
+    """RxNorm ingredient names (RxNav allconcepts, tty=IN; cached locally) plus the approved supplement list."""
+    names = set()
+    if path.exists():
+        for c in json.loads(path.read_text())["minConceptGroup"]["minConcept"]:
+            n = c["name"].lower().strip()
+            if len(n) >= 5 and n not in _NOT_A_DRUG:
+                names.add(n)
+    for sup in load_supplements().get("supplements") or []:
+        names |= {sup["name"].lower()} | {a.lower() for a in sup.get("aliases") or []}
+    return names
+
+
+def drugs_named(text: str, lexicon: set[str]) -> list[str]:
+    low = (text or "").lower()
+    words = set(re.findall(r"[a-z][a-z0-9-]{4,}", low))
+    hits = {n for n in lexicon if " " not in n and n in words}
+    hits |= {n for n in lexicon if " " in n and re.search(rf"(?<![a-z]){re.escape(n)}(?![a-z])", low)}
+    return sorted(hits)
+
+
+def _fetch_records(ids: list[str]) -> dict[str, dict]:
+    """PubMed records (title, abstract, publication types, retraction notice, PMC id) via efetch, 100 per call."""
+    out = {}
+    for i in range(0, len(ids), 100):
+        xml = http.get(f"{F.EUTILS}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(ids[i:i + 100])}", timeout=90).text
+        ab, ti, rt = F.abstracts_by_pmid(xml), titles_by_pmid(xml), retraction_notices(xml)
+        for art in re.findall(r"<PubmedArticle>.*?</PubmedArticle>", xml, re.S):
+            m = re.search(r"<PMID[^>]*>(\d+)</PMID>", art)
+            if not m:
+                continue
+            pmid = m.group(1)
+            pmc = re.search(r'<ArticleId IdType="pmc">(PMC\d+)</ArticleId>', art)
+            year = re.search(r"<PubDate>.*?<Year>(\d{4})</Year>", art, re.S)
+            out[pmid] = {"pmid": pmid, "title": ti.get(pmid, ""), "abstract": ab.get(pmid, ""),
+                         "pub_types": [re.sub(r"<[^>]+>", "", t) for t in re.findall(r"<PublicationType[^>]*>(.*?)</PublicationType>", art)],
+                         "retraction": rt.get(pmid), "pmc": pmc.group(1) if pmc else None, "year": year.group(1) if year else ""}
+    return out
+
+
+def review_references(pmid: str) -> list[str]:
+    """PMIDs a review cites (E-utilities elink pubmed_pubmed_refs)."""
+    d = _json(f"{F.EUTILS}/elink.fcgi?dbfrom=pubmed&linkname=pubmed_pubmed_refs&retmode=json&id={pmid}")
+    return [str(x) for ls in d.get("linksets") or [] for db in ls.get("linksetdbs") or [] for x in db.get("links") or []]
+
+
+def search(gene: str | None, names: list[str], exclude_drugs: set[str] | None = None) -> dict:
+    """Two steps (decision 2026-11-05). Step 1: the first 200 articles by relevance - abstracts only, no LLM; code keeps
+    those whose title or abstract names a specific drug (RxNorm ingredient lexicon). Reviews are never precedents: they
+    are kept as background and their cited original reports enter the pool (decision 2026-11-05). Step 2: at most 20
+    articles - those naming a drug not already in Tier 1 first - go to the LLM. Every count is recorded."""
     q = query(gene, names)
     url = f"{F.EUTILS}/esearch.fcgi?" + urllib.parse.urlencode({"db": "pubmed", "retmode": "json", "sort": "relevance",
-                                                               "retmax": N_PAPERS, "term": q})
+                                                               "retmax": N_SCREEN, "term": q})
     d = _json(url)["esearchresult"]
     ids, count = d.get("idlist") or [], int(d.get("count") or 0)
-    rec = {"query": q, "url": url, "queried_at": int(time.time()), "count": count, "truncated": count > N_PAPERS, "papers": []}
+    rec = {"query": q, "url": url, "queried_at": int(time.time()), "count": count, "papers": [], "reviews": [],
+           "steps": {"found": count, "screened": len(ids)}}
     if not ids:
+        rec.update(truncated=False)
         return rec
-    summ = _json(f"{F.EUTILS}/esummary.fcgi?db=pubmed&retmode=json&id={','.join(ids)}")["result"]
-    xml = http.get(f"{F.EUTILS}/efetch.fcgi?db=pubmed&retmode=xml&id={','.join(ids)}", timeout=60).text
-    abstracts, titles, retracted = F.abstracts_by_pmid(xml), titles_by_pmid(xml), retraction_notices(xml)
+    lex, excl = drug_lexicon(), {x.lower() for x in exclude_drugs or set()}
+    recs = _fetch_records(ids)
+    pool, reviews = [], []
     for pmid in ids:
-        s = summ.get(pmid) or {}
-        types = list(s.get("pubtype") or [])
-        pmc = next((a["value"] for a in s.get("articleids") or [] if a.get("idtype") == "pmc"), None)
-        p = {"pmid": pmid, "title": titles.get(pmid) or s.get("title") or "", "year": (s.get("pubdate") or "")[:4],
-             "pub_types": types, "pmc": pmc, "oa": None, "abstract": abstracts.get(pmid, ""), "full_text": ""}
-        if "Retracted Publication" in types or retracted.get(pmid):
-            p["excluded"] = f"retracted ({retracted.get(pmid) or 'PubMed publication type'})"
-        elif pmc:
+        r = recs.get(pmid)
+        if not r:
+            continue
+        r["drugs"] = drugs_named(f"{r['title']} {r['abstract']}", lex)
+        if set(r["pub_types"]) & REVIEW_TYPES:
+            reviews.append(r)
+        elif r["drugs"]:
+            pool.append(r)
+    rec["steps"]["with_drug"] = len(pool)
+    # reviews: background only; their cited original reports naming the disease or gene and a drug join the pool
+    cited = []
+    for rv in [r for r in reviews if r["drugs"]][:10]:
+        try:
+            refs = review_references(rv["pmid"])
+        except (RuntimeError, ValueError, KeyError):
+            refs = []
+        rec["reviews"].append({"pmid": rv["pmid"], "title": rv["title"], "role": "background", "references": len(refs)})
+        cited += [x for x in refs if x not in recs]
+    have = {r["pmid"] for r in pool}
+    if cited:
+        crecs = _fetch_records(list(dict.fromkeys(cited))[:N_SCREEN])
+        for pmid, r in crecs.items():
+            text = f"{r['title']} {r['abstract']}"
+            r["drugs"] = drugs_named(text, lex)
+            if pmid not in have and r["drugs"] and not set(r["pub_types"]) & REVIEW_TYPES and names_in(text, names, gene):
+                r["via_review"] = True
+                pool.append(r)
+    rec["steps"]["from_review_references"] = sum(1 for r in pool if r.get("via_review"))
+    pool.sort(key=lambda r: not (set(r["drugs"]) - excl))       # new drugs first; order otherwise by relevance
+    chosen = pool[:N_PAPERS]
+    rec["steps"]["to_llm_cap"] = len(chosen)
+    rec["truncated"] = count > N_SCREEN or len(pool) > N_PAPERS
+    for r in chosen:
+        p = {"pmid": r["pmid"], "title": r["title"], "year": r["year"], "pub_types": r["pub_types"], "pmc": r["pmc"],
+             "oa": None, "abstract": r["abstract"], "full_text": "", "drugs_in_abstract": r["drugs"][:12],
+             **({"via_review": True} if r.get("via_review") else {})}
+        if "Retracted Publication" in r["pub_types"] or r.get("retraction"):
+            p["excluded"] = f"retracted ({r.get('retraction') or 'PubMed publication type'})"
+        elif r["pmc"]:
             try:
-                p["oa"], p["full_text"], p["license"] = F.pmc_open_access_text(pmc)
+                p["oa"], p["full_text"], p["license"] = F.pmc_open_access_text(r["pmc"])
             except (RuntimeError, ValueError, OSError) as e:
                 p["oa"], p["oa_error"] = None, f"{type(e).__name__}: {e}"[:200]
         if not p.get("excluded") and not (p["abstract"] or p["full_text"]):
-            p["excluded"] = "no accessible text (no abstract, no open-access full text)"
+            p["excluded"] = "no accessible text (no abstract, no open-access or author-manuscript full text)"
         rec["papers"].append(p)
     return rec
 
@@ -128,7 +217,7 @@ def design(pub_types: list[str], design_quote: str = "") -> str | None:
     q = (design_quote or "").lower()
     if re.search(r"\brandomi[sz]ed\b|\bplacebo\b|\bdouble[- ]blind", q) and not re.search(r"\bnon[- ]?randomi[sz]ed\b", q):
         return "controlled"
-    if re.search(r"\bopen[- ]label\b|\bsingle[- ]arm\b|\bnon[- ]?randomi[sz]ed\b|\bpilot\b", q):
+    if re.search(r"\bopen[- ]label\b|\bsingle[- ]arm\b|\bnon[- ]?randomi[sz]ed\b|\bnon[- ]?blinded\b|\bunblinded\b|\bpilot\b", q):
         return "open_label"
     if re.search(r"\bcase series\b|\bretrospective\b|\bcohort\b", q):
         return "case_series"
@@ -376,8 +465,9 @@ def add_offlabel(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_ca
     made_for: dict[str, set] = {}
     for b in [b for b in led.branches if b.get("diagnosis")]:
         names, gene = E.disease_names(b, step2), b.get("gene")
+        tier1 = {a["label"] for a in earlier.values()}
         try:
-            rec = search(gene, names)
+            rec = search(gene, names, tier1)
         except (RuntimeError, ValueError, KeyError) as e:
             led.offlabel_searches[b["id"]] = {"error": f"{type(e).__name__}: {e}"[:300]}
             continue
@@ -470,6 +560,7 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
         n = checked_counts(it)
         prec.append({"pmid": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/", "year": p["year"],
                      "pub_types": p["pub_types"], "design": design(p["pub_types"], it.get("design_quote") or ""),
+                     "design_quote": it.get("design_quote") or None, "via_review": bool(p.get("via_review")),
                      "n_disease": n["n_disease"], "n_total": n["n_total"], "n_quote": it.get("n_quote") or None,
                      "use_quote": it["use_quote"], "outcome_quote": it.get("outcome_quote") or None, "direction": d,
                      "co_treatment_quote": it.get("co_treatment_quote") or None, "dose_quote": it.get("dose_quote") or None,

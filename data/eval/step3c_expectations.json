@@ -17,19 +17,23 @@
     "efficacy_direction": "reported_improvement",
     "access_route": "unconfirmed",
     "design": {
-     "32103184": null
+     "32103184": "open_label"
+    },
+    "design_quote": {
+     "32103184": "non-blinded observational pilot study"
     }
    },
    "what": {
-    "zh": "SLC35A2 ex7 / D-半乳糖进 3c：PMID 32103184，设计原文未说明，10 例；获取途径未确认，结论不强于原文",
-    "en": "SLC35A2 ex7 / D-galactose in 3c: PMID 32103184, design not stated in the source, 10 patients; access route unconfirmed, conclusion no stronger than the source"
+    "zh": "SLC35A2 ex7 / D-半乳糖进 3c：PMID 32103184，设计按全文原句：non-blinded observational pilot study，10 例；获取途径未确认，结论不强于原文",
+    "en": "SLC35A2 ex7 / D-galactose in 3c: PMID 32103184, design quoted from the full text: non-blinded observational pilot study, 10 patients; access route unconfirmed, conclusion no stronger than the source"
    },
    "source": {
     "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020), abstract",
     "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
     "quote": "Ten patients with SLC35A2-CDG were supplemented with oral D-galactose for 18 weeks in escalating doses up to 1.5 g/kg/day. ... Oral galactose is well tolerated and shows promise as dietary therapy."
    },
-   "changed_2026_11_05": "(1) Admission is the human precedent alone; the access route is descriptive (decision 2026-11-05). D-galactose: no single-ingredient product in NIH ODS DSLD and no FDA GRAS notice for the substance (local inventory export, last updated 2026-11-02) -> 'unconfirmed'. (2) Design: the earlier expectation 'single-arm, open-label' was an inference not verified against the source. PubMed lists only 'Journal Article' and the abstract has no design words; the full text (PMC7275909) is an author manuscript outside the open-access subset, so it is not used (author-manuscript use pending review) -> design 'not stated in the source'; patients: 10."
+   "changed_2026_11_05": "(1) Admission is the human precedent alone; the access route is descriptive (decision 2026-11-05). D-galactose: no single-ingredient product in NIH ODS DSLD and no FDA GRAS notice for the substance (local inventory export, last updated 2026-11-02) -> 'unconfirmed'. (2) Design: the earlier expectation 'single-arm, open-label' was an inference not verified against the source. PubMed lists only 'Journal Article' and the abstract has no design words; the full text (PMC7275909) is an author manuscript outside the open-access subset, so it is not used (author-manuscript use pending review) -> design 'not stated in the source'; patients: 10.",
+   "changed_2026_11_05b": "PMC author manuscripts are a usable source (PMC copyright notice: 'available free to read, text mine, and for other uses consistent with the principles of Fair Use'; decision 2026-11-05). The full text (PMC7275909) states: 'Participants in this non-blinded observational pilot study received oral galactose supplementation over 18 weeks.' -> design open-label (non-blinded pilot), quoted."
   },
   {
    "id": "ex8-galactose",
@@ -46,19 +50,23 @@
     "efficacy_direction": "reported_improvement",
     "access_route": "unconfirmed",
     "design": {
-     "32103184": null
+     "32103184": "open_label"
+    },
+    "design_quote": {
+     "32103184": "non-blinded observational pilot study"
     }
    },
    "what": {
-    "zh": "SLC35A2 ex8 / D-半乳糖进 3c：PMID 32103184，设计原文未说明，10 例；获取途径未确认，结论不强于原文",
-    "en": "SLC35A2 ex8 / D-galactose in 3c: PMID 32103184, design not stated in the source, 10 patients; access route unconfirmed, conclusion no stronger than the source"
+    "zh": "SLC35A2 ex8 / D-半乳糖进 3c：PMID 32103184，设计按全文原句：non-blinded observational pilot study，10 例；获取途径未确认，结论不强于原文",
+    "en": "SLC35A2 ex8 / D-galactose in 3c: PMID 32103184, design quoted from the full text: non-blinded observational pilot study, 10 patients; access route unconfirmed, conclusion no stronger than the source"
    },
    "source": {
     "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020), abstract",
     "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
     "quote": "Ten patients with SLC35A2-CDG were supplemented with oral D-galactose for 18 weeks in escalating doses up to 1.5 g/kg/day. ... Oral galactose is well tolerated and shows promise as dietary therapy."
    },
-   "changed_2026_11_05": "(1) Admission is the human precedent alone; the access route is descriptive (decision 2026-11-05). D-galactose: no single-ingredient product in NIH ODS DSLD and no FDA GRAS notice for the substance (local inventory export, last updated 2026-11-02) -> 'unconfirmed'. (2) Design: the earlier expectation 'single-arm, open-label' was an inference not verified against the source. PubMed lists only 'Journal Article' and the abstract has no design words; the full text (PMC7275909) is an author manuscript outside the open-access subset, so it is not used (author-manuscript use pending review) -> design 'not stated in the source'; patients: 10."
+   "changed_2026_11_05": "(1) Admission is the human precedent alone; the access route is descriptive (decision 2026-11-05). D-galactose: no single-ingredient product in NIH ODS DSLD and no FDA GRAS notice for the substance (local inventory export, last updated 2026-11-02) -> 'unconfirmed'. (2) Design: the earlier expectation 'single-arm, open-label' was an inference not verified against the source. PubMed lists only 'Journal Article' and the abstract has no design words; the full text (PMC7275909) is an author manuscript outside the open-access subset, so it is not used (author-manuscript use pending review) -> design 'not stated in the source'; patients: 10.",
+   "changed_2026_11_05b": "PMC author manuscripts are a usable source (PMC copyright notice: 'available free to read, text mine, and for other uses consistent with the principles of Fair Use'; decision 2026-11-05). The full text (PMC7275909) states: 'Participants in this non-blinded observational pilot study received oral galactose supplementation over 18 weeks.' -> design open-label (non-blinded pilot), quoted."
   },
   {
    "id": "grin2b-lserine",
@@ -72,9 +80,10 @@
     ],
     "unknown": [
      "variant function"
-    ]
+    ],
+    "access_route": "dietary_supplement",
+    "see_also_3b": true
    },
-   "blocked_by": "config/supplements.json not approved yet (DSLD candidate list under review): until then L-serine has no confirmed route outside the recruiting trial, so it stays in 3b with its precedents",
    "what": {
     "zh": "GRIN2B p.Gln919Ter / L-丝氨酸进 3c，有条件（功能效应未知：末位外显子截短，预测逃逸 NMD）",
     "en": "GRIN2B p.Gln919Ter / L-serine in 3c, conditional (variant function unknown: last-exon truncation predicted to escape NMD)"
@@ -83,7 +92,8 @@
     "doc": "PubMed PMID 38380699 (phase 2A), PMID 36758276 (observational); Step 1 NMD prediction",
     "url": "https://pubmed.ncbi.nlm.nih.gov/38380699/",
     "quote": "the first non-randomized, open-label, single-arm trial (NCT04646447) designed to evaluate the tolerability and efficacy of L-serine in children with GRIN genetic variants leading to loss-of-function"
-   }
+   },
+   "changed_2026_11_05b": "Supplement list approved (L-serine, DSLD): reachable outside the recruiting trial, so listed in 3c and 3b with cross-references (decision 2026-11-05)."
   },
   {
    "id": "ano10-coq10",
@@ -95,7 +105,7 @@
      "30838263"
     ],
     "efficacy_direction": "insufficient",
-    "access_route": "unconfirmed"
+    "access_route": "dietary_supplement"
    },
    "what": {
     "zh": "ANO10 / 辅酶 Q10 进 3c：3 名同胞不设盲用药，结果在可获取的文本中未报告",
@@ -106,7 +116,8 @@
     "url": "https://pubmed.ncbi.nlm.nih.gov/30838263/",
     "quote": "Data also are provided on unblinded therapy with coenzyme Q10, previously reported as a possible therapy in ANO10 -related ataxia."
    },
-   "changed_2026_11_05": "Admission is the human precedent alone (decision 2026-11-05); route 'unconfirmed' until the supplement list is approved (then 'dietary_supplement')."
+   "changed_2026_11_05": "Admission is the human precedent alone (decision 2026-11-05); route 'unconfirmed' until the supplement list is approved (then 'dietary_supplement').",
+   "changed_2026_11_05b": "Supplement list approved (coenzyme Q10, DSLD)."
   },
   {
    "id": "agxt33-stiripentol",
@@ -130,7 +141,7 @@
     "url": "https://pubmed.ncbi.nlm.nih.gov/32418144/",
     "quote": "Stiripentol may not be useful to reduce P Ox in PH patients with advanced chronic kidney disease"
    },
-   "blocked_by": "20-paper cap (contract decision 4): the PH1 search returns 355 articles; both stiripentol case reports rank below 20, so they are not read (search marked truncated)"
+   "changed_2026_11_05b": "Two-step search (200 abstracts screened by code, drug-naming articles first) replaces the plain 20-article cap; this case checks it (decision 2026-11-05)."
   },
   {
    "id": "grin2b-dserine-absent",

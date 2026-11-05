@@ -148,21 +148,29 @@ def abstracts_by_pmid(xml: str) -> dict[str, str]:
 _OPEN_LICENSE = re.compile(r'license-type="open-access"|creativecommons\.org/(?:licenses|publicdomain)', re.I)
 
 
+def _pmc_flag(x: str, name: str) -> bool:
+    return re.search(rf"<meta-name>{name}</meta-name>\s*<meta-value>yes</meta-value>", x) is not None
+
+
 def pmc_open_access_text(pmc: str) -> tuple[bool, str, str | None]:
-    """(open access, full text, license) for a PMC article, through E-utilities - one of the services PMC allows for
-    automated retrieval (the PMC OA Web Service was retired in 2026). Open access = the record carries its body and a
-    Creative Commons / open-access license; otherwise only the abstract is used (contract L3)."""
+    """(usable, full text, license + basis) for a PMC article, through E-utilities (PMC allows automated retrieval only
+    through its listed services; the OA Web Service was retired in 2026). Usable = the record carries its body and either
+    a Creative Commons / open-access license, PMC's open-access flag, or PMC's author-manuscript flag (author manuscripts:
+    "available free to read, text mine, and for other uses consistent with the principles of Fair Use" - PMC copyright
+    notice; decision 2026-11-05). The basis is recorded with the license text."""
     x = http.get(f"{EUTILS}/efetch.fcgi?db=pmc&retmode=xml&id={pmc.replace('PMC', '')}", timeout=60).text
     lic = re.search(r"<license[^>]*>.*?</license>", x, re.S)
     lic_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", lic.group(0))).strip()[:300] if lic else None
     body = re.search(r"<body>(.*)</body>", x, re.S)
-    oa = bool(body) and bool(lic and _OPEN_LICENSE.search(lic.group(0)))
-    if not oa:
+    basis = ("open-access license" if lic and _OPEN_LICENSE.search(lic.group(0)) else
+             "PMC author manuscript" if _pmc_flag(x, "pmc-prop-manuscript") else
+             "PMC open-access flag" if _pmc_flag(x, "pmc-prop-open-access") else None)
+    if not body or not basis:
         return False, "", lic_text
     b = re.sub(r"<title>(.*?)</title>", lambda m: "\n## " + re.sub(r"<[^>]+>", " ", m.group(1)).strip() + "\n", body.group(1), flags=re.S)
     b = re.sub(r"</p>", "\n", b)
     text = "\n".join(re.sub(r"[ \t]+", " ", ln).strip() for ln in re.sub(r"<[^>]+>", " ", b).splitlines() if ln.strip())
-    return True, text, lic_text
+    return True, text, f"[{basis}] {lic_text or ''}".strip()
 
 
 MGMT_HEADING = re.compile(r"treat|therap|manag|recommend|intervention|care|clinical implication|outcome|prognos|surveil|"
