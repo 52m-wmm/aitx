@@ -118,3 +118,40 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 4. **每分支逐条分析上限 10 个**。
 5. **病人事实补充**在 3b 做，写成通用模块 `aitx/evidence/patient_facts.py` 供后续子节点复用。
 6. OTC-HOPE 不再招募：期望改为"不列为可报名试验"，记录为因状态排除的阴性证据。
+
+## 实现细则（2026-11-04 批准）
+
+**病人事实（`aitx/evidence/patient_facts.py`）**
+- 描述里没有提到的事实（是否参加过其他试验、用药、既往治疗等）不出现在列表里，任何使用方都按 unknown 处理。
+- 只有原文明确否认时才算"无"（`absent`），引用里必须有否定词（no / not / never / none / without / denies / negative for 等）；"normal"同样要求原文有 normal / unremarkable 之类的词。
+- 化验、用药、既往治疗、合并症的名称必须出现在引用里。
+- 反向测试：LLM 把"Enrolled in trial …"标为"未参加"，或把"Seizures since birth"标为肝功能正常，都会被丢弃。
+
+**派生值（`aitx/evidence/derived.py`）**：只用公开公式，所有输入都必须在病例里。缺任何输入就是 unknown，不补身高、体重、种族或默认年龄。
+- eGFR，≥18 岁：CKD-EPI 2021 肌酐方程（不含种族），Inker LA et al., *N Engl J Med* 2021;385:1737–1749。
+- eGFR，<18 岁：床旁 Schwartz 公式 0.413 × 身高（cm）/ 血肌酐（mg/dL），Schwartz GJ et al., *J Am Soc Nephrol* 2009;20:629–637。必须有病例给出的身高。
+- 血肌酐先按化验单位规则换算到 mg/dL；单位无法确定时不计算。
+
+**标准映射（`aitx/evidence/criteria.py`，提示词 `3b-criteria-v1`）**
+- 代码按标题和条目符号拆分条目，入组 / 排除由标题决定。
+- LLM 对每条给出一个或多个映射：事实类型 + 比较符 + 阈值 + 单位，并附该条原文的逐字引用。
+- 代码核验，不过即作为"无法映射"处理：
+  - 引用逐字出现在该条里；
+  - 每个阈值数字出现在引用里；
+  - 比较符与原文一致（≥ / at least / or older 与 > / more than / older than 区分）；
+  - 单位按整词出现（"g/dL" 不等于 "mg/dL"）。
+- 比较一律由代码完成。年龄同时用登记的结构化字段（minimumAge / maximumAge）作为要求行；文字中的年龄条款也由代码按 Step 2 的结构化年龄比较。
+- 结果规则：
+  - 入组条款不满足 → 不适用；排除条款满足 → 不适用。
+  - 任何一条 unknown → 有条件适用，并在缺失信息里列出缺什么。
+  - 行政类条款 → `not_assessed`（"screening assessment"），不影响状态。
+  - 无法映射或核验不过的条款 → `not_assessed`（"not mapped; shown verbatim"），原文照显，不影响状态（账本校验允许这两种备注）。
+- "满足其一"：只有同时满足两个条件才按组处理——LLM 标了组，且代码拆出的父条目原文含 "one of / any of / either"。组内任一满足即满足；没有满足、但有未知的 → 未知；全部不满足 → 不满足。每组合成一行，子项列在 `any_of`。
+- 孕期：男性或 12 岁以下 → 不在孕期（排除条款通过），避孕要求不适用；其他情况 → unknown。
+
+**行动记录（`aitx/evidence/trial_records.py`）**
+- 每个试验一条 `trial:NCT…`，带研究类型、状态、期别、相关性依据、每条要求行及其逐字证据。
+- 被登记年龄 / 性别排除的试验，不调用 LLM，直接判为不适用。
+- 每个分支的检索记录、被过滤的研究（附原因）、超出上限的研究写入账本 `trial_searches`。
+- 没有试验的分支：`searched_none` + 阴性证据。
+- 验收脚本 `scripts/acceptance_step3b.py`。

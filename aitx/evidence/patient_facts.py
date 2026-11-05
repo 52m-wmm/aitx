@@ -48,6 +48,12 @@ def _llm(text: str, use_cache: bool) -> tuple[dict, dict]:
                                    "prompt_version": PROMPT_VERSION}
 
 
+# "absent" / "normal" need the description's own words: a fact the description does not mention is never "none"
+# (it is simply not in the list, and every consumer reads a missing fact as unknown)
+DENIAL = re.compile(r"\b(?:no|not|never|none|without|denies|denied|negative\s+for|nil|free\s+of|naive|na[iï]ve)\b", re.I)
+NORMAL = re.compile(r"\b(?:normal|within\s+normal|unremarkable|wnl)\b", re.I)
+
+
 def _number_in(value, quote: str) -> bool:
     if value is None:
         return True
@@ -68,7 +74,12 @@ def verify(raw: list, text: str, table: dict | None = None) -> tuple[list[dict],
         why = ("unknown kind" if kind not in KINDS else
                "quote not verbatim in the clinical description" if not LG.quote_in(quote, text) else
                "number not in the quote" if not _number_in(f.get("value"), quote) else
-               "unit not in the quote" if f.get("unit") and not LG.quote_in(str(f["unit"]), quote) else None)
+               "unit not in the quote" if f.get("unit") and not LG.quote_in(str(f["unit"]), quote) else
+               "name not in the quote" if kind in ("lab", "current_medication", "prior_therapy", "condition")
+               and not LG.quote_in(str(f.get("name") or "-"), quote) else
+               "absent without a denial in the quote" if f.get("status") == "absent" and not DENIAL.search(quote) else
+               "normal without 'normal' in the quote" if f.get("status") == "normal" and not NORMAL.search(quote) else
+               "abnormal stated with a denial" if f.get("status") == "abnormal" and NORMAL.search(quote) else None)
         if why:
             dropped.append({**f, "dropped": why})
             continue
@@ -93,7 +104,8 @@ def extract(case: dict, *, use_cache: bool = True) -> dict:
 
 
 def find(extra: dict, kind: str, name: str | None = None) -> list[dict]:
-    """Facts of one kind, optionally whose name mentions `name` (case-insensitive, whole words)."""
+    """Facts of one kind, optionally whose name mentions `name` (case-insensitive, whole words). An empty list means
+    the description does not say: unknown, never "absent"."""
     out = [f for f in (extra or {}).get("facts", []) if f["kind"] == kind]
     if name:
         n = re.escape(name.lower())

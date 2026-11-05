@@ -35,6 +35,7 @@ ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none
 REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
 PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown", "not_assessed")
 NOT_ASSESSED_NOTE = "screening assessment"   # administrative criteria (consent, adherence, visits): left to trial screening
+UNMAPPED_NOTE = "not mapped; shown verbatim"  # a criterion the mapping could not turn into a checked comparison (3b)
 
 SOURCE_ID = {   # source type -> id format
     "url": r"https?://\S+",
@@ -213,6 +214,7 @@ class Ledger:
         self.branch_assessment: list[dict] = []
         self.branch_order: list[str] = [b["id"] for b in branches]
         self.actions: list[dict] = []
+        self.trial_searches: dict = {}         # 3b: per branch, every search, filtered study (with reason) and over-cap study
 
     def add(self, e: dict) -> dict:
         if e["kind"] == "reasoning" and e["status"] == "candidate":
@@ -309,7 +311,7 @@ class Ledger:
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
                     bad.append(f"{tag}: requirement {r['id']} result inconsistent")
                 if r["result"] == "not_assessed":
-                    if r["kind"] not in ("inclusion", "exclusion") or r.get("note") != NOT_ASSESSED_NOTE or r.get("patient_fact"):
+                    if r["kind"] not in ("inclusion", "exclusion") or r.get("note") not in (NOT_ASSESSED_NOTE, UNMAPPED_NOTE) or r.get("patient_fact"):
                         bad.append(f"{tag}: requirement {r['id']} not_assessed must be a trial criterion noted "
                                    f"'{NOT_ASSESSED_NOTE}' with no patient fact")
                     continue
@@ -335,6 +337,6 @@ class Ledger:
                 "branch_assessment": self.branch_assessment, "branch_order": self.branch_order,
                 "patient_context": self.patient_context, "missing_information": self.missing_information,
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
-                "sections_status": self.sections_status, "actions": self.actions,
+                "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}

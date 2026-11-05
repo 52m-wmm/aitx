@@ -30,3 +30,28 @@ def test_find_by_kind_and_name():
                         TEXT, LABS.load())
     extra = {"facts": kept}
     assert PF.find(extra, "organ_function", "liver") and not PF.find(extra, "organ_function", "kidney")
+
+
+def test_unmentioned_facts_are_not_in_the_list_so_unknown():
+    kept, _ = PF.verify([], "seizures, age 3 years", LABS.load())
+    assert PF.find({"facts": kept}, "other_trial") == [] and PF.find({"facts": kept}, "current_medication") == []
+
+
+def test_absent_needs_a_denial_in_the_quote():
+    # reverse checks: the LLM calls something "absent" that the text does not deny
+    text = "Enrolled in trial NCT01234567. On levetiracetam. Seizures since birth."
+    raw = [{"kind": "other_trial", "name": "other trials", "status": "absent", "quote": "Enrolled in trial NCT01234567"},
+           {"kind": "current_medication", "name": "levetiracetam", "status": "absent", "quote": "On levetiracetam"},
+           {"kind": "organ_function", "name": "liver", "status": "normal", "quote": "Seizures since birth"}]
+    kept, dropped = PF.verify(raw, text, LABS.load())
+    assert not kept and [d["dropped"] for d in dropped] == ["absent without a denial in the quote"] * 2 + \
+        ["normal without 'normal' in the quote"]
+    kept, _ = PF.verify([{"kind": "prior_therapy", "name": "gene therapy", "status": "absent",
+                          "quote": "No prior gene therapy"}], "No prior gene therapy.", LABS.load())
+    assert kept and kept[0]["status"] == "absent"
+
+
+def test_named_fact_must_name_itself_in_the_quote():
+    kept, dropped = PF.verify([{"kind": "current_medication", "name": "valproate", "status": "present",
+                                "quote": "On levetiracetam"}], "On levetiracetam.", LABS.load())
+    assert not kept and dropped[0]["dropped"] == "name not in the quote"
