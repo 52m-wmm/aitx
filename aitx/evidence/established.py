@@ -218,6 +218,10 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
         known = VARIANT_CLASS_WORDS if field == "variant_class" else ZYGOSITY_WORDS
         if field == "zygosity" and zyg and not all(any(k in w for k in known) for w in want):
             want = zyg                       # the value held something else (a variant name): use the requirement's words
+        if field == "variant_class" and not (want and all(any(k in w for k in known) for w in want)):
+            words = [k for k in known if re.search(rf"\b{re.escape(k)}", req["text"].lower())]
+            if words:                        # empty or other value: the class words of the requirement (2026-11-05)
+                want = words
         if not want or not all(any(k in w for k in known) for w in want):
             return "unknown", fact, "requirement not comparable"
         return ("satisfies" if any(w.replace(" ", "_") in have or have in w for w in want) else "does_not_satisfy"), fact, ""

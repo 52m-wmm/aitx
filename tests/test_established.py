@@ -862,3 +862,14 @@ def test_narrowing_words_keep_the_condition(where):
 def test_plain_situation_without_broadening_word_stays():
     reqs = E._reqs([{"text": "in kidney failure", "field": "situation"}], None, "Dialysis in kidney failure.")
     assert reqs and not reqs[0].get("_broadening")
+
+
+def test_variant_class_with_empty_value_uses_the_requirement_words():
+    # 2026-11-05: {"field": "variant_class", "op": "", "value": ""} for "1 or 2 missense AGXT pathogenic variants"
+    req = {"field": "variant_class", "op": "", "value": "", "text": "1 or 2 missense AGXT pathogenic variants"}
+    assert E.evaluate(req, PF, BR)[0] == "does_not_satisfy"                     # frameshift patient
+    pf = dict(PF, variants=[dict(PF["variants"][0], protein="p.(Gly170Arg)", **{"class": "missense"})])
+    assert E.evaluate(req, pf, BR)[0] == "satisfies"
+    # reverse: no class word in the text and no usable value -> still not comparable (unknown, never "not met")
+    assert E.evaluate({"field": "variant_class", "op": "", "value": "", "text": "known to be pyridoxine responsive"},
+                      PF, BR)[0] == "unknown"
