@@ -873,3 +873,14 @@ def test_variant_class_with_empty_value_uses_the_requirement_words():
     # reverse: no class word in the text and no usable value -> still not comparable (unknown, never "not met")
     assert E.evaluate({"field": "variant_class", "op": "", "value": "", "text": "known to be pyridoxine responsive"},
                       PF, BR)[0] == "unknown"
+
+
+@pytest.mark.parametrize("text", ["persons without missense AGXT variants", "missense or nonsense AGXT variants",
+                                  "non-missense AGXT variants", "AGXT variants other than missense",
+                                  "any AGXT variant except missense", "not missense"])
+def test_variant_class_fallback_refuses_negated_or_several_class_words(text):
+    # reverse checks (2026-11-05): the text's class word is used only when it is the only one and is not negated
+    req = {"field": "variant_class", "op": "", "value": "", "text": text}
+    for cls in ("frameshift", "missense"):
+        pf = dict(PF, variants=[dict(PF["variants"][0], **{"class": cls})])
+        assert E.evaluate(req, pf, BR)[0] == "unknown"

@@ -25,6 +25,12 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 - 每次 LLM 调用记录服务端实际返回的模型名，防止别名被悄悄切换
 - 优先用实时 API 获取数据，引用必须能解析到具体记录（URL / accession）
 
+## 改动审批规则（2026-11-05）
+
+- **只会把判定结果放宽成"有条件"的改动**（如把某条要求改判为"未知"），可以先做后报。
+- **可能产生新的"不适用"（或把未知变成确定的满足 / 不满足）的改动**，先报给用户确认，再改。
+- 无论哪种，都要补离线测试和反向验证，并在契约里记下原因。
+
 ## 开发方式
 
 按节点逐步构建，**每个节点有契约文档（docs/）、离线测试（tests/）和联网验收脚本（scripts/acceptance_*.py），验收通过才进入下一步。**
@@ -36,8 +42,9 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
 | 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：难题测试集、缺失类术语否定规则（修复 CBAVD）、起病年龄由代码映射到 HPO 起病术语；语义检索暂缓（剩余漏提不是检索问题）。详见 Step 2 契约 v2.5 |
 | 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查（4 条加载、8 条待审、3 条否决）。契约 `docs/step3_0_contract.md` |
-| 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）：5 个练习病例 13/13 核实期望成立；3.0 验收 18 例硬性项全过（账本 v3，PubMed 链接经 E-utilities 核对）。规则变更见 3a 契约文末 |
-| 3b–3e | 按章节检索证据 | 3b 进行中（检索、分组、化验单位已完成；逐条标准映射与病人事实模块待做） |
+| 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）；补充修复（提示词 `3a-v5`：表格行与段首限定作条件、治疗类转介、漏抽补抽、放宽从句、按变量合并缺失信息等）✅ 已验收（2026-11-05，tag `step3a.1-accepted`）：6 个练习病例 20/20 核实期望成立。规则变更见 3a 契约文末 |
+| 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
+| 3c–3e | 按章节检索证据 | 下一步：支持治疗兜底链（契约 `docs/supportive_fallback_contract.md` 已批准）实现中 |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 

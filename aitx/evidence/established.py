@@ -148,6 +148,9 @@ def label_tables(full_text: str, text: str) -> dict[str, str]:
     return out
 
 
+CLASS_GUARD = re.compile(r"\b(?:not|no|without|except|excluding|exclude[sd]?|other\s+than|unless|lacking)\b|\bnon[\s-]", re.I)
+
+
 def zygosity_words(text: str) -> list[str]:
     low = (text or "").lower()
     return [w for w in ZYGOSITY_WORDS if re.search(rf"\b{w}", low)]
@@ -179,6 +182,13 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
         v = vs[0]
         fact = {"field": field, "value": v["protein"], "quote": v["quote"], "step": 1}
         zyg = zygosity_words(req["text"])
+        if field == "variant_class":
+            vals = [str(x).lower() for x in (value if isinstance(value, list) else [value]) if x]
+            if not (vals and all(any(k in w for k in VARIANT_CLASS_WORDS) for w in vals)):
+                low = req["text"].lower()        # the text's class words decide: guard the whole text before any split
+                words = {k.replace("-", "").replace("_", "") for k in VARIANT_CLASS_WORDS if re.search(rf"(?<![a-z]){re.escape(k)}", low)}
+                if len(words) != 1 or CLASS_GUARD.search(low):
+                    return "unknown", fact, "requirement not comparable"
         parts = or_parts(req["text"])
         if len(parts) > 1:                   # "A or B": any part met is enough; a part that cannot be judged -> unknown
             got = [evaluate(dict(req, text=t), pf, branch) for t in parts]
@@ -219,9 +229,12 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
         if field == "zygosity" and zyg and not all(any(k in w for k in known) for w in want):
             want = zyg                       # the value held something else (a variant name): use the requirement's words
         if field == "variant_class" and not (want and all(any(k in w for k in known) for w in want)):
-            words = [k for k in known if re.search(rf"\b{re.escape(k)}", req["text"].lower())]
-            if words:                        # empty or other value: the class words of the requirement (2026-11-05)
-                want = words
+            # empty or other value: the class word of the requirement's own text - only when there is exactly one and
+            # no negating or narrowing word ("without missense", "non-missense", "missense or nonsense" stay unknown)
+            low = req["text"].lower()
+            words = {k.replace("-", "").replace("_", "") for k in known if re.search(rf"(?<![a-z]){re.escape(k)}", low)}
+            if len(words) == 1 and not CLASS_GUARD.search(low):
+                want = [next(k for k in known if re.search(rf"(?<![a-z]){re.escape(k)}", low))]
         if not want or not all(any(k in w for k in known) for w in want):
             return "unknown", fact, "requirement not comparable"
         return ("satisfies" if any(w.replace(" ", "_") in have or have in w for w in want) else "does_not_satisfy"), fact, ""
