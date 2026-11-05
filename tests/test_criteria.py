@@ -238,3 +238,10 @@ def test_ranges_and_and_older_are_sign_cues():
     assert C.sign_ok(">=", "Patients aged 10 to 17 years") and C.sign_ok("<=", "Patients aged 10 to 17 years")
     assert C.sign_ok("<=", "Age 0-90 years old") and C.sign_ok(">=", "Aged 12 years and above")
     assert not C.sign_ok(">", "Aged 12 years and above")
+
+
+def test_thousands_separator_and_none_item():
+    items = {"exc1": {"id": "exc1", "kind": "exclusion", "text": "Severe thrombocytopenia (platelet count ≤ 100,000/µL)", "parent": None}}
+    assert C.check_mapping({"id": "exc1", "quote": "platelet count ≤ 100,000/µL", "fact": "lab", "op": "<=", "value": 100000}, items) is None
+    none = [{"id": "exc1", "kind": "exclusion", "text": "None", "level": 0, "parent": None}]
+    assert C.lines_for({"nct": "NCT00000001"}, _mapped(none, []), PF, {"facts": []}, BR, []) == []

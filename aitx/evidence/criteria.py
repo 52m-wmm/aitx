@@ -107,7 +107,7 @@ def check_mapping(m: dict, items: dict[str, dict]) -> str | None:
         return f"unknown comparison {m.get('op')!r}"
     if not LG.quote_in(quote, T.unescape(it["text"])):
         return "quote not verbatim in the criterion"
-    in_quote = [float(n) for n in re.findall(r"\d+(?:\.\d+)?", quote)]
+    in_quote = [float(n.replace(",", "")) for n in re.findall(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?", quote)]   # "100,000"
     for n in _numbers(m.get("value")):
         if not any(abs(n - q) < 1e-9 for q in in_quote):
             return f"threshold {n:g} not in the quote"
@@ -309,6 +309,8 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
     for it in mapped["items"]:
         if it.get("preamble") or it["kind"] not in ("inclusion", "exclusion"):
             continue
+        if re.fullmatch(r"\W*(?:none|n/?a|not applicable)\W*", T.unescape(it["text"]), re.I):
+            continue                                             # "Exclusion Criteria: None" states no criterion
         ms = [m for m in by_item.get(it["id"], []) if m["fact"] != "header"]
         if not ms:
             has_children = any(x.get("parent") == it["id"] for x in mapped["items"])
