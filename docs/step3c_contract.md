@@ -37,7 +37,12 @@
    - 病例数：LLM 逐字摘出报告病例数的句子，代码核对数字在引用里；本病（本基因）病例数与总数分开记（如 "24 例 GRIN 变异，其中 GRIN2B 12 例"）。
    - 无法判断设计或病例数时写"未说明"，不推断。
 7. **疗效方向**（每篇一个，由支持度核查过的结果引用决定；决定 6）：阳性 / 阴性 / 不一致（同一篇内）/ 未报告 / 合并用药无法单独归因
-   （例：PMID 36693470 司替戊醇与 lumasiran 同用）。药物层面汇总：全部阳性 → 阳性；有阳性有阴性 → 结果不一致；全部阴性 → 阴性；其余 → 未报告。
+   （例：PMID 36693470 司替戊醇与 lumasiran 同用）。
+   **药物层面汇总**（2026-11-05 确认，按此顺序判定，先命中先用）：
+   1. 有阳性也有阴性 → **结果不一致**；
+   2. 无阳性、有阴性 → **已有报告无效**（结论"已有报告无效，不推荐"）；
+   3. 有阳性、无阴性 → **报告了改善**（结论强度不超过原文）；
+   4. 只有"合并用药无法单独归因"或"未报告" → **疗效证据不足**。
 8. **原文不可获取的文献**（无摘要、全文非开放获取，如 PMID 34283403）不能作为先例，记入检索记录"无可获取文本"。
 
 ## 来源
@@ -99,7 +104,7 @@
 | 强度如实 | 每篇先例有设计与病例数（或"未说明"）；结论句通过支持度核查，且不含强于原文的词 |
 | 批准状态 | 每条行动有美国批准状态；未获批的有扩展使用途径记录 |
 | 剂量 | 剂量只出现在逐字引用里，不出现在代码生成的结论句中 |
-| 疗效方向 | 每篇先例有疗效方向；药物汇总与逐篇一致；只有阴性的结论句为"已有报告无效，不推荐" |
+| 疗效方向 | 每篇先例有疗效方向；药物汇总按上面四条的顺序由代码算出；"已有报告无效"的结论句为"已有报告无效，不推荐" |
 | 补充剂 | 膳食补充剂类行动带"非 FDA 批准药品，产品质量和剂量缺乏监管"说明，且有人类先例 |
 | 3b / 3c 互注 | 同一药物同时出现在 3b 和 3c 时，两边都有指向对方的注明 |
 
@@ -113,7 +118,7 @@
 | 反例：PRAC-GRIN2B / D-丝氨酸 | **不进 3c**：唯一的人体报告已撤稿 | PMID 28734458，PubMed 类型 "Retracted Publication"，撤稿声明 Biol Psychiatry 2018;83(8):715 |
 | 反例：PRAC-GRIN2B / NMDA 受体正向变构调节剂（妥布霉素、孕烯醇酮硫酸盐等） | **不进 3c**（只有体外研究，归 3e） | PMID 32712275 摘要：在表达变异受体的体外系统中评估 |
 
-| PRAC-AGXT-c33dup / 司替戊醇 | 进 3c，**超说明书**（FDA 批准用于 Dravet 综合征）；疗效方向**结果不一致** | PMID 32418144（病例报告，同情用药，依赖透析的婴儿）："Stiripentol may not be useful to reduce P Ox in PH patients with advanced chronic kidney disease" → 阴性；PMID 36693470（病例报告，51 岁移植后）："He received stiripentol and lumasiran without adverse events… kidney biopsy showed a complete regression of oxalate crystals"；"Further studies are needed to assess whether this strategy is effective" → 合并用药，无法单独归因；PMID 34283403 无摘要、无开放获取全文 → 不能作为先例，记"无可获取文本"；PMID 31451300 为评论、无摘要 → 同上 |
+| PRAC-AGXT-c33dup / 司替戊醇 | 进 3c，**超说明书**（FDA 批准用于 Dravet 综合征）；疗效汇总**已有报告无效**，写明"没有支持有效的证据（1 篇阴性，1 篇合并 lumasiran 无法归因）"，不写"不一致" | PMID 32418144（病例报告，同情用药，依赖透析的婴儿）："Stiripentol may not be useful to reduce P Ox in PH patients with advanced chronic kidney disease" → 阴性；PMID 36693470（病例报告，51 岁移植后）："He received stiripentol and lumasiran without adverse events… kidney biopsy showed a complete regression of oxalate crystals"；"Further studies are needed to assess whether this strategy is effective" → 合并用药，无法单独归因；PMID 34283403 无摘要、无开放获取全文 → 不能作为先例，记"无可获取文本"；PMID 31451300 为评论、无摘要 → 同上 |
 
 ## 费用与运行
 
@@ -125,5 +130,5 @@
 2. 同时有招募中试验和先例：只能经试验获得 → 只放 3b，先例附为支持证据；试验外也可获得 → 3b、3c 都列（行动键不同），互相注明，不重复写内容。
 3. 新增功能效应条件，三档（见"对照病人"）；判为功能获得且药物可能有害（产生"不适用"）的规则先报再改。
 4. 每分支 20 篇；账本记检索总数，超出标"已截断"。
-5. PH1 / 司替戊醇作为第 4 个用例，期望为"结果不一致"（另两篇已核对，见验收表）。
+5. PH1 / 司替戊醇作为第 4 个用例；按汇总规则第 2 条，期望为"已有报告无效"：没有支持有效的证据（1 篇阴性，1 篇合并 lumasiran 无法归因）。
 6. 只有阴性报告的药物也列，证据有"疗效方向"字段；只有阴性的写成"已有报告无效，不推荐"。报告呈现方式记入 Step 4 待办。
