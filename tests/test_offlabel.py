@@ -94,6 +94,13 @@ def test_direction_needs_the_support_check_and_co_treatment_is_not_attributable(
     assert O.direction(GOOD, "D-galactose", "SLC35A2-CDG", True) == "not_reported"          # LLM proposal not upheld
 
 
+def test_direction_claim_does_not_require_several_patients():
+    for d in ("positive", "negative", "mixed"):
+        c = O.direction_claim(d, "stiripentol", "PH1")
+        assert "patient or patients" in c and " in patients with" not in c and "patients with PH1 improved" not in c
+    assert O.direction_claim("negative", "stiripentol", "PH1").startswith("stiripentol did not achieve")
+
+
 # --- variant function (three tiers)
 
 def _s1(cls, nmd):

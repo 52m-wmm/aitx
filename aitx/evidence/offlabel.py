@@ -410,15 +410,23 @@ def checked_counts(it: dict) -> dict:
     return {k: (it.get(k) if it.get(k) is not None and number_in(it.get(k), q) else None) for k in ("n_disease", "n_total")}
 
 
+def direction_claim(d: str, drug: str, disease: str) -> str:
+    """Claim the support check judges. Number-neutral (2026-11-05): with "patients" the judges answered
+    "partially supported - one infant, not patients generally" for every single-case report, so no case report could
+    ever carry a direction. How many patients is recorded separately (n_disease), not inside this claim."""
+    who = f"the patient or patients with {disease} described in this report"
+    return {"positive": f"After receiving {drug}, {who} improved.",
+            "negative": f"{drug} did not achieve the intended effect in {who}.",
+            "mixed": f"{drug} had both beneficial and absent or adverse effects in {who}."}[d]
+
+
 def direction(it: dict, drug: str, disease: str, use_cache: bool) -> str:
     """Efficacy direction of one paper: the LLM's proposal stands only if the support check finds the outcome quote
     supports it; positive with a verified co-treatment is "combined_unattributable"."""
     d, q = it.get("direction"), str(it.get("outcome_quote") or "")
     if d not in ("positive", "negative", "mixed") or not q:
         return "not_reported"
-    claim = {"positive": f"In this report, patients with {disease} improved after receiving {drug}.",
-             "negative": f"In this report, {drug} did not achieve the intended effect in patients with {disease}.",
-             "mixed": f"In this report, {drug} had both beneficial and absent or adverse effects in patients with {disease}."}[d]
+    claim = direction_claim(d, drug, disease)
     # both quotes from the same article: who received the drug, and what happened (2026-11-05: the outcome sentence
     # alone - "SLC35A2-CDG patients demonstrated improvements" - does not name the drug)
     sc = SC.check_support(f"{drug} effect in {disease}", [claim], [str(it.get("use_quote") or ""), q], use_cache=use_cache)
