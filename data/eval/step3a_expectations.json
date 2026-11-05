@@ -2,70 +2,405 @@
  "description": "Step 3a acceptance expectations (docs/step3a_contract.md, 验收). Every item was checked against the source text on 2026-11-03: FDA labels from openFDA (set id, version, effective date below), GeneReviews from the local NCBI Literature Archive copy. Used by scripts/acceptance_step3a.py; the viewer only displays its result. match: case-insensitive regex on the action label or key; branch: regex on the branch disease label (omitted = every branch the action applies to); expect.status: applicable / conditional / not_applicable, or 'present' = the action is in that section with any status; expect.unknown: regexes, each must match a requirement whose result is unknown.",
  "verified_on": "2026-11-03",
  "items": [
-  {"id": "agxt33-lumasiran", "case": "PRAC-AGXT-c33dup", "section": "existing_targeted_therapies", "match": "lumasiran",
-   "expect": {"status": "applicable"},
-   "what": {"zh": "AGXT c.33dup（7 岁）/ Lumasiran → 适用", "en": "AGXT c.33dup (7 y) / Lumasiran → applicable"},
-   "source": {"doc": "Oxlumo label", "version": "9", "date": "2025-12-01", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=16985a31-f5e4-4557-9266-fc78d4bc5055",
-              "quote": "indicated for the treatment of primary hyperoxaluria type 1 (PH1) … in pediatric and adult patients"}},
-  {"id": "agxt33-nedosiran", "case": "PRAC-AGXT-c33dup", "section": "existing_targeted_therapies", "match": "nedosiran",
-   "expect": {"status": "conditional", "unknown": ["eGFR|kidney function"]},
-   "what": {"zh": "AGXT c.33dup（7 岁）/ Nedosiran → 有条件适用（eGFR 未知）", "en": "AGXT c.33dup (7 y) / Nedosiran → conditional (eGFR unknown)"},
-   "source": {"doc": "Rivfloza label", "version": "4", "date": "2025-03-03", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ace9d4bc-4d20-4beb-9e9d-888690424833",
-              "quote": "children 2 years of age and older and adults with primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m2"}},
-  {"id": "agxt33-pyridoxine", "case": "PRAC-AGXT-c33dup", "section": "existing_targeted_therapies", "match": "pyridoxine",
-   "expect": {"status": "not_applicable"},
-   "what": {"zh": "AGXT c.33dup（纯合移码）/ 吡哆醇 → 不适用（不是错义变异）", "en": "AGXT c.33dup (homozygous frameshift) / Pyridoxine → not applicable (not a missense variant)"},
-   "source": {"doc": "GeneReviews PH1 (NBK1283), Management / Treatment of Manifestations / Targeted Therapies, Table 7", "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
-              "quote": "Persons w/missense AGXT variants, esp homozygotes for p.Phe152Ile, p.Gly170Arg, & p.Ile244Thr"}},
-  {"id": "agxt508-pyridoxine", "case": "PRAC-AGXT-c508GA", "section": "existing_targeted_therapies", "match": "pyridoxine",
-   "expect": {"status": "applicable"},
-   "what": {"zh": "AGXT c.508G>A（纯合 p.Gly170Arg）/ 吡哆醇 → 适用", "en": "AGXT c.508G>A (homozygous p.Gly170Arg) / Pyridoxine → applicable"},
-   "source": {"doc": "GeneReviews PH1 (NBK1283), Targeted Therapies, Table 7; Genotype-Phenotype Correlations", "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
-              "quote": "Persons w/missense AGXT variants, esp homozygotes for p.Phe152Ile, p.Gly170Arg, & p.Ile244Thr"}},
-  {"id": "agxt508-lumasiran", "case": "PRAC-AGXT-c508GA", "section": "existing_targeted_therapies", "match": "lumasiran",
-   "expect": {"status": "applicable"},
-   "what": {"zh": "AGXT c.508G>A / Lumasiran → 适用", "en": "AGXT c.508G>A / Lumasiran → applicable"},
-   "source": {"doc": "Oxlumo label", "version": "9", "date": "2025-12-01", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=16985a31-f5e4-4557-9266-fc78d4bc5055",
-              "quote": "indicated for the treatment of primary hyperoxaluria type 1 (PH1) … in pediatric and adult patients"}},
-  {"id": "agxt508-nedosiran", "case": "PRAC-AGXT-c508GA", "section": "existing_targeted_therapies", "match": "nedosiran",
-   "expect": {"status": "conditional", "unknown": ["years of age|age", "eGFR|kidney function"]},
-   "what": {"zh": "AGXT c.508G>A（年龄未知）/ Nedosiran → 有条件适用（年龄、eGFR 未知）", "en": "AGXT c.508G>A (age unknown) / Nedosiran → conditional (age and eGFR unknown)"},
-   "source": {"doc": "Rivfloza label", "version": "4", "date": "2025-03-03", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ace9d4bc-4d20-4beb-9e9d-888690424833",
-              "quote": "children 2 years of age and older and adults with primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m2"}},
-  {"id": "cftr-eti", "case": "PRAC-CFTR-F508del", "section": "existing_targeted_therapies", "match": "elexacaftor",
-   "expect": {"status": "applicable"},
-   "what": {"zh": "CFTR 纯合 F508del（15 岁）/ Elexacaftor-tezacaftor-ivacaftor → 适用（F508del 在表 6）", "en": "CFTR F508del homozygous (15 y) / Elexacaftor-tezacaftor-ivacaftor → applicable (F508del in Table 6)"},
-   "source": {"doc": "Trikafta label", "version": "23", "date": "2026-06-22", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f354423a-85c2-41c3-a9db-0f3aee135d8d",
-              "quote": "aged 2 years and older … at least one variant in the … CFTR gene that is either responsive based on clinical and/or in vitro data (see Table 6)"}},
-  {"id": "col1a1-ascorbic", "case": "PRAC-COL1A1", "section": "supportive_management", "match": "ascorbic acid|vitamin c", "branch": "classic",
-   "expect": {"status": "present"},
-   "what": {"zh": "COL1A1 经典型 EDS 分支 / 维生素 C（抗坏血酸）→ 支持治疗", "en": "COL1A1 classic EDS branch / Ascorbic acid (vitamin C) → supportive management"},
-   "source": {"doc": "GeneReviews classic EDS (NBK1244), Management / Treatment of Manifestations", "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
-              "quote": "Ascorbic acid (vitamin C) may ↓ easy bruising"}},
-  {"id": "col1a1-desmopressin", "case": "PRAC-COL1A1", "section": "supportive_management", "match": "desmopressin|ddavp", "branch": "classic",
-   "expect": {"status": "present"},
-   "what": {"zh": "COL1A1 经典型 EDS 分支 / 去氨加压素 → 支持治疗", "en": "COL1A1 classic EDS branch / Desmopressin → supportive management"},
-   "source": {"doc": "GeneReviews classic EDS (NBK1244), Management / Treatment of Manifestations", "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
-              "quote": "DDAVP® (desmopressin) may be useful to normalize bleeding"}},
-  {"id": "otc-phenylbutyrate", "case": "PRAC-OTC", "section": "existing_targeted_therapies", "match": "phenylbutyrate",
-   "expect": {"status": "present"},
-   "what": {"zh": "OTC 缺乏症（3 个月男婴）/ 苯丁酸钠 → 现有靶向治疗（说明书点名 OTC 缺乏症）", "en": "OTC deficiency (3-month-old boy) / Sodium phenylbutyrate → existing targeted therapy (label names OTC deficiency)"},
-   "source": {"doc": "Buphenyl label", "version": "9", "date": "2024-10-30", "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=463a36fa-3eb2-4326-8bd0-c8c7a11bca3a",
-              "quote": "urea cycle disorders involving deficiencies of … ornithine transcarbamylase (OTC)"}},
-  {"id": "otc-valproate", "case": "PRAC-OTC", "section": "contraindications_precautions", "match": "valpro",
-   "expect": {"status": "present"},
-   "what": {"zh": "OTC 缺乏症 / 丙戊酸 → 禁忌与注意事项", "en": "OTC deficiency / Valproate → contraindications & precautions"},
-   "source": {"doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid", "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
-              "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"}},
-  {"id": "otc-haloperidol", "case": "PRAC-OTC", "section": "contraindications_precautions", "match": "haloperidol",
-   "expect": {"status": "present"},
-   "what": {"zh": "OTC 缺乏症 / 氟哌啶醇 → 禁忌与注意事项", "en": "OTC deficiency / Haloperidol → contraindications & precautions"},
-   "source": {"doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid", "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
-              "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"}},
-  {"id": "otc-corticosteroids", "case": "PRAC-OTC", "section": "contraindications_precautions", "match": "corticosteroid",
-   "expect": {"status": "present"},
-   "what": {"zh": "OTC 缺乏症 / 全身性糖皮质激素 → 禁忌与注意事项", "en": "OTC deficiency / Systemic corticosteroids → contraindications & precautions"},
-   "source": {"doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid", "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
-              "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"}}
+  {
+   "id": "agxt33-lumasiran",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "match": "lumasiran",
+   "expect": {
+    "status": "applicable"
+   },
+   "what": {
+    "zh": "AGXT c.33dup（7 岁）/ Lumasiran → 适用",
+    "en": "AGXT c.33dup (7 y) / Lumasiran → applicable"
+   },
+   "source": {
+    "doc": "Oxlumo label",
+    "version": "9",
+    "date": "2025-12-01",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=16985a31-f5e4-4557-9266-fc78d4bc5055",
+    "quote": "indicated for the treatment of primary hyperoxaluria type 1 (PH1) … in pediatric and adult patients"
+   }
+  },
+  {
+   "id": "agxt33-nedosiran",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "match": "nedosiran",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "eGFR|kidney function"
+    ]
+   },
+   "what": {
+    "zh": "AGXT c.33dup（7 岁）/ Nedosiran → 有条件适用（eGFR 未知）",
+    "en": "AGXT c.33dup (7 y) / Nedosiran → conditional (eGFR unknown)"
+   },
+   "source": {
+    "doc": "Rivfloza label",
+    "version": "4",
+    "date": "2025-03-03",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ace9d4bc-4d20-4beb-9e9d-888690424833",
+    "quote": "children 2 years of age and older and adults with primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m2"
+   }
+  },
+  {
+   "id": "agxt33-pyridoxine",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "match": "pyridoxine",
+   "expect": {
+    "status": "not_applicable"
+   },
+   "what": {
+    "zh": "AGXT c.33dup（纯合移码）/ 吡哆醇 → 不适用（不是错义变异）",
+    "en": "AGXT c.33dup (homozygous frameshift) / Pyridoxine → not applicable (not a missense variant)"
+   },
+   "source": {
+    "doc": "GeneReviews PH1 (NBK1283), Management / Treatment of Manifestations / Targeted Therapies, Table 7",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "Persons w/missense AGXT variants, esp homozygotes for p.Phe152Ile, p.Gly170Arg, & p.Ile244Thr"
+   }
+  },
+  {
+   "id": "agxt508-pyridoxine",
+   "case": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "match": "pyridoxine",
+   "expect": {
+    "status": "applicable"
+   },
+   "what": {
+    "zh": "AGXT c.508G>A（纯合 p.Gly170Arg）/ 吡哆醇 → 适用",
+    "en": "AGXT c.508G>A (homozygous p.Gly170Arg) / Pyridoxine → applicable"
+   },
+   "source": {
+    "doc": "GeneReviews PH1 (NBK1283), Targeted Therapies, Table 7; Genotype-Phenotype Correlations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "Persons w/missense AGXT variants, esp homozygotes for p.Phe152Ile, p.Gly170Arg, & p.Ile244Thr"
+   }
+  },
+  {
+   "id": "agxt508-lumasiran",
+   "case": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "match": "lumasiran",
+   "expect": {
+    "status": "applicable"
+   },
+   "what": {
+    "zh": "AGXT c.508G>A / Lumasiran → 适用",
+    "en": "AGXT c.508G>A / Lumasiran → applicable"
+   },
+   "source": {
+    "doc": "Oxlumo label",
+    "version": "9",
+    "date": "2025-12-01",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=16985a31-f5e4-4557-9266-fc78d4bc5055",
+    "quote": "indicated for the treatment of primary hyperoxaluria type 1 (PH1) … in pediatric and adult patients"
+   }
+  },
+  {
+   "id": "agxt508-nedosiran",
+   "case": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "match": "nedosiran",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "years of age|age",
+     "eGFR|kidney function"
+    ]
+   },
+   "what": {
+    "zh": "AGXT c.508G>A（年龄未知）/ Nedosiran → 有条件适用（年龄、eGFR 未知）",
+    "en": "AGXT c.508G>A (age unknown) / Nedosiran → conditional (age and eGFR unknown)"
+   },
+   "source": {
+    "doc": "Rivfloza label",
+    "version": "4",
+    "date": "2025-03-03",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=ace9d4bc-4d20-4beb-9e9d-888690424833",
+    "quote": "children 2 years of age and older and adults with primary hyperoxaluria type 1 (PH1) and relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m2"
+   }
+  },
+  {
+   "id": "cftr-eti",
+   "case": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "match": "elexacaftor",
+   "expect": {
+    "status": "applicable"
+   },
+   "what": {
+    "zh": "CFTR 纯合 F508del（15 岁）/ Elexacaftor-tezacaftor-ivacaftor → 适用（F508del 在表 6）",
+    "en": "CFTR F508del homozygous (15 y) / Elexacaftor-tezacaftor-ivacaftor → applicable (F508del in Table 6)"
+   },
+   "source": {
+    "doc": "Trikafta label",
+    "version": "23",
+    "date": "2026-06-22",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=f354423a-85c2-41c3-a9db-0f3aee135d8d",
+    "quote": "aged 2 years and older … at least one variant in the … CFTR gene that is either responsive based on clinical and/or in vitro data (see Table 6)"
+   }
+  },
+  {
+   "id": "col1a1-ascorbic",
+   "case": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "match": "ascorbic acid|vitamin c",
+   "branch": "classic",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "COL1A1 经典型 EDS 分支 / 维生素 C（抗坏血酸）→ 支持治疗",
+    "en": "COL1A1 classic EDS branch / Ascorbic acid (vitamin C) → supportive management"
+   },
+   "source": {
+    "doc": "GeneReviews classic EDS (NBK1244), Management / Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
+    "quote": "Ascorbic acid (vitamin C) may ↓ easy bruising"
+   }
+  },
+  {
+   "id": "col1a1-desmopressin",
+   "case": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "match": "desmopressin|ddavp",
+   "branch": "classic",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "COL1A1 经典型 EDS 分支 / 去氨加压素 → 支持治疗",
+    "en": "COL1A1 classic EDS branch / Desmopressin → supportive management"
+   },
+   "source": {
+    "doc": "GeneReviews classic EDS (NBK1244), Management / Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1244/",
+    "quote": "DDAVP® (desmopressin) may be useful to normalize bleeding"
+   }
+  },
+  {
+   "id": "otc-phenylbutyrate",
+   "case": "PRAC-OTC",
+   "section": "existing_targeted_therapies",
+   "match": "phenylbutyrate",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "OTC 缺乏症（3 个月男婴）/ 苯丁酸钠 → 现有靶向治疗（说明书点名 OTC 缺乏症）",
+    "en": "OTC deficiency (3-month-old boy) / Sodium phenylbutyrate → existing targeted therapy (label names OTC deficiency)"
+   },
+   "source": {
+    "doc": "Buphenyl label",
+    "version": "9",
+    "date": "2024-10-30",
+    "url": "https://dailymed.nlm.nih.gov/dailymed/lookup.cfm?setid=463a36fa-3eb2-4326-8bd0-c8c7a11bca3a",
+    "quote": "urea cycle disorders involving deficiencies of … ornithine transcarbamylase (OTC)"
+   }
+  },
+  {
+   "id": "otc-valproate",
+   "case": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "match": "valpro",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "OTC 缺乏症 / 丙戊酸 → 禁忌与注意事项",
+    "en": "OTC deficiency / Valproate → contraindications & precautions"
+   },
+   "source": {
+    "doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
+    "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"
+   }
+  },
+  {
+   "id": "otc-haloperidol",
+   "case": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "match": "haloperidol",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "OTC 缺乏症 / 氟哌啶醇 → 禁忌与注意事项",
+    "en": "OTC deficiency / Haloperidol → contraindications & precautions"
+   },
+   "source": {
+    "doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
+    "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"
+   }
+  },
+  {
+   "id": "otc-corticosteroids",
+   "case": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "match": "corticosteroid",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "OTC 缺乏症 / 全身性糖皮质激素 → 禁忌与注意事项",
+    "en": "OTC deficiency / Systemic corticosteroids → contraindications & precautions"
+   },
+   "source": {
+    "doc": "GeneReviews OTC deficiency (NBK154378), Management / Agents/Circumstances to Avoid",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK154378/",
+    "quote": "Avoid the following: Valproate Haloperidol … Systemic corticosteroids"
+   }
+  },
+  {
+   "id": "agxt33-fluids",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "match": "fluid intake|hydration",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 大量口服补液 → 支持治疗中出现",
+    "en": "AGXT c.33dup / high oral fluid intake → present in Supportive Management"
+   },
+   "source": {
+    "doc": "GeneReviews NBK1283, Management / Supportive Care, Table 10 row 1",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "Maintain high oral fluid intake to assure good urine volume."
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "agxt33-citrate",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "match": "potassium citrate",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "GFR"
+    ]
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 枸橼酸钾 → 有条件（GFR 是否保留未知）",
+    "en": "AGXT c.33dup / potassium citrate → conditional (whether GFR is preserved is unknown)"
+   },
+   "source": {
+    "doc": "GeneReviews NBK1283, Management / Supportive Care",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "If the GFR is preserved, increase urine citrate excretion using oral potassium citrate"
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "agxt33-pyrophosphate",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "match": "pyrophosphate",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "eGFR|kidney function"
+    ]
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 焦磷酸盐 → 有条件（eGFR >30 未知）",
+    "en": "AGXT c.33dup / pyrophosphate → conditional (eGFR >30 unknown)"
+   },
+   "source": {
+    "doc": "GeneReviews NBK1283, Management / Supportive Care",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "In individuals with good kidney function (eGFR >30 mL/min/1.73 m2), oral pyrophosphate-containing solutions"
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "agxt33-ivfluid",
+   "case": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "match": "IV fluid|intravenous fluid",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "if needed|vomiting|diarrhea|illness"
+    ]
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 静脉补液 → 有条件（使用情境：需要时，如呕吐腹泻）",
+    "en": "AGXT c.33dup / IV fluids → conditional (usage situation: if needed, e.g. vomiting or diarrhea)"
+   },
+   "source": {
+    "doc": "GeneReviews NBK1283, Management / Supportive Care, Table 10 row 4",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1283/",
+    "quote": "Use IV fluid if needed to assure high urine volume (e.g., during vomiting or diarrhea)."
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "kmt2b-anticholinergic",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "match": "anticholinergic|antimuscarinic|trihexyphenidyl",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "KMT2B / 抗胆碱药 → 支持治疗中出现（老版章节，无 Targeted Therapies）",
+    "en": "KMT2B / anticholinergic agents → present in Supportive Management (older chapter)"
+   },
+   "source": {
+    "doc": "GeneReviews NBK493766, Management / Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK493766/",
+    "quote": "Antimuscarinic (anticholinergic) agents ... should be considered first-line pharmacologic treatment"
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "kmt2b-dbs",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "match": "deep brain stimulation|DBS",
+   "expect": {
+    "status": "present"
+   },
+   "what": {
+    "zh": "KMT2B / 苍白球深部脑刺激 → 支持治疗中出现",
+    "en": "KMT2B / GPi deep brain stimulation → present in Supportive Management"
+   },
+   "source": {
+    "doc": "GeneReviews NBK493766, Management / Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK493766/",
+    "quote": "Bilateral globus pallidus pars interna deep brain stimulation (GPi-DBS) has been performed"
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "kmt2b-early-intervention",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "match": "early intervention",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "0-3|age"
+    ]
+   },
+   "what": {
+    "zh": "KMT2B（年龄未知）/ 早期干预 → 有条件（0–3 岁的年龄条件未知）",
+    "en": "KMT2B (age unknown) / early intervention → conditional (the ages 0-3 condition is unknown)"
+   },
+   "source": {
+    "doc": "GeneReviews NBK493766, Management / Treatment of Manifestations / Developmental Delay / Intellectual Disability Management Issues",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK493766/",
+    "quote": "Ages 0-3 years. Referral to an early intervention program is recommended"
+   },
+   "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  }
  ]
 }

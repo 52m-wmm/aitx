@@ -261,7 +261,7 @@ def test_unreported_manifestations_merged_into_one_missing_line(monkeypatch):
     found["procedure:ureteroscopy"]["specs"][0]["quote"] = "Pyridoxine (vitamin B6)"
     E._records(led, found, PF_FS, [])
     rows = [m for m in led.missing_information if m["variable"] == E.MISSING_MANIFESTATIONS]
-    assert len(rows) == 1 and "stones; oxalosis" in rows[0]["why_it_matters"]
+    assert len(rows) == 1 and rows[0]["details"] == ["stones", "oxalosis"] and rows[0]["affects"] == ["ureteroscopy"]
     a = next(a for a in led.actions if a["action_key"] == "procedure:ureteroscopy")
     assert a["status_by_branch"]["b1"]["status"] == "conditional"
 
@@ -564,3 +564,100 @@ def test_omim_alias_lists_split_for_label_search():
     # 2026-11-04: openFDA answers HTTP 400 to a ";" in the phrase
     assert E.label_names(["epileptic encephalopathy, early infantile, 22; EIEE22", 'x "quoted" name', "CF"]) == \
         ["epileptic encephalopathy, early infantile, 22", "x quoted name"]
+
+
+def test_single_chapter_is_still_matched_to_the_diagnoses(monkeypatch):
+    # one gene, two different diseases, one GeneReviews chapter: only the covered branch gets it
+    branches = [{"id": "b1", "gene": "COL1A1", "diagnosis": {"label": "osteogenesis imperfecta type 1"}},
+                {"id": "b2", "gene": "COL1A1", "diagnosis": {"label": "Ehlers-Danlos syndrome, classic type"}}]
+    led = LG.Ledger("P", branches)
+    step2 = {"genereviews": {"COL1A1": [{"nbk": "NBK1295", "title": "COL1A1/2 Osteogenesis Imperfecta"}]}}
+    seen = []
+
+    def fake(system, user, use_cache, what=""):
+        seen.append(user)
+        return {"links": [{"diagnosis": 1, "chapters": [1]}, {"diagnosis": 2, "chapters": []}]}, {}
+    monkeypatch.setattr(E, "_llm", fake)
+    assert E.chapters_for(led, step2, True) == {"b1": ["NBK1295"], "b2": []}
+    assert seen and "Ehlers-Danlos" in seen[0]                        # the LLM was asked, not skipped
+    # reverse: an answer that names no chapter for either diagnosis leaves both empty
+    monkeypatch.setattr(E, "_llm", lambda *a, **k: ({"links": []}, {}))
+    assert E.chapters_for(led, step2, True) == {"b1": [], "b2": []}
+
+
+# --- 2026-11-04 review: conditions lost, purpose clauses, usage situations, missing information by type
+
+def test_row_cells_give_the_items_row_and_only_that_row():
+    shown = ("Table 9. Treatment of Manifestations\n"
+             "Row 1: [Manifestation/Concern: Kidney stones] [Treatment: Ureteroscopy] [Considerations/Other: In kidney failure]\n"
+             "Row 2: [Manifestation/Concern: Oxalosis] [Treatment: Dialysis] [Considerations/Other: if needed]")
+    assert E.row_cells(shown, "Ureteroscopy") == ["Kidney stones", "Ureteroscopy", "In kidney failure"]
+    assert E.row_cells(shown, "Dialysis") == ["Oxalosis", "Dialysis", "if needed"]
+    assert E.row_cells(shown, "Pyridoxine is given to all persons.") is None
+
+
+def test_purpose_or_mechanism_clauses_are_not_requirements():
+    raw = [{"text": "to reduce hepatic oxalate production", "field": "situation"},
+           {"text": "which lowers urinary oxalate", "field": "situation"},
+           {"text": "in kidney failure", "field": "situation"},
+           {"text": "as needed", "field": "situation"}]
+    where = "Dialysis in kidney failure as needed, to reduce hepatic oxalate production, which lowers urinary oxalate"
+    assert [r["text"] for r in E._reqs(raw, None, where)] == ["in kidney failure", "as needed"]
+
+
+def test_usage_situation_makes_it_conditional_without_comparing():
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    reqs = [{"kind": "other", "text": "missense AGXT variants", "field": "situation"}]
+    E._records(led, _found("supportive_management", reqs=reqs), PF_FS, [])
+    a = next(a for a in led.actions if a["action_key"] == "drug:rxcui:684879")
+    assert a["status_by_branch"]["b1"]["status"] == "conditional"
+    assert a["requirements"][0]["note"] == E.SITUATION_NOTE
+    row = next(m for m in led.missing_information if m["variable"] == "usage situation")
+    assert row["affects"] == ["pyridoxine"]
+
+
+def test_missing_information_merged_by_variable_type():
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    for label in ("nedosiran", "lumasiran", "nedosiran"):
+        led.note_missing("kidney function", label, f"{label}: eGFR >= 30", "3a")
+    led.note_missing("kidney function", "DCR-PHXC (NCT04580420)", "eGFR < 30", "3b")
+    rows = [m for m in led.missing_information if m["variable"] == "kidney function"]
+    assert len(rows) == 1 and rows[0]["affects"] == ["nedosiran", "lumasiran", "DCR-PHXC (NCT04580420)"]
+    assert rows[0]["asked_by"] == "3a, 3b" and rows[0]["why_it_matters"].startswith("3 actions depend on it")
+    assert E.variable_type("current medication: valproate") == "current medication"
+    assert E.variable_type("kidney_function") == "kidney function"
+
+
+def _np(key, label, section="Management / Treatment of Manifestations", quote=None):
+    src = {"type": "nbk", "id": "NBK1283", "url": "u", "section": section, "credit": "c"}
+    q = quote or f"{label} is recommended."
+    return {key: {"key": {"key": key, "normalized": True}, "section": "supportive_management", "label": label,
+                  "branches": {"b1"}, "specs": [E._spec(f"GeneReviews lists {label}", src, q, q, 1)], "reqs": [],
+                  "why": section, "pregnancy_only": False}}
+
+
+def test_synonyms_merged_only_within_one_chapter_section(monkeypatch):
+    found = {**_np("procedure:a", "high fluid intake"), **_np("procedure:b", "hyperhydration"),
+             **_np("procedure:c", "fluid intake", section="Management / Prevention of Secondary Complications")}
+    monkeypatch.setattr(E, "_llm", lambda *a, **k: ({"same": [[2, 3], [1, 2]], "broader": []}, {"m": 1}))
+    log = E.merge_synonyms(found, True)
+    assert set(found) == {"procedure:a", "procedure:c"}                       # a + b merged; b + c refused
+    assert found["procedure:a"]["merged_from"] == [{"key": "procedure:b", "label": "hyperhydration"}]
+    assert any(x.get("refused") and x["why"] == "not from the same chapter section" for x in log)
+
+
+def test_broader_and_narrower_are_related_not_merged(monkeypatch):
+    found = {**_np("procedure:dialysis", "dialysis"), **_np("procedure:hd", "hemodialysis")}
+    monkeypatch.setattr(E, "_llm", lambda *a, **k: ({"same": [], "broader": [[1, 2]]}, {}))
+    E.merge_synonyms(found, True)
+    assert set(found) == {"procedure:dialysis", "procedure:hd"}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, found, PF_FS, [])
+    hd = next(a for a in led.actions if a["action_key"] == "procedure:hd")
+    dia = next(a for a in led.actions if a["action_key"] == "procedure:dialysis")
+    assert hd["report"] is False and "dialysis" in hd["report_note"] and dia["includes"][0]["label"] == "hemodialysis"
+
+
+def test_condition_from_another_row_is_not_attached():
+    row1 = ["Kidney stones", "Ureteroscopy", "In kidney failure"]
+    assert E._reqs([{"text": "if needed", "field": "situation"}], None, " | ".join(row1)) == []

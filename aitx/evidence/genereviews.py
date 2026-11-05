@@ -83,6 +83,73 @@ def sections(nbk: str) -> dict[str, str]:
     return out
 
 
+def _table_rows(tw: ET.Element) -> str:
+    """A table as the LLM sees it: caption, then one line per body row with every cell labelled by its column
+    header ("[Manifestation/Concern: Kidney stones] [Treatment: ...]"); a cell spanning rows (rowspan) is repeated
+    on the rows it covers, so each row carries its row header. Cell texts stay verbatim."""
+    lab = _text(tw.find("label")) if tw.find("label") is not None else ""
+    cap = _text(tw.find("caption")) if tw.find("caption") is not None else ""
+    heads = [_text(th) for th in tw.findall(".//thead/tr[last()]/th")] or [_text(th) for th in tw.findall(".//thead//th")]
+    lines, carry = [f"{lab} {cap}".strip()], {}
+    for k, tr in enumerate(tw.findall(".//tbody/tr"), 1):
+        cells, col, it = [], 0, iter(tr.findall("td") + tr.findall("th"))
+        nxt = next(it, None)
+        while nxt is not None or any(c >= col for c in carry):
+            if col in carry:
+                text, left = carry[col]
+                cells.append((col, text))
+                carry[col] = (text, left - 1)
+                if left - 1 <= 0:
+                    del carry[col]
+                col += 1
+                continue
+            if nxt is None:
+                break
+            text, span = _text(nxt), int(nxt.get("rowspan") or 1)
+            cells.append((col, text))
+            if span > 1:
+                carry[col] = (text, span - 1)
+            col += int(nxt.get("colspan") or 1)
+            nxt = next(it, None)
+        lab_cells = " ".join(f"[{heads[c] if c < len(heads) else f'Column {c + 1}'}: {t}]" for c, t in cells if t)
+        lines.append(f"Row {k}: {lab_cells}")
+    foot = _text(tw.find("table-wrap-foot")) if tw.find("table-wrap-foot") is not None else ""
+    return "\n".join(lines + ([f"Notes: {foot}"] if foot else []))
+
+
+def sections_for_llm(nbk: str) -> dict[str, str]:
+    """{section path: text with tables rendered row by row with their headers} - the same sections as sections();
+    quotes are still checked against sections(), where every cell text appears verbatim."""
+    path = extract_chapters([nbk]).get(nbk)
+    if not path:
+        return {}
+    root = ET.parse(path).getroot()
+    out: dict[str, str] = {}
+
+    def body(ch: ET.Element) -> str:
+        if ch.tag == "table-wrap":
+            return _table_rows(ch)
+        tws = ch.findall(".//table-wrap")
+        if not tws:
+            return _text(ch)
+        return _text(ch) if ch.tag != "table-wrap-group" else "\n".join(_table_rows(t) for t in tws)
+
+    def walk(sec: ET.Element, trail: list[str]) -> None:
+        title = _text(sec.find("title")) if sec.find("title") is not None else ""
+        here = trail + [title] if title else trail
+        text = "\n".join(body(ch) for ch in sec if ch.tag not in ("sec", "title")).strip()
+        if here and text:
+            out[" / ".join(here)] = text
+        for sub in sec.findall("sec"):
+            walk(sub, here)
+
+    nested = {s for p in root.iter("sec") for s in p.findall("sec")}
+    for sec in root.iter("sec"):
+        if sec not in nested:
+            walk(sec, [])
+    return out
+
+
 def find_section(nbk: str, *titles: str) -> tuple[str, str] | None:
     """(section path, text) of the first section whose last title matches one of `titles` (case-insensitive)."""
     want = [t.lower() for t in titles]

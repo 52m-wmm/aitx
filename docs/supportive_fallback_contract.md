@@ -1,0 +1,90 @@
+# 支持治疗兜底链（Supportive Management fallback）
+
+> 状态：**草案第 1 版，待审**（2026-11-04）。只有契约，没有代码；确认后再实现。
+> 范围：3a 的 Supportive Management 章节（Existing Targeted 与 Contraindications 不变）。
+
+## 目的
+
+现在只有 GeneReviews 有该病专章时才会有支持治疗。没有专章的病例（如练习病例 SLC35A2-CDG），这一节只有"查过没找到"，
+但专家评审要求的"完整性"和"临床实用性"恰恰在这种病例上最需要内容。兜底链按证据由强到弱逐层查找，
+**每条建议都标明它来自哪一层**，让读者知道它是"本病的专家建议"还是"同类疾病的通用建议"或"对症处理"。
+
+## 兜底链（按顺序；上一层有结果就不往下走，见"何时下沉"）
+
+| 层 | 条件 | 来源 | 报告中的层级标注 |
+| --- | --- | --- | --- |
+| L1 专章 | GeneReviews 有该诊断（或其直接上位病）的专章 | 该章 Management 各小节（现有 3a 流程） | 无额外标注 |
+| L2 总论 | 没有专章，但有覆盖它的疾病群总论（Overview，如 "Hereditary Ataxia Overview"、"Congenital Disorders of Glycosylation Overview"） | 总论的 Management / Treatment 小节 | "疾病群通用建议（来自 <总论名>，非本病专章）" |
+| L3 文献 | 既无专章也无总论 | PubMed：该基因 / 疾病的综述、队列研究、共识或指南中的管理建议（与 3c 共用检索模块） | "来自文献（<文献类型>，<PMID>）" |
+| L4 对症 | 前三层都没有可用建议 | 病人**已报告症状**对应的症状指南（如癫痫、发育迟缓、喂养困难） | 节首注明 "No disease-specific management recommendations were found; the following is symptomatic management." |
+
+**何时下沉**：一层"有结果"指至少一条通过引用核验和支持度核查的建议。L1/L2 有结果时不再查 L3；
+L3 只在 L1、L2 都没有结果时查；L4 只在 L1–L3 都没有结果时查，且只针对病人已报告的症状（Step 2 的 present 表型），不为未报告的症状写对症处理。
+同一行动在多层出现时只写一次，用最高层的来源，较低层的来源作为补充证据附上。
+
+## 每层的来源要求与核验
+
+**L1 专章**：不变（3a 契约）。
+
+**L2 总论**
+- 章节匹配：章节标题或 GeneReviews 的疾病列表中含该诊断所属的疾病群，由 LLM 从**代码给出的编号列表**里选，代码核对编号存在；
+  只选 Overview 类章节（标题含 "Overview"），且该章节的基因列表或病种表**逐字点名**该基因或该病（代码核对）。点不到名的总论不用。
+- 抽取：与 L1 相同的提示词和逐字核验；每条证据记录 `tier_source: "overview"` 和总论 NBK 号。
+- 总论中针对**其他具体病种**的建议（"In X, …"）不能用于本病：抽取时保留所在行 / 句的病种限定，代码检查限定的病种是否为本病或疾病群整体，否则丢弃。
+
+**L3 文献**
+- 检索：PubMed E-utilities（esearch + efetch 摘要），检索式 = 基因符号 AND（疾病名或同义词）AND 文献类型过滤
+  （Review、Practice Guideline、Consensus Development Conference、观察性 / 队列研究），按相关度取前 N 篇（拟 N = 10），检索式、时间、总数写入检索记录。
+  与 3c 共用同一个检索模块和缓存（3c 契约将引用本节）。
+- 抽取：只用摘要或 PMC 开放全文中**明确写出的管理建议**（"we recommend …"、"patients should be monitored / treated with …"），
+  LLM 逐字摘句，代码核对引用逐字在已获取的文本中、PMID 可解析（E-utilities esummary）。
+- 支持度核查：每条建议用 3.0 的支持度核查判断"该文献建议对 <本病> 患者采取 <行动>"；只有 supported 才进章节。
+- 病例报告（单个病人）不作为管理建议的来源；文献类型由 PubMed 的 Publication Type 字段决定，代码判断。
+- 标注：`tier_source: "literature"`、文献类型、PMID、发表年份；报告中按文献类型从强到弱排列（指南 / 共识 > 综述 > 队列）。
+
+**L4 对症**
+- 症状来源：Step 2 中 status = present 的 HPO 表型，按 HPO 映射到症状类别（癫痫、发育迟缓 / 智力障碍、肌张力异常、喂养困难、听力、视力等）。
+- 指南来源：每个症状类别配置一份**可引用的公开指南**（配置文件 `config/symptom_guidelines.json`：指南名称、发布机构、版本 / 年份、URL 或 PMID、
+  使用的段落），写代码前逐条人工核实；没有配置指南的症状不写。
+- 引用核验：引用逐字出自配置的指南文本（本地存档或可获取的页面）；链接可解析。
+- 标注：`tier_source: "symptomatic"`；报告节首加上面的说明句；每条注明对应的病人症状及其 Step 2 引用。
+
+## 新增行动类型 `therapy`
+
+- 物理治疗、作业治疗、言语 / 语言治疗、早期干预、喂养治疗等康复类行动，行动键 `therapy:<类型>`，受控类型表：
+  `physical_therapy`、`occupational_therapy`、`speech_language_therapy`、`early_intervention`、`feeding_therapy`、`other_rehabilitation`。
+- 归类由代码按受控词表（含常见写法："PT"、"physiotherapy"、"OT"、"speech therapy"、"SLP"）判断，LLM 只给原文名称。
+- 现有 3a 中被归为 `supportive_measure` 的同类行动改用 `therapy` 键；同类行动在多层或多处出现时按行动键合并（与 3a 小修第 4 条的同义合并一致）。
+- 适用条件：通常以"针对的症状"（manifestation）为条件，与现有支持治疗相同。
+
+## 账本与报告
+
+- 每条支持治疗证据增加 `tier_source`（`chapter` / `overview` / `literature` / `symptomatic`）；行动记录增加 `tier_source`（取其证据中最高层）。
+- 章节级记录每层是否查过、结果数量和下沉原因（如 "no GeneReviews chapter or overview names SLC35A2-CDG"），写入 `sections_status` 的补充字段，
+  供报告的节首说明使用；查过没找到的层留阴性证据（检索词、时间、返回数）。
+- Step 5 报告组装时：L2 / L3 / L4 的行动分别带层级标注，不与 L1 的行动混排。
+
+## 校验（在 3.0、3a 校验之外）
+
+| 校验 | 不过则 |
+| --- | --- |
+| 每条支持治疗行动有 `tier_source`，且与其证据来源类型一致 | fail |
+| 某层有结果时，没有查更低的层（L3 / L4 不越级） | fail |
+| L2 证据所在总论逐字点名该基因或该病；L3 证据的 PMID 可解析、文献类型不是单病例报告、支持度核查为 supported | fail |
+| L4 每条对应一个 Step 2 present 表型，且指南出自配置表 | fail |
+| 每个分支的支持治疗章节有行动或阴性证据，阴性证据覆盖查过的每一层 | fail |
+
+## 验收（练习病例；不用评测病例；期望先人工核实再写入）
+
+| 病例 | 期望 | 核实方式 |
+| --- | --- | --- |
+| PRAC-AGXT-c33dup | L1 专章（NBK1283）；不查 L2–L4；支持治疗与现在一致 | 现有 3a 验收 |
+| PRAC-ANO10 | 现在命中的 NBK1138 是 "Hereditary Ataxia Overview"（总论）：应标为 L2"疾病群通用建议"，不再当作专章 | 人工核对 NBK1138 的标题与基因表 |
+| PRAC-SLC35A2-ex7 / ex8 | 无专章、无点名 SLC35A2 的总论（待人工核对 CDG 总论是否点名 SLC35A2；若点名则为 L2）→ L3 文献：至少一条来自 SLC35A2-CDG 综述或队列研究的管理建议（如癫痫、喂养、发育支持），PMID 可解析 | 人工检索 PubMed 并核对原文后写入期望 |
+| L4 对症 | 练习病例都能在前三层找到内容时，L4 只用离线测试覆盖（造一个无章节、无文献的病例）；不为未报告的症状写对症处理 | 离线测试 |
+
+## 待定问题
+
+1. L3 每个分支取多少篇文献（拟 10）、是否只用摘要（拟：摘要 + PMC 开放全文）。
+2. L4 症状指南的首批范围（拟：癫痫、发育迟缓 / 智力障碍、喂养困难三类），以及每类用哪份指南。
+3. L2 与 L1 并存时（有专章，同时有总论）是否也取总论中的通用建议（拟：不取，避免重复）。

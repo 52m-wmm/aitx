@@ -28,12 +28,13 @@ from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 
-PROMPT_VERSION = "3a-v2"          # prompts unchanged on 2026-11-04 (rules in code only)
+PROMPT_VERSION = "3a-v3"          # v3 (2026-11-04): table rows with headers, usage situations, purpose clauses
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
 TARGETED_TITLES = ("targeted therapies", "targeted therapy")
-REQ_FIELDS = ("age", "sex", "variant", "variant_class", "zygosity", "kidney_function", "liver_function", "weight")
+REQ_FIELDS = ("age", "sex", "variant", "variant_class", "zygosity", "kidney_function", "liver_function", "weight", "situation")
+SITUATION_NOTE = "usage situation; not compared with the patient"
 NOT_A_THERAPY = {"supportive care", "targeted therapies", "targeted therapy", "treatment", "management",
                  "treatment of manifestations", "therapy", "care"}
 CHILD_YEARS = 12                      # pregnancy items: male or under 12 -> not applicable (decision 2026-11-03)
@@ -45,7 +46,7 @@ disorder caused by the same gene does not count. Return only JSON:
 {"links": [{"diagnosis": <number>, "chapters": [<chapter numbers>]}]}"""
 
 _REQ_SHAPE = """{"text": "<exact words>", "field": "age" | "sex" | "variant" | "variant_class" | "zygosity" |
- "kidney_function" | "liver_function" | "weight", "op": ">=" | "<=" | ">" | "<" | "==" | "in" | "",
+ "kidney_function" | "liver_function" | "weight" | "situation", "op": ">=" | "<=" | ">" | "<" | "==" | "in" | "",
  "value": <number or list of strings or "">, "unit": "year" | "month" | ""}"""
 
 EXTRACT_SYSTEM = """You list the management actions in one GeneReviews Management section. Use only the text given.
@@ -58,9 +59,14 @@ tests, surveillance, follow-up or referrals. For each, return one item:
  "manifestation": "<the exact words naming the symptom or complication it treats, or empty>",
  "requirements": [<restrictions on WHICH PATIENTS should get it, by a patient characteristic; each """ + _REQ_SHAPE + """>],
  "mechanism_quote": "<exact words saying it acts on the defective gene product or disease mechanism, or empty>"}
-Requirements are only restrictions by age, sex, variant / genotype, variant type, zygosity, kidney or liver function or
-weight, with their words copied exactly from the quote. Timing, settings, "if needed" and statements about effect are not
-requirements. Return only JSON: {"items": [...]}. Do not invent items or words."""
+Requirements describe the PATIENT: age, sex, variant / genotype, variant type, zygosity, kidney or liver function,
+weight - or the situation in which it is used ("situation": "as needed", "if needed", "during acute episodes", "in
+kidney failure", "after transplantation"). Copy their words exactly from the item's table row or sentence. A purpose or
+mechanism clause ("to reduce oxalate", "to inhibit ...", "which lowers ...") is never a requirement.
+Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
+[Treatment: ...] [Considerations/Other: ...]". The requirements of an item may be in any cell of its row, including the
+row's first column (the manifestation or concern it treats); the quote is the text of the cell that names the item,
+copied without the bracket labels. Return only JSON: {"items": [...]}. Do not invent items or words."""
 
 REQ_SYSTEM = """You list the requirements in an FDA drug label that restrict who may receive the drug for the given
 disease. Use only the label text given; copy each requirement's words exactly. Requirements are restrictions by age,
@@ -246,8 +252,8 @@ def chapters_for(led: LG.Ledger, step2: dict, use_cache: bool) -> dict[str, list
     branches = [b for b in led.branches if b.get("diagnosis")]
     if not gene_chapters or not branches:
         return {b["id"]: [] for b in led.branches}
-    if len(gene_chapters) == 1:
-        return {b["id"]: [gene_chapters[0]["nbk"]] for b in led.branches}
+    # one chapter is also checked: a gene with two diseases and one chapter must not give that chapter to both
+    # (2026-11-04 review: the single-chapter shortcut assigned it to every branch)
     user = "Diagnoses:\n" + "\n".join(f"  {i}. {b['diagnosis']['label']}" for i, b in enumerate(branches, 1))
     user += "\n\nGeneReviews chapters:\n" + "\n".join(f"  {j}. {ch['title']}" for j, ch in enumerate(gene_chapters, 1))
     parsed, _ = _llm(CHAPTERS_SYSTEM, user, use_cache, "chapter selection")
@@ -273,11 +279,32 @@ def _spec(claim, src, quote, source_text, accessed_at, produced_by="code", retri
             "produced_by": produced_by, "retrieved_by": retrieved_by}
 
 
+PURPOSE_CLAUSE = re.compile(r"^\W*(?:in order\s+)?to\s+(?:reduce|lower|inhibit|decrease|increase|prevent|improve|"
+                            r"enhance|block|limit|control|maintain|promote|minimize|slow)\b|^\W*(?:which|that)\s+"
+                            r"(?:reduces?|lowers?|inhibits?|decreases?|increases?|prevents?|improves?|enhances?)\b", re.I)
+
+
+_CELL = re.compile(r"\[([^:\]]+): ((?:[^\[\]]|\[[^\]]*\])*?)\](?= \[|$)")
+
+
+def row_cells(shown: str, quote: str) -> list[str] | None:
+    """The cell texts (with the column header as context) of the table row whose cell holds `quote`; None when the
+    quote is not in a table row (prose: its own sentence is the context)."""
+    for line in (shown or "").splitlines():
+        if line.startswith("Row ") and LG.quote_in(quote, line):
+            cells = [m.group(2) for m in _CELL.finditer(line.split(": ", 1)[1] if ": " in line else line)]
+            if any(LG.quote_in(quote, c) for c in cells):
+                return cells
+    return None
+
+
 def _reqs(raw: list, spec: dict, where: str) -> list[dict]:
-    """Structured requirements whose words are in `where`; other kinds of sentences are dropped."""
+    """Structured requirements whose words are in `where`; other kinds of sentences are dropped, and so is a purpose
+    or mechanism clause ("to reduce hepatic oxalate production") - a requirement describes the patient (2026-11-04)."""
     out = []
     for r in raw or []:
-        if isinstance(r, dict) and r.get("field") in REQ_FIELDS and LG.quote_in(str(r.get("text") or ""), where):
+        if isinstance(r, dict) and r.get("field") in REQ_FIELDS and LG.quote_in(str(r.get("text") or ""), where) \
+                and not PURPOSE_CLAUSE.search(str(r.get("text") or "")):
             out.append({**r, "kind": "label_condition", "spec": spec})
     return out
 
@@ -478,9 +505,10 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         if not secs:
             continue
         has_targeted = any(any(t in p.lower() for t in TARGETED_TITLES) for p, _ in secs)
+        shown = GR.sections_for_llm(nbk)      # tables row by row with their headers; quotes are checked on `secs`
         with ThreadPoolExecutor(max_workers=X.CONCURRENCY) as pool:
-            per_sec = list(pool.map(lambda pt: _llm(EXTRACT_SYSTEM, f"Section: {pt[0]}\n{pt[1][:6000]}", use_cache,
-                                                   f"GeneReviews {nbk} '{pt[0]}'"), secs))
+            per_sec = list(pool.map(lambda pt: _llm(EXTRACT_SYSTEM, f"Section: {pt[0]}\n{shown.get(pt[0], pt[1])[:9000]}",
+                                                   use_cache, f"GeneReviews {nbk} '{pt[0]}'"), secs))
         for (path, text), (parsed, llm) in zip(secs, per_sec):
             low = path.lower()
             avoid, pregnancy = "avoid" in low, "pregnancy" in low
@@ -510,7 +538,15 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
                 if it.get("quote_repaired"):
                     spec["quote_repaired"] = it["quote_repaired"]
+                # a table item's conditions may sit in other cells of its row (the manifestation it treats, the
+                # persons it is for): each such condition is checked against that row and quoted on its own
+                cells = row_cells(shown.get(path, ""), it["quote"])
                 reqs = _reqs(it.get("requirements"), spec, it["quote"])
+                for r in _reqs(it.get("requirements"), None, " | ".join(cells or [])):
+                    if not LG.quote_in(r["text"], it["quote"]):
+                        r["spec"] = _spec(f"GeneReviews ({path}) row condition for {name}: {r['text'][:80]}", src, r["text"],
+                                          text, acc_book, llm, f"3a genereviews {nbk}")
+                        reqs.append(r)
                 if section == "supportive_management" and it.get("manifestation") and LG.quote_in(it["manifestation"], text):
                     reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
                                  "spec": _spec(claim, src, it["manifestation"], text, acc_book, llm, f"3a genereviews {nbk}")})
@@ -582,6 +618,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     for (lb, text, name, bids, section, why, quote), reqs in zip(jobs, parsed):
         _label_action(put, lb, text, name, bids, section, why, reqs, quote=quote)
 
+    led.patient_context["action_synonyms"] = merge_synonyms(found, use_cache)
     _records(led, found, pf, searches)
 
 
@@ -621,6 +658,75 @@ def _label_action(put, lb: dict, text: str, disease: str, branch_ids: list[str],
     for r in reqs:
         r["alternative"] = f"{name} label version {lb['version']}"
     put(key, section, name, branch_ids, spec, reqs, why, source="label")
+
+
+_VAR_NAMES = {"kidney_function": "kidney function", "liver_function": "liver function", "variant_class": "variant type",
+              "situation": "usage situation"}
+
+
+def variable_type(field: str) -> str:
+    """Missing-information row name for a patient fact field ("current medication: valproate" -> "current medication")."""
+    f = str(field or "other").split(":")[0].strip()
+    return _VAR_NAMES.get(f, f.replace("_", " "))
+
+
+SYNONYM_SYSTEM = """You compare the names of non-drug management actions taken from one GeneReviews chapter. Each has a
+number and the section it comes from. Return groups of numbers that name the SAME action in different words
+("same": e.g. "high fluid intake" and "hyperhydration"), and pairs where the first is a broader action that includes
+the second ("broader": e.g. "dialysis" includes "hemodialysis"). Do not group actions that are only related.
+Return only JSON: {"same": [[<numbers>]], "broader": [[<broader number>, <narrower number>]]}"""
+
+
+def _topic(spec: dict) -> tuple:
+    src = spec.get("src") or {}
+    return (src.get("type"), src.get("id"), src.get("section"))
+
+
+def merge_synonyms(found: dict, use_cache: bool) -> list[dict]:
+    """Non-drug actions named differently (decision 2026-11-04): the LLM proposes groups; code merges a group only
+    when every member's GeneReviews quotes come from the same chapter section (topic); broader / narrower pairs
+    (dialysis > hemodialysis) are not merged, only related (the narrower is written once, under the broader).
+    Returns the log of what was merged or related and why proposals were refused."""
+    keys = [k for k, a in sorted(found.items()) if not k.startswith(("drug:", "trial:"))
+            and any(sp["src"]["type"] == "nbk" for sp in a["specs"])]
+    if len(keys) < 2:
+        return []
+    listing = "\n".join(f"{i}. {found[k]['label']} (section: {found[k]['specs'][0]['src'].get('section')})"
+                        for i, k in enumerate(keys, 1))
+    parsed, pb = _llm(SYNONYM_SYSTEM, listing, use_cache, "synonym groups")
+    log = []
+
+    def pick(nums):
+        return [keys[n - 1] for n in nums if isinstance(n, int) and 1 <= n <= len(keys)]
+
+    for group in parsed.get("same") or []:
+        ks = [k for k in dict.fromkeys(pick(group if isinstance(group, list) else [])) if k in found]
+        if len(ks) < 2:
+            continue
+        topics = [{_topic(sp) for sp in found[k]["specs"] if sp["src"]["type"] == "nbk"} for k in ks]
+        shared = set.intersection(*topics)
+        if not shared or len({found[k]["section"] for k in ks}) > 1:
+            log.append({"kind": "same", "refused": [found[k]["label"] for k in ks],
+                        "why": "not from the same chapter section" if not shared else "placed in different report sections"})
+            continue
+        keep = ks[0]
+        for k in ks[1:]:
+            b = found.pop(k)
+            a = found[keep]
+            a["branches"] |= b["branches"]
+            a["specs"] += b["specs"]
+            a["reqs"] += b["reqs"]
+            a.setdefault("merged_from", []).append({"key": k, "label": b["label"]})
+        log.append({"kind": "same", "merged_into": found[keep]["label"], "labels": [found[keep]["label"]] +
+                    [m["label"] for m in found[keep]["merged_from"]], "topic": sorted(map(str, shared))[0], "produced_by": pb})
+    for pair in parsed.get("broader") or []:
+        ks = pick(pair if isinstance(pair, list) else [])
+        if len(ks) == 2 and all(k in found for k in ks) and ks[0] != ks[1]:
+            wide, narrow = ks
+            found[narrow]["narrower_than"] = {"key": wide, "label": found[wide]["label"]}
+            found[wide].setdefault("includes", []).append({"key": narrow, "label": found[narrow]["label"]})
+            log.append({"kind": "broader", "broader": found[wide]["label"], "narrower": found[narrow]["label"], "produced_by": pb})
+    return log
 
 
 def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
@@ -703,8 +809,10 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                 note = ""
                 if st == "unknown":
                     fact = {"field": MISSING_MANIFESTATIONS, "value": None, "quote": None, "step": None}
-                    if r["text"] not in unreported:
-                        unreported.append(r["text"])
+                    if (a["label"], r["text"]) not in unreported:
+                        unreported.append((a["label"], r["text"]))
+            elif r.get("field") == "situation":            # used only in that situation: conditional, not compared
+                st, fact, note = "unknown", {"field": "usage situation", "value": None, "quote": None, "step": None}, SITUATION_NOTE
             elif r.get("field") == "pregnancy":
                 st, fact = pregnancy_status(pf)
                 note = "pregnancy-specific management"
@@ -713,11 +821,10 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             line = LG.requirement(f"r{len(lines) + 1}", r["kind"], r["text"], ev["id"], fact, st, rb, note,
                                   alternative=r.get("alternative"))
             if line["result"] == "unknown" and (fact or {}).get("field") != MISSING_MANIFESTATIONS:
-                var = (fact or {}).get("field") or f"{r.get('field')}: {r['text'][:60]}"
-                line["patient_fact"] = fact or {"field": var, "value": None, "quote": None, "step": None}
-                if var not in {m["variable"] for m in led.missing_information}:
-                    led.missing_information.append({"variable": var, "why_it_matters": f"{a['label']}: {r['text'][:120]}",
-                                                    "affects": [], "asked_by": "3a"})
+                # one row per variable type (kidney function, age, usage situation, ...), listing the actions
+                var = variable_type((fact or {}).get("field") or r.get("field") or "other")
+                line["patient_fact"] = dict(fact or {"value": None, "quote": None, "step": None}, field=var)
+                led.note_missing(var, a["label"], r["text"][:120], "3a")
             lines.append(line)
         for b in branches:
             st, alt = LG.status_of(lines, b)
@@ -735,15 +842,20 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
             rec["genereviews_notes"] = sorted(set(gr_notes))
         if precautions:
             rec["precautions"] = precautions
+        for fld in ("merged_from", "includes", "narrower_than"):
+            if a.get(fld):
+                rec[fld] = a[fld]
+        if a.get("narrower_than"):                # written once, under the broader action
+            rec["report"] = False
+            rec["report_note"] = f"included in the broader action '{a['narrower_than']['label']}'"
         if a["pregnancy_only"] and all(v["status"] == "not_applicable" for v in rec["status_by_branch"].values()):
             rec["report"] = False            # kept in the ledger, not written to the report (Step 4 decides the rules)
             rec["report_note"] = "pregnancy-specific management; patient is male or under 12"
         led.actions.append(rec)
         for b in branches:
             placed[section].add(b)
-    if unreported:
-        led.missing_information.append({"variable": MISSING_MANIFESTATIONS, "affects": [], "asked_by": "3a",
-                                        "why_it_matters": "supportive measures apply if these occur: " + "; ".join(unreported)})
+    for a_label, text in unreported:
+        led.note_missing(MISSING_MANIFESTATIONS, a_label, text, "3a")
     for s in SECTIONS_3A:
         led.mark_searched(s)
         empty = [b["id"] for b in led.branches if b["id"] not in placed[s]]

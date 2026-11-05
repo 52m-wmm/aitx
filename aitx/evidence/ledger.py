@@ -332,6 +332,25 @@ class Ledger:
                     bad.append(f"{tag}: no reason for {b}")
         return bad
 
+    def note_missing(self, variable: str, action: str, detail: str, asked_by: str) -> str:
+        """One missing-information row per variable type (2026-11-04), listing every action that depends on it.
+        Returns the variable name to put in the requirement line's patient_fact."""
+        row = next((m for m in self.missing_information if m["variable"] == variable), None)
+        if row is None:
+            row = {"variable": variable, "why_it_matters": "", "affects": [], "details": [], "asked_by": asked_by}
+            self.missing_information.append(row)
+        row.setdefault("details", [])
+        if action not in row["affects"]:
+            row["affects"].append(action)
+        if detail and detail not in row["details"]:
+            row["details"].append(detail)
+        if asked_by not in row["asked_by"].split(", "):
+            row["asked_by"] += f", {asked_by}"
+        n = len(row["affects"])
+        row["why_it_matters"] = (f"{n} action{'s' if n > 1 else ''} depend{'' if n > 1 else 's'} on it: "
+                                 + "; ".join(row["affects"][:12]) + (" …" if n > 12 else ""))
+        return variable
+
     def to_dict(self) -> dict:
         ev = sorted(self.evidence.values(), key=lambda e: (list(TIERS).index(e["section"]), e["id"]))
         return {"schema_version": SCHEMA_VERSION, "patient_id": self.patient_id, "branches": self.branches,

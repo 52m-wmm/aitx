@@ -86,10 +86,11 @@ def _record(led, study, bs: dict, mapped: dict | None, pf, extra, by_id, step2) 
             if x.get("details"):
                 line["details"] = x["details"]
             if line["result"] == "unknown":
-                var = (x["patient_fact"] or {}).get("field") or x["text"][:60]
-                if var not in {m["variable"] for m in led.missing_information}:
-                    led.missing_information.append({"variable": var, "why_it_matters": f"{nct}: {x['text'][:120]}",
-                                                    "affects": [], "asked_by": "3b"})
+                field = (x["patient_fact"] or {}).get("field") or "other"
+                var = E.variable_type(field)                  # one row per variable type, listing the trials
+                line["patient_fact"] = dict(x["patient_fact"] or {"value": None, "quote": None, "step": None},
+                                            field=var, detail=field)
+                led.note_missing(var, f"{study.get('acronym') or nct} ({nct})", x["text"][:120], "3b")
             lines.append(line)
         mine = [l for l in lines if b in l["applies_to"]]
         fail = [l for l in mine if l["result"] == "fail"]
