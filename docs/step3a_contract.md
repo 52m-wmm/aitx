@@ -221,3 +221,10 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 3. **`--offpeak-only` 改为每次 LLM 调用前都检查。**
    - 启动时的 `peak.guard()` 设置环境标志，`extract._cached_chat` 每次真实调用前执行 `peak.check_before_call()`。
    - 一旦进入高峰时段就抛出 `PeakHours`：`run_pipeline.py` 保留已写出的病例，正在跑的病例不写，退出码 3；`acceptance_step3_0.py` 同样退出码 3。
+
+### 放宽从句（2026-11-05 批准）
+
+- 要求原文**紧跟在放宽词之后**时（including / incl / even in / also in / regardless of 等，如 "incl those w/advanced CKD or kidney failure"），它是在扩大适用人群，不是条件，由代码丢弃（`broadening_word`、`drop_broadening`）。
+- **边界一**：丢弃后该行动必须仍有主条件（针对的症状、孕期标记不算主条件）。没有主条件时，按原样保留并在账本 `dropped_conditions` 里报警（`warning: true`，规则 `BROADENING_ALARM`）。每次丢弃都记原文、放宽词和规则。
+- **边界二**：收窄词（excluding / except / other than / unless 等）不在此列，照旧作为条件。反向测试覆盖这四种写法。
+- 起因：PH1 表第 1 行 "… in all persons w/1 or 2 missense AGXT pathogenic variants, incl those w/advanced CKD or kidney failure" 让吡哆醇被判为"肾功能未知 → 有条件适用"。同时修了 "1 or 2" 被按 or 拆开的错误。

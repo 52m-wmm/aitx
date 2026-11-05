@@ -817,3 +817,48 @@ def test_count_alternatives_compare_on_the_variant_class():
     assert E.evaluate(req, PF, BR)[0] == "does_not_satisfy"                      # frameshift patient
     pf = dict(PF, variants=[dict(PF["variants"][0], protein="p.(Gly170Arg)", **{"class": "missense"})])
     assert E.evaluate(req, pf, BR)[0] == "satisfies"
+
+
+# --- broadening clauses (decision 2026-11-05)
+
+ROW_PYR = ("a trial of pyridoxine should be considered in all persons w/1 or 2 missense AGXT pathogenic variants, "
+           "incl those w/advanced CKD or kidney failure.")
+
+
+def test_broadening_clause_dropped_when_a_main_condition_remains():
+    raw = [{"text": "1 or 2 missense AGXT pathogenic variants", "field": "variant_class", "op": "in", "value": ["missense"]},
+           {"text": "advanced CKD or kidney failure", "field": "kidney_function"}]
+    reqs = E._reqs(raw, None, ROW_PYR)
+    assert reqs[1]["_broadening"] == "incl those w/" and "_broadening" not in reqs[0]
+    log = []
+    kept = E.drop_broadening(reqs, log, {"source": "NBK1283 x", "action": "pyridoxine"})
+    assert [r["text"] for r in kept] == ["1 or 2 missense AGXT pathogenic variants"]
+    assert log[0]["text"] == "advanced CKD or kidney failure" and log[0]["rule"] == E.BROADENING_RULE and not log[0]["kept"]
+
+
+def test_broadening_clause_alone_is_kept_with_an_alarm():
+    reqs = E._reqs([{"text": "advanced CKD or kidney failure", "field": "kidney_function"}], None, ROW_PYR)
+    log = []
+    kept = E.drop_broadening(reqs, log, {"source": "s", "action": "a"})
+    assert [r["text"] for r in kept] == ["advanced CKD or kidney failure"] and "_broadening" not in kept[0]
+    assert log[0]["warning"] and log[0]["kept"] and log[0]["rule"] == E.BROADENING_ALARM
+
+
+@pytest.mark.parametrize("where", [
+    "considered in all persons w/1 or 2 missense AGXT pathogenic variants, except those w/advanced CKD or kidney failure.",
+    "considered in all persons w/1 or 2 missense AGXT pathogenic variants, excluding those w/advanced CKD or kidney failure.",
+    "considered in persons w/missense variants other than those w/advanced CKD or kidney failure.",
+    "considered in persons w/missense variants unless advanced CKD or kidney failure is present.",
+])
+def test_narrowing_words_keep_the_condition(where):
+    # reverse check: the same sentence with a narrowing word is a real condition
+    raw = [{"text": "missense", "field": "variant_class", "op": "in", "value": ["missense"]},
+           {"text": "advanced CKD or kidney failure", "field": "kidney_function"}]
+    reqs = E._reqs(raw, None, where)
+    assert not any(r.get("_broadening") for r in reqs)
+    assert len(E.drop_broadening(reqs, [], {})) == 2
+
+
+def test_plain_situation_without_broadening_word_stays():
+    reqs = E._reqs([{"text": "in kidney failure", "field": "situation"}], None, "Dialysis in kidney failure.")
+    assert reqs and not reqs[0].get("_broadening")

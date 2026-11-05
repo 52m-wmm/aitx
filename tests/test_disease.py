@@ -885,3 +885,16 @@ def test_http_get_retries_socket_timeout(monkeypatch, tmp_path):
     except Exception as e:  # noqa: BLE001 - only the retry matters here
         assert not isinstance(e, socket.timeout), e
     assert len(calls) >= 2
+
+
+def test_every_timeout_handler_also_catches_socket_timeout():
+    # Python 3.9: socket.timeout is not a TimeoutError; any except clause naming TimeoutError must name it too
+    import re
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    bad = []
+    for f in list((root / "aitx").rglob("*.py")) + list((root / "scripts").rglob("*.py")):
+        for n, line in enumerate(f.read_text().splitlines(), 1):
+            if re.search(r"except\s*\(.*\bTimeoutError\b", line) and "socket.timeout" not in line:
+                bad.append(f"{f.relative_to(root)}:{n}")
+    assert not bad, bad

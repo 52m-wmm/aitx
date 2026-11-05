@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import re
+import socket
 import sys
 import time
 import urllib.error
@@ -86,7 +87,7 @@ def _fetch(url: str) -> str | None:
         except urllib.error.HTTPError as e:
             if e.code not in (429, 500, 502, 503):
                 return None
-        except (urllib.error.URLError, TimeoutError):
+        except (urllib.error.URLError, TimeoutError, socket.timeout):    # socket.timeout: not a TimeoutError before 3.10
             pass
         time.sleep(3 * (attempt + 1))
     return None

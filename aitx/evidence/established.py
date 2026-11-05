@@ -327,6 +327,25 @@ def row_cells(shown: str, quote: str) -> list[str] | None:
 
 
 PURPOSE_RULE = "purpose or mechanism clause is not a requirement (a requirement describes the patient; decision 2026-11-04)"
+BROADENING_RULE = ("broadening clause right after 'including / even in / also in / regardless of' widens who may receive it; "
+                   "it is not a requirement (decision 2026-11-05)")
+BROADENING_ALARM = "broadening clause is the item's only condition: kept as written (decision 2026-11-05)"
+# only the clause right after a broadening word; narrowing words (excluding, except, other than, unless) stay conditions
+_BROADEN = re.compile(r"(?:\bincl(?:uding|uded|\.)?|\beven\s+(?:in|for|with|if|when)|\balso\s+(?:in|for|with)|\bregardless\s+of)"
+                      r"\s+(?:all\s+)?(?:those|persons|individuals|people|patients|children|adults)?\s*(?:w/|with|who\s+(?:have|are))?\s*$", re.I)
+
+
+def broadening_word(text: str, where: str) -> str | None:
+    """The broadening words right before `text` in `where` ("incl those w/" before "advanced CKD or kidney failure"),
+    or None. Narrowing words never match, so "except those w/ kidney failure" stays a requirement."""
+    low, t = re.sub(r"\s+", " ", where or "").lower(), re.sub(r"\s+", " ", text or "").lower().strip()
+    i = low.find(t) if t else -1
+    while i >= 0:
+        m = _BROADEN.search(low[max(0, i - 40):i])
+        if m:
+            return m.group(0).strip()
+        i = low.find(t, i + 1)
+    return None
 
 
 def _reqs(raw: list, spec: dict, where: str, dropped: list | None = None, context: dict | None = None) -> list[dict]:
@@ -342,8 +361,25 @@ def _reqs(raw: list, spec: dict, where: str, dropped: list | None = None, contex
                 dropped.append({"text": r.get("text"), "field": r.get("field"), "rule": PURPOSE_RULE,
                                 "pattern": PURPOSE_CLAUSE.pattern, **(context or {})})
             continue
-        out.append({**r, "kind": "label_condition", "spec": spec})
+        word = broadening_word(str(r.get("text") or ""), where)
+        out.append({**r, "kind": "label_condition", "spec": spec, **({"_broadening": word} if word else {})})
     return out
+
+
+def drop_broadening(reqs: list[dict], dropped: list, context: dict) -> list[dict]:
+    """Drop the broadening clauses of one item, provided a main condition remains; otherwise keep them as written
+    and raise an alarm in the ledger. Every decision is logged (text, rule, the broadening words)."""
+    broad = [r for r in reqs if r.get("_broadening")]
+    if not broad:
+        return reqs
+    main = [r for r in reqs if not r.get("_broadening") and r.get("field") not in ("manifestation", "pregnancy")]
+    for r in broad:
+        dropped.append({"text": r["text"], "field": r.get("field"), "after": r["_broadening"],
+                        "rule": BROADENING_RULE if main else BROADENING_ALARM, "kept": not main,
+                        **({"warning": True} if not main else {}), **context})
+    if not main:
+        return [{k: v for k, v in r.items() if k != "_broadening"} for r in reqs]
+    return [r for r in reqs if not r.get("_broadening")]
 
 
 # --- quote repair (decision 2026-11-04) ---------------------------------------------------------------------
@@ -614,6 +650,12 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                         r["spec"] = _spec(f"GeneReviews ({path}) row condition for {name}: {r['text'][:80]}", src, r["text"],
                                           text, acc_book, llm, f"3a genereviews {nbk}")
                         reqs.append(r)
+                    elif scope and not r.get("_broadening"):         # same words seen in the wider scope: broadening there?
+                        w = broadening_word(r["text"], scope)
+                        for x in reqs:
+                            if w and x["text"] == r["text"]:
+                                x["_broadening"] = w
+                reqs = drop_broadening(reqs, dropped_conditions, ctx)
                 if section == "supportive_management" and it.get("manifestation") and LG.quote_in(it["manifestation"], text):
                     reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
                                  "spec": _spec(claim, src, it["manifestation"], text, acc_book, llm, f"3a genereviews {nbk}")})
