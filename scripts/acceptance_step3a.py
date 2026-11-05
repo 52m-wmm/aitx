@@ -41,6 +41,11 @@ def compare(item: dict, led: dict | None) -> dict:
     # the label decides; the action key only when no label matches (a combination product's key lists every ingredient)
     hits = [a for a in here if re.search(item["match"], a["label"], re.I)] or \
         [a for a in here if re.search(item["match"], a.get("action_key") or "", re.I)]
+    # actions kept in the ledger but not written to the report (e.g. pregnancy-only for a boy) are not what the
+    # report says; they count only when nothing reported matches (2026-11-04: a hidden pregnancy-only "intravenous
+    # fluid administration" failed the IV fluids expectation although the reported "IV fluid" action held)
+    shown = [a for a in hits if a.get("report", True) is not False]
+    hits = shown or hits
     elsewhere = [f"{a['label']} in {a['section']}" for a in led["actions"] if a["section"] != item["section"]
                  and re.search(item["match"], f"{a['label']} {a.get('action_key') or ''}", re.I)]
     if not hits:

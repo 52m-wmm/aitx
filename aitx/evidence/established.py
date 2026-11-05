@@ -298,14 +298,23 @@ def row_cells(shown: str, quote: str) -> list[str] | None:
     return None
 
 
-def _reqs(raw: list, spec: dict, where: str) -> list[dict]:
+PURPOSE_RULE = "purpose or mechanism clause is not a requirement (a requirement describes the patient; decision 2026-11-04)"
+
+
+def _reqs(raw: list, spec: dict, where: str, dropped: list | None = None, context: dict | None = None) -> list[dict]:
     """Structured requirements whose words are in `where`; other kinds of sentences are dropped, and so is a purpose
-    or mechanism clause ("to reduce hepatic oxalate production") - a requirement describes the patient (2026-11-04)."""
+    or mechanism clause ("to reduce hepatic oxalate production") - a requirement describes the patient (2026-11-04).
+    Every dropped purpose clause is appended to `dropped` (text, rule, context) so it can be reviewed in the ledger."""
     out = []
     for r in raw or []:
-        if isinstance(r, dict) and r.get("field") in REQ_FIELDS and LG.quote_in(str(r.get("text") or ""), where) \
-                and not PURPOSE_CLAUSE.search(str(r.get("text") or "")):
-            out.append({**r, "kind": "label_condition", "spec": spec})
+        if not (isinstance(r, dict) and r.get("field") in REQ_FIELDS and LG.quote_in(str(r.get("text") or ""), where)):
+            continue
+        if PURPOSE_CLAUSE.search(str(r.get("text") or "")):
+            if dropped is not None:
+                dropped.append({"text": r.get("text"), "field": r.get("field"), "rule": PURPOSE_RULE,
+                                "pattern": PURPOSE_CLAUSE.pattern, **(context or {})})
+            continue
+        out.append({**r, "kind": "label_condition", "spec": spec})
     return out
 
 
@@ -490,6 +499,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     ch_map = chapters_for(led, step2, use_cache)
     acc_book = D.ensure("genereviews_book").downloaded_at
     found: dict[str, dict] = {}          # action key -> {key, section, label, branches, specs, reqs, why}
+    dropped_conditions: list[dict] = []  # requirements code refused (purpose clauses), kept for review
     searches: list[dict] = []
 
     def put(key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict], why: str,
@@ -541,8 +551,10 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 # a table item's conditions may sit in other cells of its row (the manifestation it treats, the
                 # persons it is for): each such condition is checked against that row and quoted on its own
                 cells = row_cells(shown.get(path, ""), it["quote"])
-                reqs = _reqs(it.get("requirements"), spec, it["quote"])
-                for r in _reqs(it.get("requirements"), None, " | ".join(cells or [])):
+                ctx = {"source": f"{nbk} {path}", "action": name, "item_quote": it["quote"][:200]}
+                reqs = _reqs(it.get("requirements"), spec, it["quote"], dropped_conditions, ctx)
+                for r in _reqs(it.get("requirements"), None, " | ".join(cells or []),
+                               dropped_conditions if cells else None, ctx):
                     if not LG.quote_in(r["text"], it["quote"]):
                         r["spec"] = _spec(f"GeneReviews ({path}) row condition for {name}: {r['text'][:80]}", src, r["text"],
                                           text, acc_book, llm, f"3a genereviews {nbk}")
@@ -619,6 +631,9 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         _label_action(put, lb, text, name, bids, section, why, reqs, quote=quote)
 
     led.patient_context["action_synonyms"] = merge_synonyms(found, use_cache)
+    seen_drop = set()                  # the same clause can be refused twice (item quote, then its row)
+    led.dropped_conditions = [d for d in dropped_conditions
+                              if (k := (d["text"], d["source"], d["action"])) not in seen_drop and not seen_drop.add(k)]
     _records(led, found, pf, searches)
 
 

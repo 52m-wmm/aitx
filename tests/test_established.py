@@ -661,3 +661,13 @@ def test_broader_and_narrower_are_related_not_merged(monkeypatch):
 def test_condition_from_another_row_is_not_attached():
     row1 = ["Kidney stones", "Ureteroscopy", "In kidney failure"]
     assert E._reqs([{"text": "if needed", "field": "situation"}], None, " | ".join(row1)) == []
+
+
+def test_dropped_purpose_clauses_are_logged_with_the_rule():
+    log = []
+    raw = [{"text": "to reduce hepatic oxalate production", "field": "situation"}, {"text": "as needed", "field": "situation"}]
+    kept = E._reqs(raw, None, "as needed to reduce hepatic oxalate production", log, {"source": "NBK1283 s", "action": "x"})
+    assert [r["text"] for r in kept] == ["as needed"]
+    assert log == [{"text": "to reduce hepatic oxalate production", "field": "situation", "rule": E.PURPOSE_RULE,
+                    "pattern": E.PURPOSE_CLAUSE.pattern, "source": "NBK1283 s", "action": "x"}]
+    assert "dropped_conditions" in LG.Ledger("P", [dict(BR, id="b1")]).to_dict()

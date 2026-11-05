@@ -215,6 +215,7 @@ class Ledger:
         self.branch_assessment: list[dict] = []
         self.branch_order: list[str] = [b["id"] for b in branches]
         self.actions: list[dict] = []
+        self.dropped_conditions: list[dict] = []   # 3a: requirements refused by a code rule (text, rule, source)
         self.trial_searches: dict = {}         # 3b: per branch, every search, filtered study (with reason) and over-cap study
 
     def add(self, e: dict) -> dict:
@@ -358,5 +359,6 @@ class Ledger:
                 "patient_context": self.patient_context, "missing_information": self.missing_information,
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
                 "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
+                "dropped_conditions": self.dropped_conditions,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}
