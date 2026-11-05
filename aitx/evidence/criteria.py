@@ -65,8 +65,9 @@ def items_for_llm(items: list[dict]) -> str:
     return "\n".join(f"[{it['id']}] ({it['kind']}) {T.unescape(it['text'])}" for it in items if not it.get("preamble"))
 
 
-_GE = re.compile(r"≥|>=|\bat least\b|\bor older\b|\bor more\b|\bor greater\b|\bminimum\b|\bor above\b|\bor over\b", re.I)
-_LE = re.compile(r"≤|<=|\bat most\b|\bor younger\b|\bor less\b|\bor below\b|\bup to\b|\bmaximum\b|\bno more than\b|\bnot exceeding\b", re.I)
+_RANGE = re.compile(r"\d\s*(?:-|–|—|to|through)\s*\d", re.I)       # "10 to 17", "0-90": inclusive on both ends
+_GE = re.compile(r"≥|>=|\bat least\b|\b(?:or|and)\s+(?:older|above|over)\b|\bor more\b|\bor greater\b|\bminimum\b|\binclusive\b", re.I)
+_LE = re.compile(r"≤|<=|\bat most\b|\b(?:or|and)\s+(?:younger|under|below)\b|\bor less\b|\bup to\b|\bmaximum\b|\bno more than\b|\bnot exceeding\b|\binclusive\b", re.I)
 _GT = re.compile(r"(?<![<≤])>(?!=)|\bgreater than\b|\bmore than\b|\bover\b|\babove\b|\bolder than\b|\bexceed", re.I)
 _LT = re.compile(r"(?<![>≥])<(?!=)|\bless than\b|\bunder\b|\bbelow\b|\byounger than\b|\blower than\b", re.I)
 
@@ -76,7 +77,8 @@ def sign_ok(op: str, quote: str) -> bool:
     no cue of a different strictness in the same direction."""
     if op in ("", "=="):
         return True
-    ge, le = bool(_GE.search(quote)), bool(_LE.search(quote))
+    rng = bool(_RANGE.search(quote))
+    ge, le = bool(_GE.search(quote)) or rng, bool(_LE.search(quote)) or rng
     gt = bool(_GT.search(_GE.sub(" ", quote)))
     lt = bool(_LT.search(_LE.sub(" ", quote)))
     return {">=": ge, ">": gt and not ge, "<=": le, "<": lt and not le}[op]
@@ -109,7 +111,7 @@ def check_mapping(m: dict, items: dict[str, dict]) -> str | None:
     for n in _numbers(m.get("value")):
         if not any(abs(n - q) < 1e-9 for q in in_quote):
             return f"threshold {n:g} not in the quote"
-    if m.get("op") and not _numbers(m.get("value")) and fact not in ("variant", "variant_class", "zygosity"):
+    if m.get("op") in ("<", "<=", ">", ">=") and not _numbers(m.get("value")) and fact not in ("variant", "variant_class", "zygosity"):
         return "comparison without a threshold"
     if not sign_ok(m.get("op", ""), quote):
         return f"comparison {m.get('op')!r} not as written"
@@ -153,16 +155,25 @@ def _unk(var: str, note: str) -> tuple[str, dict, str, dict]:
     return "unknown", {"field": var, "value": None, "quote": None, "step": None}, note, {}
 
 
-def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str]) -> tuple[str, dict | None, str, dict]:
-    """(patient_status, patient_fact, note, details) for one verified mapping."""
+AGE_BY_REGISTRY = LG.AGE_BY_REGISTRY_NOTE
+_ANY_SEX = re.compile(r"\b(?:all|both|any)\s+(?:genders?|sexes)\b|\bmales?\s*(?:and|or|/|&)\s*females?\b|"
+                      r"\bfemales?\s*(?:and|or|/|&)\s*males?\b|\bregardless\s+of\s+(?:gender|sex)\b", re.I)
+
+
+def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kind: str = "inclusion"
+             ) -> tuple[str, dict | None, str, dict]:
+    """(patient_status, patient_fact, note, details) for one verified mapping; kind = inclusion / exclusion."""
     fact, op, quote = m["fact"], m.get("op", ""), m["quote"]
     nums = _numbers(m.get("value"))
     if fact == "administrative":
         return "not_assessed", None, LG.NOT_ASSESSED_NOTE, {}
-    if fact == "sex" and re.search(r"\bmale\b", quote, re.I) and re.search(r"\bfemale\b", quote, re.I) \
-            and re.search(r"\bmale\s+(?:or|and|/)\s+female\b|\bfemale\s+(?:or|and|/)\s+male\b|\bboth\b|\ball\b", quote, re.I):
+    if fact == "sex" and _ANY_SEX.search(quote):
         return "satisfies", {"field": "sex", "value": pf["sex"] or "any", "quote": quote, "step": "3b"}, "any sex", {}
-    if fact in ("age", "sex", "variant", "variant_class", "zygosity"):
+    if fact == "age":
+        # cohorts ("adolescents >= 12", "children 6 to 11", "children 2 to 5") make text age clauses alternatives the
+        # item tree does not show; age is decided by the registry minimumAge / maximumAge lines (decision 2026-11-04)
+        return "not_assessed", None, AGE_BY_REGISTRY, {}
+    if fact in ("sex", "variant", "variant_class", "zygosity"):
         req = {"field": fact, "op": op, "value": nums[0] if fact == "age" and nums else m.get("value"),
                "unit": _age_unit(m.get("unit") or quote), "text": quote}
         st, fct, note = E.evaluate(req, pf, branch)
@@ -170,7 +181,9 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str]) -> 
             fct = {"field": fact, "value": None, "quote": None, "step": None}     # the variable that is missing
         return st, fct, note, {}
     if fact == "diagnosis":
-        hit = next((n for n in names if E.name_in(n, quote) is not None), None)
+        hit = next((n for n in E.label_names(names) if E.name_in(n, quote) is not None), None)
+        if hit and kind == "exclusion":       # the branch disease named in an exclusion is context ("not related to CF",
+            return _unk("diagnosis", "exclusion mentions the branch disease as context; not compared")   # "CF exacerbation")
         return ("satisfies", {"field": "diagnosis", "value": hit, "quote": hit, "step": 2}, "diagnosis named", {}) if hit \
             else _unk("diagnosis", "the criterion names another diagnosis or none of the branch names")
     if fact == "genetic_confirmation":
@@ -222,11 +235,13 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str]) -> 
         return ("does_not_satisfy" if f["status"] == "absent" else "satisfies"), \
             {"field": "other trials", "value": f["status"], "quote": f["quote"], "step": "3b"}, "", {}
     if fact == "pregnancy":
-        st, fct = E.pregnancy_status(pf)                 # male or under 12 -> cannot be pregnant / of childbearing potential
-        if (m.get("name") or "").lower() == "contraception":
-            return ("satisfies", fct, "contraception requirement does not apply (male or under 12)", {}) \
-                if st == "does_not_satisfy" else _unk("pregnancy / contraception", "pregnancy status unknown")
-        return (st, fct, "", {}) if st == "does_not_satisfy" else _unk("pregnancy status", "pregnancy status unknown")
+        # male or under 12: a pregnancy / contraception criterion does not apply - it never excludes the patient and
+        # never fails an inclusion (2026-11-04: "unwilling to use contraception" had excluded a 7-year-old boy)
+        st, fct = E.pregnancy_status(pf)
+        if st == "does_not_satisfy":
+            return ("does_not_satisfy" if kind == "exclusion" else "satisfies"), fct, \
+                "pregnancy / contraception criterion does not apply (male or under 12)", {}
+        return _unk("pregnancy status", "pregnancy status unknown")
     if fact == "weight":
         return _unk("weight", "not stated in the case")
     return _unk(f"other: {quote[:60]}", "no patient fact of this kind")
@@ -304,7 +319,7 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
                         "patient_fact": None, "note": LG.UNMAPPED_NOTE, "details": {}, "item": it["id"]})
             continue
         for m in ms:
-            st, fct, note, det = evaluate(m, pf, extra, branch, names)
+            st, fct, note, det = evaluate(m, pf, extra, branch, names, it["kind"])
             line = {"kind": it["kind"], "text": m["quote"], "patient_status": st,
                     "patient_fact": None if st == "not_assessed" else fct, "note": note, "details": det,
                     "item": it["id"], "fact": m["fact"]}

@@ -35,6 +35,7 @@ ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none
 REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
 PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown", "not_assessed")
 NOT_ASSESSED_NOTE = "screening assessment"   # administrative criteria (consent, adherence, visits): left to trial screening
+AGE_BY_REGISTRY_NOTE = "age: decided by the registry age fields"   # 3b: text age clauses, shown, not compared
 UNMAPPED_NOTE = "not mapped; shown verbatim"  # a criterion the mapping could not turn into a checked comparison (3b)
 
 SOURCE_ID = {   # source type -> id format
@@ -311,7 +312,7 @@ class Ledger:
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
                     bad.append(f"{tag}: requirement {r['id']} result inconsistent")
                 if r["result"] == "not_assessed":
-                    if r["kind"] not in ("inclusion", "exclusion") or r.get("note") not in (NOT_ASSESSED_NOTE, UNMAPPED_NOTE) or r.get("patient_fact"):
+                    if r["kind"] not in ("inclusion", "exclusion") or r.get("note") not in (NOT_ASSESSED_NOTE, UNMAPPED_NOTE, AGE_BY_REGISTRY_NOTE) or r.get("patient_fact"):
                         bad.append(f"{tag}: requirement {r['id']} not_assessed must be a trial criterion noted "
                                    f"'{NOT_ASSESSED_NOTE}' with no patient fact")
                     continue

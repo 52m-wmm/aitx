@@ -190,6 +190,51 @@ def test_any_sex_is_met_when_sex_is_unknown_and_unknown_age_names_its_variable(e
     # 2026-11-04 run: "Male or Female" was unknown, and unknown age / sex lines had no variable for missing information
     assert C.evaluate({"quote": "Male or Female", "fact": "sex", "value": ["male", "female"]}, PF, extra, BR, [])[0] == "satisfies"
     assert C.evaluate({"quote": "Female", "fact": "sex", "value": "female"}, PF, extra, BR, [])[0] == "unknown"
-    st, fact, _, _ = C.evaluate({"quote": "Age > 1 month", "fact": "age", "op": ">", "value": 1, "unit": "month"},
-                                dict(PF, age_months=None), extra, BR, [])
-    assert st == "unknown" and fact["field"] == "age"
+    st, fact, _, _ = C.evaluate({"quote": "Female", "fact": "sex", "value": "female"}, dict(PF, sex=None), extra, BR, [])
+    assert st == "unknown" and fact["field"] == "sex"
+
+
+# --- 2026-11-04 run: false "not applicable" verdicts (regressions)
+
+BOY = dict(PF, age_months=84, age_quote="7-year-old", sex="male", sex_quote="boy")
+
+
+@pytest.mark.parametrize("kind,quote,name,want", [
+    ("exclusion", "Unwilling to comply with contraceptive requirements", "contraception", "does_not_satisfy"),
+    ("inclusion", "Pubescent and adult female patients must have a negative pregnancy test", "", "satisfies"),
+    ("exclusion", "Pregnant or breastfeeding", "", "does_not_satisfy"),
+    ("inclusion", "Agree to use contraception", "contraception", "satisfies"),
+])
+def test_pregnancy_criteria_never_rule_out_a_boy(kind, quote, name, want, extra):
+    st, _, _, _ = C.evaluate({"quote": quote, "fact": "pregnancy", "name": name}, BOY, extra, BR, [], kind)
+    assert st == want
+    line = LG.requirement("r1", kind, quote, "e", {"field": "sex", "value": "male", "quote": "boy", "step": 2}, st, ["b1"])
+    assert line["result"] == "pass"
+
+
+@pytest.mark.parametrize("quote", ["All genders", "males and females", "Male or Female", "regardless of gender", "both sexes"])
+def test_any_sex_wordings(quote, extra):
+    assert C.evaluate({"quote": quote, "fact": "sex"}, BOY, extra, BR, [])[0] == "satisfies"
+
+
+def test_text_age_clauses_are_left_to_the_registry_fields(extra):
+    # NCT04580420: cohorts ">= 12", "6 to 11", "2 to 5" had failed a 7-year-old one by one
+    st, fact, note, _ = C.evaluate({"quote": "adults and adolescents (aged ≥ 12 years)", "fact": "age", "op": ">=", "value": 12},
+                                   BOY, extra, BR, [])
+    assert st == "not_assessed" and fact is None and note == LG.AGE_BY_REGISTRY_NOTE
+
+
+def test_branch_disease_named_in_an_exclusion_is_context(extra):
+    cf = {"id": "b1", "gene": "CFTR", "diagnosis": {"label": "cystic fibrosis"}}
+    for q in ("Chronic lung or liver or pancreatic disease not related to cystic fibrosis",
+              "Cystic fibrosis pulmonary exacerbation requiring hospitalization"):
+        assert C.evaluate({"quote": q, "fact": "diagnosis"}, BOY, extra, cf, ["cystic fibrosis", "CF"], "exclusion")[0] == "unknown"
+    assert C.evaluate({"quote": "Diagnosis of cystic fibrosis", "fact": "diagnosis"}, BOY, extra, cf,
+                      ["cystic fibrosis", "CF"], "inclusion")[0] == "satisfies"
+    assert C.evaluate({"quote": "Diagnosis of CF", "fact": "diagnosis"}, BOY, extra, cf, ["cystic fibrosis", "CF"])[0] == "unknown"
+
+
+def test_ranges_and_and_older_are_sign_cues():
+    assert C.sign_ok(">=", "Patients aged 10 to 17 years") and C.sign_ok("<=", "Patients aged 10 to 17 years")
+    assert C.sign_ok("<=", "Age 0-90 years old") and C.sign_ok(">=", "Aged 12 years and above")
+    assert not C.sign_ok(">", "Aged 12 years and above")
