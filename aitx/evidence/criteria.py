@@ -159,10 +159,15 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str]) -> 
     nums = _numbers(m.get("value"))
     if fact == "administrative":
         return "not_assessed", None, LG.NOT_ASSESSED_NOTE, {}
+    if fact == "sex" and re.search(r"\bmale\b", quote, re.I) and re.search(r"\bfemale\b", quote, re.I) \
+            and re.search(r"\bmale\s+(?:or|and|/)\s+female\b|\bfemale\s+(?:or|and|/)\s+male\b|\bboth\b|\ball\b", quote, re.I):
+        return "satisfies", {"field": "sex", "value": pf["sex"] or "any", "quote": quote, "step": "3b"}, "any sex", {}
     if fact in ("age", "sex", "variant", "variant_class", "zygosity"):
         req = {"field": fact, "op": op, "value": nums[0] if fact == "age" and nums else m.get("value"),
                "unit": _age_unit(m.get("unit") or quote), "text": quote}
         st, fct, note = E.evaluate(req, pf, branch)
+        if st == "unknown" and not (fct or {}).get("field"):
+            fct = {"field": fact, "value": None, "quote": None, "step": None}     # the variable that is missing
         return st, fct, note, {}
     if fact == "diagnosis":
         hit = next((n for n in names if E.name_in(n, quote) is not None), None)

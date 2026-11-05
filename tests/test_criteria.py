@@ -184,3 +184,12 @@ def test_branch_without_trials_gets_negative_evidence(monkeypatch, extra):
     assert len(none) == 1 and none[0]["status_by_branch"]["b1"]["status"] == "searched_none"
     neg = led.evidence[none[0]["evidence_ids"][0]]
     assert neg["status"] == "verified" and neg["search"]["n_excluded"] == 2
+
+
+def test_any_sex_is_met_when_sex_is_unknown_and_unknown_age_names_its_variable(extra):
+    # 2026-11-04 run: "Male or Female" was unknown, and unknown age / sex lines had no variable for missing information
+    assert C.evaluate({"quote": "Male or Female", "fact": "sex", "value": ["male", "female"]}, PF, extra, BR, [])[0] == "satisfies"
+    assert C.evaluate({"quote": "Female", "fact": "sex", "value": "female"}, PF, extra, BR, [])[0] == "unknown"
+    st, fact, _, _ = C.evaluate({"quote": "Age > 1 month", "fact": "age", "op": ">", "value": 1, "unit": "month"},
+                                dict(PF, age_months=None), extra, BR, [])
+    assert st == "unknown" and fact["field"] == "age"
