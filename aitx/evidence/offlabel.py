@@ -29,7 +29,7 @@ from aitx.evidence import trials as T
 
 ROOT = Path(__file__).resolve().parents[2]
 SECTION = "off_label_expanded_access"
-PROMPT_VERSION = "3c-v1"
+PROMPT_VERSION = "3c-v2"          # v2 (2026-11-05): anaesthesia / sedation / procedural / diagnostic uses excluded
 N_PAPERS = 20                                     # decision 4
 SUPPLEMENTS = ROOT / "config" / "supplements.json"
 SUPPLEMENT_NOTE = "Not an FDA-approved drug; product quality and dosing are not regulated."
@@ -93,7 +93,17 @@ def product_ingredients(path: Path = ROOT / ".cache" / "rxnorm" / "products.json
     return keep
 
 
+_PROTEIN_AFTER = re.compile(r"^[\s:-]*(?:oxidase|dehydrogenase|aminotransferase|transaminase|reductase|synthase|synthetase|"
+                            r"kinase|transporter|receptor|carrier|hydroxylase|decarboxylase|transferase|isomerase|mutase|"
+                            r"lyase|ligase|glyoxylate aminotransferase|:glyoxylate)", re.I)
+
+
 def drugs_named(text: str, lexicon: set[str]) -> list[str]:
+    # a substance name that is part of an enzyme or protein name ("glycolate oxidase", "alanine:glyoxylate
+    # aminotransferase") is not a drug (2026-11-05)
+    text = re.sub(r"\b([a-z][a-z0-9-]*)(?=[\s:-]*(?:oxidase|dehydrogenase|aminotransferase|transaminase|reductase|synthase|"
+                  r"synthetase|kinase|transporter|receptor|hydroxylase|decarboxylase|transferase|:glyoxylate)\b)", " ", text or "",
+                  flags=re.I)
     low = (text or "").lower()
     words = set(re.findall(r"[a-z][a-z0-9-]{4,}", low))
     hits = {n for n in lexicon if " " not in n and n in words}
@@ -117,6 +127,32 @@ def _fetch_records(ids: list[str]) -> dict[str, dict]:
             out[pmid] = {"pmid": pmid, "title": ti.get(pmid, ""), "abstract": ab.get(pmid, ""),
                          "pub_types": [re.sub(r"<[^>]+>", "", t) for t in re.findall(r"<PublicationType[^>]*>(.*?)</PublicationType>", art)],
                          "retraction": rt.get(pmid), "pmc": pmc.group(1) if pmc else None, "year": year.group(1) if year else ""}
+    return out
+
+
+def pick(pool: list[dict], cap: int) -> list[dict]:
+    """Round robin over the new drugs (2026-11-05): each drug gets one article per round - one naming it in the title
+    first - so the cap covers as many candidate drugs as possible; articles naming only Tier 1 drugs or context terms
+    come last, by relevance. A drug that is rare in the pool is not favoured over a common one."""
+    def in_title(r, n):
+        return re.search(rf"(?<![a-z]){re.escape(n)}(?![a-z])", r["title"].lower()) is not None
+    queues: dict[str, list[dict]] = {}
+    for r in pool:
+        for n in r["new_drugs"]:
+            queues.setdefault(n, []).append(r)
+    for n in queues:
+        queues[n].sort(key=lambda r: not in_title(r, n))
+    order = sorted(queues, key=lambda n: (not any(in_title(r, n) for r in queues[n]), pool.index(queues[n][0])))
+    out, seen = [], set()
+    while len(out) < cap and any(queues[n] for n in order):
+        for n in order:
+            while queues[n] and queues[n][0]["pmid"] in seen:
+                queues[n].pop(0)
+            if queues[n] and len(out) < cap:
+                r = queues[n].pop(0)
+                out.append(r)
+                seen.add(r["pmid"])
+    out += [r for r in pool if r["pmid"] not in seen][: cap - len(out)]
     return out
 
 
@@ -192,8 +228,14 @@ def search(gene: str | None, names: list[str], exclude_drugs: set[str] | None = 
     for r in pool:
         r["new_drugs"] = sorted((set(r["drugs"]) & prod) - excl - common)
     rec["steps"]["context_terms_ignored"] = sorted(common)[:20]
-    pool.sort(key=lambda r: (not r["new_drugs"], not any(n in r["title"].lower() for n in r["new_drugs"])))
-    chosen = pool[:N_PAPERS]
+    # a new drug in the title first (case reports name the drug there; metabolites appear in the abstract), then a new
+    # drug in the abstract, then relevance (2026-11-05: PH1 glycolate / alanine abstracts had pushed stiripentol out)
+    # an article with neither an abstract nor a PMC record can never be read: it takes no slot (recorded)
+    unreadable = [r for r in pool if not r["abstract"] and not r["pmc"]]
+    rec["unreadable"] = [{"pmid": r["pmid"], "title": r["title"], "excluded": "no accessible text (no abstract, no PMC record)"}
+                         for r in unreadable]
+    rec["steps"]["unreadable"] = len(unreadable)
+    chosen = pick([r for r in pool if r not in unreadable], N_PAPERS)
     rec["steps"]["to_llm_cap"] = len(chosen)
     rec["truncated"] = count > N_SCREEN or len(pool) > N_PAPERS
     for r in chosen:
@@ -275,7 +317,8 @@ def number_in(n, quote: str) -> bool:
 
 SYSTEM = """You read one article about patients with a genetic disease and list every drug, supplement or other medicinal
 product that patients with this disease (or with variants in this gene) actually received in the work reported.
-Do not list products only proposed, only tested in cells or animals, or given for another disease. Copy every quote
+Do not list products only proposed, only tested in cells or animals, given for another disease, or used for
+anaesthesia, sedation, a procedure or a diagnostic test. Copy every quote
 character for character from the text. For each product return one item:
 {"name": "<product name>",
  "use_quote": "<the sentence saying patients with this disease or gene received it>",
@@ -332,11 +375,17 @@ def drug_in(quote: str, drug: str) -> bool:
     return bool(words) and any(re.search(rf"(?<![a-z]){re.escape(w)}", low) for w in words)
 
 
+_NOT_TREATMENT = re.compile(r"\b(?:anaesthe\w*|anesthe\w*|sedat\w*|premedicat\w*|perioperative|intraoperative|"
+                            r"intubat\w*|induction of anesthesia|contrast agent|diagnostic)\b", re.I)
+
+
 def check_item(it: dict, text: str, names: list[str], gene: str | None) -> str | None:
     """Why a lifted item is not a valid precedent, or None (code only)."""
     name, use = str(it.get("name") or "").strip(), str(it.get("use_quote") or "")
     if not name or not use:
         return "no product name or use quote"
+    if _NOT_TREATMENT.search(use):          # 2026-11-05: "Anesthesia was induced and maintained with sevoflurane"
+        return "not a treatment of the disease (anaesthesia, sedation, procedure or diagnostic use)"
     if not LG.quote_in(use, text):
         return "use quote not verbatim in the article"
     if not drug_in(use, name):

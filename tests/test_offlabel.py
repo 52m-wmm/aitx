@@ -161,7 +161,7 @@ def test_two_step_search_counts_and_exclusions(monkeypatch):
     p = {x["pmid"]: x for x in rec["papers"]}
     st = {k: v for k, v in rec["steps"].items() if k != "context_terms_ignored"}
     assert st == {"found": 250, "found_primary_designs": 250, "screened": 5, "with_drug": 2, "from_review_references": 1,
-                  "to_llm_cap": 3}
+                  "unreadable": 0, "to_llm_cap": 3}
     assert set(p) == {"1", "3", "6"}                                      # 2 (no abstract, no drug) and 4 (no drug) screened out
     assert p["1"]["excluded"].startswith("retracted (Biol Psychiatry")
     assert p["6"]["via_review"] and "5" not in p                           # the review is background, its cited report is the lead
@@ -370,3 +370,26 @@ def test_support_check_sees_use_and_outcome_quotes(monkeypatch):
     monkeypatch.setattr(O.SC, "check_support", lambda t, c, q, use_cache=True: seen.append(q) or {"overall": "supported"})
     O.direction(GOOD, "D-galactose", "SLC35A2-CDG", True)
     assert seen[0] == [GOOD["use_quote"], GOOD["outcome_quote"]]
+
+
+def test_anaesthesia_or_procedural_use_is_not_a_precedent():
+    text = "Anaesthetic management in primary hyperoxaluria type 1.\nIn a child with primary hyperoxaluria type 1, anesthesia was induced and maintained with sevoflurane."
+    it = {"name": "sevoflurane", "use_quote": "In a child with primary hyperoxaluria type 1, anesthesia was induced and maintained with sevoflurane"}
+    assert O.check_item(it, text, ["primary hyperoxaluria type 1"], "AGXT").startswith("not a treatment")
+    ok = {"name": "stiripentol", "use_quote": "In a child with primary hyperoxaluria type 1, stiripentol was given for 4 months"}
+    assert O.check_item(ok, "t.\nIn a child with primary hyperoxaluria type 1, stiripentol was given for 4 months.",
+                        ["primary hyperoxaluria type 1"], "AGXT") is None
+
+
+def test_enzyme_names_are_not_drugs():
+    lex = {"glycolate", "alanine", "stiripentol"}
+    assert O.drugs_named("Glycolate oxidase as a target; alanine:glyoxylate aminotransferase", lex) == []
+    assert O.drugs_named("Stiripentol was given; plasma glycolate fell", lex) == ["glycolate", "stiripentol"]
+
+
+def test_round_robin_covers_many_drugs_before_repeating_one():
+    def r(pmid, drugs, title=""):
+        return {"pmid": pmid, "title": title, "new_drugs": drugs}
+    pool = [r("1", ["a"]), r("2", ["a"]), r("3", ["a"]), r("4", ["b"], "b in the title"), r("5", []), r("6", ["c"])]
+    assert [x["pmid"] for x in O.pick(pool, 4)] == ["4", "1", "6", "2"]       # b (title) first, then a, c, then a again
+    assert [x["pmid"] for x in O.pick(pool, 10)][-1] == "5"                 # no new drug: last
