@@ -803,3 +803,17 @@ def test_uncovered_row_extracted_again_and_logged(monkeypatch):
     assert set(log) == {"Row 2", "Row 3"} and log["Row 2"]["n_items"] == 1 and log["Row 3"]["no_treatment"]
     iv = next(a for a in led.actions if a["label"] == "IV fluid")
     assert iv["status_by_branch"]["b1"]["status"] == "conditional"
+
+
+def test_or_between_counts_is_not_split():
+    # 2026-11-05 run: "1 or 2 missense AGXT pathogenic variants" was split into "1" and "2 missense ..." -> unknown
+    assert E.or_parts("persons w/1 or 2 missense AGXT pathogenic variants") == ["persons w/1 or 2 missense AGXT pathogenic variants"]
+    assert E.or_parts("one or two missense AGXT variants") == ["one or two missense AGXT variants"]
+    assert len(E.or_parts("heterozygous for p.Phe508del & a minimal function variant or other known responsive PV")) == 2
+
+
+def test_count_alternatives_compare_on_the_variant_class():
+    req = {"field": "variant_class", "op": "in", "value": ["missense"], "text": "1 or 2 missense AGXT pathogenic variants"}
+    assert E.evaluate(req, PF, BR)[0] == "does_not_satisfy"                      # frameshift patient
+    pf = dict(PF, variants=[dict(PF["variants"][0], protein="p.(Gly170Arg)", **{"class": "missense"})])
+    assert E.evaluate(req, pf, BR)[0] == "satisfies"

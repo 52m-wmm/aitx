@@ -127,7 +127,8 @@ PRECAUTION_AVOID = re.compile(r"\b(?:not|avoid|contraindicated|should\s+not|must
 SECOND_ALLELE = re.compile(r"&|\+|\b(?:and|plus)\s+(?:a|an|one|another|1)\b", re.I)
 
 
-_OR = re.compile(r"\s+or\s+(?!older\b|younger\b|more\b|less\b|greater\b|above\b|below\b|over\b|under\b)", re.I)
+_OR = re.compile(r"(?<!\d)(?<!\bone)(?<!\btwo)(?<!\bthree)\s+or\s+(?!older\b|younger\b|more\b|less\b|greater\b|above\b|"
+                 r"below\b|over\b|under\b|\d|one\b|two\b|three\b|four\b)", re.I)   # "1 or 2 missense variants" is one requirement
 
 
 def or_parts(text: str) -> list[str]:

@@ -853,3 +853,35 @@ def test_socket_read_timeout_is_retried(tmp_path, monkeypatch):
         return {"model": "deepseek-flash", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
     monkeypatch.setattr(X.llm, "chat", chat)
     assert X._cached_chat(MSG, 0, True)["content"] == "{}" and len(calls) == 2
+
+
+def test_http_get_retries_socket_timeout(monkeypatch, tmp_path):
+    import socket
+    from aitx import http as H
+    calls = []
+
+    class Resp:
+        status = 200
+        headers = {}
+
+        def read(self):
+            return b"{}"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def urlopen(req, timeout=None):
+        calls.append(1)
+        if len(calls) == 1:
+            raise socket.timeout("The read operation timed out")
+        return Resp()
+    monkeypatch.setattr(H.urllib.request, "urlopen", urlopen)
+    monkeypatch.setattr(H.time, "sleep", lambda s: None)
+    try:
+        H.get("https://example.org/x-socket-timeout-test", use_cache=False)
+    except Exception as e:  # noqa: BLE001 - only the retry matters here
+        assert not isinstance(e, socket.timeout), e
+    assert len(calls) >= 2
