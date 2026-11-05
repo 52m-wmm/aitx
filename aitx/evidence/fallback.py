@@ -24,7 +24,6 @@ ROOT = Path(__file__).resolve().parents[2]
 TIERS = ("chapter", "overview", "literature", "symptomatic")
 GUIDELINES = ROOT / "config" / "symptom_guidelines.json"
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
-OA_SERVICE = "https://www.ncbi.nlm.nih.gov/pmc/utils/oa/oa.fcgi"
 N_PAPERS = 10                                    # decision 2026-11-04
 PUB_TYPES = ("Review", "Systematic Review", "Practice Guideline", "Guideline", "Consensus Development Conference",
              "Observational Study", "Multicenter Study")
@@ -128,9 +127,10 @@ def search_literature(gene: str | None, names: list[str]) -> dict:
         if set(types) <= CASE_ONLY:
             paper["excluded"] = "case report"
         elif pmc:
-            paper["oa"] = is_open_access(pmc)
-            if paper["oa"]:
-                paper["full_text"] = pmc_text(pmc)
+            try:                               # one paper's failure never stops the layer: unknown -> abstract only
+                paper["oa"], paper["full_text"], paper["license"] = pmc_open_access_text(pmc)
+            except (RuntimeError, ValueError, OSError) as e:
+                paper["oa"], paper["oa_error"] = None, f"{type(e).__name__}: {e}"[:200]
         rec["papers"].append(paper)
     return rec
 
@@ -145,16 +145,20 @@ def abstracts_by_pmid(xml: str) -> dict[str, str]:
     return out
 
 
-def is_open_access(pmc: str) -> bool:
-    """PMC's OA service decides (a record without an error is in the open-access subset); the result is recorded."""
-    t = http.get(f"{OA_SERVICE}?id={pmc}", timeout=60).text
-    return "<record " in t and "<error" not in t
+_OPEN_LICENSE = re.compile(r'license-type="open-access"|creativecommons\.org/(?:licenses|publicdomain)', re.I)
 
 
-def pmc_text(pmc: str) -> str:
+def pmc_open_access_text(pmc: str) -> tuple[bool, str, str | None]:
+    """(open access, full text, license) for a PMC article, through E-utilities - one of the services PMC allows for
+    automated retrieval (the PMC OA Web Service was retired in 2026). Open access = the record carries its body and a
+    Creative Commons / open-access license; otherwise only the abstract is used (contract L3)."""
     x = http.get(f"{EUTILS}/efetch.fcgi?db=pmc&retmode=xml&id={pmc.replace('PMC', '')}", timeout=60).text
+    lic = re.search(r"<license[^>]*>.*?</license>", x, re.S)
+    lic_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", lic.group(0))).strip()[:300] if lic else None
     body = re.search(r"<body>(.*)</body>", x, re.S)
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body.group(1) if body else "")).strip()
+    oa = bool(body) and bool(lic and _OPEN_LICENSE.search(lic.group(0)))
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body.group(1))).strip() if oa else ""
+    return oa, text, lic_text
 
 
 LIT_SYSTEM = """You list management recommendations stated in one article about a genetic disease. Use only the text

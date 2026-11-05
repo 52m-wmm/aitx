@@ -42,7 +42,7 @@
 
 **L3 文献**
 - 文本范围：**只用 PubMed 摘要和 PMC 开放获取（Open Access）子集的全文**。不是开放获取的全文一律不获取，不绕过任何访问限制（登录、付费墙、人机验证）。
-  某篇文献是否在开放获取子集，由 PMC 的 OA 服务判断，代码记录判断结果。
+  某篇文献是否在开放获取子集，用 E-utilities efetch（PMC 允许自动获取的接口之一）取 PMC 记录判断：带正文且许可证为 Creative Commons / open-access 才算开放获取，许可证原文记进账本。PMC OA Web Service 已于 2026 年停用（pmc.ncbi.nlm.nih.gov/tools/oa-service，2026-11-05 核对）。单篇文献判定失败时记为未知，只用摘要，不中断整个 L3。
 - 检索：PubMed E-utilities（esearch + efetch 摘要），检索式 = 基因符号 AND（疾病名或同义词）AND 文献类型过滤
   （Review、Practice Guideline、Consensus Development Conference、观察性 / 队列研究），按相关度取前 N 篇（拟 N = 10），检索式、时间、总数写入检索记录。
   与 3c 共用同一个检索模块和缓存（3c 契约将引用本节）。

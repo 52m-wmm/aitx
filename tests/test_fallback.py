@@ -80,11 +80,11 @@ def test_search_fetches_open_access_full_text_only_and_drops_case_reports(monkey
                 "333": {"title": "Cohort", "pubdate": "2022", "pubtype": ["Observational Study"], "articleids": [{"idtype": "pmc", "value": "PMC3"}]}}}))
         if "efetch.fcgi?db=pubmed" in url:
             return R(XML)
-        if "oa.fcgi" in url:
-            return R('<OA><records><record id="PMC1"/></records></OA>' if "PMC1" in url else
-                     '<OA><error code="idIsNotOpenAccess">not OA</error></OA>')
-        if "db=pmc" in url:
-            return R("<article><body><p>Full text recommends speech therapy.</p></body></article>")
+        if "db=pmc" in url and url.endswith("id=1"):
+            return R('<article><front><permissions><license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/">'
+                     "CC BY</license></permissions></front><body><p>Full text recommends speech therapy.</p></body></article>")
+        if "db=pmc" in url:                       # not open access: no body, no open license
+            return R("<article><front><abstract><p>Abstract only.</p></abstract></front></article>")
         raise AssertionError(url)
     monkeypatch.setattr(F.http, "get", get)
     rec = F.search_literature("SLC35A2", ["SLC35A2-CDG"])
@@ -92,7 +92,7 @@ def test_search_fetches_open_access_full_text_only_and_drops_case_reports(monkey
     assert p["111"]["oa"] is True and "speech therapy" in p["111"]["full_text"]
     assert p["222"]["excluded"] == "case report" and not any("PMC2" in u for u in fetched)       # never fetched
     assert p["333"]["oa"] is False and p["333"]["full_text"] == ""                               # not OA: abstract only
-    assert not any("db=pmc&retmode=xml&id=3" in u for u in fetched)
+    assert p["111"]["license"].startswith("CC BY")
 
 
 def _stub_common(monkeypatch, *, lit=None, llm_items=(), support="supported", table=None):
@@ -338,3 +338,22 @@ def test_multi_gene_disease_chapter_is_a_chapter_not_an_overview():
     assert F.chapter_tier("NBK1138", S2, TITLES.get) == "overview"
     assert F.chapter_tier("NBK9999", s2, lambda n: None) == "chapter"            # no title, no metadata: a chapter
     assert F.chapter_tier("NBK1244", s2, lambda n: None) == "overview"           # no title: the gene count decides
+
+
+def test_one_papers_open_access_failure_does_not_stop_the_layer(monkeypatch):
+    class R:
+        def __init__(self, text):
+            self.text = text
+
+    def get(url, timeout=30, **k):
+        if "esearch" in url:
+            return R(json.dumps({"esearchresult": {"count": "1", "idlist": ["111"]}}))
+        if "esummary" in url:
+            return R(json.dumps({"result": {"111": {"pubdate": "2024", "pubtype": ["Review"], "articleids": [{"idtype": "pmc", "value": "PMC1"}]}}}))
+        if "efetch.fcgi?db=pubmed" in url:
+            return R(XML)
+        raise RuntimeError("HTTP 404 for " + url)
+    monkeypatch.setattr(F.http, "get", get)
+    rec = F.search_literature("SLC35A2", ["SLC35A2-CDG"])
+    p = rec["papers"][0]
+    assert p["oa"] is None and "404" in p["oa_error"] and p["full_text"] == "" and p["abstract"]
