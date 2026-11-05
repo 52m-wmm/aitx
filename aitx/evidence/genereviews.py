@@ -117,6 +117,21 @@ def _table_rows(tw: ET.Element) -> str:
     return "\n".join(lines + ([f"Notes: {foot}"] if foot else []))
 
 
+def _para(state: dict, ctx: list[str], text: str) -> str:
+    c = "; ".join(dict.fromkeys(x for x in ctx if x))
+    return f"Paragraph {state['n']}" + (f" [context: {c}]" if c else "") + f": {text}"
+
+
+def paragraph_scope(shown: str, quote: str) -> str | None:
+    """The paragraph line (its context and its text) that holds `quote` in a sections_for_llm() text; None if the
+    quote is not in a paragraph line (e.g. a table row). A requirement of an item is checked only within this scope."""
+    from aitx.evidence.ledger import quote_in
+    for line in (shown or "").splitlines():
+        if line.startswith("Paragraph ") and quote_in(quote, line.split(": ", 1)[1] if "]: " not in line else line.split("]: ", 1)[1]):
+            return line
+    return None
+
+
 def sections_for_llm(nbk: str) -> dict[str, str]:
     """{section path: text with tables rendered row by row with their headers} - the same sections as sections();
     quotes are still checked against sections(), where every cell text appears verbatim."""
@@ -126,18 +141,65 @@ def sections_for_llm(nbk: str) -> dict[str, str]:
     root = ET.parse(path).getroot()
     out: dict[str, str] = {}
 
+    def lead_of(p_el: ET.Element) -> str | None:
+        """A paragraph's lead-in ("<bold>Ages 0-3 years.</bold> Referral to ...") - its first bold run, when the
+        paragraph starts with it."""
+        first = next(iter(p_el), None)
+        if first is not None and first.tag == "bold" and not (p_el.text or "").strip():
+            return _text(first)
+        return None
+
+    def render(children, state: dict, inherited: list[str]) -> list[str]:
+        """Paragraph lines "Paragraph k [context: subheading; lead-in]: text" (decision 2026-11-04: a lead-in or
+        subheading conditions everything in its paragraph, and a list right after a paragraph belongs to it)."""
+        out, last_ctx = [], list(inherited)
+        for ch in children:
+            if ch.tag in ("sec", "title"):
+                continue
+            if ch.tag == "table-wrap":
+                out.append(_table_rows(ch))
+                continue
+            if ch.tag == "table-wrap-group" or (ch.tag != "list" and ch.findall(".//table-wrap")):
+                tws = ch.findall(".//table-wrap") if ch.tag == "table-wrap-group" else []
+                out += [_table_rows(t) for t in tws] or [_text(ch)]
+                continue
+            if ch.tag == "list":
+                for li in ch.findall("list-item"):
+                    ps = [x for x in li if x.tag == "p"]
+                    lead = lead_of(ps[0]) if ps else None
+                    ctx = last_ctx + ([lead] if lead else [])
+                    for x in li:
+                        if x.tag == "p":
+                            state["n"] += 1
+                            out.append(_para(state, ctx, _text(x)))
+                        elif x.tag == "list":
+                            out += render([x], state, ctx)
+                continue
+            text = _text(ch)
+            if not text:
+                continue
+            if ch.tag == "p":
+                lead = lead_of(ch)
+                if lead and lead == text:                    # a bold-only paragraph is a subheading
+                    state["sub"] = lead
+                    out.append(f"Subheading: {lead}")
+                    last_ctx = [lead]
+                    continue
+                ctx = ([state["sub"]] if state.get("sub") else []) + ([lead] if lead else [])
+                state["n"] += 1
+                out.append(_para(state, ctx, text))
+                last_ctx = ctx
+            else:
+                out.append(text)
+        return out
+
     def body(ch: ET.Element) -> str:
-        if ch.tag == "table-wrap":
-            return _table_rows(ch)
-        tws = ch.findall(".//table-wrap")
-        if not tws:
-            return _text(ch)
-        return _text(ch) if ch.tag != "table-wrap-group" else "\n".join(_table_rows(t) for t in tws)
+        return "\n".join(render([ch], {"n": 0}, []))
 
     def walk(sec: ET.Element, trail: list[str]) -> None:
         title = _text(sec.find("title")) if sec.find("title") is not None else ""
         here = trail + [title] if title else trail
-        text = "\n".join(body(ch) for ch in sec if ch.tag not in ("sec", "title")).strip()
+        text = "\n".join(render(list(sec), {"n": 0}, [])).strip()
         if here and text:
             out[" / ".join(here)] = text
         for sub in sec.findall("sec"):

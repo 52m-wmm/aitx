@@ -82,6 +82,8 @@ def run() -> dict:
                      "schema_version": (led or {}).get("schema_version"), "ledger_ok": (led or {}).get("ok"),
                      "failed_checks": [c["name"] for c in (led or {}).get("checks", []) if c["status"] == "fail"],
                      "prompt_versions": prompt,
+                     "reextracted_rows": len((led or {}).get("reextracted_rows") or []),
+                     "reextracted_no_treatment": sum(1 for r in (led or {}).get("reextracted_rows") or [] if r.get("no_treatment")),
                      "branches": {b["id"]: (b.get("diagnosis") or {}).get("label") or b.get("gene") for b in (led or {}).get("branches", [])}}
     rows = [{**{k: i[k] for k in ("id", "case", "section", "match", "expect", "what", "source")}, "branch": i.get("branch"),
              **compare(i, ledgers[i["case"]])} for i in spec["items"]]
@@ -99,7 +101,8 @@ def main() -> int:
     for cid, m in r["cases"].items():
         made = time.strftime("%Y-%m-%d %H:%M", time.localtime(m["created_at"] or 0))
         print(f"{cid}: ledger {'ok' if m['ledger_ok'] else 'FAILED ' + str(m['failed_checks'])}, made {made}, "
-              f"prompt {m['prompt_versions']}")
+              f"prompt {m['prompt_versions']}, rows extracted again {m['reextracted_rows']} "
+              f"(no treatment {m['reextracted_no_treatment']})")
     for row in r["rows"]:
         print(f"  {'OK ' if row['ok'] else 'BAD'} {row['id']:<22} {row['what']['en']}" + (f"  -- {row['problem']}" if row["problem"] else ""))
     print(f"{r['n_ok']}/{r['n']} expectations hold; overall {'PASS' if r['ok'] else 'FAIL'} -> {RESULT.relative_to(ROOT)}")

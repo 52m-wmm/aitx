@@ -721,3 +721,85 @@ def test_therapy_referral_kept_evaluation_referral_dropped(monkeypatch):
     assert "therapy:early_intervention" in keys                         # treatment referral kept, keyed by the vocabulary
     assert not any("pediatrician" in a["label"] for a in led.actions)  # evaluation referral excluded
     assert "procedure:chest_physical_therapy" in keys                   # airway clearance stays a procedure
+
+
+# --- paragraph lead-ins and row coverage (decision 2026-11-04)
+
+SHOWN_P = ("Paragraph 1: The following information represents typical recommendations.\n"
+           "Paragraph 2 [context: Ages 0-3 years.]: Ages 0-3 years. Referral to an early intervention program is recommended.\n"
+           "Paragraph 3 [context: Ages 3-5 years.]: Ages 3-5 years. In the US, developmental preschool is recommended.")
+
+
+def test_paragraph_scope_is_the_items_paragraph_only():
+    from aitx.evidence import genereviews as GR
+    sc = GR.paragraph_scope(SHOWN_P, "Referral to an early intervention program is recommended.")
+    assert sc.startswith("Paragraph 2") and "Ages 0-3 years" in sc
+    assert E._reqs([{"text": "Ages 0-3 years", "field": "age"}], None, sc)               # lead-in of its own paragraph
+    assert not E._reqs([{"text": "Ages 3-5 years", "field": "age"}], None, sc)           # reverse: another paragraph's
+
+
+def test_lead_in_and_subheading_rendered_as_paragraph_context(tmp_path, monkeypatch):
+    from aitx.evidence import genereviews as GR
+    xml = ("<book-part><body><sec><title>Management</title><sec><title>Treatment of Manifestations</title>"
+           "<p><bold>Pharmacologic treatment of dystonia</bold></p>"
+           "<p><bold>Ages 0-3 years.</bold> Referral to an early intervention program is recommended.</p>"
+           "<p>All ages. Physical therapy.</p>"
+           "<list><list-item><p>Feeding therapy if needed.</p></list-item></list></sec></sec></body></book-part>")
+    f = tmp_path / "x.nxml"
+    f.write_text(xml)
+    monkeypatch.setattr(GR, "extract_chapters", lambda nbks: {nbks[0]: f})
+    shown = GR.sections_for_llm("NBK9")["Management / Treatment of Manifestations"].splitlines()
+    assert shown[0] == "Subheading: Pharmacologic treatment of dystonia"
+    assert shown[1].startswith("Paragraph 1 [context: Pharmacologic treatment of dystonia; Ages 0-3 years.]: Ages 0-3 years.")
+    assert shown[2].startswith("Paragraph 2 [context: Pharmacologic treatment of dystonia]: All ages.")   # no bold: no lead-in
+    assert shown[3].startswith("Paragraph 3 [context: Pharmacologic treatment of dystonia]: Feeding therapy")  # list after it
+    assert GR.sections("NBK9")["Management / Treatment of Manifestations"].count("Ages 0-3 years.") == 1    # plain text unchanged
+
+
+SHOWN_T = ("Table 10. Supportive Care\n"
+           "Row 1: [Objective: Reduce stones] [Treatment: Maintain high oral fluid intake.] [Consideration/Other: Gastrostomy tube.]\n"
+           "Row 2: [Objective: Preserve kidney function] [Treatment: Avoid dehydration.] [Consideration/Other: Use IV fluid if needed.]\n"
+           "Row 3: [Objective: Follow-up] [Treatment: Renal ultrasound yearly.] [Consideration/Other: ]")
+TEXT_T = ("Table 10. Supportive Care Objective Treatment Consideration/Other Reduce stones Maintain high oral fluid intake. "
+          "Gastrostomy tube. Preserve kidney function Avoid dehydration. Use IV fluid if needed. Follow-up Renal ultrasound yearly.")
+
+
+def test_uncovered_rows_found_and_quotes_must_be_verbatim():
+    items = [{"name": "fluids", "quote": "Maintain high oral fluid intake."},
+             {"name": "iv", "quote": "Use IV fluids when required."}]                  # not verbatim: does not cover row 2
+    rows = E.uncovered_rows(SHOWN_T, TEXT_T, items)
+    assert [r["row"] for r in rows] == ["Row 2", "Row 3"] and rows[0]["caption"] == "Table 10. Supportive Care"
+    assert E.uncovered_rows(SHOWN_T, TEXT_T, items + [{"quote": "Use IV fluid if needed."},
+                                                      {"quote": "Renal ultrasound yearly."}]) == []
+
+
+def test_uncovered_row_extracted_again_and_logged(monkeypatch):
+    calls = []
+
+    def fake(system, user, uc, what=""):
+        calls.append(what)
+        if system == E.ROW_SYSTEM and "Row 2" in user:
+            return {"items": [{"name": "IV fluid", "kind": "procedure", "quote": "Use IV fluid if needed.",
+                               "requirements": [{"text": "if needed", "field": "situation"}]}]}, {"m": "row"}
+        if system == E.ROW_SYSTEM:
+            return {"items": [], "no_treatment": True, "reason": "surveillance"}, {"m": "row"}
+        if "management actions" in system:
+            return {"items": [{"name": "high oral fluid intake", "kind": "diet", "quote": "Maintain high oral fluid intake."}]}, {"m": 1}
+        return {"same": [], "broader": []}, {}
+    monkeypatch.setattr(E, "chapters_for", lambda led, s2, uc: {"b1": ["NBK1"]})
+    monkeypatch.setattr(E, "mgmt_sections", lambda nbk: [("Management / Treatment of Manifestations / Supportive Care", TEXT_T)])
+    monkeypatch.setattr(E.GR, "sections_for_llm", lambda nbk: {"Management / Treatment of Manifestations / Supportive Care": SHOWN_T})
+    monkeypatch.setattr(E.D, "ensure", lambda name: type("S", (), {"downloaded_at": 1})())
+    monkeypatch.setattr(E, "_llm", fake)
+    monkeypatch.setattr(E.LB, "search", lambda *a, **k: ([], {"database": "openfda", "endpoint": "e", "query": "q",
+                                                              "queried_at": 1, "n_results": 0, "returned": 0}))
+    monkeypatch.setattr(E, "disease_names", lambda b, s2: ["primary hyperoxaluria type 1"])
+    monkeypatch.setattr(E, "facts", lambda s1, s2: PF)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E.add_established(led, {}, {}, use_cache=True)
+    labels = {a["label"] for a in led.actions}
+    assert "IV fluid" in labels and "high oral fluid intake" in labels
+    log = {r["row"]: r for r in led.reextracted_rows}
+    assert set(log) == {"Row 2", "Row 3"} and log["Row 2"]["n_items"] == 1 and log["Row 3"]["no_treatment"]
+    iv = next(a for a in led.actions if a["label"] == "IV fluid")
+    assert iv["status_by_branch"]["b1"]["status"] == "conditional"

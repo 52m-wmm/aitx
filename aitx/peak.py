@@ -8,6 +8,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import math
+import os
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -43,6 +44,23 @@ def current_window(now: dt.datetime | None = None, cfg: dict | None = None) -> t
     return None
 
 
+class PeakHours(Exception):
+    """Raised before an LLM call inside a peak window when the run was started with --offpeak-only."""
+
+
+ENV = "AITX_OFFPEAK_ONLY"      # set by guard(); checked before every real LLM call (aitx/disease/extract.py)
+
+
+def check_before_call(now: dt.datetime | None = None) -> None:
+    """Before each LLM call (decision 2026-11-04): a run started with --offpeak-only stops as soon as a peak
+    window begins, instead of checking only at start."""
+    if os.environ.get(ENV) == "1":
+        w = current_window(now)
+        if w:
+            raise PeakHours(f"peak-price window {w[0]:%a %H:%M}-{w[1]:%H:%M} {w[1].tzname()} began; stopping before the next "
+                            f"LLM call (off-peak again at {w[1]:%H:%M})")
+
+
 def guard(now: dt.datetime | None = None) -> None:
     """Exit (code 3) with a message if we are inside a peak window."""
     w = current_window(now)
@@ -52,3 +70,4 @@ def guard(now: dt.datetime | None = None) -> None:
         print(f"Peak-price hours ({w[0]:%a %H:%M}-{w[1]:%H:%M} {w[1].tzname()}): no LLM calls now. "
               f"Off-peak in {mins // 60} h {mins % 60} min (at {w[1]:%H:%M}). Run again then.")
         raise SystemExit(3)
+    os.environ[ENV] = "1"      # and check again before every LLM call of this run

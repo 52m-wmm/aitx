@@ -76,3 +76,57 @@ def test_streamed_response_is_assembled(monkeypatch, tmp_path):
     assert m["message"]["content"] == '{"a": 1}' and m["message"]["reasoning_content"] == "think"
     assert m["finish_reason"] == "stop" and r["model"] == "deepseek-flash" and r["usage"]["completion_tokens"] == 3
     assert J.loads((tmp_path / "calls.jsonl").read_text())["usage"]["prompt_tokens"] == 5
+
+
+PT = ZoneInfo("America/Los_Angeles")
+
+
+def test_offpeak_only_checks_before_every_call(monkeypatch):
+    # decision 2026-11-04: not only at start - a run that reaches a peak window stops before the next call
+    monkeypatch.setenv(peak.ENV, "1")
+    peak.check_before_call(dt.datetime(2026, 11, 4, 21, 59, tzinfo=PT))          # Wed 21:59: off-peak, no error
+    with pytest.raises(peak.PeakHours):
+        peak.check_before_call(dt.datetime(2026, 11, 4, 22, 1, tzinfo=PT))      # Wed 22:01: peak
+    monkeypatch.delenv(peak.ENV)
+    peak.check_before_call(dt.datetime(2026, 11, 4, 22, 1, tzinfo=PT))          # reverse: without --offpeak-only, no stop
+
+
+def test_guard_arms_the_per_call_check(monkeypatch):
+    monkeypatch.delenv(peak.ENV, raising=False)
+    peak.guard(dt.datetime(2026, 11, 4, 21, 0, tzinfo=PT))
+    import os
+    assert os.environ.get(peak.ENV) == "1"
+    monkeypatch.delenv(peak.ENV)
+
+
+def test_llm_call_refused_inside_peak_and_nothing_cached(monkeypatch, tmp_path):
+    from aitx.disease import extract as X
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setenv(peak.ENV, "1")
+    monkeypatch.setattr(peak, "current_window", lambda now=None, cfg=None: (dt.datetime(2026, 11, 4, 22, tzinfo=PT),
+                                                                           dt.datetime(2026, 11, 5, 2, tzinfo=PT)))
+    called = []
+    monkeypatch.setattr(X.llm, "chat", lambda *a, **k: called.append(1))
+    monkeypatch.setattr(X.llm, "config", lambda: {"model": "m", "base_url": "u"})
+    with pytest.raises(peak.PeakHours):
+        X._cached_chat([{"role": "user", "content": "x"}], 0, True)
+    assert not called and not list(tmp_path.iterdir())
+
+
+def test_pipeline_stops_with_exit_code_3_keeping_finished_cases(monkeypatch, tmp_path):
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+    import run_pipeline as RP
+    written = []
+    monkeypatch.setattr(RP.runmeta, "write_output", lambda k, case, result, upstream=None, **kw: written.append(case["id"]) or "h")
+    monkeypatch.setattr(RP.runmeta, "path", lambda k, cid, *a, **kw: tmp_path / f"{cid}.json")
+
+    def step(case, prior, ctx):
+        if case["id"] == "B":
+            raise peak.PeakHours("peak began")
+        return {"ok": True}
+    monkeypatch.setattr(RP, "STEPS", {1: step})
+    monkeypatch.setattr(RP, "Context", lambda cases, use_cache: None)
+    assert RP.run([{"id": "A"}, {"id": "B"}, {"id": "C"}], 1, 1) == 3
+    assert written == ["A"]                                              # A kept, B not written, C not started

@@ -28,7 +28,7 @@ from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 
-PROMPT_VERSION = "3a-v4"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs (2026-11-04)
+PROMPT_VERSION = "3a-v5"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
@@ -67,7 +67,9 @@ Requirements describe the PATIENT: age, sex, variant / genotype, variant type, z
 weight - or the situation in which it is used ("situation": "as needed", "if needed", "during acute episodes", "in
 kidney failure", "after transplantation"). Copy their words exactly from the item's table row or sentence. A purpose or
 mechanism clause ("to reduce oxalate", "to inhibit ...", "which lowers ...") is never a requirement.
-Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
+Paragraphs are shown one per line with their context: "Paragraph 2 [context: Ages 0-3 years.]: ..." - the context
+(a subheading, or the paragraph's lead-in) applies to everything in that paragraph, so its words can be a requirement
+("Ages 0-3 years" -> age). Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
 [Treatment: ...] [Considerations/Other: ...]". The requirements of an item may be in any cell of its row, including the
 row's first column (the manifestation or concern it treats); the quote is the text of the cell that names the item,
 copied without the bracket labels. Return only JSON: {"items": [...]}. Do not invent items or words."""
@@ -286,6 +288,27 @@ def _spec(claim, src, quote, source_text, accessed_at, produced_by="code", retri
 PURPOSE_CLAUSE = re.compile(r"^\W*(?:in order\s+)?to\s+(?:reduce|lower|inhibit|decrease|increase|prevent|improve|"
                             r"enhance|block|limit|control|maintain|promote|minimize|slow)\b|^\W*(?:which|that)\s+"
                             r"(?:reduces?|lowers?|inhibits?|decreases?|increases?|prevents?|improves?|enhances?)\b", re.I)
+
+
+ROW_SYSTEM = EXTRACT_SYSTEM + """
+Only ONE table row is given here, with its table caption. List the management actions in this row as above. If the
+row names no treatment (only surveillance, evaluation, monitoring or information), return
+{"items": [], "no_treatment": true, "reason": "<a few words>"}."""
+
+
+def uncovered_rows(shown: str, text: str, items: list) -> list[dict]:
+    """Table rows (in the LLM view) none of whose cells holds the verbatim quote of an extracted item.
+    -> [{row, line, caption}]"""
+    quotes = [str(it.get("quote") or "") for it in items if isinstance(it, dict) and LG.quote_in(str(it.get("quote") or ""), text)]
+    out, caption = [], ""
+    for line in (shown or "").splitlines():
+        if line.startswith("Table "):
+            caption = line
+        elif line.startswith("Row "):
+            cells = [m.group(2) for m in _CELL.finditer(line.split(": ", 1)[1] if ": " in line else line)]
+            if not any(LG.quote_in(q, c) or LG.quote_in(c, q) for q in quotes for c in cells if c and q):
+                out.append({"row": line.split(":", 1)[0], "line": line, "caption": caption})
+    return out
 
 
 _CELL = re.compile(r"\[([^:\]]+): ((?:[^\[\]]|\[[^\]]*\])*?)\](?= \[|$)")
@@ -523,7 +546,21 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         with ThreadPoolExecutor(max_workers=X.CONCURRENCY) as pool:
             per_sec = list(pool.map(lambda pt: _llm(EXTRACT_SYSTEM, f"Section: {pt[0]}\n{shown.get(pt[0], pt[1])[:9000]}",
                                                    use_cache, f"GeneReviews {nbk} '{pt[0]}'"), secs))
+        # row coverage (decision 2026-11-04): every table row of a Management section must yield at least one
+        # action or be judged "no treatment content"; an uncovered row is extracted again on its own
+        extra_secs, extra_res = [], []
         for (path, text), (parsed, llm) in zip(secs, per_sec):
+            for row in uncovered_rows(shown.get(path, ""), text, parsed.get("items") or []):
+                r_parsed, r_llm = _llm(ROW_SYSTEM, f"Section: {path}\n{row['caption']}\n{row['line']}", use_cache,
+                                       f"GeneReviews {nbk} row {row['row']}")
+                items = [x for x in r_parsed.get("items") or [] if isinstance(x, dict)]
+                led.reextracted_rows.append({"nbk": nbk, "section": path, "row": row["row"], "row_text": row["line"][:300],
+                                             "n_items": len(items), "no_treatment": bool(r_parsed.get("no_treatment")) and not items,
+                                             "reason": r_parsed.get("reason") or "", "produced_by": r_llm})
+                if items:
+                    extra_secs.append((path, text))
+                    extra_res.append(({"items": items}, r_llm))
+        for (path, text), (parsed, llm) in zip(secs + extra_secs, per_sec + extra_res):
             low = path.lower()
             avoid, pregnancy = "avoid" in low, "pregnancy" in low
             for it in parsed.get("items") or []:
@@ -564,11 +601,14 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                     spec["quote_repaired"] = it["quote_repaired"]
                 # a table item's conditions may sit in other cells of its row (the manifestation it treats, the
                 # persons it is for): each such condition is checked against that row and quoted on its own
+                # ...and a paragraph item's conditions may sit in the paragraph's lead-in or subheading ("Ages 0-3
+                # years."): checked only within that paragraph (its line in the LLM view), never across paragraphs
                 cells = row_cells(shown.get(path, ""), it["quote"])
+                para = None if cells else GR.paragraph_scope(shown.get(path, ""), it["quote"])
+                scope = " | ".join(cells) if cells else (para or "")
                 ctx = {"source": f"{nbk} {path}", "action": name, "item_quote": it["quote"][:200]}
                 reqs = _reqs(it.get("requirements"), spec, it["quote"], dropped_conditions, ctx)
-                for r in _reqs(it.get("requirements"), None, " | ".join(cells or []),
-                               dropped_conditions if cells else None, ctx):
+                for r in _reqs(it.get("requirements"), None, scope, dropped_conditions if scope else None, ctx):
                     if not LG.quote_in(r["text"], it["quote"]):
                         r["spec"] = _spec(f"GeneReviews ({path}) row condition for {name}: {r['text'][:80]}", src, r["text"],
                                           text, acc_book, llm, f"3a genereviews {nbk}")

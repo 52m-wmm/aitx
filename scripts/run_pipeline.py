@@ -78,6 +78,9 @@ def step3(case: dict, prior: dict, ctx: Context) -> dict:
 STEPS = {1: step1, 2: step2, 3: step3}          # step -> fn(case, prior outputs {step: result}, ctx) -> result
 
 
+from aitx.peak import PeakHours  # noqa: E402
+
+
 def run(cases: list[dict], start: int, stop: int, use_cache: bool = True) -> int:
     ctx = Context(cases, use_cache)
     failed = False
@@ -94,6 +97,9 @@ def run(cases: list[dict], start: int, stop: int, use_cache: bool = True) -> int
         for k in range(start, stop + 1):
             try:
                 result = STEPS[k](case, prior, ctx)
+            except PeakHours as e:     # --offpeak-only: keep the cases already written, stop, exit code 3
+                print(f"[PEAK] {case['id']} step {k} not finished (nothing written for it): {e}")
+                return 3
             except Exception as e:  # noqa: BLE001 - report and move to the next case
                 print(f"[ERROR] {case['id']} step {k}: {type(e).__name__}: {e}")
                 failed = True

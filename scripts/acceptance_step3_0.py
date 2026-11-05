@@ -29,6 +29,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx import http, runmeta  # noqa: E402
 from aitx.evidence import pipeline  # noqa: E402
+from aitx.peak import PeakHours  # noqa: E402
 from aitx.evidence.rules import load_rules  # noqa: E402
 from run_pipeline import load_cases  # noqa: E402
 
@@ -145,7 +146,11 @@ def main() -> int:
         except runmeta.StaleOutput as e:
             hard(False, f"{case['id']}: {e}")
             continue
-        led = pipeline.run_case(case, s1, s2)
+        try:
+            led = pipeline.run_case(case, s1, s2)
+        except PeakHours as e:            # --offpeak-only: a peak window began; stop with exit code 3
+            print(f"[PEAK] stopped at {case['id']}: {e}")
+            return 3
         ledgers[case["id"]] = led
         bad = [f"{c['name']}: {c['detail']}" for c in led["checks"] if c["status"] == "fail"]
         hard(not bad, f"{case['id']}: {len(led['branches'])} branch(es), {len(led['evidence'])} items, checks"
