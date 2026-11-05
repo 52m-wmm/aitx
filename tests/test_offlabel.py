@@ -74,7 +74,8 @@ def test_valid_precedent_and_reverse_cases():
     assert O.check_item({**GOOD, "use_quote": "Ten patients were given D-galactose"}, TEXT, NAMES, "SLC35A2") == \
         "use quote not verbatim in the article"
     assert O.check_item({**GOOD, "name": "uridine"}, TEXT, NAMES, "SLC35A2") == "use quote does not name the product"
-    assert O.check_item({**GOOD, "n_disease": 12}, TEXT, NAMES, "SLC35A2") == "n_disease 12 not in the count quote"
+    assert O.check_item({**GOOD, "n_disease": 12}, TEXT, NAMES, "SLC35A2") is None          # count: not stated, not a rejection
+    assert O.checked_counts({**GOOD, "n_disease": 12})["n_disease"] is None
 
 
 def test_short_abbreviation_matches_case_sensitively():
@@ -168,6 +169,7 @@ def _run(monkeypatch, items, *, fda=False, supplement=None, trials=(), earlier=(
     monkeypatch.setattr(O, "fda_status", lambda d: {"approved": fda})
     monkeypatch.setattr(O, "load_supplements", lambda: {"supplements": [supplement] if supplement else []})
     monkeypatch.setattr(O, "expanded_access", lambda d, n, g: [])
+    monkeypatch.setattr(O, "gras_table", lambda: {"file": None, "substances": {}})
     led = LG.Ledger("P", [BR])
     for a in list(earlier) + list(trials):
         led.actions.append(a)
@@ -182,7 +184,7 @@ LSER = {"name": "L-serine", "use_quote": "GRIN2B patients were treated with L-se
 def test_supplement_with_a_precedent_goes_to_3c_conditional(monkeypatch):
     led = _run(monkeypatch, [LSER], supplement={"name": "L-serine", "dsld": ["254751"]})
     a = next(x for x in led.actions if x["section"] == O.SECTION and x.get("action_key"))
-    assert a["product_class"] == "dietary_supplement" and a["supplement_note"] == O.SUPPLEMENT_NOTE
+    assert a["access_route"] == "dietary_supplement" and a["supplement_note"] == O.SUPPLEMENT_NOTE
     assert a["precedents"][0]["design"] == "case_report" and a["efficacy_direction"] == "reported_improvement"
     assert a["status_by_branch"]["b1"]["status"] == "conditional"        # variant function unknown (escapes NMD)
     assert not [c for c in led.checks() if c["status"] == "fail"], led.checks()
@@ -190,12 +192,12 @@ def test_supplement_with_a_precedent_goes_to_3c_conditional(monkeypatch):
     assert p["1"]["excluded"].startswith("retracted")                    # D-serine report never used
 
 
-def test_not_approved_not_supplement_no_expanded_access_is_not_listed(monkeypatch):
+def test_precedent_alone_admits_and_an_unknown_route_is_noted(monkeypatch):
+    # decision 2026-11-05: admission is the human precedent; the access route only describes availability
     led = _run(monkeypatch, [LSER])
-    assert not [x for x in led.actions if x["section"] == O.SECTION and x.get("action_key")]
-    none = next(x for x in led.actions if x["section"] == O.SECTION)
-    assert none["status_by_branch"]["b1"]["status"] == "searched_none"
-    assert led.offlabel_searches["b1"]["drug_decisions"][0]["decision"].startswith("not listed")
+    a = next(x for x in led.actions if x["section"] == O.SECTION and x.get("action_key"))
+    assert a["access_route"] == "unconfirmed" and a["access_note"] == O.UNCONFIRMED_NOTE
+    assert not O.problems(led.actions)
 
 
 def test_already_in_tier_1_is_not_repeated(monkeypatch):
@@ -230,10 +232,54 @@ def test_reachable_outside_the_trial_is_listed_in_both_with_cross_references(mon
 def test_problems_catch_violations():
     base = {"action_key": "drug:x", "section": O.SECTION, "precedents": [{"pmid": "1", "direction": "negative"}],
             "efficacy_direction": "reported_ineffective", "conclusion": "Reported ineffective; not recommended. (1 negative)",
-            "product_class": "approved_off_label"}
+            "access_route": "fda_approved"}
     assert O.problems([base]) == []
     assert O.problems([{**base, "efficacy_direction": "inconsistent"}])                     # summary not by the rule
     assert O.problems([{**base, "conclusion": "Stiripentol is effective."}])                # stronger than the sources
-    assert O.problems([{**base, "product_class": "dietary_supplement"}])                    # supplement without the note
+    assert O.problems([{**base, "access_route": "dietary_supplement"}])                     # supplement without the note
+    assert O.problems([{**base, "access_route": "unconfirmed"}])                            # unconfirmed without the note
+    assert O.problems([{**base, "access_route": "trial_only"}])                             # trial-only belongs in 3b
     assert O.problems([{**base, "precedents": [{"pmid": "1", "direction": "negative", "retracted": True}]}])
     assert O.problems([base, {**base, "section": "existing_targeted_therapies"}])           # duplicate across sections
+
+
+# --- access route details (2026-11-05)
+
+def test_gras_lookup_exact_substance(tmp_path):
+    d = tmp_path / "fda_gras"
+    d.mkdir()
+    (d / "gras_notices_2026-11-05.xls").write_text(
+        "Downloaded from FDA GRAS Notices; Last updated 11/2/2026; downloaded 11/5/2026.\n\n"
+        "GRAS Notice (GRN) No.,Substance,Intended Use\n"
+        '"=T(""285"")", Galacto-oligosaccharides,food\n'
+        '"=T(""817"")", Serine endopeptidase from <I>Malbranchea</I>,enzyme\n', encoding="latin-1")
+    t = O.gras_table(d)
+    assert O.gras_entry("galacto-oligosaccharides", t)["grn"] == ["285"]
+    assert O.gras_entry("L-serine", t) is None                                  # "serine endopeptidase" is not L-serine
+    assert O.gras_entry("D-galactose", t) is None
+    assert O.gras_table(tmp_path / "missing")["substances"] == {}
+
+
+def test_unverifiable_count_is_not_stated_and_the_precedent_stays():
+    it = {**GOOD, "n_quote": "Ten patients with SLC35A2-CDG", "n_disease": 3}
+    assert O.check_item(it, TEXT, NAMES, "SLC35A2") is None
+    assert O.checked_counts(it) == {"n_disease": None, "n_total": 10}
+    assert O.checked_counts(GOOD) == {"n_disease": 10, "n_total": 10}
+
+
+def test_source_alias_dedupes_against_tier_1():
+    # 2026-11-05: "vitamin B6" (RxNorm 42954) entered 3c although 3a had pyridoxine (684879); the GeneReviews row says
+    # "Pyridoxine (vitamin B6 analog)"
+    earlier = {"drug:rxcui:684879": {"label": "pyridoxine", "section": "existing_targeted_therapies", "evidence_ids": ["e1"]}}
+    ev = {"e1": {"quote": "Small molecule therapy Pyridoxine (vitamin B6 analog) Persons w/missense AGXT variants"}}
+    assert O.source_alias("vitamin B6", earlier, ev)["action_key"] == "drug:rxcui:684879"
+    # reverse: another name elsewhere in the sentence is not an alias
+    ev2 = {"e1": {"quote": "Pyridoxine (vitamin B6 analog) is used; lumasiran is also available"}}
+    assert O.source_alias("lumasiran", earlier, ev2) is None
+    assert O.source_alias("vitamin B12", earlier, ev) is None
+
+
+def test_one_precedent_per_article(monkeypatch):
+    led = _run(monkeypatch, [LSER, {**LSER, "use_quote": "GRIN2B patients were treated with L-serine"}], supplement={"name": "L-serine"})
+    a = next(x for x in led.actions if x["section"] == O.SECTION and x.get("action_key"))
+    assert [p["pmid"] for p in a["precedents"]] == ["3"]

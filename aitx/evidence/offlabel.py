@@ -33,6 +33,9 @@ PROMPT_VERSION = "3c-v1"
 N_PAPERS = 20                                     # decision 4
 SUPPLEMENTS = ROOT / "config" / "supplements.json"
 SUPPLEMENT_NOTE = "Not an FDA-approved drug; product quality and dosing are not regulated."
+UNCONFIRMED_NOTE = "Access route not confirmed; confirm with the treating physician."
+GRAS_DIR = ROOT / ".cache" / "fda_gras"               # FDA GRAS Notice Inventory export (not committed; date in the file)
+ROUTES = ("fda_approved", "dietary_supplement", "food_substance_gras", "expanded_access", "trial_only", "unconfirmed")
 DIRECTIONS = ("positive", "negative", "mixed", "not_reported", "combined_unattributable")
 TREAT_TERMS = ('treatment[tiab] OR therapy[tiab] OR treated[tiab] OR supplementation[tiab] OR "off-label"[tiab] OR '
                'compassionate[tiab] OR administered[tiab] OR received[tiab]')
@@ -205,10 +208,14 @@ def check_item(it: dict, text: str, names: list[str], gene: str | None) -> str |
     for k in ("n_quote", "outcome_quote", "co_treatment_quote", "dose_quote", "design_quote"):
         if it.get(k) and not LG.quote_in(str(it[k]), text):
             return f"{k} not verbatim"
-    for k in ("n_disease", "n_total"):
-        if it.get(k) is not None and not number_in(it.get(k), str(it.get("n_quote") or "")):
-            return f"{k} {it.get(k)} not in the count quote"
     return None
+
+
+def checked_counts(it: dict) -> dict:
+    """Patient counts kept only when the number is in the count quote; otherwise "not stated" (None) - a count that
+    cannot be verified never removes the precedent itself (2026-11-05: PMID 30838263 had been dropped)."""
+    q = str(it.get("n_quote") or "")
+    return {k: (it.get(k) if it.get(k) is not None and number_in(it.get(k), q) else None) for k in ("n_disease", "n_total")}
 
 
 def direction(it: dict, drug: str, disease: str, use_cache: bool) -> str:
@@ -271,6 +278,35 @@ def supplement_entry(drug: str, table: dict) -> dict | None:
     return None
 
 
+def gras_table(directory: Path = GRAS_DIR) -> dict:
+    """{substance (lower case): [GRN numbers]} from the newest local GRAS inventory export, with its dates."""
+    import csv
+    import io
+    files = sorted(directory.glob("gras_notices_*.xls")) if directory.exists() else []
+    if not files:
+        return {"file": None, "substances": {}}
+    raw = files[-1].read_text(encoding="latin-1")
+    lines = raw.splitlines()
+    head = next(i for i, l in enumerate(lines) if l.startswith("GRAS Notice (GRN) No."))
+    subs: dict[str, list[str]] = {}
+    for r in csv.DictReader(io.StringIO("\n".join(lines[head:]))):
+        name = re.sub(r"<[^>]+>", "", r.get("Substance") or "").strip().lower()
+        grn = re.sub(r'[^0-9]', "", r.get("GRAS Notice (GRN) No.") or "")
+        if name:
+            subs.setdefault(name, []).append(grn)
+    return {"file": files[-1].name, "header": lines[0][:200], "substances": subs}
+
+
+def gras_entry(drug: str, table: dict) -> dict | None:
+    """A GRAS notice whose substance is exactly this product (case-insensitive, optional D-/L- prefix); never a
+    substance that merely contains the word ("serine protease" is not L-serine)."""
+    core = re.sub(r"^[dl]-", "", drug.lower().strip())
+    for name, grns in (table.get("substances") or {}).items():
+        if re.sub(r"^[dl]-", "", name) == core:
+            return {"substance": name, "grn": grns, "file": table.get("file")}
+    return None
+
+
 def fda_status(drug: str) -> dict:
     """Approved in the US for any indication? A label whose generic name is exactly this drug (not a combination)."""
     comps = A.components(drug)
@@ -322,9 +358,12 @@ def function_status(req_text: str, step1: dict, gene: str | None) -> tuple[str, 
 
 # ------------------------------------------------------------------ ledger
 
-CLASS_LABEL = {"approved_off_label": "FDA-approved for another indication (off-label use)",
-               "dietary_supplement": "available as a dietary supplement",
-               "expanded_access": "available through expanded access"}
+ROUTE_LABEL = {"fda_approved": "FDA-approved drug (off-label use for this disease)",
+               "dietary_supplement": "available as a dietary supplement (NIH ODS DSLD)",
+               "food_substance_gras": "food substance (FDA GRAS notice)",
+               "expanded_access": "available through expanded access",
+               "trial_only": "only through a clinical trial",
+               "unconfirmed": "access route not confirmed"}
 
 
 def add_offlabel(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_cache: bool = True) -> None:
@@ -388,36 +427,61 @@ def add_offlabel(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_ca
                                             searched_none=True))
 
 
+def source_alias(drug: str, earlier: dict, evidence: dict) -> dict | None:
+    """A Tier 1 action whose own source names this product as its alias right after the action's name - "Pyridoxine
+    (vitamin B6 analog)" makes "vitamin B6" the same action as pyridoxine (2026-11-05: RxNorm codes the two apart).
+    Only the parenthesis right after the name counts, never any other mention in the sentence."""
+    d = re.sub(r"\s+", " ", drug.lower().strip())
+    for k, a in earlier.items():
+        lab = re.escape(re.sub(r"\s+", " ", a["label"].lower().strip()))
+        for eid in a.get("evidence_ids") or []:
+            q = re.sub(r"\s+", " ", str((evidence.get(eid) or {}).get("quote") or "").lower())
+            for m in re.finditer(rf"\b{lab}\s*\(([^)]*)\)", q):
+                if re.search(rf"(?<![a-z0-9]){re.escape(d)}(?![a-z0-9])", m.group(1)):
+                    return {"action_key": k, "section": a["section"], "quote": m.group(0)}
+    return None
+
+
 def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, made_for, use_cache) -> None:
     key, drug, bid = g["key"]["key"], g["name"], b["id"]
     decisions = led.offlabel_searches[bid].setdefault("drug_decisions", [])
     if key in earlier:                                             # approved for this disease or already in Tier 1
         decisions.append({"drug": drug, "key": key, "decision": f"already in {earlier[key]['section']}"})
         return
+    alias = source_alias(drug, earlier, led.evidence)
+    if alias:
+        decisions.append({"drug": drug, "key": key, "decision": f"already in {alias['section']} as {alias['action_key']} "
+                          f"(source names it: '{alias['quote']}')"})
+        return
     fda = fda_status(drug)
     sup = supplement_entry(drug, supplements)
+    gras = gras_entry(drug, gras_table())
     ea = [x for x in expanded_access(drug, names, gene) if x["status"] == "AVAILABLE"]
-    cls = "approved_off_label" if fda["approved"] else "dietary_supplement" if sup else "expanded_access" if ea else None
     trials = [a for a in trial_acts if drug_in(" ".join(a.get("interventions") or []), drug) and bid in a["applies_to"]]
-    prec = []
+    # admission is the human precedent alone; the access route only describes how it can be obtained (decision 2026-11-05)
+    route = ("fda_approved" if fda["approved"] else "dietary_supplement" if sup else "food_substance_gras" if gras
+             else "expanded_access" if ea else "trial_only" if trials else "unconfirmed")
+    prec, seen_pmid = [], set()
     for p, it, llm in g["items"]:
+        if p["pmid"] in seen_pmid:                                 # one precedent per article
+            continue
+        seen_pmid.add(p["pmid"])
         d = direction(it, drug, b["diagnosis"]["label"], use_cache)
+        n = checked_counts(it)
         prec.append({"pmid": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/", "year": p["year"],
                      "pub_types": p["pub_types"], "design": design(p["pub_types"], it.get("design_quote") or ""),
-                     "n_disease": it.get("n_disease"), "n_total": it.get("n_total"), "n_quote": it.get("n_quote") or None,
+                     "n_disease": n["n_disease"], "n_total": n["n_total"], "n_quote": it.get("n_quote") or None,
                      "use_quote": it["use_quote"], "outcome_quote": it.get("outcome_quote") or None, "direction": d,
                      "co_treatment_quote": it.get("co_treatment_quote") or None, "dose_quote": it.get("dose_quote") or None,
                      "open_access_full_text": bool(p.get("full_text")), "retracted": False,
                      "_text": paper_text(p), "_conditions": it.get("conditions") or [], "_llm": llm})
-    if trials and cls is None:                                    # only through the trial: 3b, precedents attached
+    if route == "trial_only":                                     # only through the trial: 3b, precedents attached
         for a in trials:
-            a.setdefault("supporting_precedents", []).extend({k: v for k, v in x.items() if not k.startswith("_")} for x in prec)
+            have = {x["pmid"] for x in a.setdefault("supporting_precedents", [])}
+            a["supporting_precedents"].extend({k: v for k, v in x.items() if not k.startswith("_")} for x in prec
+                                              if x["pmid"] not in have)
         decisions.append({"drug": drug, "key": key, "decision": "only through a recruiting trial: kept in 3b with its precedents",
                           "trials": [a["nct"] for a in trials]})
-        return
-    if cls is None:
-        decisions.append({"drug": drug, "key": key, "decision": "not listed: not FDA-approved, not on the supplement list, "
-                          "no available expanded access", "fda": {k: v for k, v in fda.items() if k != "search"}})
         return
     directions = [x["direction"] for x in prec]
     agg = aggregate(directions)
@@ -451,18 +515,21 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
               if "unknown" in res else CONCLUSION[agg])
     rec = LG.action_record(key, SECTION, drug, [bid], lines, [e["id"] for e in evs if e["status"] == "verified"], {bid: reason})
     rec.update(precedents=[{k: v for k, v in x.items() if not k.startswith("_")} for x in prec], efficacy_direction=agg,
-               conclusion=conclusion(agg, directions), product_class=cls, product_class_label=CLASS_LABEL[cls],
-               regulatory={"fda": {k: v for k, v in fda.items() if k != "search"}, "supplement": sup, "expanded_access": ea},
+               conclusion=conclusion(agg, directions), access_route=route, access_route_label=ROUTE_LABEL[route],
+               regulatory={"fda": {k: v for k, v in fda.items() if k != "search"}, "supplement": sup, "gras": gras,
+                           "expanded_access": ea},
                strength=strongest(prec))
-    if cls == "dietary_supplement":
+    if route in ("dietary_supplement", "food_substance_gras"):
         rec["supplement_note"] = SUPPLEMENT_NOTE
+    if route == "unconfirmed":
+        rec["access_note"] = UNCONFIRMED_NOTE
     if trials:                                                    # reachable outside the trial too: both, cross-referenced
         rec["see_also"] = [{"section": "clinical_trial_eligibility", "nct": a["nct"]} for a in trials]
         for a in trials:
             a.setdefault("see_also", []).append({"section": SECTION, "action_key": key})
     led.actions.append(rec)
     made_for.setdefault(bid, set()).add(key)
-    decisions.append({"drug": drug, "key": key, "decision": f"3c ({cls})"})
+    decisions.append({"drug": drug, "key": key, "decision": f"3c (access: {route})"})
 
 
 def led_time() -> int:
@@ -507,10 +574,12 @@ def problems(actions: list[dict]) -> list[str]:
             bad.append(f"{k}: conclusion stronger than the sources")
         if any(p.get("dose_quote") and p["dose_quote"] in c for p in pr):
             bad.append(f"{k}: dose in the conclusion")
-        if a.get("product_class") not in CLASS_LABEL:
-            bad.append(f"{k}: no US status")
-        if a.get("product_class") == "dietary_supplement" and a.get("supplement_note") != SUPPLEMENT_NOTE:
-            bad.append(f"{k}: supplement without the note")
+        if a.get("access_route") not in ROUTE_LABEL or a.get("access_route") == "trial_only":
+            bad.append(f"{k}: access route {a.get('access_route')} (trial-only belongs in 3b)")
+        if a.get("access_route") in ("dietary_supplement", "food_substance_gras") and a.get("supplement_note") != SUPPLEMENT_NOTE:
+            bad.append(f"{k}: supplement / food substance without the note")
+        if a.get("access_route") == "unconfirmed" and a.get("access_note") != UNCONFIRMED_NOTE:
+            bad.append(f"{k}: unconfirmed access without the note")
         for s in a.get("see_also") or []:
             t = next((x for x in actions if x.get("nct") == s.get("nct")), None)
             if not t or not any(y.get("action_key") == k for y in t.get("see_also") or []):

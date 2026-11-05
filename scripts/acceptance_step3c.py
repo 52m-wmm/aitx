@@ -45,7 +45,10 @@ def compare(item: dict, led: dict | None) -> dict:
     sts = {b: v["status"] for b, v in a["status_by_branch"].items()}
     if want["status"] not in ("present",) and any(s != want["status"] for s in sts.values()):
         probs.append(f"status {sts}")
-    for k in ("product_class", "efficacy_direction"):
+    for pmid, want_design in (want.get("design") or {}).items():
+        if pmid in pm and pm[pmid].get("design") != want_design:
+            probs.append(f"PMID {pmid} design {pm[pmid].get('design')} (want {want_design})")
+    for k in ("access_route", "efficacy_direction"):
         if want.get(k) and a.get(k) != want[k]:
             probs.append(f"{k} {a.get(k)} (want {want[k]})")
     for pmid in want.get("precedent_pmids") or []:
@@ -62,7 +65,7 @@ def compare(item: dict, led: dict | None) -> dict:
     for pat in want.get("unknown") or []:
         if not any(re.search(pat, u, re.I) for u in unknown):
             probs.append(f"no unknown condition /{pat}/")
-    return {"ok": not probs, "actual": {"status": sts, "product_class": a.get("product_class"), "efficacy": a.get("efficacy_direction"),
+    return {"ok": not probs, "actual": {"status": sts, "access_route": a.get("access_route"), "efficacy": a.get("efficacy_direction"),
                                         "conclusion": a.get("conclusion"), "precedents": [{k: p.get(k) for k in ("pmid", "design", "n_disease", "direction")} for p in pm.values()]},
             "problem": "; ".join(probs) or None}
 
