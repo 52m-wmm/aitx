@@ -69,7 +69,7 @@ NAMES = ["SLC35A2-congenital disorder of glycosylation", "SLC35A2-CDG"]
 
 def test_valid_precedent_and_reverse_cases():
     assert O.check_item(GOOD, TEXT, NAMES, "SLC35A2") is None
-    assert O.check_item({**GOOD, "use_quote": "Oral galactose is well tolerated"}, TEXT, NAMES, "SLC35A2") == \
+    assert O.check_item({**GOOD, "use_quote": "Oral galactose is well tolerated", "n_quote": ""}, TEXT, NAMES, "SLC35A2") == \
         "use quote names neither the disease nor the gene"
     assert O.check_item({**GOOD, "use_quote": "Ten patients were given D-galactose"}, TEXT, NAMES, "SLC35A2") == \
         "use quote not verbatim in the article"
@@ -158,7 +158,9 @@ def test_two_step_search_counts_and_exclusions(monkeypatch):
     _http(monkeypatch)
     rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"])
     p = {x["pmid"]: x for x in rec["papers"]}
-    assert rec["steps"] == {"found": 250, "screened": 5, "with_drug": 2, "from_review_references": 1, "to_llm_cap": 3}
+    st = {k: v for k, v in rec["steps"].items() if k != "context_terms_ignored"}
+    assert st == {"found": 250, "found_primary_designs": 250, "screened": 5, "with_drug": 2, "from_review_references": 1,
+                  "to_llm_cap": 3}
     assert set(p) == {"1", "3", "6"}                                      # 2 (no abstract, no drug) and 4 (no drug) screened out
     assert p["1"]["excluded"].startswith("retracted (Biol Psychiatry")
     assert p["6"]["via_review"] and "5" not in p                           # the review is background, its cited report is the lead
@@ -176,6 +178,8 @@ def test_only_a_review_mentions_the_drug_no_precedent(monkeypatch):
 
 def test_new_drugs_come_before_tier_1_drugs(monkeypatch):
     _http(monkeypatch)
+    monkeypatch.setattr(O, "product_ingredients", lambda: {"memantine", "l-serine"})
+    monkeypatch.setattr(O, "COMMON_SHARE", 1.0)                              # a 5-article pool: nothing is context
     rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"], exclude_drugs={"l-serine"})
     order = [x["pmid"] for x in rec["papers"]]
     assert order.index("6") < order.index("3")                              # memantine (new) before L-serine (Tier 1)
@@ -311,3 +315,25 @@ def test_one_precedent_per_article(monkeypatch):
     led = _run(monkeypatch, [LSER, {**LSER, "use_quote": "GRIN2B patients were treated with L-serine"}], supplement={"name": "L-serine"})
     a = next(x for x in led.actions if x["section"] == O.SECTION and x.get("action_key"))
     assert [p["pmid"] for p in a["precedents"]] == ["3"]
+
+
+def test_gene_may_be_named_in_the_patient_count_quote():
+    text = ("Patients aged 2-18 years with GRIN loss-of-function pathogenic variants received L-serine for 52 weeks. "
+            "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases, respectively).")
+    it = {"name": "L-serine", "use_quote": "with GRIN loss-of-function pathogenic variants received L-serine for 52 weeks",
+          "n_quote": "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases, respectively)", "n_disease": 12}
+    assert O.check_item(it, text, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") is None
+    assert O.checked_counts(it)["n_disease"] == 12
+    # reverse: neither quote names GRIN2B -> not a precedent for this gene
+    it2 = {**it, "n_quote": "Patients aged 2-18 years"}
+    assert O.check_item(it2, text, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") == \
+        "use quote names neither the disease nor the gene"
+
+
+def test_pool_common_terms_are_context_not_new_drugs(monkeypatch):
+    # 2026-11-05: glycolate / alanine in PH1 abstracts had pushed stiripentol out of the 20
+    _http(monkeypatch)
+    monkeypatch.setattr(O, "product_ingredients", lambda: {"memantine", "l-serine"})
+    monkeypatch.setattr(O, "COMMON_SHARE", 0.3)
+    rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"])
+    assert rec["steps"]["context_terms_ignored"] == []

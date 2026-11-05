@@ -153,3 +153,7 @@
    - 账本记每步数量：命中总数、筛查篇数、含药名篇数、来自综述参考文献的篇数、交给 LLM 的篇数。
 3. **PMC 作者稿可用**（L3 与 3c 都适用）：PMC 记录带正文，且有知识共享许可、PMC 作者稿标记（`pmc-prop-manuscript`）或开放获取标记之一即可用；依据写进许可字段（如 "[PMC author manuscript] …"）。许可原文见 PMC 版权声明页："available free to read, text mine, and for other uses consistent with the principles of Fair Use."
 4. **综述不算先例，只作线索**：PubMed 类型为 Review / Systematic Review / Meta-Analysis 的文献不交给 LLM 抽先例，在账本里记为背景（`reviews`，role = background）；用 E-utilities elink（pubmed_pubmed_refs）取其参考文献，原始报告中标题或摘要同时出现本病（或本基因）和药名的进入候选池，以原始报告为先例；原始报告拿不到原文的不算。
+5. **两步检索的补充**（实施中发现，均为放宽）：
+   - 第 1 步加一路检索：同一检索式限定 Case Reports / Clinical Trial / Observational Study / "case series"，取前 200 篇，与主检索合并后筛查（只增加召回，不是过滤）。起因：PH1 两篇司替戊醇病例报告在主检索里排在 200 名之后。
+   - 排序时"新药名" = 出现在 RxNorm 处方药品（SCD / SBD）名称里的成分或补充剂名单，不在 Tier 1，且不是池中常见词（出现在超过 15% 的筛查摘要里的物质视为该病背景，如 PH1 的乙醇酸、丙氨酸、草酸钙）；标题里出现新药名的排在更前。筛查本身仍用完整成分词典。
+   - 病名或基因可以出现在用药引用或病例数引用里（两句都逐字核对）。起因：PMID 38380699 的用药句只写 "GRIN … variants"，GRIN2B 在病例数句里。

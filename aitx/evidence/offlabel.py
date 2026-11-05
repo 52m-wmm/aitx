@@ -56,7 +56,9 @@ def _json(url: str) -> dict:
 
 
 N_SCREEN = 200                                    # step 1: abstracts screened by code (decision 2026-11-05)
+COMMON_SHARE = 0.15                               # a substance named in more of the screened abstracts is context
 REVIEW_TYPES = {"Review", "Systematic Review", "Meta-Analysis"}
+PRIMARY_DESIGNS = '("Case Reports"[pt] OR "Clinical Trial"[pt] OR "Observational Study"[pt] OR "Case series"[tiab])'
 # ubiquitous substances that are RxNorm ingredients but never "a specific drug" in an abstract
 _NOT_A_DRUG = {"water", "oxygen", "sodium", "potassium", "calcium", "chloride", "glucose", "alcohol", "ethanol", "protein",
                "nitrogen", "carbon", "hydrogen", "iron", "zinc", "magnesium", "phosphate", "lactate", "urea", "creatinine",
@@ -76,11 +78,26 @@ def drug_lexicon(path: Path = ROOT / ".cache" / "rxnorm" / "ingredients.json") -
     return names
 
 
+def product_ingredients(path: Path = ROOT / ".cache" / "rxnorm" / "products.json") -> set[str]:
+    """Ingredients named in at least one prescribable RxNorm product (SCD / SBD; RxNav allconcepts, cached) plus the
+    supplement list: used only to rank articles naming a new drug first (metabolites such as adenine or calcium oxalate
+    are RxNorm ingredients but name no product)."""
+    lex = drug_lexicon()
+    if not path.exists():
+        return lex
+    prods = " | ".join(c["name"].lower() for c in json.loads(path.read_text())["minConceptGroup"]["minConcept"])
+    words = set(re.findall(r"[a-z][a-z0-9-]+", prods))
+    keep = {n for n in lex if (n in words if " " not in n else n in prods)}
+    for sup in load_supplements().get("supplements") or []:
+        keep |= {sup["name"].lower()} | {a.lower() for a in sup.get("aliases") or []}
+    return keep
+
+
 def drugs_named(text: str, lexicon: set[str]) -> list[str]:
     low = (text or "").lower()
     words = set(re.findall(r"[a-z][a-z0-9-]{4,}", low))
     hits = {n for n in lexicon if " " not in n and n in words}
-    hits |= {n for n in lexicon if " " in n and re.search(rf"(?<![a-z]){re.escape(n)}(?![a-z])", low)}
+    hits |= {n for n in lexicon if " " in n and n in low and re.search(rf"(?<![a-z]){re.escape(n)}(?![a-z])", low)}
     return sorted(hits)
 
 
@@ -119,12 +136,21 @@ def search(gene: str | None, names: list[str], exclude_drugs: set[str] | None = 
                                                                "retmax": N_SCREEN, "term": q})
     d = _json(url)["esearchresult"]
     ids, count = d.get("idlist") or [], int(d.get("count") or 0)
-    rec = {"query": q, "url": url, "queried_at": int(time.time()), "count": count, "papers": [], "reviews": [],
-           "steps": {"found": count, "screened": len(ids)}}
+    # a second recall path: the same query limited to primary designs (added, never a filter: 2026-11-05, PH1 stiripentol
+    # case reports ranked below 200 in the main query)
+    q2 = f"{q} AND {PRIMARY_DESIGNS}"
+    url2 = f"{F.EUTILS}/esearch.fcgi?" + urllib.parse.urlencode({"db": "pubmed", "retmode": "json", "sort": "relevance",
+                                                                "retmax": N_SCREEN, "term": q2})
+    d2 = _json(url2)["esearchresult"]
+    ids2 = [i for i in d2.get("idlist") or [] if i not in set(ids)]
+    ids = ids + ids2
+    rec = {"query": q, "url": url, "query_primary_designs": q2, "queried_at": int(time.time()), "count": count,
+           "papers": [], "reviews": [],
+           "steps": {"found": count, "found_primary_designs": int(d2.get("count") or 0), "screened": len(ids)}}
     if not ids:
         rec.update(truncated=False)
         return rec
-    lex, excl = drug_lexicon(), {x.lower() for x in exclude_drugs or set()}
+    lex, prod, excl = drug_lexicon(), product_ingredients(), {x.lower() for x in exclude_drugs or set()}
     recs = _fetch_records(ids)
     pool, reviews = [], []
     for pmid in ids:
@@ -156,7 +182,17 @@ def search(gene: str | None, names: list[str], exclude_drugs: set[str] | None = 
                 r["via_review"] = True
                 pool.append(r)
     rec["steps"]["from_review_references"] = sum(1 for r in pool if r.get("via_review"))
-    pool.sort(key=lambda r: not (set(r["drugs"]) - excl))       # new drugs first; order otherwise by relevance
+    # a "new drug" is a product ingredient not in Tier 1 and not common in this pool: a name in more than 15% of the
+    # screened abstracts is part of the disease's context (glycolate, alanine in PH1), not a treatment tried in it
+    freq: dict[str, int] = {}
+    for r in pool:
+        for n in set(r["drugs"]):
+            freq[n] = freq.get(n, 0) + 1
+    common = {n for n, k in freq.items() if k > COMMON_SHARE * max(len(ids), 1)}
+    for r in pool:
+        r["new_drugs"] = sorted((set(r["drugs"]) & prod) - excl - common)
+    rec["steps"]["context_terms_ignored"] = sorted(common)[:20]
+    pool.sort(key=lambda r: (not r["new_drugs"], not any(n in r["title"].lower() for n in r["new_drugs"])))
     chosen = pool[:N_PAPERS]
     rec["steps"]["to_llm_cap"] = len(chosen)
     rec["truncated"] = count > N_SCREEN or len(pool) > N_PAPERS
@@ -292,7 +328,10 @@ def check_item(it: dict, text: str, names: list[str], gene: str | None) -> str |
         return "use quote not verbatim in the article"
     if not drug_in(use, name):
         return "use quote does not name the product"
-    if not names_in(use, names, gene):
+    # the treated patients' disease or gene may be named in the use quote or in the patient-count quote (both verbatim;
+    # 2026-11-05: "received L-serine" + "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases)")
+    nq = str(it.get("n_quote") or "")
+    if not names_in(use, names, gene) and not (nq and LG.quote_in(nq, text) and names_in(nq, names, gene)):
         return "use quote names neither the disease nor the gene"
     for k in ("n_quote", "outcome_quote", "co_treatment_quote", "dose_quote", "design_quote"):
         if it.get(k) and not LG.quote_in(str(it[k]), text):
