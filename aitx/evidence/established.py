@@ -962,7 +962,8 @@ def _literature(led, b, rec, put, step2, use_cache) -> None:
         text = " ".join(x for x in (p["abstract"], p["full_text"]) if x)
         if not text:
             continue
-        parsed, llm = _llm(F.LIT_SYSTEM, f"Disease: {b['diagnosis']['label']}\nArticle PMID {p['pmid']}:\n{text[:12000]}",
+        shown = F.text_for_llm(p["abstract"], p["full_text"])       # management sections first when the text is long
+        parsed, llm = _llm(F.LIT_SYSTEM, f"Disease: {b['diagnosis']['label']}\nArticle PMID {p['pmid']}:\n{shown}",
                            use_cache, f"literature PMID {p['pmid']}")
         for it in parsed.get("items") or []:
             name, q = str(it.get("name") or "").strip(), str(it.get("quote") or "")

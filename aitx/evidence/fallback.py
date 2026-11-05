@@ -157,8 +157,39 @@ def pmc_open_access_text(pmc: str) -> tuple[bool, str, str | None]:
     lic_text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", lic.group(0))).strip()[:300] if lic else None
     body = re.search(r"<body>(.*)</body>", x, re.S)
     oa = bool(body) and bool(lic and _OPEN_LICENSE.search(lic.group(0)))
-    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body.group(1))).strip() if oa else ""
-    return oa, text, lic_text
+    if not oa:
+        return False, "", lic_text
+    b = re.sub(r"<title>(.*?)</title>", lambda m: "\n## " + re.sub(r"<[^>]+>", " ", m.group(1)).strip() + "\n", body.group(1), flags=re.S)
+    b = re.sub(r"</p>", "\n", b)
+    text = "\n".join(re.sub(r"[ \t]+", " ", ln).strip() for ln in re.sub(r"<[^>]+>", " ", b).splitlines() if ln.strip())
+    return True, text, lic_text
+
+
+MGMT_HEADING = re.compile(r"treat|therap|manag|recommend|intervention|care|clinical implication|outcome|prognos|surveil|"
+                          r"conclusion", re.I)
+
+
+def text_for_llm(abstract: str, full_text: str, limit: int = 12000) -> str:
+    """Abstract, then the full text's sections - those whose heading is about treatment or management first - up to the
+    limit (2026-11-05: the first 12000 characters of a long review held only its introduction and genetics)."""
+    secs, cur = [], ["", []]
+    for ln in (full_text or "").splitlines():
+        if ln.startswith("## "):
+            secs.append(cur)
+            cur = [ln[3:], []]
+        else:
+            cur[1].append(ln)
+    secs.append(cur)
+    ordered = [x for x in secs if MGMT_HEADING.search(x[0])] + [x for x in secs if not MGMT_HEADING.search(x[0])]
+    out = abstract or ""
+    for title, lines in ordered:
+        piece = (f"\n## {title}\n" if title else "\n") + "\n".join(lines)
+        if len(out) + len(piece) > limit:
+            piece = piece[: max(0, limit - len(out))]
+        out += piece
+        if len(out) >= limit:
+            break
+    return out.strip()
 
 
 LIT_SYSTEM = """You list management recommendations stated in one article about a genetic disease. Use only the text

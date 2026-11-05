@@ -357,3 +357,10 @@ def test_one_papers_open_access_failure_does_not_stop_the_layer(monkeypatch):
     rec = F.search_literature("SLC35A2", ["SLC35A2-CDG"])
     p = rec["papers"][0]
     assert p["oa"] is None and "404" in p["oa_error"] and p["full_text"] == "" and p["abstract"]
+
+
+def test_long_full_text_puts_management_sections_first():
+    full = "## Introduction\n" + "intro " * 3000 + "\n## Genetics\n" + "gene " * 3000 + "\n## Treatment and Management\nWe recommend a ketogenic diet."
+    out = F.text_for_llm("Abstract text.", full, limit=2000)
+    assert out.startswith("Abstract text.") and "We recommend a ketogenic diet." in out and len(out) <= 2000
+    assert F.text_for_llm("A.", "") == "A."
