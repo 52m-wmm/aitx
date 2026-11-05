@@ -69,7 +69,8 @@ NAMES = ["SLC35A2-congenital disorder of glycosylation", "SLC35A2-CDG"]
 
 def test_valid_precedent_and_reverse_cases():
     assert O.check_item(GOOD, TEXT, NAMES, "SLC35A2") is None
-    assert O.check_item({**GOOD, "use_quote": "Oral galactose is well tolerated", "n_quote": ""}, TEXT, NAMES, "SLC35A2") == \
+    untitled = "An untitled note.\n" + TEXT.split("\n", 1)[1]
+    assert O.check_item({**GOOD, "use_quote": "Oral galactose is well tolerated", "n_quote": ""}, untitled, NAMES, "SLC35A2") == \
         "use quote names neither the disease nor the gene"
     assert O.check_item({**GOOD, "use_quote": "Ten patients were given D-galactose"}, TEXT, NAMES, "SLC35A2") == \
         "use quote not verbatim in the article"
@@ -318,7 +319,7 @@ def test_one_precedent_per_article(monkeypatch):
 
 
 def test_gene_may_be_named_in_the_patient_count_quote():
-    text = ("Patients aged 2-18 years with GRIN loss-of-function pathogenic variants received L-serine for 52 weeks. "
+    text = ("A phase 2A trial.\nPatients aged 2-18 years with GRIN loss-of-function pathogenic variants received L-serine for 52 weeks. "
             "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases, respectively).")
     it = {"name": "L-serine", "use_quote": "with GRIN loss-of-function pathogenic variants received L-serine for 52 weeks",
           "n_quote": "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases, respectively)", "n_disease": 12}
@@ -337,3 +338,35 @@ def test_pool_common_terms_are_context_not_new_drugs(monkeypatch):
     monkeypatch.setattr(O, "COMMON_SHARE", 0.3)
     rec = O.search("GRIN2B", ["GRIN2B-related neurodevelopmental disorder"])
     assert rec["steps"]["context_terms_ignored"] == []
+
+
+# --- 2026-11-05 run: cancer papers naming the gene; title naming drug and disease; support check sees both quotes
+
+@pytest.mark.parametrize("quote,gene,want", [
+    ("patients with GRIN2B-NDD were treated with l-serine", "GRIN2B", "GRIN2B"),
+    ("children with AGXT variants received stiripentol", "AGXT", "AGXT"),
+    ("previously reported as a possible therapy in ANO10 -related ataxia", "ANO10", "ANO10"),
+    ("Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases)", "GRIN2B", "GRIN2B"),
+    ("A GRIN2B child was treated with memantine.", "GRIN2B", "GRIN2B"),
+    ("AGXT expression predicted response to bevacizumab and oxaliplatin", "AGXT", None),          # bare symbol
+    ("patients with AGXT mutations in colorectal cancer received cetuximab", "AGXT", None),       # cancer context
+])
+def test_gene_must_name_the_patients_genetic_condition(quote, gene, want):
+    assert O.names_in(quote, ["primary hyperoxaluria type 1"], gene) == want
+
+
+def test_title_naming_drug_and_disease_accepts_a_bare_use_quote():
+    text = ("Evidence for effect of l-serine, a novel therapy for GRIN2B-related neurodevelopmental disorder.\n"
+            "the patients were treated experimentally according to an approved protocol with oral l-serine")
+    it = {"name": "l-serine", "use_quote": "the patients were treated experimentally according to an approved protocol with oral l-serine"}
+    assert O.check_item(it, text, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") is None
+    other = "A study of sleep in children.\nthe patients were treated experimentally according to an approved protocol with oral l-serine"
+    assert O.check_item(it, other, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") == \
+        "use quote names neither the disease nor the gene"
+
+
+def test_support_check_sees_use_and_outcome_quotes(monkeypatch):
+    seen = []
+    monkeypatch.setattr(O.SC, "check_support", lambda t, c, q, use_cache=True: seen.append(q) or {"overall": "supported"})
+    O.direction(GOOD, "D-galactose", "SLC35A2-CDG", True)
+    assert seen[0] == [GOOD["use_quote"], GOOD["outcome_quote"]]

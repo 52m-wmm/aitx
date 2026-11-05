@@ -302,14 +302,27 @@ def _llm(user: str, use_cache: bool, what: str):
                                    "prompt_version": PROMPT_VERSION}
 
 
+_GENE_AFTER = (r"(?:\s*-\s*|\s+)(?:variants?|mutations?|pathogenic|deficien\w*|related|associated|ndd|cdg|encephalopath\w*|"
+               r"disorders?|disease|patients?|carriers?|individuals?|syndrome|child(?:ren)?|infants?|girls?|boys?|siblings?|famil\w*)\b"
+               r"|(?:\s*,\s*[A-Z][A-Z0-9]+)*,?\s+(?:and|or)\s+[A-Z][A-Z0-9]+\s+(?:variants?|mutations?)\b")   # "GRIN2B, GRIN1 and GRIN2A variants"
+_GENE_BEFORE = r"\b(?:variants?|mutations?|carriers?|pathogenic variants?|patients?|individuals?|children)\s+(?:with\s+|in\s+|of\s+)?(?:a\s+|an\s+|the\s+)?(?:\w+\s+){0,2}"
+_CANCER = re.compile(r"\b(?:cancer|carcinoma|tumou?rs?|neoplas\w*|malignan\w*|leuka?emi\w*|lymphoma|metasta\w*|chemotherapy)\b", re.I)
+
+
 def names_in(quote: str, names: list[str], gene: str | None) -> str | None:
-    """A disease name (case-insensitive) or the gene / a short abbreviation (case-sensitive) named in the quote."""
+    """A disease name (case-insensitive; a short abbreviation case-sensitive) named in the quote, or the gene named as
+    the patients' genetic condition ("GRIN2B-NDD", "AGXT variants", "patients with ANO10 mutations"). A bare gene symbol
+    is not enough, and a cancer context without the disease name never counts (2026-11-05: "AGXT expression" in
+    colorectal-cancer papers had admitted bevacizumab, oxaliplatin, cetuximab and 5-fluorouracil)."""
     for n in [x for x in names if x]:
         short = " " not in n.strip() and n.strip().upper() == n.strip() and len(n.strip()) <= 6
         if re.search(rf"(?<![A-Za-z0-9]){re.escape(n.strip())}(?![A-Za-z0-9])", quote or "", 0 if short else re.I):
             return n
-    if gene and re.search(rf"(?<![A-Za-z0-9]){re.escape(gene)}(?![A-Za-z0-9])", quote or ""):
-        return gene
+    if gene and not _CANCER.search(quote or ""):
+        g = re.escape(gene)
+        if re.search(rf"(?<![A-Za-z0-9]){g}{_GENE_AFTER}", quote or "", re.I) or \
+                re.search(rf"{_GENE_BEFORE}{g}(?![A-Za-z0-9])", quote or "", re.I):
+            return gene
     return None
 
 
@@ -331,7 +344,9 @@ def check_item(it: dict, text: str, names: list[str], gene: str | None) -> str |
     # the treated patients' disease or gene may be named in the use quote or in the patient-count quote (both verbatim;
     # 2026-11-05: "received L-serine" + "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases)")
     nq = str(it.get("n_quote") or "")
-    if not names_in(use, names, gene) and not (nq and LG.quote_in(nq, text) and names_in(nq, names, gene)):
+    title = (text or "").split("\n", 1)[0]
+    if not names_in(use, names, gene) and not (nq and LG.quote_in(nq, text) and names_in(nq, names, gene)) \
+            and not (names_in(title, names, gene) and drug_in(title, name)):
         return "use quote names neither the disease nor the gene"
     for k in ("n_quote", "outcome_quote", "co_treatment_quote", "dose_quote", "design_quote"):
         if it.get(k) and not LG.quote_in(str(it[k]), text):
@@ -355,7 +370,9 @@ def direction(it: dict, drug: str, disease: str, use_cache: bool) -> str:
     claim = {"positive": f"In this report, patients with {disease} improved after receiving {drug}.",
              "negative": f"In this report, {drug} did not achieve the intended effect in patients with {disease}.",
              "mixed": f"In this report, {drug} had both beneficial and absent or adverse effects in patients with {disease}."}[d]
-    sc = SC.check_support(f"{drug} effect in {disease}", [claim], [q], use_cache=use_cache)
+    # both quotes from the same article: who received the drug, and what happened (2026-11-05: the outcome sentence
+    # alone - "SLC35A2-CDG patients demonstrated improvements" - does not name the drug)
+    sc = SC.check_support(f"{drug} effect in {disease}", [claim], [str(it.get("use_quote") or ""), q], use_cache=use_cache)
     if sc["overall"] != "supported":
         return "not_reported"
     if d == "positive" and it.get("co_treatment_quote"):
