@@ -1,4 +1,4 @@
-# L4 对症指南：候选清单（第 2 版，待审，未写入配置）
+# L4 对症指南：候选清单（第 3 版，待审，未写入配置）
 
 > 2026-11-04 整理。选源优先级（审阅决定）：① 国际学会（ILAE 等）→ ② 美国学会（AAP、AAN、AES 等）→ ③ 其他国家机构（NICE、IAP 等），
 > 只有前两级确实没有可用的管理 / 干预类指南时才用第 ③ 级，并写明理由。支持治疗不含监测 / 筛查。
@@ -11,10 +11,13 @@
 | --- | --- | --- | --- | --- |
 | ① ILAE | ILAE 2023 新生儿癫痫发作抗癫痫药建议（Pressler et al., *Epilepsia* 2023） | UCL 存档开放获取 PDF | 只适用于新生儿；待选段落 | ⏳ 未逐字核对；只在病人为新生儿时适用 |
 | ② AES | Evidence-based guideline: treatment of convulsive status epilepticus in children and adults（Glauser et al., *Epilepsy Curr* 2016;16(1):48–61；PMC4749120；DOI 10.5698/1535-7597-16.1.48；AES 发布，儿童神经病学会等认可） | https://pmc.ncbi.nlm.nih.gov/articles/PMC4749120/ | 摘要："In children, intravenous lorazepam and intravenous diazepam …"（儿童一线用药，Level A）| ✅ 经 NCBI E-utilities（efetch）取得摘要逐字核对；PMC 全文未经官方接口提供，只用摘要 |
-| ② AAN/AES | Practice guideline update summary: Efficacy and tolerability of the new antiepileptic drugs I: Treatment of new-onset epilepsy（Kanner et al., *Neurology* 2018；DOI 10.1212/WNL.0000000000005755） | AAN 指南页 | 新发癫痫的药物选择推荐（如儿童失神癫痫 ethosuximide / valproic acid 先于 lamotrigine，Level B） | ⏳ 未逐字核对（仅二手摘要）；需确认 AAN 是否已复审或撤回（发布已 8 年） |
+| ② AAN/AES | Practice guideline update summary: Efficacy and tolerability of the new antiepileptic drugs I: Treatment of new-onset epilepsy（Kanner et al., *Neurology* 2018；PMC6145382；DOI 10.1212/WNL.0000000000005755） | https://www.aan.com/Guidelines/home/GuidelineDetail/915 | 摘要："Unless there are compelling adverse-effect–related concerns, ethosuximide (ETS) or valproic acid (VPA) should be considered before LTG to decrease seizure frequency in treating absence seizures in childhood absence epilepsy (Level B)." | ✅ 现行状态已在 AAN 官网核对（"Reaffirmed on October 19, 2024."，浏览器打开公开页面，2026-11-05）；摘要经 E-utilities efetch 逐字核对，存 `.cache/guidelines/aan2018/` |
 | ③ NICE | NG217 Epilepsies in children, young people and adults（2022-04-27 发布，2026-08-05 更新） | https://www.nice.org.uk/guidance/ng217 | 4.1.1 "Develop an individualised antiseizure medication treatment strategy …" | ✅ 已核对；**按优先级降为备选**：①② 没有覆盖"个体化治疗方案、转诊专科"这类一般管理条目时才用，理由须写进配置 |
 
-**结论（待审）**：慢性癫痫的一般管理（个体化用药方案、转诊）在 ①② 级没有找到对应的现行管理指南：ILAE 只有新生儿专项，AES 是癫痫持续状态，AAN 是药物选择。建议：癫痫持续状态 / 急救用 AES 2016；一般管理用 NICE NG217 并写明上述理由。AAN 2018 核实现行状态后再决定。
+**结论（待审）**：
+- 癫痫持续状态 / 急救：AES 2016（②）。
+- 新发癫痫的药物选择：AAN/AES 2018（②，2024 年复审确认）。只在药物推荐对应病人的发作类型时使用（如儿童失神癫痫），否则不写。
+- 一般管理（个体化治疗方案、转诊专科）：①② 级仍未找到现行指南（2026-11-05 复查：ILAE 只有新生儿、婴儿痉挛、精神共病等专项；AES 2025 婴儿癫痫指南还在公开征求意见阶段，未定稿），所以用 NICE NG217（③），理由写进配置。
 
 ## 发育迟缓 / 智力障碍
 
@@ -38,5 +41,5 @@
 ## 待你决定
 
 1. 癫痫一般管理用 NICE NG217（理由：①② 级无对应现行指南），是否同意。
-2. AAN 2018 是否纳入（需先确认现行状态）。
+2. AAN/AES 2018：现行状态已确认（2024 年复审），是否纳入。
 3. 发育迟缓：AAP 2013 待 PubMed 摘要核实；3 岁以上康复推荐是否用 IAP 2022 补充。
