@@ -401,6 +401,240 @@
     "quote": "Ages 0-3 years. Referral to an early intervention program is recommended"
    },
    "added": "2026-11-04: supportive spot checks; text checked against the local GeneReviews archive"
+  },
+  {
+   "id": "ex7-fallback-tier",
+   "case": "PRAC-SLC35A2-ex7",
+   "branch": "SLC35A2",
+   "expect": {
+    "tier": {
+     "tier": "symptomatic",
+     "literature_searched": true,
+     "no_literature_actions": true
+    }
+   },
+   "what": {
+    "zh": "SLC35A2 ex7 / 支持治疗兜底链：无 GeneReviews 章节，L3 已检索文献但无明确推荐 → 落到 L4 对症",
+    "en": "SLC35A2 ex7 / supportive fallback: no GeneReviews chapter; L3 searched, no explicit recommendation -> L4 symptomatic"
+   },
+   "source": {
+    "doc": "PubMed: PMID 32103184 (Witters et al., Genet Med 2020), PMID 30746764 (Vals et al., J Inherit Metab Dis 2019), PMID 41373710 (review, Int J Mol Sci 2025); abstracts read via NCBI E-utilities 2026-11-05",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "32103184: \"Oral galactose is well tolerated and shows promise as dietary therapy.\" (a 10-patient open-label study; no recommendation). 30746764: clinical, neuroradiological and biochemical features; no management advice. 41373710: \"therapeutic perspectives including galactose supplementation\" (perspective; the support check found no recommendation)."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex7-no-galactose-supportive",
+   "case": "PRAC-SLC35A2-ex7",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "galactose",
+   "expect": {
+    "status": "absent"
+   },
+   "what": {
+    "zh": "SLC35A2 ex7 / D-半乳糖不进支持治疗（新兴证据，属 Tier 2，3c 处理）",
+    "en": "SLC35A2 ex7 / D-galactose is not in Supportive Management (emerging evidence; Tier 2, step 3c)"
+   },
+   "source": {
+    "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020)",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "Oral galactose is well tolerated and shows promise as dietary therapy."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex7-l4-asm-plan",
+   "case": "PRAC-SLC35A2-ex7",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "individualised antiseizure",
+   "expect": {
+    "status": "applicable",
+    "tier_source": "symptomatic",
+    "for_symptom": "seizure"
+   },
+   "what": {
+    "zh": "SLC35A2 ex7 / L4：个体化抗癫痫药方案 → 适用（针对癫痫发作）",
+    "en": "SLC35A2 ex7 / L4: individualised antiseizure medication strategy -> applicable (seizures)"
+   },
+   "source": {
+    "doc": "NICE NG217 Epilepsies in children, young people and adults, recommendation 4.1.1 (last updated 2026-08-05; checked 2026-11-05)",
+    "url": "https://www.nice.org.uk/guidance/ng217/chapter/4-Principles-of-treatment-safety-monitoring-and-withdrawal",
+    "quote": "Develop an individualised antiseizure medication treatment strategy with the person, and their family and carers if appropriate, taking into account:"
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex7-l4-bzd-rescue",
+   "case": "PRAC-SLC35A2-ex7",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "benzodiazepine rescue",
+   "expect": {
+    "status": "conditional",
+    "tier_source": "symptomatic",
+    "for_symptom": "seizure",
+    "unknown": [
+     "seizures lasting at least 5 minutes"
+    ]
+   },
+   "what": {
+    "zh": "SLC35A2 ex7 / L4：苯二氮䓬类抢救 → 有条件（发作持续 5 分钟以上）",
+    "en": "SLC35A2 ex7 / L4: benzodiazepine rescue -> conditional (seizures lasting at least 5 minutes)"
+   },
+   "source": {
+    "doc": "AES evidence-based guideline: treatment of convulsive status epilepticus in children and adults, Epilepsy Curr 2016;16(1):48-61 (PMC4749120), abstract",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4749120/",
+    "quote": "In children, intravenous lorazepam and intravenous diazepam are established as efficacious at stopping seizures lasting at least 5 minutes (Level A)"
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex7-dd-disabled",
+   "case": "PRAC-SLC35A2-ex7",
+   "branch": "SLC35A2",
+   "expect": {
+    "tier": {
+     "disabled_category": "developmental_delay_intellectual_disability",
+     "disabled_hpo": [
+      "HP:0001263",
+      "HP:0001249"
+     ]
+    }
+   },
+   "what": {
+    "zh": "SLC35A2 ex7 / 发育迟缓类 L4 停用（临时期望）",
+    "en": "SLC35A2 ex7 / developmental delay L4 category disabled (provisional)"
+   },
+   "source": {
+    "doc": "config/symptom_guidelines.json, category developmental_delay_intellectual_disability (approved 2026-11-05)",
+    "url": "",
+    "quote": "enabled: false - first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified; IAP 2022 is not used as a stand-in"
+   },
+   "provisional": {
+    "reason": "AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: PubMed abstract and reaffirmation status (original source) pending; IAP 2022 is not used as a stand-in.",
+    "lift_when": "AAP 2013 verified and the category enabled: replace with 'early intervention / rehabilitation therapy -> conditional' for global developmental delay, citing the verified passage."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex8-fallback-tier",
+   "case": "PRAC-SLC35A2-ex8",
+   "branch": "SLC35A2",
+   "expect": {
+    "tier": {
+     "tier": "symptomatic",
+     "literature_searched": true,
+     "no_literature_actions": true
+    }
+   },
+   "what": {
+    "zh": "SLC35A2 ex8 / 支持治疗兜底链：无 GeneReviews 章节，L3 已检索文献但无明确推荐 → 落到 L4 对症",
+    "en": "SLC35A2 ex8 / supportive fallback: no GeneReviews chapter; L3 searched, no explicit recommendation -> L4 symptomatic"
+   },
+   "source": {
+    "doc": "PubMed: PMID 32103184 (Witters et al., Genet Med 2020), PMID 30746764 (Vals et al., J Inherit Metab Dis 2019), PMID 41373710 (review, Int J Mol Sci 2025); abstracts read via NCBI E-utilities 2026-11-05",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "32103184: \"Oral galactose is well tolerated and shows promise as dietary therapy.\" (a 10-patient open-label study; no recommendation). 30746764: clinical, neuroradiological and biochemical features; no management advice. 41373710: \"therapeutic perspectives including galactose supplementation\" (perspective; the support check found no recommendation)."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex8-no-galactose-supportive",
+   "case": "PRAC-SLC35A2-ex8",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "galactose",
+   "expect": {
+    "status": "absent"
+   },
+   "what": {
+    "zh": "SLC35A2 ex8 / D-半乳糖不进支持治疗（新兴证据，属 Tier 2，3c 处理）",
+    "en": "SLC35A2 ex8 / D-galactose is not in Supportive Management (emerging evidence; Tier 2, step 3c)"
+   },
+   "source": {
+    "doc": "PubMed PMID 32103184 (Witters et al., Genet Med 2020)",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32103184/",
+    "quote": "Oral galactose is well tolerated and shows promise as dietary therapy."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex8-l4-asm-plan",
+   "case": "PRAC-SLC35A2-ex8",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "individualised antiseizure",
+   "expect": {
+    "status": "applicable",
+    "tier_source": "symptomatic",
+    "for_symptom": "seizure"
+   },
+   "what": {
+    "zh": "SLC35A2 ex8 / L4：个体化抗癫痫药方案 → 适用（针对癫痫发作）",
+    "en": "SLC35A2 ex8 / L4: individualised antiseizure medication strategy -> applicable (seizures)"
+   },
+   "source": {
+    "doc": "NICE NG217 Epilepsies in children, young people and adults, recommendation 4.1.1 (last updated 2026-08-05; checked 2026-11-05)",
+    "url": "https://www.nice.org.uk/guidance/ng217/chapter/4-Principles-of-treatment-safety-monitoring-and-withdrawal",
+    "quote": "Develop an individualised antiseizure medication treatment strategy with the person, and their family and carers if appropriate, taking into account:"
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex8-l4-bzd-rescue",
+   "case": "PRAC-SLC35A2-ex8",
+   "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "benzodiazepine rescue",
+   "expect": {
+    "status": "conditional",
+    "tier_source": "symptomatic",
+    "for_symptom": "seizure",
+    "unknown": [
+     "seizures lasting at least 5 minutes"
+    ]
+   },
+   "what": {
+    "zh": "SLC35A2 ex8 / L4：苯二氮䓬类抢救 → 有条件（发作持续 5 分钟以上）",
+    "en": "SLC35A2 ex8 / L4: benzodiazepine rescue -> conditional (seizures lasting at least 5 minutes)"
+   },
+   "source": {
+    "doc": "AES evidence-based guideline: treatment of convulsive status epilepticus in children and adults, Epilepsy Curr 2016;16(1):48-61 (PMC4749120), abstract",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4749120/",
+    "quote": "In children, intravenous lorazepam and intravenous diazepam are established as efficacious at stopping seizures lasting at least 5 minutes (Level A)"
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+  },
+  {
+   "id": "ex8-dd-disabled",
+   "case": "PRAC-SLC35A2-ex8",
+   "branch": "SLC35A2",
+   "expect": {
+    "tier": {
+     "disabled_category": "developmental_delay_intellectual_disability",
+     "disabled_hpo": [
+      "HP:0001263",
+      "HP:0001249"
+     ]
+    }
+   },
+   "what": {
+    "zh": "SLC35A2 ex8 / 发育迟缓类 L4 停用（临时期望）",
+    "en": "SLC35A2 ex8 / developmental delay L4 category disabled (provisional)"
+   },
+   "source": {
+    "doc": "config/symptom_guidelines.json, category developmental_delay_intellectual_disability (approved 2026-11-05)",
+    "url": "",
+    "quote": "enabled: false - first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified; IAP 2022 is not used as a stand-in"
+   },
+   "provisional": {
+    "reason": "AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: PubMed abstract and reaffirmation status (original source) pending; IAP 2022 is not used as a stand-in.",
+    "lift_when": "AAP 2013 verified and the category enabled: replace with 'early intervention / rehabilitation therapy -> conditional' for global developmental delay, citing the verified passage."
+   },
+   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
   }
  ]
 }

@@ -1175,7 +1175,17 @@ def acceptance_page(res: dict | None) -> str:
     for r in res["rows"]:
         names = res["cases"].get(r["case"], {}).get("branches", {})
         acts = []
+        if isinstance(r["actual"], dict) and r["actual"] and all(isinstance(v, dict) and "tier" in v for v in r["actual"].values()):
+            for b, v in r["actual"].items():               # supportive fallback-chain record of a branch
+                acts.append(f"<div><b>{e(names.get(b, b))}</b>: {L('层级', 'tier')} {e(str(v.get('tier')))} · "
+                            f"{L('文献', 'literature')} {e(str(v.get('literature_count')))}"
+                            + (f" · {L('停用', 'disabled')} {e(', '.join(v.get('disabled') or []))}" if v.get("disabled") else "")
+                            + (f" · <span class='fail'>{e(str(v.get('literature_error')))}</span>" if v.get("literature_error") else "")
+                            + "</div>")
         for a in (r["actual"] if isinstance(r["actual"], list) else []):
+            if "status_by_branch" not in a:                 # an "absent" expectation lists what was found instead
+                acts.append(f"<div><b>{e(a['label'])}</b> ({e(str(a.get('tier_source')))})</div>")
+                continue
             sts = "; ".join(f"{act_label(v['status'])}" + (f" ({e(names.get(b, b))})" if len(names) > 1 else "")
                             + f" — {e(v['reason'])}" for b, v in a["status_by_branch"].items())
             unk = (f"<div class='muted'>{L('未知条件', 'unknown')}: " + e(" | ".join(a["unknown_requirements"])) + "</div>") if a["unknown_requirements"] else ""
@@ -1186,9 +1196,12 @@ def acceptance_page(res: dict | None) -> str:
         s = r["source"]
         ver = " · ".join(x for x in (L(f"版本 {s['version']}", f"version {s['version']}") if s.get("version") else "",
                                      L(f"生效 {s['date']}", f"effective {s['date']}") if s.get("date") else "") if x)
-        src = f"{link(s.get('url'), s['doc'])}<div class='muted'>{e(ver)}</div><q>{e(s['quote'])}</q>"
+        src = f"{link(s.get('url') or None, s['doc'])}<div class='muted'>{e(ver)}</div><q>{e(s['quote'])}</q>"
+        sec = section_label(r["section"]) if r.get("section") else L("支持治疗兜底链", "supportive fallback chain")
+        prov = (f"<div>{tag('warn', L('临时期望', 'provisional'))} <span class='muted'>{e(r['provisional'].get('reason', ''))} "
+                f"{L('解除条件', 'lift when')}: {e(r['provisional'].get('lift_when', ''))}</span></div>") if r.get("provisional") else ""
         rows.append(f"<tr class='{'' if r['ok'] else 'badrow'}'><td>{e(r['what']['en' if LANG == 'en' else 'zh'])}"
-                    f"<div class='muted'>{e(section_label(r['section']))}</div></td><td>{actual}</td><td>{mark}</td><td>{src}</td></tr>")
+                    f"<div class='muted'>{e(sec)}</div>{prov}</td><td>{actual}</td><td>{mark}</td><td>{src}</td></tr>")
     body = (f"<h1>{title} {overall}</h1><p class='muted'>"
             + L(f"{res['n_ok']}/{res['n']} 条期望成立 · 结果生成于 {made}（代码 {res['code_commit']}）· 期望核实于 {res['expectations_verified_on']}。"
                 "本页只显示 scripts/acceptance_step3a.py 的输出，不做计算。",

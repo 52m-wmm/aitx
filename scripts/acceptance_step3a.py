@@ -29,11 +29,44 @@ def _branches(led: dict, pattern: str | None) -> list[str]:
             if not pattern or re.search(pattern, ((b.get("diagnosis") or {}).get("label") or b.get("gene") or ""), re.I)]
 
 
+def compare_tier(item: dict, led: dict) -> dict:
+    """Supportive fallback-chain record of a branch (ledger supportive_tiers) against expect.tier:
+    {tier, literature_searched, no_literature_actions, disabled_category}."""
+    want = item["expect"]["tier"]
+    branches = _branches(led, item.get("branch"))
+    recs = {b: (led.get("supportive_tiers") or {}).get(b) for b in branches}
+    if not branches or not all(recs.values()):
+        return {"ok": False, "actual": None, "problem": "no supportive tier record for the branch"}
+    probs, actual = [], {}
+    for b, r in recs.items():
+        lit = r.get("literature") or {}
+        lit_actions = [a["label"] for a in led["actions"] if a.get("tier_source") == "literature" and b in a["applies_to"]]
+        disabled = (r.get("symptomatic") or {}).get("disabled") or []
+        actual[b] = {"tier": r.get("tier"), "literature_count": lit.get("count"), "literature_error": lit.get("error"),
+                     "literature_actions": lit_actions, "disabled": disabled}
+        if "tier" in want and r.get("tier") != want["tier"]:
+            probs.append(f"{b}: tier {r.get('tier')} (want {want['tier']})")
+        if want.get("literature_searched") and (lit.get("error") or lit.get("count") is None):
+            probs.append(f"{b}: literature not searched ({lit.get('error') or 'no record'})")
+        if want.get("no_literature_actions") and lit_actions:
+            probs.append(f"{b}: literature actions {lit_actions}")
+        if want.get("disabled_category") and want["disabled_category"] not in disabled:
+            probs.append(f"{b}: category {want['disabled_category']} not recorded as disabled")
+        if want.get("disabled_category"):
+            made = [a["label"] for a in led["actions"] if a.get("tier_source") == "symptomatic" and b in a["applies_to"]
+                    and (a.get("for_symptom") or {}).get("hpo_id") in set(want.get("disabled_hpo") or [])]
+            if made:
+                probs.append(f"{b}: actions for a disabled category {made}")
+    return {"ok": not probs, "actual": actual, "problem": "; ".join(probs) or None}
+
+
 def compare(item: dict, led: dict | None) -> dict:
     """One expectation against one ledger -> {ok, actual, problem}. Code only; the page shows this."""
     if led is None:
         return {"ok": False, "actual": None, "problem": "no step 3 ledger for this case"}
     want = item["expect"]
+    if "tier" in want:
+        return compare_tier(item, led)
     branches = _branches(led, item.get("branch"))
     if not branches:
         return {"ok": False, "actual": None, "problem": f"no branch matches {item.get('branch')!r}"}
@@ -48,6 +81,9 @@ def compare(item: dict, led: dict | None) -> dict:
     hits = shown or hits
     elsewhere = [f"{a['label']} in {a['section']}" for a in led["actions"] if a["section"] != item["section"]
                  and re.search(item["match"], f"{a['label']} {a.get('action_key') or ''}", re.I)]
+    if want["status"] == "absent":            # e.g. emerging evidence must not be written into an established section
+        return {"ok": not hits, "actual": [{"label": a["label"], "tier_source": a.get("tier_source")} for a in hits],
+                "problem": ("present: " + "; ".join(a["label"] for a in hits)) if hits else None}
     if not hits:
         return {"ok": False, "actual": {"found_elsewhere": elsewhere},
                 "problem": "not found in this section" + (f" (found: {'; '.join(elsewhere)})" if elsewhere else "")}
@@ -64,6 +100,10 @@ def compare(item: dict, led: dict | None) -> dict:
         for pat in want.get("unknown") or []:
             if not any(re.search(pat, u, re.I) for u in unknown):
                 problems.append(f"{a['label']}: no unknown requirement matching /{pat}/")
+        if want.get("tier_source") and a.get("tier_source") != want["tier_source"]:
+            problems.append(f"{a['label']}: tier_source {a.get('tier_source')} (want {want['tier_source']})")
+        if want.get("for_symptom") and not re.search(want["for_symptom"], (a.get("for_symptom") or {}).get("label", ""), re.I):
+            problems.append(f"{a['label']}: for_symptom {(a.get('for_symptom') or {}).get('label')}")
     return {"ok": not problems, "actual": actual, "problem": "; ".join(problems) or None}
 
 
@@ -85,7 +125,7 @@ def run() -> dict:
                      "reextracted_rows": len((led or {}).get("reextracted_rows") or []),
                      "reextracted_no_treatment": sum(1 for r in (led or {}).get("reextracted_rows") or [] if r.get("no_treatment")),
                      "branches": {b["id"]: (b.get("diagnosis") or {}).get("label") or b.get("gene") for b in (led or {}).get("branches", [])}}
-    rows = [{**{k: i[k] for k in ("id", "case", "section", "match", "expect", "what", "source")}, "branch": i.get("branch"),
+    rows = [{**{k: i.get(k) for k in ("id", "case", "section", "match", "expect", "what", "source", "provisional")}, "branch": i.get("branch"),
              **compare(i, ledgers[i["case"]])} for i in spec["items"]]
     n_ok = sum(r["ok"] for r in rows)
     ok = n_ok == len(rows) and all(m["ledger_ok"] for m in meta.values())
