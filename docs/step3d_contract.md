@@ -170,3 +170,11 @@ N1C 的判定对象是**外显子**，不是单个变异："While splicing asses
 | 10 | UniProt 结构域注释 | 外显子跳跃的"结构域"判定一律"无法评估：结构域未查"。**不用"编码蛋白比例 ≤ 10%"替代**——N1C 把两者列为独立判定，所以该外显子即使比例合格，也只能到 likely eligible，不能因为比例合格就说结构域没问题 | 同上。Step 1 已有 UniProt 号，接入成本低 |
 
 **统计要求**：3d 的账本按手段记录 `unassessable_reason`，验收脚本汇总每种原因的条数和占比（`out/acceptance/step3d.json` 的 `unassessable_summary`），作为上面三条解除条件的依据。
+
+## 9. 实现（2026-11-05）
+
+- 模块 `aitx/evidence/bespoke.py`，离线测试 `tests/test_bespoke.py`（先写测试，31 条），验收脚本 `scripts/acceptance_step3d.py`，期望 `data/eval/step3d_expectations.json`（8 条，逐条核实原文）。
+- 账本：章节 `bespoke_therapies`（已在 `ledger.SECTIONS` 里，层级 hypothesized）；每个分支 × 6 种手段一条记录；另记 `bespoke_mechanism`（每个分支的机制、逐字引用、出处）和 `bespoke_unassessable`（每条"无法评估"及缺的输入）。校验 `bespoke_consistent`：六种手段齐全且各只判一次、分级用词不越界（N1C 五级只给三种 ASO 手段）、"无法评估"必须说明缺什么、负面结论必须指出没过哪一条、结论不得出现 recommended / effective / proven 等词、用到机制的判定必须引用机制证据。
+- 确定性计算（无 LLM）：编码外显子与相位（跳过 UTR-only 外显子）、跳过后新密码子是否为终止密码子（用本地缓存的 RefSeq 序列算，不联网）、外显子占蛋白比例、AAV 容量、编辑器类型、X 失活提示。
+- LLM 只用于从 GeneReviews 段落抽机制（提示词 `3d-mech-v1`，每分支按 `Molecular Genetics / Molecular Pathogenesis` → `Molecular Genetics` → `Clinical Characteristics / Genotype-Phenotype Correlations` 顺序试），引用必须逐字在该段落里，否则机制视为未知。
+- 已核对的真实行为（离线、用本地缓存）：DMD c.7544_9286del → 外显子跳跃"不适用（阅读框已保留）"、基因替代"不适用（CDS 11,055 nt）"、编辑"不适用（大片段缺失）"；KMT2B → 最后一个编码外显子；AGXT c.33dup → 第一个编码外显子、先导编辑；COL1A1 → 碱基编辑（G>A 转换）、外显子 25 占蛋白 2.3% 但结构域未查 → 无法评估。

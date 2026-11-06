@@ -1,0 +1,190 @@
+{
+ "schema": "step3d-expectations-v1",
+ "verified_on": "2026-11-05",
+ "how_verified": "Every quote was read in its source and copied character for character: the N1C Data S1 PDF (Europe PMC API copy in .cache/n1c/supp/), the Wu 2010 PubMed abstract (E-utilities), and the GeneReviews NBK1295 section from the local archive. Step 1 facts were read from the step 1 outputs, which step 1 acceptance covers.",
+ "items": [
+  {
+   "id": "dmd-skip-frame-kept",
+   "case": "PRAC-DMD-del",
+   "branch": null,
+   "modality": "aso_exon_skipping",
+   "expect": {
+    "classification": "not_applicable",
+    "failed_criterion": "already keeps the reading frame"
+   },
+   "what": {
+    "zh": "DMD 外显子 52-63 框内缺失 / 外显子跳跃：不适用（阅读框已保留，没有可恢复的框）",
+    "en": "DMD in-frame deletion of exons 52-63 / exon skipping: not applicable (the frame is already kept)"
+   },
+   "source": {
+    "doc": "Step 1 output out/step1/PRAC-DMD-del.json, retranslation.same_frame_after_change = true (deterministic re-translation, verified in step 1 acceptance)",
+    "url": "",
+    "quote": ""
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "dmd-aav-too-big",
+   "case": "PRAC-DMD-del",
+   "branch": null,
+   "modality": "gene_replacement",
+   "expect": {
+    "classification": "not_applicable",
+    "failed_criterion": "beyond the roughly 4.7 kb",
+    "facts": {
+     "cds_nt": 11055,
+     "cds_fits_aav": false
+    }
+   },
+   "what": {
+    "zh": "DMD / 基因替代：不适用（CDS 11,055 nt，超出 AAV 约 4.7 kb 容量）",
+    "en": "DMD / gene replacement: not applicable (CDS 11,055 nt, beyond the roughly 4.7 kb AAV capacity)"
+   },
+   "source": {
+    "doc": "Wu Z, Yang H, Colosi P. Effect of genome size on AAV vector packaging. Mol Ther 2010 (PMID 19904234), abstract",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/19904234/",
+    "quote": "packaged AAV vector genomes never exceeded 5.2 kb in length"
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "kmt2b-last-coding-exon",
+   "case": "PRAC-KMT2B",
+   "branch": null,
+   "modality": "aso_exon_skipping",
+   "expect": {
+    "classification": "not_eligible",
+    "failed_criterion": "last coding exon",
+    "facts": {
+     "exon_number": 37,
+     "coding_exons": 37
+    }
+   },
+   "what": {
+    "zh": "KMT2B c.8079delC（第 37/37 外显子）/ 外显子跳跃：不符合（最后一个编码外显子，跳过会丢失终止密码子）",
+    "en": "KMT2B c.8079delC (exon 37 of 37) / exon skipping: not eligible (last coding exon; skipping it removes the stop codon)"
+   },
+   "source": {
+    "doc": "N1C VARIANT guidelines, Data S1, Section A (Cheerie D et al., Am J Hum Genet 2025, PMID 40139194, PMC12120168, CC BY); supplementary file obtained 2026-11-05 via the Europe PMC API, kept in .cache/n1c/supp/",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12120168/",
+    "quote": "The first and last coding exons are usually not eligible for exon skipping as this would lead to the loss of the start or stop codon."
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "agxt33-first-coding-exon",
+   "case": "PRAC-AGXT-c33dup",
+   "branch": null,
+   "modality": "aso_exon_skipping",
+   "expect": {
+    "classification": "not_eligible",
+    "failed_criterion": "first coding exon",
+    "facts": {
+     "exon_number": 1,
+     "coding_exons": 11
+    }
+   },
+   "what": {
+    "zh": "AGXT c.33dup（第 1/11 外显子）/ 外显子跳跃：不符合（第一个编码外显子，跳过会丢失起始密码子），并写出 N1C 的例外",
+    "en": "AGXT c.33dup (exon 1 of 11) / exon skipping: not eligible (first coding exon; skipping it removes the start codon), with the N1C exception named"
+   },
+   "source": {
+    "doc": "N1C VARIANT guidelines, Data S1, Section A (Cheerie D et al., Am J Hum Genet 2025, PMID 40139194, PMC12120168, CC BY); supplementary file obtained 2026-11-05 via the Europe PMC API, kept in .cache/n1c/supp/",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12120168/",
+    "quote": "It is theoretically possible to skip the first coding exon if a nearby in-frame start codon exists"
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "agxt33-prime-editing",
+   "case": "PRAC-AGXT-c33dup",
+   "branch": null,
+   "modality": "base_or_prime_editing",
+   "expect": {
+    "classification": "theoretically_possible",
+    "facts": {
+     "editor": "prime_editing"
+    },
+    "unassessable_reason": "PAM"
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 编辑：重复（插入）型，碱基编辑器做不到，只有先导编辑理论上可行；PAM 未评估",
+    "en": "AGXT c.33dup / editing: a duplication (insertion), which base editors cannot make; only prime editing could revert it; PAM not assessed"
+   },
+   "source": {
+    "doc": "Step 1 output out/step1/PRAC-AGXT-c33dup.json, variant_cdna c.33dup; the editor follows from the change type alone (contract 3.6)",
+    "url": "",
+    "quote": ""
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "col1a1-base-editing",
+   "case": "PRAC-COL1A1",
+   "branch": null,
+   "modality": "base_or_prime_editing",
+   "expect": {
+    "classification": "theoretically_possible",
+    "facts": {
+     "editor": "base_editing"
+    },
+    "unassessable_reason": "PAM"
+   },
+   "what": {
+    "zh": "COL1A1 c.1678G>A / 编辑：G>A 是转换型，理论上可由腺嘌呤碱基编辑器回复；PAM 未评估",
+    "en": "COL1A1 c.1678G>A / editing: G>A is a transition, revertible in principle by an adenine base editor; PAM not assessed"
+   },
+   "source": {
+    "doc": "Step 1 output out/step1/PRAC-COL1A1.json, variant_cdna c.1678G>A",
+    "url": "",
+    "quote": ""
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "col1a1-replacement-dominant-negative",
+   "case": "PRAC-COL1A1",
+   "branch": null,
+   "modality": "gene_replacement",
+   "expect": {
+    "classification": "not_applicable",
+    "failed_criterion": "dominant negative",
+    "mechanism": "dominant_negative"
+   },
+   "what": {
+    "zh": "COL1A1 p.Gly560Ser（三螺旋区甘氨酸替换）/ 基因替代：不适用（机制为显性负效应，补正常拷贝不能消除异常蛋白的作用）；机制须引用 GeneReviews 原文",
+    "en": "COL1A1 p.Gly560Ser (glycine substitution in the triple helix) / gene replacement: not applicable (dominant-negative mechanism; a normal copy does not remove the abnormal protein's effect), with the GeneReviews quote"
+   },
+   "source": {
+    "doc": "GeneReviews NBK1295 (COL1A1- and COL1A2-Related Osteogenesis Imperfecta), section Molecular Genetics / Molecular Pathogenesis, local archive; read verbatim 2026-11-05",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
+    "quote": "Quantitative changes, which lead to loss of function, tend to have a milder phenotype when compared to qualitative changes, which impart a dominant-negative effect."
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  },
+  {
+   "id": "col1a1-skip-unassessable",
+   "case": "PRAC-COL1A1",
+   "branch": null,
+   "modality": "aso_exon_skipping",
+   "expect": {
+    "classification": "unable_to_assess",
+    "unassessable_reason": "domain",
+    "facts": {
+     "exon_share_percent": 2.3,
+     "classification_ceiling": "likely_eligible"
+    }
+   },
+   "what": {
+    "zh": "COL1A1 第 25/51 外显子 / 外显子跳跃：可计算的条件（内部外显子、框内、占蛋白 2.3%）都满足，但结构域与天然跳跃证据未查 → 无法评估（上限 likely eligible）",
+    "en": "COL1A1 exon 25 of 51 / exon skipping: the computable criteria are met (internal exon, in frame, 2.3% of the protein), but functional domains and natural-skipping evidence are not checked -> unable to assess (ceiling likely eligible)"
+   },
+   "source": {
+    "doc": "N1C VARIANT guidelines, Data S1, Section A (Cheerie D et al., Am J Hum Genet 2025, PMID 40139194, PMC12120168, CC BY); supplementary file obtained 2026-11-05 via the Europe PMC API, kept in .cache/n1c/supp/; the two unchecked criteria are the deferred data sources recorded in the contract (decision 2026-11-05)",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12120168/",
+    "quote": "skipping an exon that encodes for more than 10% of the protein is considered “unlikely eligible”, and obtaining functional evidence is the expected next step"
+   },
+   "added": "2026-11-05: step 3d first acceptance set"
+  }
+ ]
+}

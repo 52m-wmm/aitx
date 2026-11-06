@@ -208,6 +208,8 @@ class Ledger:
         self.branches = branches
         self.evidence: dict[str, dict] = {}
         self.sections_status = {s: "not_searched" for s in SECTIONS}
+        self.bespoke_mechanism: dict[str, dict] = {}        # 3d: the mechanism each branch's judgements rest on
+        self.bespoke_unassessable: list[dict] = []          # 3d: every "unable to assess" with its missing input
         self.patient_context: dict = {}
         self.missing_information: list[dict] = []
         self.rules_applied: list[dict] = []
@@ -300,6 +302,10 @@ class Ledger:
         if any(a["section"] == "off_label_expanded_access" for a in self.actions):
             from aitx.evidence import offlabel as O             # local import: offlabel imports this module
             chk("offlabel_consistent", O.problems(self.actions), "3c actions: valid precedents, efficacy summary, US status")
+        if any(a["section"] == "bespoke_therapies" for a in self.actions):
+            from aitx.evidence import bespoke as BS             # local import: bespoke imports this module
+            chk("bespoke_consistent", BS.problems(self.actions, [b["id"] for b in self.branches if b.get("diagnosis")]),
+                "3d: every branch has all six modality judgements, each with its reason")
         if self.supportive_tiers:
             from aitx.evidence import fallback as F            # local import: fallback imports this module
             present = {i for r in self.supportive_tiers.values() for i in r.get("present_ids") or []}
@@ -372,5 +378,6 @@ class Ledger:
                 "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
                 "supportive_tiers": self.supportive_tiers, "offlabel_searches": self.offlabel_searches,
+                "bespoke_mechanism": self.bespoke_mechanism, "bespoke_unassessable": self.bespoke_unassessable,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}
