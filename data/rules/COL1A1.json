@@ -346,16 +346,17 @@
   {
    "id": "COL1A1-1",
    "gene": "COL1A1",
-   "version": 1,
-   "statement": "The COL1A1 missense change Arg134Cys has been reported in an EDS/OI overlap phenotype.",
+   "version": 2,
+   "statement": "The COL1A1 arginine-to-cysteine change Arg134Cys has been reported in an EDS/OI overlap phenotype.",
    "applies_when": {
     "variant_class": [
      "missense"
     ],
-    "protein_position": [
-     134,
-     134
-    ]
+    "aa_substitution": {
+     "position": 134,
+     "from": "Arg",
+     "to": "Cys"
+    }
    },
    "effect": {
     "type": "diagnosis",
@@ -386,13 +387,20 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "status": "pending_review",
+   "review": {
+    "decision": "not_reviewed",
+    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+   },
+   "content_sha256": "b46bfa78639fc22417a554d7ac92ace23aa874f92e09592c350bc217f9609453",
+   "narrowed": "narrowed 2026-11-05 (review): the source names the arginine-to-cysteine change Arg134Cys, so the rule no longer fires on any other substitution at residue 134.",
    "support_check": {
     "overall": "partially_supported",
     "items": [
      {
-      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 134.",
+      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that replace Arg at protein residue 134 with Cys.",
       "verdict": "supported",
-      "reason": "The quote names a COL1A1 Arg134Cys arginine-to-cysteine change, which is a missense change at residue 134.",
+      "reason": "The quote names COL1A1 and an arginine-to-cysteine change at Arg134Cys, matching the stated substitution.",
       "judgements": [
        "supported",
        "supported",
@@ -402,7 +410,7 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote supports an EDS/OI overlap phenotype but not specifically combined OI and EDS syndrome 1/OIEDS1.",
+      "reason": "The quote supports an EDS/OI overlap phenotype but does not name combined OI and EDS syndrome 1 or OIEDS1.",
       "judgements": [
        "partially_supported",
        "partially_supported",
@@ -411,10 +419,10 @@
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
-      "verdict": "supported",
-      "reason": "The quote reports three COL1A1 arginine-to-cysteine changes in an EDS phenotype, not a single patient/family or a frequency comparison.",
+      "verdict": "partially_supported",
+      "reason": "The quote says three such changes have been reported, but it does not explicitly state a general association or clarify patient/family scope.",
       "judgements": [
-       "supported",
+       "partially_supported",
        "supported",
        "supported"
       ]
@@ -426,26 +434,22 @@
      "served_model": "deepseek-flash",
      "prompt_version": "support-check-v5"
     }
-   },
-   "status": "pending_review",
-   "review": {
-    "decision": "not_reviewed"
-   },
-   "content_sha256": "59c9a77a082ab2e7827390a0b8a17447d2c958c714fda91942100a754e500fcd"
+   }
   },
   {
    "id": "COL1A1-2",
    "gene": "COL1A1",
-   "version": 1,
-   "statement": "The COL1A1 missense change Arg915Cys has been reported in an EDS/OI overlap phenotype.",
+   "version": 2,
+   "statement": "The COL1A1 arginine-to-cysteine change Arg915Cys has been reported in an EDS/OI overlap phenotype.",
    "applies_when": {
     "variant_class": [
      "missense"
     ],
-    "protein_position": [
-     915,
-     915
-    ]
+    "aa_substitution": {
+     "position": 915,
+     "from": "Arg",
+     "to": "Cys"
+    }
    },
    "effect": {
     "type": "diagnosis",
@@ -476,13 +480,20 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "status": "pending_review",
+   "review": {
+    "decision": "not_reviewed",
+    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+   },
+   "content_sha256": "ea09373284bcc3a5db5ab0fb11b072eecd051b1564391a613354d7dc39a9fbcd",
+   "narrowed": "narrowed 2026-11-05 (review): as COL1A1-1, for Arg915Cys.",
    "support_check": {
     "overall": "not_supported",
     "items": [
      {
-      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 915.",
+      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that replace Arg at protein residue 915 with Cys.",
       "verdict": "supported",
-      "reason": "The quote explicitly lists Arg915Cys as an arginine-to-cysteine change in COL1A1, i.e. a missense change at residue 915.",
+      "reason": "The quote explicitly lists Arg915Cys as an arginine-to-cysteine change in COL1A1.",
       "judgements": [
        "supported",
        "supported",
@@ -492,7 +503,7 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote supports an EDS/OI overlap phenotype, but does not specifically name combined OI and EDS syndrome 1/OIEDS1.",
+      "reason": "The quote reports an EDS/OI overlap phenotype but does not specifically state combined OIEDS1.",
       "judgements": [
        "partially_supported",
        "partially_supported",
@@ -502,11 +513,11 @@
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "not_supported",
-      "reason": "The quote only reports three specific changes in an EDS phenotype and does not state a general association for such COL1A1 variants.",
+      "reason": "The quote reports that changes have been reported, not a general association for such COL1A1 variants.",
       "judgements": [
        "supported",
-       "not_supported",
-       "supported"
+       "partially_supported",
+       "not_supported"
       ]
      }
     ],
@@ -516,26 +527,22 @@
      "served_model": "deepseek-flash",
      "prompt_version": "support-check-v5"
     }
-   },
-   "status": "pending_review",
-   "review": {
-    "decision": "not_reviewed"
-   },
-   "content_sha256": "bb04b02cfc783c63a7a2620fdb627b5ecc1144212c80bc8951156b59dd79910e"
+   }
   },
   {
    "id": "COL1A1-3",
    "gene": "COL1A1",
-   "version": 1,
-   "statement": "The COL1A1 missense change Arg396Cys has been reported in an EDS/OI overlap phenotype.",
+   "version": 2,
+   "statement": "The COL1A1 arginine-to-cysteine change Arg396Cys has been reported in an EDS/OI overlap phenotype.",
    "applies_when": {
     "variant_class": [
      "missense"
     ],
-    "protein_position": [
-     396,
-     396
-    ]
+    "aa_substitution": {
+     "position": 396,
+     "from": "Arg",
+     "to": "Cys"
+    }
    },
    "effect": {
     "type": "diagnosis",
@@ -566,13 +573,20 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "status": "pending_review",
+   "review": {
+    "decision": "not_reviewed",
+    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+   },
+   "content_sha256": "01705506c1069bd9a96b0865d715f92b5b0a70fb041853cf956a2141763b0404",
+   "narrowed": "narrowed 2026-11-05 (review): as COL1A1-1, for Arg396Cys.",
    "support_check": {
     "overall": "partially_supported",
     "items": [
      {
-      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that affect protein residue 396.",
+      "item": "Condition: the rule is about COL1A1 variants that are missense variants and that replace Arg at protein residue 396 with Cys.",
       "verdict": "supported",
-      "reason": "The quote identifies Arg396Cys as an arginine-to-cysteine COL1A1 change at residue 396.",
+      "reason": "The quote lists Arg396Cys among COL1A1 arginine-to-cysteine changes.",
       "judgements": [
        "supported",
        "supported",
@@ -582,17 +596,17 @@
      {
       "item": "Conclusion: such variants point to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1 (also called: OIEDS Syndrome 1; OIEDS1).",
       "verdict": "partially_supported",
-      "reason": "The quote describes EDS/OI overlap and an EDS phenotype, but does not specifically name combined OI/EDS syndrome 1 or OIEDS1.",
+      "reason": "The quote states an EDS/OI overlap phenotype but not specifically combined OI and EDS syndrome 1/OIEDS1.",
       "judgements": [
        "partially_supported",
        "partially_supported",
-       "supported"
+       "partially_supported"
       ]
      },
      {
       "item": "Scope: this is stated as a general association for such COL1A1 variants, not only for a single reported patient or family, and not only as a difference in frequency between patient groups.",
       "verdict": "supported",
-      "reason": "The quote reports three Arg-to-Cys COL1A1 changes, not a single patient/family or a frequency comparison.",
+      "reason": "The quote reports three COL1A1 arginine-to-cysteine changes in an EDS phenotype and does not limit this to a single patient/family or frequency difference.",
       "judgements": [
        "supported",
        "supported",
@@ -606,20 +620,15 @@
      "served_model": "deepseek-flash",
      "prompt_version": "support-check-v5"
     }
-   },
-   "status": "pending_review",
-   "review": {
-    "decision": "not_reviewed"
-   },
-   "content_sha256": "3abbf36f837f462a5f1557342e114de0242f754b11c4b550bd2efcc295610109"
+   }
   },
   {
    "id": "COL1A1-4",
    "gene": "COL1A1",
-   "version": 1,
+   "version": 2,
    "statement": "Loss of exon 6 of COL1A1 results in arthrochalasia EDS.",
    "applies_when": {
-    "exon": [
+    "exon_loss": [
      6,
      6
     ]
@@ -653,27 +662,34 @@
     },
     "prompt_version": "rules-draft-v1"
    },
+   "status": "pending_review",
+   "review": {
+    "decision": "not_reviewed",
+    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+   },
+   "content_sha256": "ce58e574dce934be9863fdacb0a7ee43a7cd31cc3914365b8a2d7479ac711cab",
+   "narrowed": "narrowed 2026-11-05 (review): the source is about LOSS of exon 6, so the rule now fires only on a deletion covering exon 6 or a splice variant at its boundary, never on a coding change inside the exon.",
    "support_check": {
     "overall": "partially_supported",
     "items": [
      {
-      "item": "Condition: the rule is about COL1A1 variants that lie in exon 6.",
+      "item": "Condition: the rule is about COL1A1 variants that remove the whole of exon 6 (a deletion covering it, or a splice variant at its boundary).",
       "verdict": "partially_supported",
-      "reason": "The quote specifies loss of exon 6, not COL1A1 variants that merely lie in exon 6.",
+      "reason": "The quote states loss of exon 6 but not the specific deletion-covering or splice-boundary variant details.",
       "judgements": [
+       "supported",
        "partially_supported",
-       "partially_supported",
-       "partially_supported"
+       "supported"
       ]
      },
      {
       "item": "Conclusion: such variants point to Ehlers-Danlos syndrome arthrochalasia type 1 (also called: EDS VIIA; EDSARTH1; Ehlers-Danlos syndrome type 7A).",
       "verdict": "partially_supported",
-      "reason": "The quote names Arthrochalasia EDS but does not specify type 1 or its listed synonyms.",
+      "reason": "The quote supports Arthrochalasia EDS generally, but does not specify type 1 or the listed synonyms.",
       "judgements": [
        "partially_supported",
        "partially_supported",
-       "supported"
+       "partially_supported"
       ]
      },
      {
@@ -693,12 +709,7 @@
      "served_model": "deepseek-flash",
      "prompt_version": "support-check-v5"
     }
-   },
-   "status": "pending_review",
-   "review": {
-    "decision": "not_reviewed"
-   },
-   "content_sha256": "5cefe7a5c432cdf60a52a8c3dfdddddfcc006927180ceab5b398b72e44b47c70"
+   }
   },
   {
    "id": "COL1A1-5",
