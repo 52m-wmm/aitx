@@ -429,10 +429,19 @@ def add_repurposing(led, case: dict, step1: dict, step2: dict, *, use_cache: boo
                                 if m.get("chembl_id")}
         rec["subunit_level_molecules"] = len(subunit_mol)
         names = E.disease_names(b, step2)
+        # the unit of exclusion is a drug, not a mechanism row: one drug may have several rows, and the ledger's
+        # negative record requires every returned record to be listed with a reason (2026-11-06)
+        all_drugs: dict[str, list[dict]] = {}
+        for row in facts["candidates"]:
+            all_drugs.setdefault(row["chembl_id"] or row["drug"], []).append(row)
         by_drug: dict[str, list[dict]] = {}
         for row in rows_for_target(facts["candidates"], facts["symbol"]):
             by_drug.setdefault(row["chembl_id"] or row["drug"], []).append(row)
         cands, excluded = [], []
+        for key, rows in all_drugs.items():
+            if key not in by_drug:
+                excluded.append({**_slim({"drug": rows[0]["drug"], "chembl_id": rows[0]["chembl_id"]}),
+                                 "why": f"its mechanism records are about other targets, not {facts['symbol']}"})
         for rows in by_drug.values():
             direction, why = one_direction(rows)
             r0 = rows[0]
@@ -464,7 +473,8 @@ def add_repurposing(led, case: dict, step1: dict, step2: dict, *, use_cache: boo
                              pmids=lit.get("pmids") or [])
             cands.append(c)
         kept, dropped = pick(cands)
-        rec.update({"candidates": len(cands), "kept": len(kept), "excluded": excluded,
+        rec.update({"drugs_returned": len(all_drugs), "drugs_for_this_target": len(by_drug),
+                    "candidates": len(cands), "kept": len(kept), "excluded": excluded,
                     "dropped": [{"drug": d["drug"], "why": d["why"]} for d in dropped],
                     "queried_at": facts.get("accessed_at")})
         for c in kept:
@@ -472,11 +482,11 @@ def add_repurposing(led, case: dict, step1: dict, step2: dict, *, use_cache: boo
         if not kept:
             led.add(LG.negative(SECTION, [bid], database="open targets / chembl", endpoint=OT_GRAPHQL,
                                 query=f"target {facts['ensembl_id']} candidates, direction {g['needed']}",
-                                queried_at=int(time.time()), n_results=len(facts["candidates"]),
-                                response_count=len(facts["candidates"]), excluded=excluded,
+                                queried_at=int(time.time()), n_results=len(all_drugs),
+                                response_count=len(all_drugs), excluded=excluded,
                                 claim=(f"No repurposing candidate was kept for {facts['symbol']}: "
-                                       f"{len(facts['candidates'])} drug records returned, {len(excluded)} excluded "
-                                       f"(direction, duplication or a human precedent).")))
+                                       f"{len(all_drugs)} drugs returned, {len(excluded)} excluded (another "
+                                       f"target, direction, duplication or a human precedent).")))
         led.sections_status[SECTION] = "searched"
 
 

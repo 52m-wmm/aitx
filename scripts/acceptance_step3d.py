@@ -25,9 +25,16 @@ RESULT = ROOT / "out" / "acceptance" / "step3d.json"
 
 
 def row_of(led: dict, modality: str, branch: str | None) -> dict | None:
+    """The 3d row to compare against. A case with several diagnosis branches has one row per branch; when an
+    expectation names no branch they must agree on the verdict, otherwise the expectation has to name one
+    (2026-11-06: DMD and COL1A1 have three branches each and the old 'exactly one row' rule failed them)."""
     rows = [a for a in led.get("actions", []) if a.get("section") == "bespoke_therapies"
             and a.get("modality") == modality and (branch is None or branch in a.get("applies_to", []))]
-    return rows[0] if len(rows) == 1 else None
+    if not rows:
+        return None
+    if len({(r.get("classification"), r.get("failed_criterion")) for r in rows}) > 1:
+        return None
+    return rows[0]
 
 
 def compare(item: dict, led: dict | None) -> dict:
@@ -36,7 +43,12 @@ def compare(item: dict, led: dict | None) -> dict:
     want = item["expect"]
     a = row_of(led, item["modality"], item.get("branch"))
     if a is None:
-        return {"ok": False, "actual": None, "problem": f"no single 3d row for {item['modality']}"}
+        got = [r for r in led.get("actions", []) if r.get("section") == "bespoke_therapies"
+               and r.get("modality") == item["modality"]]
+        why = (f"the branches disagree on {item['modality']}: "
+               + "; ".join(f"{r['applies_to']} {r.get('classification')}" for r in got)
+               + " - name a branch in the expectation") if got else f"no 3d row for {item['modality']}"
+        return {"ok": False, "actual": None, "problem": why}
     probs, facts = [], a.get("facts") or {}
     if want.get("classification") and a.get("classification") != want["classification"]:
         probs.append(f"classification {a.get('classification')} (want {want['classification']})")

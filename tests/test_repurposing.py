@@ -270,3 +270,30 @@ def test_the_ledger_accepts_a_hypothesis_row_with_a_drug_key():
     led.actions = [{"section": "bespoke_therapies", "modality": "gene_replacement", "applies_to": ["B"],
                     "requirements": [], "status_by_branch": {}, "action_key": "drug:x", "label": "x"}]
     assert any("carries no action key" in x for x in led._action_problems())
+
+
+def test_every_returned_drug_is_listed_as_excluded(monkeypatch):
+    """The ledger rejects a 'found nothing' record that does not account for every returned record. A drug has
+    several mechanism rows, so the counts must be in drugs, not rows (2026-11-06: COL1A1 returned 4 rows for 2
+    drugs, the record said 4 vs 2 excluded, and the ledger rejected it)."""
+    from aitx.evidence import ledger as LG
+    rows = [{"chembl_id": "C1", "drug": "d1", "action_type": "AGONIST", "mechanism_targets": ["COL1A1"],
+             "mechanism_text": "", "max_clinical_stage": "PHASE_1"},
+            {"chembl_id": "C1", "drug": "d1", "action_type": "AGONIST", "mechanism_targets": ["OTHER"],
+             "mechanism_text": "", "max_clinical_stage": "PHASE_1"},
+            {"chembl_id": "C2", "drug": "d2", "action_type": "ANTAGONIST", "mechanism_targets": ["OTHER"],
+             "mechanism_text": "", "max_clinical_stage": "PHASE_1"}]
+    monkeypatch.setattr(RP, "target_facts", lambda gene, use_cache=True: {
+        "ensembl_id": "ENSG1", "symbol": "COL1A1", "uniprot": "P1", "pathways": [], "candidates": rows,
+        "accessed_at": 1})
+    monkeypatch.setattr(RP, "chembl_targets", lambda uni, use_cache=True: [])
+    led = LG.Ledger("P", [{"id": "B", "gene": "COL1A1", "diagnosis": {"label": "d", "omim": ["OMIM:1"]},
+                           "synonyms": []}])
+    led.patient_context, led.missing_information = {}, []
+    led.bespoke_mechanism["B"] = {"mechanism": "gain_of_function"}     # needs "down"; d1 is an agonist
+    RP.add_repurposing(led, {"id": "P"}, {"variants": []}, {"candidates": []}, use_cache=True)
+    rec = led.repurposing_searches["B"]
+    assert rec["drugs_returned"] == 2 and rec["kept"] == 0
+    assert len(rec["excluded"]) == 2                                   # both drugs accounted for
+    neg = [e for e in led.evidence.values() if e["section"] == RP.SECTION and e["kind"] == "negative"]
+    assert len(neg) == 1 and neg[0]["status"] == "verified", neg[0].get("reasons")

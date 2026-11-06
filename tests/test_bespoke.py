@@ -271,3 +271,26 @@ def test_mechanism_rejects_a_hedged_quote_and_records_it(monkeypatch):
     got = BS.mechanism_of("COL1A1", ["NBK1244"], "missense", use_cache=True)
     assert got["mechanism"] is None
     assert got["rejected"] and got["rejected"][0]["why"] == BS.NO_FIRM_MECHANISM
+
+
+def test_acceptance_handles_a_case_with_several_branches():
+    """A case with three diagnosis branches has three rows per modality; the expectation compares them when they
+    agree and says so when they do not (2026-11-06)."""
+    import importlib.util
+    import pathlib
+    spec = importlib.util.spec_from_file_location(
+        "acc3d", pathlib.Path(__file__).resolve().parents[1] / "scripts" / "acceptance_step3d.py")
+    acc = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(acc)
+
+    def led(classes):
+        return {"actions": [{"section": "bespoke_therapies", "modality": "gene_replacement", "applies_to": [b],
+                             "classification": c, "failed_criterion": "x"} for b, c in classes.items()]}
+    agree = led({"B1": "not_applicable", "B2": "not_applicable", "B3": "not_applicable"})
+    assert acc.row_of(agree, "gene_replacement", None)["classification"] == "not_applicable"
+    assert acc.row_of(agree, "gene_replacement", "B2")["applies_to"] == ["B2"]
+    disagree = led({"B1": "not_applicable", "B2": "theoretically_possible"})
+    assert acc.row_of(disagree, "gene_replacement", None) is None
+    item = {"modality": "gene_replacement", "expect": {"classification": "not_applicable"}}
+    assert "branches disagree" in acc.compare(item, disagree)["problem"]
+    assert acc.compare(item, agree)["ok"]
