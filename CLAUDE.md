@@ -49,8 +49,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查。规则现状（2026-11-05 复核，审阅表 `docs/rules_review_2026-11-05.md`）：4 条已加载、6 条已否决、**5 条待审（全是 COL1A1）**，其中 COL1A1-1/2/3/4 已按审阅收窄条件、支持度核查待重跑。契约 `docs/step3_0_contract.md` |
 | 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）；补充修复（提示词 `3a-v5`：表格行与段首限定作条件、治疗类转介、漏抽补抽、放宽从句、按变量合并缺失信息等）✅ 已验收（2026-11-05，tag `step3a.1-accepted`）：6 个练习病例 20/20 核实期望成立。规则变更见 3a 契约文末 |
 | 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
-| 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | 实现完成，验收待跑：7 个期望中 agxt33-stiripentol 等已成立；SLC35A2 ex7/ex8、GRIN2B、ANO10 四个病例待用新代码重跑（验收只计新鲜输出）。契约 `docs/step3c_contract.md` |
-| 3d | 定制疗法（Bespoke Therapies） | 契约草案 `docs/step3d_contract.md`（v0.1，含 N1C VARIANT 判定细则），7 个待定问题待审 |
+| 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | ✅ 已验收（2026-11-06，tag `step3c-accepted`）：5 个练习病例 7/7 核实期望成立、全部新鲜输出、账本校验全过。契约 `docs/step3c_contract.md`（规则变更见文末 1–15 条） |
+| 3d | 定制疗法（Bespoke Therapies） | 实现完成（`aitx/evidence/bespoke.py`，6 种手段逐一判定），离线测试 36 条；验收 2/8 成立、6 条因输出过期未计分（预算上限截断，明天补跑）。首轮统计：24 条判定中 10 条"无法评估"（41.7%），全部落在外显子跳跃（结构域、天然跳跃证据）和碱基编辑（PAM），都是审阅决定暂缓接入的数据源。契约 `docs/step3d_contract.md` |
 | 3e | 候选药物（体外 / 动物证据） | 未开始 |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
