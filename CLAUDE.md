@@ -46,7 +46,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | ✅ 已验收（2026-10-28，tag `step2-accepted`）：`--fresh-llm` 硬性项全过；离线测试 135 个全过；症状提取测试集 32 条精确率/召回率 1.0（集合偏简单）；剩余问题见契约“已知局限” |
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
 | 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：难题测试集、缺失类术语否定规则（修复 CBAVD）、起病年龄由代码映射到 HPO 起病术语；语义检索暂缓（剩余漏提不是检索问题）。详见 Step 2 契约 v2.5 |
-| 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查。规则现状（2026-11-05 复核，审阅表 `docs/rules_review_2026-11-05.md`）：4 条已加载、6 条已否决、**5 条待审（全是 COL1A1）**，其中 COL1A1-1/2/3/4 已按审阅收窄条件、支持度核查待重跑。契约 `docs/step3_0_contract.md` |
+| 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查。规则现状（2026-11-06 审阅后，审阅表 `docs/rules_review_2026-11-05.md`）：共 15 条，**4 条已加载、10 条已否决、1 条待审**（COL1A1-6：剪接变异→轻型 I 型 OI）。COL1A1-1/2/3/4 收窄条件后重跑了支持度核查，仍卡在"结论"与"适用范围"，2026-11-06 全部否决："报告过"不足以支撑"指向"，外显子 6 丢失又依赖 Step 1 不做的剪接预测；不新增提示型规则。契约 `docs/step3_0_contract.md` |
 | 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）；补充修复（提示词 `3a-v5`：表格行与段首限定作条件、治疗类转介、漏抽补抽、放宽从句、按变量合并缺失信息等）✅ 已验收（2026-11-05，tag `step3a.1-accepted`）：6 个练习病例 20/20 核实期望成立。规则变更见 3a 契约文末 |
 | 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
 | 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | ✅ 已验收（2026-11-06，tag `step3c-accepted`）：5 个练习病例 7/7 核实期望成立、全部新鲜输出、账本校验全过。契约 `docs/step3c_contract.md`（规则变更见文末 1–15 条） |

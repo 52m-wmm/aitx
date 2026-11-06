@@ -389,8 +389,10 @@
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed",
-    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "\"have been reported\" does not support \"points to\": the source says three arginine-to-cysteine changes have been reported in an EDS phenotype, which is a report, not a general association. The rule layer promotes an OMIM disease to a branch, and that step needs more than one reported observation. The support check said the same three times (conclusion partially supported 3:0)."
    },
    "content_sha256": "b46bfa78639fc22417a554d7ac92ace23aa874f92e09592c350bc217f9609453",
    "narrowed": "narrowed 2026-11-05 (review): the source names the arginine-to-cysteine change Arg134Cys, so the rule no longer fires on any other substitution at residue 134.",
@@ -482,8 +484,10 @@
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed",
-    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1. Here the scope item was judged not supported (\"The quote reports that changes have been reported, not a general association for such COL1A1 variants\")."
    },
    "content_sha256": "ea09373284bcc3a5db5ab0fb11b072eecd051b1564391a613354d7dc39a9fbcd",
    "narrowed": "narrowed 2026-11-05 (review): as COL1A1-1, for Arg915Cys.",
@@ -575,8 +579,10 @@
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed",
-    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1."
    },
    "content_sha256": "01705506c1069bd9a96b0865d715f92b5b0a70fb041853cf956a2141763b0404",
    "narrowed": "narrowed 2026-11-05 (review): as COL1A1-1, for Arg396Cys.",
@@ -664,8 +670,10 @@
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed",
-    "note": "conditions changed 2026-11-05; the support check below is from the previous wording and must be run again"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "The source states that arthrochalasia EDS results from LOSS of exon 6, but deciding which variants cause that loss needs splice prediction, which step 1 does not do (decision 2026-11-05: splice prediction is not connected). The narrowed condition therefore stands in for the source rather than following it, and the support check marked the condition item down for exactly that (2:1). Also, the quote names arthrochalasia EDS without the type or the synonyms of OMIM 130060."
    },
    "content_sha256": "ce58e574dce934be9863fdacb0a7ee43a7cd31cc3914365b8a2d7479ac711cab",
    "narrowed": "narrowed 2026-11-05 (review): the source is about LOSS of exon 6, so the rule now fires only on a deletion covering exon 6 or a splice variant at its boundary, never on a coding change inside the exon.",
