@@ -333,11 +333,18 @@ class Ledger:
         for a in self.actions:
             tag = a.get("action_key") or f"{a['section']} (searched_none)"
             if a.get("modality") or a.get("hypothesis"):
-                # 3d rows judge a therapeutic modality, not whether an action fits this patient, so they carry no
-                # requirement lines and no per-branch status; bespoke_consistent checks them instead (2026-11-06).
-                if a.get("action_key") or a.get("requirements") or not set(a["applies_to"]) <= branch_ids:
-                    bad.append(f"{a['section']} {a['modality']}: a modality judgement must name existing branches "
-                               f"and carry no action key or requirement lines")
+                # 3d judges a therapeutic modality and 3e proposes a hypothesis about a drug; neither says whether
+                # something fits this patient, so neither carries requirement lines or a per-branch status. Their
+                # own checks (bespoke_consistent, repurposing_consistent) cover them. A 3d row has no action key;
+                # a 3e row must have one, since it is a drug and has to be deduped against the other sections
+                # (2026-11-06: the shared rule had refused every 3e row).
+                what = a.get("modality") or a.get("label") or "hypothesis"
+                if a.get("requirements") or not set(a["applies_to"]) <= branch_ids:
+                    bad.append(f"{a['section']} {what}: must name existing branches and carry no requirement lines")
+                if a.get("modality") and a.get("action_key"):
+                    bad.append(f"{a['section']} {what}: a modality judgement carries no action key")
+                if a.get("hypothesis") and not a.get("action_key"):
+                    bad.append(f"{a['section']} {what}: a drug hypothesis needs an action key for deduplication")
                 continue
             if not set(a["applies_to"]) <= branch_ids or set(a["status_by_branch"]) != set(a["applies_to"]):
                 bad.append(f"{tag}: branches")

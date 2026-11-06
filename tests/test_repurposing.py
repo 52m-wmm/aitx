@@ -251,3 +251,22 @@ def test_level_is_read_off_the_mechanism_not_off_the_gene():
     assert RP.level_from_rows(family, "GRIN2B", {"CHEMBL1"}) == "subunit"
     assert RP.level_from_rows(family, "GRIN2B", {"CHEMBL9"}) == "family_group"
     assert RP.level_from_rows([], "GRIN2B") == "family_group"
+
+
+def test_the_ledger_accepts_a_hypothesis_row_with_a_drug_key():
+    """2026-11-06: the shared rule for rows without a per-branch status forbade an action key, which 3d rows do
+    not have but 3e rows must (they are drugs and have to be deduped against the other sections)."""
+    from aitx.evidence import ledger as LG
+    led = LG.Ledger("P", [{"id": "B", "gene": "GRIN2B", "diagnosis": {"label": "d", "omim": ["OMIM:1"]},
+                           "synonyms": []}])
+    led.patient_context, led.missing_information = {}, []
+    led.actions.append(RP.record(_cand(), branch="B"))
+    led.repurposing_searches["B"] = {"candidates": 1, "kept": 1, "excluded": []}
+    problems = led._action_problems()
+    assert problems == [], problems
+    # a 3e row without a key is still refused, and a 3d row with one too
+    led.actions.append({**RP.record(_cand(chembl_id="", drug=""), branch="B"), "action_key": None})
+    assert any("needs an action key" in x for x in led._action_problems())
+    led.actions = [{"section": "bespoke_therapies", "modality": "gene_replacement", "applies_to": ["B"],
+                    "requirements": [], "status_by_branch": {}, "action_key": "drug:x", "label": "x"}]
+    assert any("carries no action key" in x for x in led._action_problems())
