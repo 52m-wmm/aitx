@@ -24,11 +24,14 @@
 | 级别 | 指南 | 出处 | 拟用段落 | 核实 |
 | --- | --- | --- | --- | --- |
 | ① 国际 | 未找到国际学会的发育迟缓 / 智力障碍**干预或管理**指南（找到的国际文件多为病因评估） | — | — | — |
-| ② AAP | Early Intervention, IDEA Part C Services, and the Medical Home: Collaboration for Best Practice and Best Outcomes（Adams RC, Tapia C, AAP Council on Children with Disabilities, *Pediatrics* 2013;132(4):e1073–e1088） | publications.aap.org | 0–3 岁转介早期干预（IDEA Part C）、家庭为中心的服务 | ⏳ 出版商页面有 Cloudflare 人机验证，未绕过；待 NCBI 检索恢复后用 PubMed 摘要核对；需确认是否经 AAP 复审（二手资料称 2017 复审） |
+| ② AAP | Early Intervention, IDEA Part C Services, and the Medical Home: Collaboration for Best Practice and Best Outcomes（Adams RC, Tapia C, AAP Council on Children with Disabilities, *Pediatrics* 2013;132(4):e1073–e1088） | publications.aap.org | 0–3 岁转介早期干预（IDEA Part C）、家庭为中心的服务 | 🔶 2026-11-05 经 E-utilities 核对：PMID 24082001，*Pediatrics* 2013;132(4):e1073-88，DOI 10.1542/peds.2013-2305，PubMed 文献类型 Journal Article + Review（AAP 临床报告，不是正式指南）。摘要逐字核对，存 `.cache/guidelines/aap2013/`；摘要里没有直接的推荐句，最接近的是 "Economic, health, and family-focused data each underscore the critical role of timely referral for relationship-based, individualized, accessible early intervention services"。**复审状态无法用 E-utilities 核实**：PubMed 收录的 16 条 "AAP Publications Reaffirmed / Retired" 通知（2017–2023）都没有摘要，看不到列了哪些文件；PubMed 记录本身也没有勘误或复审链接 |
 | ② AAP | Comprehensive Evaluation of the Child With ID or GDD（2014）、Genetic Evaluation …（2025） | — | — | ✗ 评估 / 遗传检测类，不是干预，不用 |
 | ③ IAP | Diagnosis and Management of Global Development Delay（印度儿科学会三分会共识，Juneja M et al., *Indian Pediatr* 2022 在线优先） | https://indianpediatrics.net/epub022022/RECOMM-00406.pdf | 5D "Early intervention should be initiated soon after the delay is recognized, instead of waiting for a formal diagnosis."；多学科团队（作业治疗、物理治疗、言语治疗）原文 | ✅ PDF 原文逐字核对（存 `.cache/guidelines/`）；**备选**：AAP 2013 核实不了时才用 |
 
-**结论（待审）**：首选 AAP 2013（核实后），覆盖 0–3 岁早期干预；3 岁以上的康复治疗（PT / OT / 言语）推荐 AAP 2013 未覆盖时，用 IAP 2022 并写明理由。
+**结论（待审，2026-11-05 更新）**：AAP 2013 的摘要已核实，但①摘要没有直接推荐句，②复审状态无法核实（E-utilities 范围内）。可选：
+(a) 用摘要那句"及时转介早期干预服务"作为 0–3 岁的依据，配置里注明"临床报告，复审状态未核实"；
+(b) 不用 AAP 2013，改用已逐字核对的 IAP 2022 第 5D 条（第 ③ 级，理由：②级唯一候选的现行状态无法核实）；
+(c) 发育迟缓类别继续停用。建议 (b)：它有明确的推荐句，原文已核对。
 
 ## 喂养困难
 
@@ -42,4 +45,4 @@
 
 1. 癫痫一般管理用 NICE NG217（理由：①② 级无对应现行指南），是否同意。
 2. AAN/AES 2018：现行状态已确认（2024 年复审），是否纳入。
-3. 发育迟缓：AAP 2013 待 PubMed 摘要核实；3 岁以上康复推荐是否用 IAP 2022 补充。
+3. 发育迟缓：AAP 2013 摘要已核实但无直接推荐句、复审状态无法核实；选 (a) / (b) / (c)（见上，建议 (b)）。
