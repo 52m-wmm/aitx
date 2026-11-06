@@ -85,6 +85,19 @@
 
 ## 5. 验收（只用练习病例；期望先人工核实原文后再写入 `data/eval/`）
 
+**已写入 `data/eval/step3e_expectations.json`（2026-11-06，5 条，全部当场查库核实）**，验收脚本 `scripts/acceptance_step3e.py`：
+
+| ID | 期望 | 核实依据 |
+| --- | --- | --- |
+| grin2b-pam-candidate | NEBOGLAMINE（NMDA 正向变构调节剂）作为假设出现，方向 up，层级 family_group，结论带"对本亚基选择性未知"、标为假设、无人体先例 | Open Targets ENSG00000273079：NEBOGLAMINE = CHEMBL1255840，action type POSITIVE ALLOSTERIC MODULATOR，机制靶点为 7 个 GRIN 亚基（故为家族层级） |
+| grin2b-partial-agonist-labelled | RAPASTINEL 可写，但必须写明是部分激动剂 | 同上，action type PARTIAL AGONIST |
+| grin2b-antagonists-excluded | 美金刚 / 金刚烷胺 / 艾司氯胺酮 / 阿坎酸不得出现，排除理由记账本 | 同上；阿坎酸 CHEMBL1201293 有 NMDA ANTAGONIST 与 GABA-A POSITIVE MODULATOR 两行，按靶点过滤后只剩前者 |
+| grin2b-subunit-level-is-honest | 所有候选都是家族层级，`subunit_level_molecules` 为 0 | ChEMBL Q13224：CHEMBL1904（SINGLE PROTEIN）上机制数为 0 |
+| agxt-no-candidates | AGXT 不写任何候选，只留一条已核实的"检索无结果"负面证据 | Open Targets ENSG00000172482：drug 记录 0 条（ANO10、SLC35A2、KMT2B 同样为 0） |
+
+> 期望检查的是结构与方向，不是计数：数据库会更新，所以把当时的计数写在 source 里，日后不一致时能分清是库变了还是代码坏了。
+
+
 **已知用例（审阅指定）：GRIN2B 的 NMDA 受体正向变构调节剂（PAM），只有体外研究。**
 
 | 提议 ID | 病例 | 期望 | 待核实的依据 |

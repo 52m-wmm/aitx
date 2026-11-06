@@ -1,0 +1,131 @@
+{
+ "schema": "step3e-expectations-v1",
+ "verified_on": "2026-11-06",
+ "how_verified": "Every record was queried live on 2026-11-06 against Open Targets Platform GraphQL v4, the ChEMBL REST API and Reactome ContentService, and the ids, action types and mechanism targets below were read from those responses. The expectations check structure and direction rather than counts, because the databases are updated; a count that does change is noted in the source field so a later mismatch can be told apart from a code fault.",
+ "items": [
+  {
+   "id": "grin2b-pam-candidate",
+   "case": "PRAC-GRIN2B",
+   "branch": null,
+   "expect": {
+    "present": "NEBOGLAMINE",
+    "direction": "up",
+    "target_level": "family_group",
+    "evidence_level_in": [
+     "in_vitro",
+     "animal_model",
+     "target_rationale_only"
+    ],
+    "conclusion_contains": [
+     "A hypothesis only:",
+     "increases the activity of",
+     "selectivity for this gene's subunit is unknown"
+    ],
+    "conclusion_lacks": [
+     "recommended",
+     "effective",
+     "proven",
+     "mg"
+    ]
+   },
+   "what": {
+    "zh": "GRIN2B p.Gln919Ter（功能丧失）/ 3e：NMDA 受体正向变构调节剂 NEBOGLAMINE 作为假设性候选出现，方向为增强活性，层级为家族（带\"对本亚基选择性未知\"），结论标为假设、无人体先例",
+    "en": "GRIN2B p.Gln919Ter (loss of function) / 3e: the NMDA positive allosteric modulator NEBOGLAMINE appears as a hypothesis, direction up, family level with the selectivity caveat, marked a hypothesis with no human precedent"
+   },
+   "source": {
+    "doc": "Open Targets Platform GraphQL v4, target ENSG00000273079 (GRIN2B), field drugAndClinicalCandidates; queried live 2026-11-06: 50 mechanism rows, of which 28 act in the opposite direction for this target; NEBOGLAMINE CHEMBL1255840, action type POSITIVE ALLOSTERIC MODULATOR, mechanism 'Glutamate [NMDA] receptor positive allosteric modulator', mechanism targets GRIN1, GRIN2A, GRIN2B, GRIN2C, GRIN2D, GRIN3A, GRIN3B (hence family level)",
+    "url": "https://platform.opentargets.org/target/ENSG00000273079",
+    "quote": ""
+   },
+   "added": "2026-11-06: step 3e first acceptance set"
+  },
+  {
+   "id": "grin2b-partial-agonist-labelled",
+   "case": "PRAC-GRIN2B",
+   "branch": null,
+   "expect": {
+    "present": "RAPASTINEL",
+    "direction": "partial_up",
+    "conclusion_contains": [
+     "partial agonist",
+     "A hypothesis only:"
+    ]
+   },
+   "what": {
+    "zh": "GRIN2B / 3e：部分激动剂 RAPASTINEL 可以写，但必须写明是部分激动剂",
+    "en": "GRIN2B / 3e: the partial agonist RAPASTINEL may be written, but must be labelled a partial agonist"
+   },
+   "source": {
+    "doc": "Open Targets Platform GraphQL v4, target ENSG00000273079 (GRIN2B), field drugAndClinicalCandidates; queried live 2026-11-06: 50 mechanism rows, of which 28 act in the opposite direction for this target; RAPASTINEL action type PARTIAL AGONIST, mechanism targets the seven GRIN subunits",
+    "url": "https://platform.opentargets.org/target/ENSG00000273079",
+    "quote": ""
+   },
+   "added": "2026-11-06: step 3e first acceptance set"
+  },
+  {
+   "id": "grin2b-antagonists-excluded",
+   "case": "PRAC-GRIN2B",
+   "branch": null,
+   "expect": {
+    "absent": [
+     "AMANTADINE",
+     "MEMANTINE",
+     "ESKETAMINE",
+     "ACAMPROSATE"
+    ],
+    "excluded_reason_contains": "direction down does not address loss_of_function"
+   },
+   "what": {
+    "zh": "GRIN2B / 3e：NMDA 拮抗剂（美金刚、金刚烷胺、艾司氯胺酮、阿坎酸）不得出现，排除理由记在账本；阿坎酸尤其重要——它在 GABA-A 上是正向调节剂，按靶点过滤后只剩 NMDA 拮抗这一条",
+    "en": "GRIN2B / 3e: NMDA antagonists (memantine, amantadine, esketamine, acamprosate) must not appear, with the reason recorded; acamprosate matters most, since its GABA-A row is a positive modulator and only the NMDA antagonist row survives the target filter"
+   },
+   "source": {
+    "doc": "Open Targets Platform GraphQL v4, target ENSG00000273079 (GRIN2B), field drugAndClinicalCandidates; queried live 2026-11-06: 50 mechanism rows, of which 28 act in the opposite direction for this target; ACAMPROSATE CHEMBL1201293 has an NMDA ANTAGONIST row and a GABA-A POSITIVE MODULATOR row",
+    "url": "https://platform.opentargets.org/target/ENSG00000273079",
+    "quote": ""
+   },
+   "added": "2026-11-06: step 3e first acceptance set"
+  },
+  {
+   "id": "grin2b-subunit-level-is-honest",
+   "case": "PRAC-GRIN2B",
+   "branch": null,
+   "expect": {
+    "all_target_levels": [
+     "family_group"
+    ],
+    "subunit_level_molecules": 0
+   },
+   "what": {
+    "zh": "GRIN2B / 3e：所有候选都是家族层级——GRIN2B 在 ChEMBL 的单蛋白记录（CHEMBL1904）上机制数为 0，不能因为存在单蛋白记录就标成亚基层级",
+    "en": "GRIN2B / 3e: every candidate is family level - the gene's SINGLE PROTEIN record in ChEMBL (CHEMBL1904) carries 0 mechanisms, so the presence of that record must not be reported as subunit-level evidence"
+   },
+   "source": {
+    "doc": "ChEMBL REST, target records for UniProt Q13224: CHEMBL1904 (SINGLE PROTEIN, 0 mechanism rows), CHEMBL1907603 and CHEMBL5483086 (PROTEIN COMPLEX), CHEMBL2094124 (PROTEIN COMPLEX GROUP); queried live 2026-11-06",
+    "url": "https://www.ebi.ac.uk/chembl/api/data/target.json?target_components__accession=Q13224",
+    "quote": ""
+   },
+   "added": "2026-11-06: step 3e first acceptance set"
+  },
+  {
+   "id": "agxt-no-candidates",
+   "case": "PRAC-AGXT-c33dup",
+   "branch": null,
+   "expect": {
+    "no_actions": true,
+    "negative_evidence": true,
+    "candidates": 0
+   },
+   "what": {
+    "zh": "AGXT c.33dup / 3e：没有任何方向相符的候选 → 整节不写候选，只留一条已核实的\"检索无结果\"负面证据（反例：宁缺勿错）",
+    "en": "AGXT c.33dup / 3e: no candidate acts in the needed direction -> no candidate is written, only a verified 'searched, found nothing' record (the reverse case: say nothing rather than something wrong)"
+   },
+   "source": {
+    "doc": "Open Targets Platform GraphQL v4, target ENSG00000172482 (AGXT), field drugAndClinicalCandidates; queried live 2026-11-06: 0 drug rows. ANO10, SLC35A2 and KMT2B also return 0.",
+    "url": "https://platform.opentargets.org/target/ENSG00000172482",
+    "quote": ""
+   },
+   "added": "2026-11-06: step 3e first acceptance set"
+  }
+ ]
+}
