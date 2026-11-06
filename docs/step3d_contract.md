@@ -23,7 +23,7 @@
 
 | 用途 | 出处 | 核对情况 |
 | --- | --- | --- |
-| 三种 ASO 手段的五级分类与判定流程 | **N1C VARIANT guidelines** v1.0：Cheerie D, et al. Consensus guidelines for assessing eligibility of pathogenic DNA variants for antisense oligonucleotide treatments. *Am J Hum Genet* 2025. PMID 40139194，PMC12120168（CC BY） | ✅ 正文已取（efetch，开放获取）。五级分类定义逐字见正文 "Classification terms" 节。**详细判定流程在补充材料 Data S1（mmc1.pdf），E-utilities 拿不到，下载需你同意（见待定问题 2）** |
+| 三种 ASO 手段的五级分类与判定流程 | **N1C VARIANT guidelines** v1.0：Cheerie D, et al. Consensus guidelines for assessing eligibility of pathogenic DNA variants for antisense oligonucleotide treatments. *Am J Hum Genet* 2025. PMID 40139194，PMC12120168（CC BY） | ✅ 正文已取（efetch，开放获取）。五级分类定义逐字见正文 "Classification terms" 节。详细判定流程在补充材料 **Data S1**（mmc1.pdf，约 2400 行）：2026-11-05 经 **Europe PMC 官方补充材料接口**取得（`https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12120168/supplementaryFiles`），存 `.cache/n1c/supp/`。PMC 自己的 bin 路径返回人机验证式的中间页，未绕过。Data S1 的判定细则已并入下面第 3 节 |
 | 上调正常拷贝：只给评估思路、不分级 | 同上，正文："Assessment strategies are provided for upregulation from the WT allele, but classifications toward eligibility are not defined because this area of ASO therapeutics is less established to date." | ✅ 逐字 |
 | 只评估变异层面，不含病情、个人因素 | 同上，正文："For a full assessment beyond the variant, disease- and individual-specific clinical factors have to also be taken into consideration … which is beyond the scope of these guidelines." | ✅ 逐字 |
 | ASO 的疾病与组织适用性（背景） | Lauffer MC, van Roon-Mom W, Aartsma-Rus A; N=1 Collaborative. *Commun Med (Lond)* 2024. PMID 38182878 | ✅ 摘要 |
@@ -49,21 +49,38 @@
 - Step 1 目前**不预测剪接**。所以：
   - 剪接类变异 → "无法评估：需要 RNA 层面证据（患者 RNA 测序或剪接预测）"；
   - 其他类型（错义、无义、移码等）→ "不适用：没有证据表明该变异影响剪接"。理由要写清楚：这是基于 Step 1 没有剪接证据，不是证明它不影响剪接。
-- 是否接入剪接预测工具，见待定问题 1。
+- **已知局限（2026-11-05 决定）**：暂不接入剪接预测。因此 3.1 几乎总是"不适用"或"无法评估"，报告里要如实写明这是本系统的局限，不是"该变异不影响剪接"的证据。N1C 的 Data S1 也要求剪接判定以 RNA 层面证据（RNA-seq、qPCR）为准："please note that in silico predictions are not to be used as substitutes for RNAseq and qPCR data"（逐字）——所以即便以后接入预测，也只能当线索，不能当结论。
 - 已有针对**同一变异**的剪接纠正 ASO（临床或临床前）→ "eligible"（N1C 定义），但要附上那项研究。
 
-### 3.2 ASO 典型外显子跳跃
+### 3.2 ASO 典型外显子跳跃（细则取自 N1C Data S1 "Section A"，逐条引用）
+
+N1C 的判定对象是**外显子**，不是单个变异："While splicing assessments are based on the variant, evaluating the potential for exon skipping are based on the exon, thus an exon skipping approach is applicable to all variants within that exon."（逐字）所以结论按外显子给出，再套到病人的变异上。
+
 代码逐条检查，任一条不满足 → 结论 + 是哪一条：
-1. 疾病机制是功能丧失，且**截短蛋白可能保留功能**。后者要有基因层面的证据：健康人中天然存在该外显子缺失或跳跃，或实验证明跳跃后蛋白仍有功能（N1C 对 "eligible" 的要求）。没有这种证据，最多判 "likely eligible"（只满足分子条件）。
-2. 变异在一个**内部外显子**里：不是第一个或最后一个外显子，也不是单外显子基因（N1C 举例：单外显子基因"not eligible"）。用 `exon.number`、`exon.total`、`exon.is_last_exon` 判断。
-3. **跳过该外显子后阅读框不变**：外显子编码长度 `exon.coding_nt` 是 3 的倍数。不是 3 的倍数时，只有和相邻外显子一起跳（多外显子跳跃）才可能保持阅读框，这时判 "unlikely eligible"，并写出需要一起跳的外显子组合。
-4. 大片段缺失：先看缺失本身是否已经保持阅读框（Step 1 `retranslation.same_frame_after_change`）。已经保持 → "不适用：阅读框已经保留，外显子跳跃的目的（恢复阅读框）不存在"。
-5. 已获批的外显子跳跃 ASO：按说明书判断（归 3a）。不覆盖该病人的外显子时，3d 写"已获批产品针对第 N 号外显子，本病人的缺失不适用"。
+
+| # | 判定 | N1C 原文（逐字） | Step 1 字段 | 不满足时 |
+| --- | --- | --- | --- | --- |
+| 1 | 不能是第一个或最后一个**编码**外显子；单编码外显子基因直接排除 | "The first and last coding exons are usually not eligible for exon skipping as this would lead to the loss of the start or stop codon."；"genes containing exactly one coding exon are not eligible and are disqualified from further analysis" | `transcript_layout.cds` + `transcript_layout.exons` 算出哪些外显子含编码序列（**注意 UTR**：转录本的第一 / 最后一个外显子不一定是编码外显子） | not eligible |
+| 2 | 外显子编码长度须为 3 的倍数 | "Out-of-frame exons (containing a number of base pairs not divisible by 3) should be classified as "not eligible" in the case of LoF variants where relevant restoration of the reading frame is the aim." | `exon.coding_nt % 3` | not eligible（例外见下） |
+| 3 | 相位 1-1 / 2-2 的框内外显子：跳过后两侧外显子拼接**不得**形成终止密码子 | "Assessors should evaluate whether joining the adjacent exons would form an in-frame stop codon, coded by either a TAA, TAG, or TGA … If this is the case, the exon is not eligible for exon skipping" | 由 Step 1 的 mRNA 序列和 `transcript_layout.exons` 确定性计算（拼接后的新密码子） | not eligible |
+| 4 | 外显子编码的蛋白比例 ≤ 10% | "skipping an exon that encodes for more than 10% of the protein is considered "unlikely eligible", and obtaining functional evidence is the expected next step"；公式 "Exon size as coding region in % = (exon length in bp/3) / length of the protein in aa *100" | `exon.coding_nt`、`protein_length` | >10% → unlikely eligible；>10% **且**跨一个以上非重复结构域 → not eligible |
+| 5 | 结构域：该外显子不编码关键功能域 | 同上一行的"not eligible"条件 | 需要 UniProt 结构域注释（Step 1 已取 UniProt 号，尚未取结构域）→ 暂判"无法评估：结构域未查"，见待定问题 10 | — |
+| 6 | 天然跳跃 / 框内缺失的证据 | "If full-length exon skipping has been observed in individuals who do not show signs of the disease in question … the exon is eligible for exon skipping."；反之"If full exon skipping has been observed and validated and is disease-causing (pathogenic variant), this exon … is not eligible" | 需检索 ClinVar / gnomAD / PubMed；证据须是 RNA-seq 或 qPCR 验证过的 | 有致病性跳跃证据 → not eligible；健康人中存在 → eligible；都没有 → 继续按分子条件判 likely / unlikely |
+
+**例外（N1C 明确列出，逐字要点）**：移码外显子在"最后或倒数第二个外显子内产生终止密码子且蛋白仍有残余功能"时理论上可行；功能获得 / 显性负效应变异可以用跳跃来降低转录本量（归 3.3）；相邻移码外显子一起跳可以恢复阅读框（"designing an ASO that skips two consecutive exons or multiple ASOs may prove to be a challenge"）；已有整个移码外显子缺失时，跳邻近外显子可恢复阅读框；第一个编码外显子在"附近存在框内起始密码子"时理论上可跳。这些都只能判到 unlikely eligible，并写明依据的是哪一条例外。
+
+**大片段缺失**：先看缺失本身是否已保持阅读框（Step 1 `retranslation.same_frame_after_change`）。已保持 → "不适用：阅读框已经保留，外显子跳跃的目的（恢复阅读框）不存在"。
+
+**已获批的外显子跳跃 ASO**：按说明书判断（归 3a）。不覆盖本病人的外显子时，3d 写"已获批产品针对第 N 号外显子，本病人的变异不适用"。
 
 ### 3.3 RNA 敲低
-- **总量敲低**：只用于功能获得 / 显性负效应，且该基因的总量下降可以耐受。N1C 的 "not eligible" 例子是剂量受严格调控的基因。剂量证据用 gnomAD pLI 或 ClinGen 单倍剂量不足评分（需新增查询，见待定问题 4）。单倍剂量不足或功能丧失疾病 → "不适用：敲低会进一步减少功能"。
-- **等位基因特异敲低**：只用于杂合的显性负效应 / 功能获得变异，并需要能区分两个等位基因的靶点（变异本身，或同一等位上的常见 SNP）。Step 1 只有致病变异本身。用变异本身作靶点，判 "likely eligible（分子条件）"；用 SNP 作靶点，判 "无法评估：需要单倍型信息"。
-- 纯合 / 半合子：没有正常等位基因 → 等位基因特异敲低不适用。
+- **总量敲低**：只用于功能获得 / 显性负效应（N1C："Variants to be considered for knockdown approaches using gapmer ASOs or siRNA are toxic GoF and DN variants and copy number gains."）。
+  - **剂量敏感性阈值（N1C Data S1 "Section B"，逐字）**："Typically, a pLI score of equal to or greater than 0.9, the top three deciles of LOEUF scores, or a ClinGen haploinsufficiency score of 3 (sufficient evidence) indicates haploinsufficiency being a cause of disease"。N1C 把 ClinGen 的人工评定列为最高级证据："We consider a curation from a reputable, independent source, such as the ClinGen consortium, the highest level of evidence for dosage sensitivity."
+  - 单倍剂量不足成立时，N1C 仍留一个口子："a knockdown approach should only be considered if the disease caused by haploinsufficiency is less severe than the disorder associated with the GoF or DN variants"。**这一步要比较两种病的严重程度，属于临床判断，3d 不做**：只写"单倍剂量不足成立，总量敲低需要临床比较两种表型的严重程度（超出本节范围）"。
+  - 数据来源见待定问题 4（pLI / LOEUF / ClinGen 评分都要新增查询）。查不到 → "无法评估：剂量敏感性未查"。
+- **等位基因特异敲低**：只用于杂合的显性负效应 / 功能获得变异（N1C："it is critical that an ASO is designed to specifically target the DN allele while keeping the wildtype product intact"），靶点是变异本身或同一等位上的常见 SNP。Step 1 只有致病变异本身：用变异本身作靶点 → "likely eligible（分子条件）"；需要 SNP → "无法评估：需要单倍型（phasing）信息"。
+- 纯合 / 半合子：没有正常等位基因 → 等位基因特异敲低不适用。X 连锁男性按 N1C 要特别说明："downregulation of a gene on the X or Y chromosome can lead to a complete loss of the gene function"。
+- **已有同基因敲低 ASO 时仍算 eligible**（N1C 明确）："The gene is still "eligible" for knockdown according to the criteria outlined in Table 5 even if the already available ASO is not suitable for the individual under assessment." 3d 要写明"需为该病人重新设计"。
 
 ### 3.4 上调正常拷贝
 - 前提：杂合、有一份正常拷贝（`copies_affected == 1` 且不是半合子），疾病机制有出处地写明是单倍剂量不足。
@@ -129,14 +146,23 @@
 - 大部分判定是确定性计算。LLM 只用在两处：机制原文抽取（每个分支 1 次，加支持度核查），以及先例检索结果筛选（沿用 3c 的两步检索方式）。
 - 按非高峰规则运行。
 
-## 8. 待定问题
+## 8. 待定问题（2026-11-05 更新：第 1、2 条已决定，其余 7 条附建议）
 
-1. **剪接预测**：是否接入剪接预测（如 SpliceAI 的公开查询服务）？不接的话，剪接纠正几乎总是"不适用 / 无法评估"。接入就是新的外部数据源，需要另立契约。
-2. **下载 N1C 补充材料**：Data S1（判定流程 PDF）和 Table S2（上调靶点汇总，xlsx）。都是 CC BY 开放获取，来自 PMC 或期刊网站，放 `.cache/n1c/`、不进仓库。要你同意。没有 Data S1，3.1–3.3 的细则只能按正文和本草案的规则执行，与 N1C 原版可能有出入。
-3. **机制出处的优先级**：GeneReviews → ClinGen / GenCC 机制字段 → 文献？只用 GeneReviews 最稳，但有些基因的章节没写机制。
-4. **基因剂量耐受数据**（总量敲低用）：是否接入 gnomAD pLI 和 ClinGen 单倍剂量不足评分（都是公开下载）？
-5. **碱基编辑的 PAM 与编辑窗口**：要不要取 RefSeq 基因组序列来计算？计算可以确定性完成，但会多出 Cas 变体、编辑窗口等需要约定的参数。不计算就一律写"未评估"。
-6. **非 ASO 手段的分级**：用三档描述（本草案的做法），还是也套用五级？
-7. **"Outcome Measures & Ranking" 小节**归 3d 还是 Step 4？本草案只提供排序要用的字段（分级、前提是否齐全、有无先例），不做排序。
-8. **嵌合 / X 染色体失活**（如 SLC35A2 女性杂合）：正常拷贝是否表达，取决于 X 失活。是一律写"无法评估：取决于 X 失活"，还是另有规则？
-9. **3d 与 3e 的分界**：已有体外 ASO 研究、但没进入临床的，算 3d 的先例，还是 3e 的候选？
+**已决定**
+1. ~~剪接预测~~：**暂不接入**，记为已知局限（见 3.1）。
+2. ~~下载 N1C 补充材料~~：**已同意并取得**（Europe PMC 官方接口，存 `.cache/n1c/supp/`）。Data S1 的细则已并入第 3 节；Table S2（上调靶点汇总表，mmc4.xlsx）留待 3.4 实现时读取。
+
+**待你决定（7 条，每条附我的建议）**
+
+| # | 问题 | 要点 | 我的建议 |
+| --- | --- | --- | --- |
+| 3 | **疾病机制的出处优先级** | 依赖机制的手段（敲低、基因替代、上调）必须先知道是功能丧失 / 单倍剂量不足 / 功能获得 / 显性负效应。候选来源：① GeneReviews 的 Molecular Genetics 段落；② ClinGen / GenCC 的机制字段；③ 文献 | **按 ①→②→③ 的顺序，取到第一个明确写出机制的就停**，并把出处和逐字引用记进账本；三者都没有 → "无法评估"。理由：① 已经在本地归档、引用能逐字核对，和 3a 用的是同一套来源；② 是结构化字段，适合做代码判定但覆盖面有限；③ 最容易过度解读（单个家系的推论），所以放最后，且只接受综述或指南性质的表述。不要让 LLM 在没有这三者时"推断"机制 |
+| 4 | **基因剂量数据**（总量敲低用） | N1C 给了明确阈值：pLI ≥ 0.9、LOEUF 前三个十分位、ClinGen 单倍剂量不足评分 3 | **接入 ClinGen 的单倍剂量不足评分 + gnomAD 的 pLI / LOEUF**，三者都记录、按 N1C 原文的阈值判定，并以 ClinGen 的人工评定为准（N1C 自己就这么说）。两个来源都是公开批量下载，和现有的 GRAS、RxNorm 本地清单做法一致（下载一次、记 sha256、不进仓库）。查不到就写"无法评估"，不要用 pLI 的经验值替代 |
+| 5 | **碱基编辑的 PAM 与编辑窗口** | 要判断"有没有合适的 PAM"需要基因组序列；还要约定 Cas 变体、编辑窗口宽度、旁观者编辑的容忍度 | **暂不计算，一律写"是否存在合适的 PAM 未评估"**。理由：参数（用哪种 Cas、窗口多宽、允许几个旁观者编辑）都是会影响结论的人为选择，一旦写死就等于我们在替临床做判断；而且 Step 1 现在只取 mRNA 序列，不取基因组序列和内含子，接入是另一个数据源。先把"需要哪种编辑器"这一层确定性结论做对（这一层只靠 HGVS 就能判），把 PAM 留给后续节点 |
+| 6 | **非 ASO 手段的分级用词** | 三种 ASO 手段用 N1C 五级；基因替代、碱基编辑、上调正常拷贝没有共识标准 | **不套用 N1C 的五级**，用"理论上可行（分子条件满足）/ 不适用（附理由）/ 无法评估（缺什么）"三档。理由：五级是 N1C 对三种 ASO 手段专门定义的，借来用在基因替代上会让读者以为也有国际共识——这正是"写错比不写更糟"要避免的。N1C 自己对上调正常拷贝就**拒绝**分级（"classifications toward eligibility are not defined because this area of ASO therapeutics is less established to date"），我们照做 |
+| 7 | **"Outcome Measures & Ranking" 小节归谁** | 官方模板里这一小节在 Tier 3 | **归 Step 4（报告组装）**，3d 只负责产出排序需要的字段：分级、前提是否齐全、有无人体先例、是否已有获批 / 在试产品。理由：排序要同时看 3c（老药新用）、3d（定制疗法）、3e（候选药）三节的内容，放在任何一个子节点里都会只看到自己那一部分。已记在 `docs/step4_contract_todo.md` |
+| 8 | **嵌合 / X 染色体失活**（如 SLC35A2 女性杂合、体细胞嵌合） | 正常拷贝到底表达多少，取决于 X 失活比例或嵌合比例；这会直接影响"上调正常拷贝"和"等位基因特异敲低"是否成立 | **一律判"无法评估：取决于 X 失活（或嵌合比例），病例未提供"**，并在缺失信息里列出这一项（和 3a / 3b 处理缺信息的方式一致）。N1C 也只说"it should be considered how X inactivation will affect gene dosage"，没给判定规则。例外：病例明确给出了偏斜失活或嵌合比例的检测结果时，才按该结果判断 |
+| 9 | **3d 与 3e 的分界** | 已有体外 ASO 研究、但没进入临床的候选 | **按"手段"分，不按"证据阶段"分**：只要是 ASO / 基因替代 / 编辑这类为该变异定制的手段，无论证据停在体外还是已有个案，都在 3d 写，证据强度如实标注（体外 / 动物 / 个案）；3e 留给**小分子或已上市药物**的体外筛选结果（如 GRIN2B 的 NMDA 受体调节剂）。理由：N1C 的 "eligible" 判定本来就把临床前功能证据算进来（"pre-clinical data is sufficient"），把体外 ASO 研究踢到 3e 会让 3d 判不出 eligible |
+| 10 | **结构域注释**（新增，来自 Data S1） | 外显子跳跃的第 5 条判定要知道该外显子编不编关键结构域，N1C 还要求区分"非重复结构域" | **接入 UniProt 的结构域注释**（Step 1 已经取了 UniProt 号和 AlphaFold 模型，加一个结构域字段的成本很低），拿不到就判"无法评估：结构域未查"，**不要**用"蛋白比例 ≤10%"替代这一条——N1C 把它们列为两条独立判定 |
+
+> 第 3、4、10 条都是"要不要再接一个公开数据源"，彼此独立，可以分批决定。第 5 条如果以后要做，建议单独立契约。

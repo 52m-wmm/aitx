@@ -492,32 +492,26 @@
    "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
   },
   {
-   "id": "ex7-dd-disabled",
+   "id": "ex7-l4-early-intervention",
    "case": "PRAC-SLC35A2-ex7",
    "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "early intervention",
    "expect": {
-    "tier": {
-     "disabled_category": "developmental_delay_intellectual_disability",
-     "disabled_hpo": [
-      "HP:0001263",
-      "HP:0001249"
-     ]
-    }
+    "status": "applicable",
+    "tier_source": "symptomatic",
+    "for_symptom": "developmental delay"
    },
    "what": {
-    "zh": "SLC35A2 ex7 / 发育迟缓类 L4 停用（临时期望）",
-    "en": "SLC35A2 ex7 / developmental delay L4 category disabled (provisional)"
+    "zh": "SLC35A2 ex7 / L4：delay 一经识别即开始早期干预 → 适用（针对全面发育迟缓）",
+    "en": "SLC35A2 ex7 / L4: start early intervention as soon as the delay is recognized -> applicable (global developmental delay)"
    },
    "source": {
-    "doc": "config/symptom_guidelines.json, category developmental_delay_intellectual_disability (approved 2026-11-05)",
-    "url": "",
-    "quote": "enabled: false - first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified; IAP 2022 is not used as a stand-in"
+    "doc": "IAP consensus guidelines, Diagnosis and Management of Global Development Delay (Juneja M et al., Indian Pediatrics, 2022-02-19 e-pub ahead of print), recommendation 5D; PDF verified verbatim 2026-11-05, record .cache/guidelines/iap2022/verified.json",
+    "url": "https://indianpediatrics.net/epub022022/RECOMM-00406.pdf",
+    "quote": "Early intervention should be initiated soon after the delay is recognized, instead of waiting for a formal diagnosis."
    },
-   "provisional": {
-    "reason": "AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: PubMed abstract and reaffirmation status (original source) pending; IAP 2022 is not used as a stand-in.",
-    "lift_when": "AAP 2013 verified and the category enabled: replace with 'early intervention / rehabilitation therapy -> conditional' for global developmental delay, citing the verified passage."
-   },
-   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+   "added": "2026-11-05: replaces the provisional '<ex>-dd-disabled' expectation. The category was disabled while AAP 2013 was unverified; AAP 2013 turned out to be a clinical report with no recommendation sentence in its abstract and an unverifiable reaffirmation status, so IAP 2022 (level 3, reason in the config) was approved instead and the category enabled. Quote checked character for character against the publisher PDF."
   },
   {
    "id": "ex8-fallback-tier",
@@ -609,32 +603,26 @@
    "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
   },
   {
-   "id": "ex8-dd-disabled",
+   "id": "ex8-l4-early-intervention",
    "case": "PRAC-SLC35A2-ex8",
    "branch": "SLC35A2",
+   "section": "supportive_management",
+   "match": "early intervention",
    "expect": {
-    "tier": {
-     "disabled_category": "developmental_delay_intellectual_disability",
-     "disabled_hpo": [
-      "HP:0001263",
-      "HP:0001249"
-     ]
-    }
+    "status": "applicable",
+    "tier_source": "symptomatic",
+    "for_symptom": "developmental delay"
    },
    "what": {
-    "zh": "SLC35A2 ex8 / 发育迟缓类 L4 停用（临时期望）",
-    "en": "SLC35A2 ex8 / developmental delay L4 category disabled (provisional)"
+    "zh": "SLC35A2 ex8 / L4：delay 一经识别即开始早期干预 → 适用（针对全面发育迟缓）",
+    "en": "SLC35A2 ex8 / L4: start early intervention as soon as the delay is recognized -> applicable (global developmental delay)"
    },
    "source": {
-    "doc": "config/symptom_guidelines.json, category developmental_delay_intellectual_disability (approved 2026-11-05)",
-    "url": "",
-    "quote": "enabled: false - first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified; IAP 2022 is not used as a stand-in"
+    "doc": "IAP consensus guidelines, Diagnosis and Management of Global Development Delay (Juneja M et al., Indian Pediatrics, 2022-02-19 e-pub ahead of print), recommendation 5D; PDF verified verbatim 2026-11-05, record .cache/guidelines/iap2022/verified.json",
+    "url": "https://indianpediatrics.net/epub022022/RECOMM-00406.pdf",
+    "quote": "Early intervention should be initiated soon after the delay is recognized, instead of waiting for a formal diagnosis."
    },
-   "provisional": {
-    "reason": "AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: PubMed abstract and reaffirmation status (original source) pending; IAP 2022 is not used as a stand-in.",
-    "lift_when": "AAP 2013 verified and the category enabled: replace with 'early intervention / rehabilitation therapy -> conditional' for global developmental delay, citing the verified passage."
-   },
-   "added": "2026-11-05: supportive fallback chain (contract docs/supportive_fallback_contract.md); proposed after reading the abstracts, approved"
+   "added": "2026-11-05: replaces the provisional '<ex>-dd-disabled' expectation. The category was disabled while AAP 2013 was unverified; AAP 2013 turned out to be a clinical report with no recommendation sentence in its abstract and an unverifiable reaffirmation status, so IAP 2022 (level 3, reason in the config) was approved instead and the category enabled. Quote checked character for character against the publisher PDF."
   }
  ]
 }
