@@ -33,6 +33,19 @@ PARTIAL_WORDS = ("partial agonist",)
 NEEDED = {"loss_of_function": "up", "haploinsufficiency": "up", "gain_of_function": "down",
           "dominant_negative": None}
 
+# Drug types that are bespoke modalities, not repurposing: they belong to 3d, which judges them per variant
+# (2026-11-06: DMD returned the exon-skipping ASOs drisapersen and suvodirsen, which 3e must not propose - the
+# exon they skip may not even be this patient's, and that judgement is 3d's).
+BESPOKE_TYPES = ("oligonucleotide", "gene therapy", "cell therapy", "gene editing", "rna")
+BESPOKE_NOTE = "a {kind}: judged per variant in Bespoke Therapies (3d), not repurposed here"
+
+
+def is_bespoke_type(drug_type: str | None) -> str | None:
+    """The bespoke modality this drug type is, or None when it is an ordinary drug 3e may consider."""
+    t = (drug_type or "").strip().lower()
+    return next((k for k in BESPOKE_TYPES if k in t), None)
+
+
 NO_MECHANISM = ("no disease mechanism from a source (step 3d): without it the direction a drug would have to act "
                 "in cannot be decided, so no candidate is proposed")
 DN_NOTE = ("the mechanism is dominant negative: lowering the abnormal product is a bespoke-therapy question (3d), "
@@ -451,7 +464,13 @@ def add_repurposing(led, case: dict, step1: dict, step2: dict, *, use_cache: boo
                  "chembl_target": next((t for t in levels), None), "direction": direction,
                  "action_type": r0.get("action_type"), "mechanism_text": r0.get("mechanism_text"),
                  "route": "same_target", "mechanism": mech, "evidence_level": "target_rationale_only",
+                 "drug_type": r0.get("drug_type"),
                  "max_clinical_stage": r0.get("max_clinical_stage"), "pmids": []}
+            kind = is_bespoke_type(r0.get("drug_type"))
+            if kind:
+                excluded.append({**_slim(c), "why": BESPOKE_NOTE.format(kind=kind),
+                                 "see_also": {"section": "bespoke_therapies"}})
+                continue
             if direction is None:
                 excluded.append({**_slim(c), "why": why})
                 continue

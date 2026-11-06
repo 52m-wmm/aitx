@@ -297,3 +297,36 @@ def test_every_returned_drug_is_listed_as_excluded(monkeypatch):
     assert len(rec["excluded"]) == 2                                   # both drugs accounted for
     neg = [e for e in led.evidence.values() if e["section"] == RP.SECTION and e["kind"] == "negative"]
     assert len(neg) == 1 and neg[0]["status"] == "verified", neg[0].get("reasons")
+
+
+# --- bespoke modalities belong to 3d, not here (2026-11-06, found in the live DMD data)
+
+@pytest.mark.parametrize("drug_type,kind", [
+    ("Oligonucleotide", "oligonucleotide"), ("oligonucleotide", "oligonucleotide"),
+    ("Gene therapy", "gene therapy"), ("Cell therapy", "cell therapy"),
+    ("Small molecule", None), ("Protein", None), ("Antibody", None), (None, None), ("", None),
+])
+def test_bespoke_drug_types_are_recognised(drug_type, kind):
+    assert RP.is_bespoke_type(drug_type) == kind
+
+
+def test_an_exon_skipping_aso_is_not_a_repurposing_candidate(monkeypatch):
+    """DMD's Open Targets candidates include drisapersen and suvodirsen, exon-skipping ASOs. 3e must hand them
+    to 3d: which exon they skip is a per-variant judgement, and this patient's deletion may not match."""
+    from aitx.evidence import ledger as LG
+    rows = [{"chembl_id": "C1", "drug": "DRISAPERSEN", "drug_type": "Oligonucleotide",
+             "action_type": "POSITIVE MODULATOR", "mechanism_targets": ["DMD"], "mechanism_text": "",
+             "max_clinical_stage": "PHASE_3"}]
+    monkeypatch.setattr(RP, "target_facts", lambda gene, use_cache=True: {
+        "ensembl_id": "ENSG1", "symbol": "DMD", "uniprot": "P1", "pathways": [], "candidates": rows,
+        "accessed_at": 1})
+    monkeypatch.setattr(RP, "chembl_targets", lambda uni, use_cache=True: [])
+    led = LG.Ledger("P", [{"id": "B", "gene": "DMD", "diagnosis": {"label": "d", "omim": ["OMIM:1"]},
+                           "synonyms": []}])
+    led.patient_context, led.missing_information = {}, []
+    led.bespoke_mechanism["B"] = {"mechanism": "loss_of_function"}
+    RP.add_repurposing(led, {"id": "P"}, {"variants": []}, {"candidates": []}, use_cache=True)
+    rec = led.repurposing_searches["B"]
+    assert rec["kept"] == 0 and [a for a in led.actions if a["section"] == RP.SECTION] == []
+    assert "oligonucleotide" in rec["excluded"][0]["why"] and "3d" in rec["excluded"][0]["why"]
+    assert rec["excluded"][0]["see_also"]["section"] == "bespoke_therapies"
