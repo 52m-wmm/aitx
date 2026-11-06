@@ -899,7 +899,10 @@
    },
    "status": "pending_review",
    "review": {
-    "decision": "not_reviewed"
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1 to -4: \"often lead to\" does not support \"points to\" a particular disease, and the rule also rests on splicing, which step 1 does not predict (decision 2026-11-05: splice prediction is not connected)."
    },
    "content_sha256": "e795b2a548161ee9608de578db81e6e429cd85edcfc00a2dd2603e993e70d821"
   }

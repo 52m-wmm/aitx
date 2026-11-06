@@ -16,6 +16,7 @@ from aitx.evidence.established import add_established
 from aitx.evidence.trial_records import add_trials
 from aitx.evidence.bespoke import add_bespoke
 from aitx.evidence.offlabel import add_offlabel
+from aitx.evidence.repurposing import add_repurposing
 from aitx.evidence.rules import apply_rules, load_rules
 
 
@@ -114,6 +115,7 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     add_trials(led, case, step1, step2)                # 3b: Clinical Trial Eligibility
     add_offlabel(led, case, step1, step2)              # 3c: Off-label / Expanded Access
     add_bespoke(led, case, step1, step2)               # 3d: Bespoke Therapies
+    add_repurposing(led, case, step1, step2)           # 3e: Drug Repurposing
     out = led.to_dict()
     out["branches_dropped"] = dropped
     out["ok"] = all(c["status"] != "fail" for c in out["checks"])

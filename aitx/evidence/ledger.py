@@ -210,6 +210,7 @@ class Ledger:
         self.sections_status = {s: "not_searched" for s in SECTIONS}
         self.bespoke_mechanism: dict[str, dict] = {}        # 3d: the mechanism each branch's judgements rest on
         self.bespoke_unassessable: list[dict] = []          # 3d: every "unable to assess" with its missing input
+        self.repurposing_searches: dict[str, dict] = {}     # 3e: per branch, what was queried and what was excluded
         self.patient_context: dict = {}
         self.missing_information: list[dict] = []
         self.rules_applied: list[dict] = []
@@ -309,6 +310,13 @@ class Ledger:
             from aitx.evidence import bespoke as BS             # local import: bespoke imports this module
             chk("bespoke_consistent", BS.problems(self.actions, [b["id"] for b in self.branches if b.get("diagnosis")]),
                 "3d: every branch has all six modality judgements, each with its reason")
+        if any(a["section"] == "drug_repurposing" for a in self.actions) or self.repurposing_searches:
+            from aitx.evidence import repurposing as RP      # local import: repurposing imports this module
+            chk("repurposing_consistent",
+                RP.problems(self.actions, [b["id"] for b in self.branches if b.get("diagnosis")],
+                            {a.get("action_key"): a for a in self.actions if a.get("action_key")
+                             and a["section"] != "drug_repurposing"}, self.repurposing_searches),
+                "3e: every candidate's hops resolve, the direction addresses the mechanism, nothing is repeated")
         if self.supportive_tiers:
             from aitx.evidence import fallback as F            # local import: fallback imports this module
             present = {i for r in self.supportive_tiers.values() for i in r.get("present_ids") or []}
@@ -324,7 +332,7 @@ class Ledger:
         missing = {m["variable"] for m in self.missing_information}
         for a in self.actions:
             tag = a.get("action_key") or f"{a['section']} (searched_none)"
-            if a.get("modality"):
+            if a.get("modality") or a.get("hypothesis"):
                 # 3d rows judge a therapeutic modality, not whether an action fits this patient, so they carry no
                 # requirement lines and no per-branch status; bespoke_consistent checks them instead (2026-11-06).
                 if a.get("action_key") or a.get("requirements") or not set(a["applies_to"]) <= branch_ids:
@@ -389,5 +397,6 @@ class Ledger:
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
                 "supportive_tiers": self.supportive_tiers, "offlabel_searches": self.offlabel_searches,
                 "bespoke_mechanism": self.bespoke_mechanism, "bespoke_unassessable": self.bespoke_unassessable,
+                "repurposing_searches": self.repurposing_searches,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}

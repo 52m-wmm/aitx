@@ -54,6 +54,38 @@ def _key(url: str, headers: dict | None = None) -> Path:
     return CACHE_DIR / (hashlib.sha256(k.encode()).hexdigest() + ".json")
 
 
+def post_json(url: str, body: dict, *, use_cache: bool = True, timeout: int = 30, retries: int = 3,
+              headers: dict | None = None) -> Fetched:
+    """A cached POST of JSON (GraphQL endpoints only accept POST). The cache key includes the body, so two
+    different queries to one endpoint are two entries."""
+    payload = json.dumps(body, sort_keys=True)
+    path = _key(url + "#" + hashlib.sha256(payload.encode()).hexdigest(), headers)
+    if use_cache and path.exists():
+        d = json.loads(path.read_text())
+        if not _stale(url, d["accessed_at"]):
+            return Fetched(d["url"], d["text"], d["accessed_at"], True)
+    last_err: Exception | None = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, data=payload.encode(), headers={
+                "User-Agent": USER_AGENT, "Content-Type": "application/json", **(headers or {})})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                text = r.read().decode("utf-8", errors="replace")
+            accessed = int(time.time())
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"url": url, "text": text, "accessed_at": accessed, "body": payload}))
+            _refreshed.add(url)
+            return Fetched(url, text, accessed, False)
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500 and e.code != 429:
+                raise RuntimeError(f"HTTP {e.code} for POST {url}") from e
+            last_err = e
+        except (urllib.error.URLError, TimeoutError, socket.timeout, http.client.HTTPException, ConnectionError) as e:
+            last_err = e
+        time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(f"failed to POST {url}: {last_err}")
+
+
 def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3,
         headers: dict | None = None) -> Fetched:
     path = _key(url, headers)
