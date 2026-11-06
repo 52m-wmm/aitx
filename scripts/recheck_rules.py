@@ -39,6 +39,8 @@ def names_for(gene: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for f in sorted((ROOT / "out" / "step2").glob("*.json")):
         r = json.loads(f.read_text())
+        if not isinstance(r, dict):                # some step 2 files hold a list (older runs)
+            continue
         for c in r.get("candidates") or []:
             if c.get("gene") != gene:
                 continue
