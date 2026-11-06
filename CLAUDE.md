@@ -22,7 +22,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 - 模型接口统一（`aitx/llm.py`，OpenAI 兼容，换模型只改环境变量）
 - 开发期用 DeepSeek-V4.1-Flash-1017（官方 API 名 `deepseek-flash`，763B，属于参赛组 Tier 3）
 - 对照：DeepSeek-V4-Flash-0423（284B，Tier 2，第三方平台调用）；第 4 周按同一评分标准对比后决定报哪个组
-- 每次 LLM 调用记录服务端实际返回的模型名，防止别名被悄悄切换
+- 每次 LLM 调用记录服务端实际返回的模型名，防止别名被悄悄切换；跨接口复用缓存要求服务端模型名**完全一致**，并记录服务商
+- 当天 LLM 费用上限 `AITX_LLM_BUDGET_USD`（默认 0.3 美元），每次调用前检查，超了就停下并保留已完成部分（退出码 4）
 - 优先用实时 API 获取数据，引用必须能解析到具体记录（URL / accession）
 
 ## 改动审批规则（2026-11-05）
@@ -41,10 +42,12 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 2 | 疾病归一化（基因 → OMIM / GenCC / GeneReviews） | ✅ 已验收（2026-10-28，tag `step2-accepted`）：`--fresh-llm` 硬性项全过；离线测试 135 个全过；症状提取测试集 32 条精确率/召回率 1.0（集合偏简单）；剩余问题见契约“已知局限” |
 | 2.5 | 审查用查看页面 | ✅ 本地 Web 应用 `scripts/viewer_app.py`（FastAPI，127.0.0.1:8765，实时刷新、页面上重跑、运行记录）+ 静态导出 `scripts/build_viewer.py`；前端二期（Step 1 平面三图、3D 结构）完成 |
 | 2.1 | Step 2 局限改进 | ✅ 已验收（2026-11-03，tag `step2.1-accepted`）：难题测试集、缺失类术语否定规则（修复 CBAVD）、起病年龄由代码映射到 HPO 起病术语；语义检索暂缓（剩余漏提不是检索问题）。详见 Step 2 契约 v2.5 |
-| 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查（4 条加载、8 条待审、3 条否决）。契约 `docs/step3_0_contract.md` |
+| 3.0 | 证据账本与公共基础 | ✅ 已验收（2026-11-03，tag `step3.0-accepted`）：联网验收硬性项全过；规则 16 基因起草、独立支持度核查。规则现状（2026-11-05 复核，审阅表 `docs/rules_review_2026-11-05.md`）：4 条已加载、6 条已否决、**5 条待审（全是 COL1A1）**，其中 COL1A1-1/2/3/4 已按审阅收窄条件、支持度核查待重跑。契约 `docs/step3_0_contract.md` |
 | 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）；补充修复（提示词 `3a-v5`：表格行与段首限定作条件、治疗类转介、漏抽补抽、放宽从句、按变量合并缺失信息等）✅ 已验收（2026-11-05，tag `step3a.1-accepted`）：6 个练习病例 20/20 核实期望成立。规则变更见 3a 契约文末 |
 | 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
-| 3c–3e | 按章节检索证据 | 下一步：支持治疗兜底链（契约 `docs/supportive_fallback_contract.md` 已批准）实现中 |
+| 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | 实现完成，验收待跑：7 个期望中 agxt33-stiripentol 等已成立；SLC35A2 ex7/ex8、GRIN2B、ANO10 四个病例待用新代码重跑（验收只计新鲜输出）。契约 `docs/step3c_contract.md` |
+| 3d | 定制疗法（Bespoke Therapies） | 契约草案 `docs/step3d_contract.md`（v0.1，含 N1C VARIANT 判定细则），7 个待定问题待审 |
+| 3e | 候选药物（体外 / 动物证据） | 未开始 |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
