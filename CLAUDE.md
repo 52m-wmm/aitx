@@ -36,6 +36,10 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 
 按节点逐步构建，**每个节点有契约文档（docs/）、离线测试（tests/）和联网验收脚本（scripts/acceptance_*.py），验收通过才进入下一步。**
 
+**新章节首次接入流水线，先用 1 个病例小规模试跑**（2026-11-06 定）：确认账本能完整写出（`out/step3/<病例>.json` 真的落盘）、`checks` 里没有 fail，再跑其余病例。
+起因：3d 首次接入时，新行动行缺 `status_by_branch`，账本在每个病例的最后一步抛 `KeyError`，12 个病例的 LLM 调用全部白花（约 \$0.19），一条输出都没写出来。
+同理适用于：改动账本结构、新增校验、换提示词版本。小规模试跑用缓存（`AITX_LLM_CACHE_ONLY=1`）能跑通的部分先跑，必须联网的那一步再放非高峰。
+
 | 步骤 | 内容 | 状态 |
 | --- | --- | --- |
 | 1 | 变异解析（确定性，无 LLM） | ✅ step1.1 已验收（2026-11-03，tag `step1.1-accepted`）：自检 6 独立重新翻译，16 个变异全部一致、反向验证全 fail；输出 schema v1.2 另含外显子布局和 AlphaFold 结构事实（pLDDT、RSA、8 Å 邻居） |
