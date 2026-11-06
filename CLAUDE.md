@@ -51,7 +51,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
 | 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | ✅ 已验收（2026-11-06，tag `step3c-accepted`）：5 个练习病例 7/7 核实期望成立、全部新鲜输出、账本校验全过。契约 `docs/step3c_contract.md`（规则变更见文末 1–15 条） |
 | 3d | 定制疗法（Bespoke Therapies） | 实现完成（`aitx/evidence/bespoke.py`，6 种手段逐一判定），离线测试 36 条；验收 2/8 成立、6 条因输出过期未计分（预算上限截断，明天补跑）。首轮统计：24 条判定中 10 条"无法评估"（41.7%），全部落在外显子跳跃（结构域、天然跳跃证据）和碱基编辑（PAM），都是审阅决定暂缓接入的数据源。契约 `docs/step3d_contract.md` |
-| 3e | 候选药物（体外 / 动物证据） | 未开始 |
+| 3e | 药物重定位（Drug Repurposing，体外 / 动物证据） | 契约草案 `docs/step3e_contract.md`（v0.1，三个数据源已当场验证），8 个待定问题待审 |
 | 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
