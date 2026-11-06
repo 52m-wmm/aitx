@@ -228,3 +228,8 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 - **边界一**：丢弃后该行动必须仍有主条件（针对的症状、孕期标记不算主条件）。没有主条件时，按原样保留并在账本 `dropped_conditions` 里报警（`warning: true`，规则 `BROADENING_ALARM`）。每次丢弃都记原文、放宽词和规则。
 - **边界二**：收窄词（excluding / except / other than / unless 等）不在此列，照旧作为条件。反向测试覆盖这四种写法。
 - 起因：PH1 表第 1 行 "… in all persons w/1 or 2 missense AGXT pathogenic variants, incl those w/advanced CKD or kidney failure" 让吡哆醇被判为"肾功能未知 → 有条件适用"。同时修了 "1 or 2" 被按 or 拆开的错误。
+
+
+## 验收新鲜度（2026-11-05）
+
+验收脚本只给新鲜输出计分：代码指纹、病例输入指纹或上游输出指纹与当前不一致的病例判"过期"，不计分，整体不通过。规则见 3c 契约第 14 条，实现 `aitx/runmeta.py` 的 `freshness`。

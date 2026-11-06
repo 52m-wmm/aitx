@@ -136,12 +136,17 @@ def _pf():
     (("satisfies", {"field": "manifestation", "value": "Visual impairment", "quote": "poor vision", "step": 2}), "satisfies", ""),
     (("unknown", None), "unknown", O.TARGET_NOTE),                     # not reported -> conditional
     (("does_not_satisfy", {"field": "manifestation", "value": "NOT x", "quote": "no eye findings", "step": 2}),
-     "unknown", O.ABSENT_NOTE),                                         # reverse: never a new 'not applicable'
+     "does_not_satisfy", O.ABSENT_NOTE),                                # explicitly denied -> not applicable
+    (("does_not_satisfy", {"field": "manifestation", "value": "NOT x", "quote": "Ophthalmology review", "step": 2}),
+     "unknown", O.UNVERIFIED_ABSENT_NOTE),                              # reverse: no denial word -> not stated
+    (("does_not_satisfy", None), "unknown", O.UNVERIFIED_ABSENT_NOTE),  # reverse: no quote at all
 ])
-def test_target_status_never_not_applicable(monkeypatch, ms, want_status, want_note):
+def test_target_status(monkeypatch, ms, want_status, want_note):
     monkeypatch.setattr(O.E, "manifestation_status", lambda t, pf: ms)
     st, fact, note = O.target_status("ocular findings", _pf())
     assert (st, note) == (want_status, want_note) and fact["field"] == "manifestation"
+    if st == "unknown":
+        assert fact["quote"] is None                                    # an unverified denial is not used as a fact
 
 
 class _Led:
@@ -174,6 +179,14 @@ def test_target_lines(monkeypatch):
                          src_of=lambda x: {}, key={}, start=3)
     assert [l["alternative"] for l in two] == ["target1", "target2"] and two[0]["id"] == "r4"
     assert all(l["result"] != "fail" for l in two)
+    # explicitly denied complication -> the line fails -> the drug is not applicable for this patient
+    monkeypatch.setattr(O.E, "manifestation_status", lambda t, pf: (
+        "does_not_satisfy", {"field": "manifestation", "value": "NOT CNV", "quote": "No choroidal neovascularization", "step": 2}))
+    led = _Led()
+    deny = O.target_lines(led, [_prec("1", "choroidal neovascularization")], "bevacizumab", _pf(), "B",
+                          src_of=lambda x: {}, key={}, start=0)
+    assert deny[0]["result"] == "fail" and O.LG.status_from([l["result"] for l in deny]) == "not_applicable"
+    assert led.missing == []                                            # a stated fact is not missing information
 
 
 # --- variant function (three tiers)

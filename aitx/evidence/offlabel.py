@@ -757,17 +757,23 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
 
 
 TARGET_NOTE = "used for this complication in the source; the case does not report it"
-ABSENT_NOTE = "the case states this complication is absent (kept conditional: a 'not applicable' needs review)"
+ABSENT_NOTE = "the case explicitly denies this complication"
+UNVERIFIED_ABSENT_NOTE = "marked absent, but the case quote has no denial word; treated as not stated"
 
 
 def target_status(text: str, pf: dict) -> tuple[str, dict | None, str]:
     """Does the patient have the complication the precedent treated? Same HPO matching as 3a's manifestation
-    conditions. Never a 'not applicable' (approval rule 2026-11-05): absent or not reported -> unknown (conditional)."""
+    conditions. Not reported -> unknown (conditional). Explicitly denied -> does not satisfy (not applicable;
+    approved 2026-11-05), but only when the case quote passes the patient-fact denial check (no / not / never /
+    without / denies ... - patient_facts.DENIAL); otherwise it counts as not stated."""
+    from aitx.evidence import patient_facts as PF
     st, fact = E.manifestation_status(text, pf)
     if st == "satisfies":
         return st, fact, ""
-    fact = fact or {"field": "manifestation", "value": None, "quote": None, "step": None}
-    return "unknown", dict(fact, field="manifestation"), ABSENT_NOTE if st == "does_not_satisfy" else TARGET_NOTE
+    if st == "does_not_satisfy" and fact and PF.DENIAL.search(str(fact.get("quote") or "")):
+        return st, dict(fact, field="manifestation"), ABSENT_NOTE
+    note = UNVERIFIED_ABSENT_NOTE if st == "does_not_satisfy" else TARGET_NOTE
+    return "unknown", {"field": "manifestation", "value": None, "quote": None, "step": None}, note
 
 
 def target_lines(led, prec: list[dict], drug: str, pf: dict, bid: str, *, src_of, key, start: int) -> list[dict]:

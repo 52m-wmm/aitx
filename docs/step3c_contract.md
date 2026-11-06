@@ -173,5 +173,6 @@
     - 测试：`test_outcome_measure_is_kept_only_inside_the_outcome_quote`、`test_positive_claim_is_about_the_measure_not_the_patient`、`test_improvement_conclusion_names_what_improved`。
 13. **针对特定并发症的用药带"针对的症状"条件**（2026-11-05 决定）。抽取时多取 `target_quote`（文献说明该药是用于某个并发症或症状而非疾病本身时，逐字；不在原文里的整条否决）。**所有**先例都写明针对的并发症时，每个不同的并发症记一条条件（`target_symptom: true`），几个并发症之间是"任一满足即可"的关系（alternative）；只要有一个先例是治疗疾病本身，就不加这个条件。
     - 病人是否有该症状：沿用 3a 的 HPO 上下位匹配（`established.manifestation_status`）。有 → 满足；没报告 → 未知（有条件），记入缺失信息"manifestation"。
-    - **病例明确写了没有这个症状**时，按审批规则**暂不判"不适用"**，仍为有条件，备注 `ABSENT_NOTE`；是否改判"不适用"待审。
-    - 测试：`test_target_quote_must_be_verbatim`、`test_target_status_never_not_applicable`（含反向：明确没有 → 不是不适用）、`test_target_lines`（有一个先例治疗疾病本身 → 不加条件；两个并发症 → 互为替代）。
+    - **病例明确否认该症状 → 不适用**（2026-11-05 批准）。按病人事实的否定核验规则（同 3b 契约"病人事实"：引用里必须有否定词，`patient_facts.DENIAL`）：Step 2 标为"无"、且病例原文引用含 no / not / never / without / denies 等词，才判"不满足"；标为"无"但引用里没有否定词 → 当作没提到（有条件，备注 `UNVERIFIED_ABSENT_NOTE`），不用这条事实。
+    - 测试：`test_target_quote_must_be_verbatim`、`test_target_status`（明确否认 → 不满足；反向：没有否定词或没有引用 → 未知）、`test_target_lines`（明确否认 → 不适用、不记缺失信息；有一个先例治疗疾病本身 → 不加条件；两个并发症 → 互为替代）。
+14. **验收只计新鲜输出**（2026-11-05 批准，3a / 3b / 3c 验收脚本同用 `runmeta.freshness`）。输出的 `_meta` 新增 `code_fingerprint`（`aitx/`、`config/`、`scripts/run_pipeline.py` 下所有受版本管理或新建文件内容的 sha256，未提交的改动也能区分）。下列任一情况判"过期"，该病例的期望**不计分**、整体不通过：没有输出；没有代码指纹（本检查之前生成）；代码指纹与当前不一致；病例输入指纹不一致；上游 Step 1 / Step 2 输出文件在此后改变。测试 `tests/test_freshness.py`。

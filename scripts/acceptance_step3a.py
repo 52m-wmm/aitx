@@ -127,6 +127,11 @@ def run() -> dict:
                      "branches": {b["id"]: (b.get("diagnosis") or {}).get("label") or b.get("gene") for b in (led or {}).get("branches", [])}}
     rows = [{**{k: i.get(k) for k in ("id", "case", "section", "match", "expect", "what", "source", "provisional")}, "branch": i.get("branch"),
              **compare(i, ledgers[i["case"]])} for i in spec["items"]]
+    code = runmeta.code_fingerprint()
+    fresh = {cid: runmeta.freshness(3, cid, code=code) for cid in cases}
+    runmeta.apply_freshness(rows, fresh)
+    for cid in cases:
+        meta[cid]["fresh"] = fresh[cid]
     n_ok = sum(r["ok"] for r in rows)
     ok = n_ok == len(rows) and all(m["ledger_ok"] for m in meta.values())
     return {"schema": "acceptance-step3a-v1", "created_at": int(time.time()), "code_commit": runmeta.code_commit(),
@@ -144,8 +149,9 @@ def main() -> int:
               f"prompt {m['prompt_versions']}, rows extracted again {m['reextracted_rows']} "
               f"(no treatment {m['reextracted_no_treatment']})")
     for row in r["rows"]:
-        print(f"  {'OK ' if row['ok'] else 'BAD'} {row['id']:<22} {row['what']['en']}" + (f"  -- {row['problem']}" if row["problem"] else ""))
-    print(f"{r['n_ok']}/{r['n']} expectations hold; overall {'PASS' if r['ok'] else 'FAIL'} -> {RESULT.relative_to(ROOT)}")
+        print(f"  {'OK ' if row['ok'] else ('STL' if row.get('stale') else 'BAD')} {row['id']:<22} {row['what']['en']}" + (f"  -- {row['problem']}" if row["problem"] else ""))
+    n_stale = sum(1 for row in r["rows"] if row.get("stale"))
+    print(f"{r['n_ok']}/{r['n']} expectations hold ({n_stale} on stale outputs, not scored); overall {'PASS' if r['ok'] else 'FAIL'} -> {RESULT.relative_to(ROOT)}")
     return 0 if r["ok"] else 1
 
 

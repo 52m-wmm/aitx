@@ -157,3 +157,8 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 - 每个分支的检索记录、被过滤的研究（附原因）、超出上限的研究写入账本 `trial_searches`。
 - 没有试验的分支：`searched_none` + 阴性证据。
 - 验收脚本 `scripts/acceptance_step3b.py`。
+
+
+## 验收新鲜度（2026-11-05）
+
+验收脚本只给新鲜输出计分：代码指纹、病例输入指纹或上游输出指纹与当前不一致的病例判"过期"，不计分，整体不通过。规则见 3c 契约第 14 条，实现 `aitx/runmeta.py` 的 `freshness`。

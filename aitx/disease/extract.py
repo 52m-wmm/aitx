@@ -116,13 +116,63 @@ def _cache_usable(entry: dict, cfg: dict) -> bool:
     return not prefix or str(entry.get("served_model", "")).startswith(prefix)
 
 
+# Other endpoints whose cached answers may be reused (2026-11-05 decision): "base_url|requested model", comma separated.
+DEFAULT_CACHE_FROM = "https://api.deepseek.com|deepseek-flash"
+REUSE_LOG = "cache_reuse.jsonl"
+
+
+def cache_sources(cfg: dict) -> list[dict]:
+    raw = os.environ.get("AITX_LLM_CACHE_FROM", DEFAULT_CACHE_FROM)
+    out = []
+    for part in [x.strip() for x in raw.split(",") if x.strip()]:
+        url, _, model = part.partition("|")
+        src = dict(cfg, base_url=url.strip().rstrip("/"), model=(model.strip() or cfg["model"]))
+        if (src["base_url"], src["model"]) != (cfg["base_url"], cfg["model"]):
+            out.append(src)
+    return out
+
+
+def cross_provider_ok(entry: dict, cfg: dict) -> bool:
+    """An answer cached from another endpoint is reused only when the model name its server returned is exactly the
+    expected one (AITX_EXPECT_MODEL_PREFIX set to the full served name): same weights, not just the same alias.
+    Without an expected name nothing is reused across endpoints."""
+    want = cfg.get("expect_model_prefix") or ""
+    return bool(want) and str(entry.get("served_model") or "") == want
+
+
+def cache_lookup(messages: list[dict], k: int, cfg: dict, prompt_version: str | None = None) -> dict | None:
+    """This endpoint's cached answer, else one from a listed other endpoint under cross_provider_ok. The provider
+    that produced the answer is recorded on the entry (`provider`) and every cross-endpoint reuse is logged."""
+    path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
+    if path.exists():
+        entry = json.loads(path.read_text())
+        if _cache_usable(entry, cfg):
+            entry.setdefault("provider", cfg["base_url"])
+            return entry
+    for src in cache_sources(cfg):
+        other = CACHE_DIR / f"{cache_key(messages, k, src, prompt_version)}.json"
+        if not other.exists():
+            continue
+        entry = json.loads(other.read_text())
+        if _cache_usable(entry, cfg) and cross_provider_ok(entry, cfg):
+            entry.setdefault("provider", src["base_url"])
+            entry["reused_on"] = cfg["base_url"]
+            log = llm.LOG.parent / REUSE_LOG
+            log.parent.mkdir(parents=True, exist_ok=True)
+            with log.open("a") as f:
+                f.write(json.dumps({"ts": int(time.time()), "key": other.stem, "provider": entry["provider"],
+                                    "reused_on": cfg["base_url"], "served_model": entry.get("served_model")}) + "\n")
+            return entry
+    return None
+
+
 def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: str | None = None) -> dict:
     """One chat completion, cached under cache_key(). Other modules pass their own prompt_version."""
     cfg = llm.config()
     path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
-    if use_cache and path.exists():
-        entry = json.loads(path.read_text())
-        if _cache_usable(entry, cfg):
+    if use_cache:
+        entry = cache_lookup(messages, k, cfg, prompt_version)
+        if entry is not None:
             return entry
     attempts, params = 5, CALL_PARAMS
     for attempt in range(attempts):
@@ -155,7 +205,7 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
         raise RuntimeError(f"LLM returned no usable content (finish_reason={choice.get('finish_reason')})")
     out = {"requested_model": cfg["model"], "served_model": resp.get("model", ""),
            "content": content, "sample": k, "call_params": params, "call_params_source": "recorded",
-           "prompt_version": prompt_version or PROMPT_VERSION}
+           "prompt_version": prompt_version or PROMPT_VERSION, "provider": cfg["base_url"]}
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     return out

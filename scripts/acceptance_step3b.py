@@ -79,7 +79,10 @@ def run() -> dict:
         ledgers[cid] = json.loads(p.read_text()) if p.exists() else None
     rows = [{**{k: i[k] for k in ("id", "case", "match", "expect", "what", "source")}, **compare(i, ledgers[i["case"]])}
             for i in spec["items"]]
-    meta = {cid: {"exists": l is not None, "ledger_ok": (l or {}).get("ok"),
+    code = runmeta.code_fingerprint()
+    fresh = {cid: runmeta.freshness(3, cid, code=code) for cid in ledgers}
+    runmeta.apply_freshness(rows, fresh)
+    meta = {cid: {"fresh": fresh[cid], "exists": l is not None, "ledger_ok": (l or {}).get("ok"),
                   "failed_checks": [c["name"] for c in (l or {}).get("checks", []) if c["status"] == "fail"],
                   "created_at": ((l or {}).get("_meta") or {}).get("created_at")} for cid, l in ledgers.items()}
     n_ok = sum(r["ok"] for r in rows)
@@ -95,8 +98,9 @@ def main() -> int:
     for cid, m in r["cases"].items():
         print(f"{cid}: ledger {'ok' if m['ledger_ok'] else 'FAILED ' + str(m['failed_checks'])}")
     for row in r["rows"]:
-        print(f"  {'OK ' if row['ok'] else 'BAD'} {row['id']:<20} {row['what']['en']}" + (f"  -- {row['problem']}" if row["problem"] else ""))
-    print(f"{r['n_ok']}/{r['n']} expectations hold; overall {'PASS' if r['ok'] else 'FAIL'} -> {RESULT.relative_to(ROOT)}")
+        print(f"  {'OK ' if row['ok'] else ('STL' if row.get('stale') else 'BAD')} {row['id']:<20} {row['what']['en']}" + (f"  -- {row['problem']}" if row["problem"] else ""))
+    n_stale = sum(1 for row in r["rows"] if row.get("stale"))
+    print(f"{r['n_ok']}/{r['n']} expectations hold ({n_stale} on stale outputs, not scored); overall {'PASS' if r['ok'] else 'FAIL'} -> {RESULT.relative_to(ROOT)}")
     return 0 if r["ok"] else 1
 
 

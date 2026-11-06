@@ -83,9 +83,12 @@ def main() -> int:
         leds[cid] = json.loads(p.read_text()) if p.exists() else None
     rows = [{**{k: i.get(k) for k in ("id", "case", "match", "expect", "what", "source", "blocked_by", "note")}, **compare(i, leds[i["case"]])}
             for i in spec["items"]]
-    counted = [r for r in rows if not r.get("blocked_by") or r["ok"]]
+    code = runmeta.code_fingerprint()
+    fresh = {cid: runmeta.freshness(3, cid, code=code) for cid in leds}
+    runmeta.apply_freshness(rows, fresh)
+    counted = [r for r in rows if not r.get("blocked_by") or r["ok"] or r.get("stale")]
     res = {"schema": "acceptance-step3c-v1", "created_at": int(time.time()), "code_commit": runmeta.code_commit(),
-           "n": len(rows), "n_ok": sum(r["ok"] for r in rows), "n_blocked": sum(1 for r in rows if r.get("blocked_by") and not r["ok"]),
+           "n": len(rows), "n_ok": sum(r["ok"] for r in rows), "n_blocked": sum(1 for r in rows if r.get("blocked_by") and not r["ok"] and not r.get("stale")),
            "ok": all(r["ok"] for r in counted) and all((l or {}).get("ok") for l in leds.values()),
            "ledgers_ok": {c: (l or {}).get("ok") for c, l in leds.items()}, "rows": rows}
     RESULT.parent.mkdir(parents=True, exist_ok=True)
@@ -93,9 +96,9 @@ def main() -> int:
     for c, ok in res["ledgers_ok"].items():
         print(f"{c}: ledger {'ok' if ok else 'FAILED'}")
     for r in rows:
-        tag = "OK " if r["ok"] else ("BLK" if r.get("blocked_by") else "BAD")
+        tag = "OK " if r["ok"] else ("STL" if r.get("stale") else "BLK" if r.get("blocked_by") else "BAD")
         print(f"  {tag} {r['id']:<24} {r['what']['en']}" + (f"  -- {r['problem']}" if r["problem"] else ""))
-    print(f"{res['n_ok']}/{res['n']} hold, {res['n_blocked']} blocked by pending decisions; overall {'PASS' if res['ok'] else 'FAIL'}")
+    print(f"{res['n_ok']}/{res['n']} hold, {sum(1 for r in rows if r.get('stale'))} on stale outputs (not scored), {res['n_blocked']} blocked by pending decisions; overall {'PASS' if res['ok'] else 'FAIL'}")
     return 0 if res["ok"] else 1
 
 
