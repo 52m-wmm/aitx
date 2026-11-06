@@ -87,3 +87,17 @@ def test_independent_samples_are_combined(monkeypatch):
 
 def test_prompt_states_conclusion_strength_limits():
     assert "does not support" in SC.SYSTEM and "single case" in SC.SYSTEM and "does not support causation" in SC.SYSTEM
+
+
+def test_rule_items_say_the_narrowing_conditions(monkeypatch):
+    """A narrowed rule must be judged on its narrow condition, not as if it had none (2026-11-05)."""
+    names = {"OMIM:619115": {"label": "EDS/OI overlap"}}
+    sub = {"gene": "COL1A1", "applies_when": {"variant_class": ["missense"],
+           "aa_substitution": {"position": 134, "from": "Arg", "to": "Cys"}},
+           "effect": {"supports": ["OMIM:619115"]}}
+    cond = SC.rule_items(sub, names)[0]
+    assert "replace Arg at protein residue 134 with Cys" in cond and "missense" in cond
+    loss = {"gene": "COL1A1", "applies_when": {"exon_loss": [6, 6]}, "effect": {"supports": ["OMIM:130060"]}}
+    cond = SC.rule_items(loss, {})[0]
+    assert "remove the whole of exon 6" in cond and "splice variant at its boundary" in cond
+    assert "lie in exon 6" not in cond                      # not the old, wider wording

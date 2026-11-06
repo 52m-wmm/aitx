@@ -301,7 +301,9 @@ def test_config_is_well_formed_and_every_quote_is_in_its_verified_record():
     t = F.load_guidelines()
     cats = t["categories"]
     assert set(cats) == {"epilepsy", "developmental_delay_intellectual_disability", "feeding_difficulties"}
-    assert cats["developmental_delay_intellectual_disability"]["enabled"] is False          # AAP 2013 not verified yet
+    dd = cats["developmental_delay_intellectual_disability"]
+    assert "enabled" not in dd and [g["id"] for g in dd["guidelines"]] == ["iap2022"]        # enabled 2026-11-05
+    assert dd["guidelines"][0]["level"] == 3 and dd["level_3_reason"]                        # level 3 needs its reason
     nice = next(g for g in cats["epilepsy"]["guidelines"] if g["id"] == "nice_ng217")
     assert nice["level"] == 3 and nice["reason_level_3"]
     for c in cats.values():

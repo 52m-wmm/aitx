@@ -80,9 +80,40 @@
     "HP:0001263",
     "HP:0001249"
    ],
-   "enabled": false,
-   "why_disabled": "first choice AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home) not yet verified: publisher page behind a Cloudflare check, NCBI search unavailable (2026-11-05); IAP 2022 is not used as a stand-in (decision 2026-11-05). After verification, IAP 2022 may supplement rehabilitation advice for ages over 3, with the reason.",
-   "guidelines": []
+   "guidelines": [
+    {
+     "id": "iap2022",
+     "level": 3,
+     "title": "Diagnosis and Management of Global Development Delay: consensus guidelines of three chapters of the Indian Academy of Pediatrics",
+     "body": "Indian Academy of Pediatrics (Growth, Development and Behavioral Pediatrics Chapter; Neurology Chapter; Neurodevelopment Pediatrics Chapter)",
+     "version": "Indian Pediatrics, FEBRUARY 19, 2022 [E-PUB AHEAD OF PRINT]",
+     "url": "https://indianpediatrics.net/epub022022/RECOMM-00406.pdf",
+     "verified": {
+      "file": ".cache/guidelines/iap2022/verified.json",
+      "sha256": "b7d43e41d079cd70a8ccb1581037db56e65b89f0b5970342db88cfd96c087c37",
+      "date": "2026-11-05"
+     },
+     "rule": "intervention-type items only; 5A (NICU only), 5B (finding the cause), 5C (routine health care) and 5E (screening) are not used - see not_used in the verified record",
+     "recommendations": [
+      {
+       "name": "start early intervention as soon as the delay is recognized",
+       "quote": "Early intervention should be initiated soon after the delay is recognized, instead of waiting for a formal diagnosis.",
+       "item": "5D"
+      },
+      {
+       "name": "multidisciplinary developmental intervention team (developmental paediatrics or paediatric neurology, clinical psychology, occupational therapy, physiotherapy, special education, speech therapy)",
+       "quote": "This requires a multi-disciplinary team consisting of developmental pediatrician/pediatric neurologists, clinical psychologists, occupational therapists, physiotherapists, special educators and speech therapists.",
+       "item": "Early developmental interventions (body text)"
+      },
+      {
+       "name": "preschool education services in the least restrictive environment",
+       "quote": "Children with GDD should receive preschool education services in the least restrictive environment that is possible and appropriate to address their needs.",
+       "item": "5G"
+      }
+     ]
+    }
+   ],
+   "level_3_reason": "levels (1)-(2) have no usable intervention guideline: no international society guideline on the management of developmental delay was found, and the only US candidate, AAP 2013 (Early Intervention, IDEA Part C Services, and the Medical Home, PMID 24082001), is a clinical report whose abstract carries no recommendation sentence and whose reaffirmation status could not be verified (the 16 'AAP Publications Reaffirmed/Retired' notices in PubMed have no abstracts). Decision 2026-11-05: use IAP 2022 instead, with this reason recorded."
   },
   "feeding_difficulties": {
    "hpo": [

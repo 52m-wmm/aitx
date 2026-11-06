@@ -143,3 +143,10 @@
 - **新增配置项**：类别 `enabled`；推荐 `hpo`（只对病人已有的该症状或其下位症状使用）；推荐 `requires`（使用情境，原文逐字，判为有条件）。
 - **总论判定改为按章节原文标题**（契约原文"标题含 Overview"）。实现时曾按基因数判断，把"Classic Ehlers-Danlos Syndrome"（3 个基因）误标为总论；现在按标题判断，取不到标题时才退回按基因数。
 - **新发现的候选（未写入配置）**：AES 官网列出 "American Epilepsy Society Clinical Practice Guideline: Infantile Epilepsy"（2026 年 4 月）。这是第 ② 级的婴儿癫痫管理指南，待核实原文后再决定是否加入。
+
+## L4 发育迟缓类别启用（2026-11-05 批准）
+
+- 首选 AAP 2013（PMID 24082001）**不用**：PubMed 文献类型是 Journal Article + Review（AAP 临床报告，不是指南），摘要里没有推荐句，且复审状态无法核实——PubMed 收录的 16 条 "AAP Publications Reaffirmed / Retired" 通知都没有摘要，看不到列了哪些文件。
+- 改用 **IAP 2022**（第 ③ 级，理由写进配置 `level_3_reason`）：Juneja M 等，*Indian Pediatrics*，2022-02-19 电子预发表。PDF 原文已取、pdftotext 提取、逐字核对，存 `.cache/guidelines/iap2022/`（PDF + 提取文本 + verified.json，均不进仓库；sha256 在配置里）。
+- 采用的三条（都是干预类）：5D"delay 一经识别即开始早期干预，不等正式诊断"；多学科团队（发育儿科 / 儿童神经、临床心理、作业治疗、物理治疗、特殊教育、言语治疗）；5G 学前教育服务。
+- **不采用**并记在 verified.json 的 `not_used` 里：5A（只适用于 NICU 内的婴儿）、5B（查找并治疗病因，是报告自身的任务）、5C（常规保健）、5E（筛查 / 监测——L4 只收干预类推荐）。

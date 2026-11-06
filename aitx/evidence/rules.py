@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 from aitx import http
@@ -24,7 +25,8 @@ from aitx.evidence.branches import MAX_BRANCHES, make_branch, set_roles
 
 ROOT = Path(__file__).resolve().parents[2]
 RULES_DIR = ROOT / "data" / "rules"
-CONDITION_FIELDS = {"variant_class", "nmd_prediction", "zygosity", "exon", "protein_position"}
+CONDITION_FIELDS = {"variant_class", "nmd_prediction", "zygosity", "exon", "protein_position",
+                    "aa_substitution", "exon_loss"}      # narrowing fields added 2026-11-05 (review)
 
 
 def identity(rule: dict) -> str:
@@ -91,15 +93,57 @@ def load_rules(rules_dir: Path = RULES_DIR) -> dict:
     return {"loaded": loaded, "skipped": skipped}
 
 
+_AA3 = {"Ala", "Arg", "Asn", "Asp", "Cys", "Gln", "Glu", "Gly", "His", "Ile", "Leu", "Lys", "Met", "Phe", "Pro",
+        "Ser", "Thr", "Trp", "Tyr", "Val", "Ter", "Sec"}
+# the whole protein change must be this one substitution: "p.(Ile2694SerfsTer44)" is a frameshift, not Ile->Ser
+_SUB = re.compile(r"^p\.\(?([A-Z][a-z]{2})(\d+)([A-Z][a-z]{2})\)?$")
+
+
+def substitution(v: dict) -> dict | None:
+    """{position, from, to} of a single amino-acid substitution, from the step 1 re-translation (preferred, since
+    it is computed from the sequence) or from the stated protein change. None when the variant is not one."""
+    fc = ((v.get("retranslation") or {}).get("first_changed_aa") or {})
+    if fc.get("position") and fc.get("reference") in _AA3 and fc.get("variant") in _AA3:
+        return {"position": int(fc["position"]), "from": fc["reference"], "to": fc["variant"]}
+    m = _SUB.match(str(v.get("variant_protein") or "").strip())
+    if m and m.group(1) in _AA3 and m.group(3) in _AA3:
+        return {"position": int(m.group(2)), "from": m.group(1), "to": m.group(3)}
+    return None
+
+
+def loses_exon(v: dict, lo: int, hi: int) -> bool:
+    """Does this variant remove (or plausibly skip) a whole exon in [lo, hi]?
+
+    Only two deterministic cases (2026-11-05 review): a deletion whose span covers such an exon, and a splice
+    variant at such an exon's own boundary (the usual way an exon is skipped; we do not predict splicing, so
+    this is as far as step 1 facts reach). A coding change inside the exon is NOT exon loss.
+    """
+    ex = v.get("exon") or {}
+    n, spanned = ex.get("number"), ex.get("exons_spanned") or ([ex["number"]] if ex.get("number") else [])
+    cls = v.get("variant_class")
+    if cls in ("deletion", "inframe_deletion", "cnv_deletion", "whole_exon_deletion"):
+        return any(lo <= e <= hi for e in spanned)
+    if cls == "splice":
+        return n is not None and lo <= n <= hi
+    return False
+
+
 def matches(cond: dict, v: dict) -> bool:
     """Conditions on one step 1 variant; every listed condition must hold."""
     pos = v.get("first_affected_aa")
+
+    def is_sub(want: dict) -> bool:
+        got = substitution(v)
+        return bool(got) and all(got.get(k) == want[k] for k in ("position", "from", "to") if k in want)
+
     checks = {
         "variant_class": lambda want: v.get("variant_class") in want,
         "nmd_prediction": lambda want: (v.get("nmd") or {}).get("prediction") in want,
         "zygosity": lambda want: v.get("zygosity") in want,
         "exon": lambda r: (v.get("exon") or {}).get("number") is not None and r[0] <= v["exon"]["number"] <= r[1],
         "protein_position": lambda r: pos is not None and r[0] <= pos <= r[1],
+        "aa_substitution": is_sub,
+        "exon_loss": lambda r: loses_exon(v, r[0], r[1]),
     }
     return all(checks[k](want) for k, want in cond.items())
 

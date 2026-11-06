@@ -237,3 +237,45 @@ def test_verified_rule_must_have_passed_support_check(pubmed):
 def test_review_identity_ignores_status_and_checks():
     a, b = rule(), rule(status="pending_review", support_check={"overall": "partially_supported"})
     assert RU.identity(a) == RU.identity(b) and RU.content_hash(a) != RU.content_hash(b)
+
+
+# --- narrowing conditions added after the 2026-11-05 rule review
+
+def _v(**kw):
+    base = {"gene": "COL1A1", "variant_class": "missense", "zygosity": "heterozygous",
+            "variant_protein": "p.(Arg134Cys)", "first_affected_aa": 134}
+    base.update(kw)
+    return base
+
+
+def test_aa_substitution_needs_the_same_replacement():
+    want = {"position": 134, "from": "Arg", "to": "Cys"}
+    assert RU.matches({"aa_substitution": want}, _v())                                   # Arg134Cys
+    assert not RU.matches({"aa_substitution": want}, _v(variant_protein="p.(Arg134His)"))   # same residue, other aa
+    assert not RU.matches({"aa_substitution": want}, _v(variant_protein="p.(Arg915Cys)", first_affected_aa=915))
+    assert not RU.matches({"aa_substitution": want}, _v(variant_protein="p.(Gly560Ser)", first_affected_aa=560))
+    # the position-only condition it replaces would have fired on all of them
+    assert RU.matches({"protein_position": [134, 134]}, _v(variant_protein="p.(Arg134His)"))
+
+
+def test_substitution_prefers_the_recomputed_residues():
+    v = _v(variant_protein="p.(Arg134Cys)",
+            retranslation={"first_changed_aa": {"position": 134, "reference": "Arg", "variant": "His"}})
+    assert RU.substitution(v) == {"position": 134, "from": "Arg", "to": "His"}       # sequence beats the stated name
+    assert RU.substitution(_v(variant_protein="p.Gln919Ter")) == {"position": 919, "from": "Gln", "to": "Ter"}
+    assert RU.substitution(_v(variant_protein="p.(Ile2694SerfsTer44)", retranslation={})) is None   # frameshift
+    assert RU.substitution(_v(variant_protein="", retranslation={})) is None
+
+
+@pytest.mark.parametrize("v,want", [
+    (_v(variant_class="splice", exon={"number": 6}), True),                         # splice at that exon's boundary
+    (_v(variant_class="inframe_deletion", exon={"number": 4, "exons_spanned": [4, 5, 6, 7]}), True),
+    (_v(variant_class="missense", exon={"number": 6}), False),                      # a coding change is not exon loss
+    (_v(variant_class="nonsense", exon={"number": 6}), False),
+    (_v(variant_class="frameshift", exon={"number": 6}), False),
+    (_v(variant_class="splice", exon={"number": 7}), False),
+    (_v(variant_class="inframe_deletion", exon={"number": 8, "exons_spanned": [8, 9]}), False),
+    (_v(variant_class="missense", exon={}), False),
+])
+def test_exon_loss_only_for_deletions_and_splice_variants(v, want):
+    assert RU.matches({"exon_loss": [6, 6]}, v) is want

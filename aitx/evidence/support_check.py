@@ -118,6 +118,13 @@ def rule_items(rule: dict, names: dict[str, dict]) -> list[str]:
     if c.get("exon"):
         a, b = c["exon"]
         parts.append(f"lie in exon{'s' if a != b else ''} {a}" + (f"-{b}" if a != b else ""))
+    if c.get("aa_substitution"):                   # narrowing condition (2026-11-05): one named substitution
+        sub = c["aa_substitution"]
+        parts.append(f"replace {sub.get('from')} at protein residue {sub.get('position')} with {sub.get('to')}")
+    if c.get("exon_loss"):                         # narrowing condition (2026-11-05): the exon itself is lost
+        a, b = c["exon_loss"]
+        parts.append(f"remove the whole of exon{'s' if a != b else ''} {a}" + (f"-{b}" if a != b else "")
+                     + " (a deletion covering it, or a splice variant at its boundary)")
     if c.get("nmd_prediction"):
         parts.append("have the NMD prediction " + " or ".join(c["nmd_prediction"]))
     if c.get("zygosity"):

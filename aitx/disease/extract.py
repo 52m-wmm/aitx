@@ -29,7 +29,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from aitx import llm, peak
+from aitx import budget, llm, peak
 from aitx.disease.hpo import Ontology
 
 N_SAMPLES = 3
@@ -177,6 +177,7 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
     attempts, params = 5, CALL_PARAMS
     for attempt in range(attempts):
         peak.check_before_call()               # --offpeak-only: never start a call inside a peak window
+        budget.check_before_call()             # daily spend cap (2026-11-05): stop instead of overspending
         try:
             with _SLOTS:
                 resp = llm.chat(messages, **params)
