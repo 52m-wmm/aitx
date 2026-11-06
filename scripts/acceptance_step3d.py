@@ -50,7 +50,8 @@ def compare(item: dict, led: dict | None) -> dict:
             probs.append(f"facts.{k} = {facts.get(k)!r} (want {v!r})")
     if want.get("mechanism"):
         got = {b: (r or {}).get("mechanism") for b, r in (led.get("bespoke_mechanism") or {}).items()}
-        if want["mechanism"] not in got.values():
+        ok = want["mechanism"] if isinstance(want["mechanism"], list) else [want["mechanism"]]
+        if not set(ok) & set(got.values()):
             probs.append(f"mechanism {got} (want {want['mechanism']})")
         elif not a.get("evidence_ids"):
             probs.append("mechanism-based verdict cites no evidence")

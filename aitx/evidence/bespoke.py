@@ -329,6 +329,7 @@ def record(modality: str, res: dict, branch: str) -> dict:
     """One ledger row per branch and modality (contract section 4), with the four fields step 4 ranks on."""
     reasons = res.get("unassessable_reason") or []
     return {"section": SECTION, "modality": modality, "label": LABEL[modality], "applies_to": [branch],
+            "action_key": None, "requirements": [], "evidence_ids": [],
             "classification": res["classification"], "conclusion": sentence(modality, res),
             "criteria_met": res.get("criteria_met") or [], "failed_criterion": res.get("failed_criterion"),
             "exceptions": res.get("exceptions") or [], "unassessable_reason": reasons,
@@ -359,6 +360,20 @@ Return only JSON: {"mechanism": "<word>", "quote": "<the sentence from the passa
  "for_variant_kind": "<the words in the passage naming which variants this applies to, or empty>"}"""
 
 
+# A passage that only guesses at the mechanism is not a source for it (2026-11-06: a GeneReviews table cell read
+# "COL1A1 c.934C>T Unknown; possible dominant-negative activity", and that was taken as dominant-negative).
+HEDGES = re.compile(r"\b(unknown|unclear|uncertain|possible|possibly|may|might|could|putative|presumed|presumably|"
+                    r"suspected|hypothesi[sz]ed|not (?:yet )?(?:known|established|determined)|remains to be|"
+                    r"likely|probable|probably|appears? to|thought to|proposed)\b", re.I)
+NO_FIRM_MECHANISM = ("the GeneReviews passage only suggests a mechanism rather than stating one "
+                     "(no other mechanism source is connected)")
+
+
+def hedged(quote: str) -> bool:
+    """Does this quote hedge instead of stating the mechanism?"""
+    return bool(HEDGES.search(quote or ""))
+
+
 def mechanism_of(gene: str, nbks: list[str], variant_class: str | None, *, use_cache: bool = True) -> dict:
     """{mechanism, quote, nbk, section, llm} from the archived GeneReviews chapter, or mechanism None.
 
@@ -368,6 +383,7 @@ def mechanism_of(gene: str, nbks: list[str], variant_class: str | None, *, use_c
     from aitx.disease import extract as X
     from aitx.evidence import genereviews as GR
     from aitx.evidence import ledger as LG
+    rejected = []
     for nbk in nbks:
         for sec in MECH_SECTIONS:
             text = GR.section_text(nbk, sec)
@@ -381,10 +397,15 @@ def mechanism_of(gene: str, nbks: list[str], variant_class: str | None, *, use_c
             mech, quote = got.get("mechanism"), str(got.get("quote") or "")
             llm = {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
                    "prompt_version": MECH_PROMPT_VERSION}
+            if mech in LOF + TOXIC and quote and LG.quote_in(quote, text) and hedged(quote):
+                rejected.append({"nbk": nbk, "section": sec, "mechanism": mech, "quote": quote,
+                                 "why": NO_FIRM_MECHANISM})
+                continue
             if mech in LOF + TOXIC and quote and LG.quote_in(quote, text):
                 return {"mechanism": mech, "quote": quote, "nbk": nbk, "section": sec, "source_text": text,
                         "for_variant_kind": str(got.get("for_variant_kind") or ""), "llm": llm}
-    return {"mechanism": None, "quote": None, "nbk": None, "section": None, "source_text": None, "llm": None}
+    return {"mechanism": None, "quote": None, "nbk": None, "section": None, "source_text": None, "llm": None,
+            "rejected": rejected or None}
 
 
 # ------------------------------------------------------------------ the step: one set of records per branch

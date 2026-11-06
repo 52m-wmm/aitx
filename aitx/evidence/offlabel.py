@@ -348,11 +348,27 @@ def _llm(user: str, use_cache: bool, what: str):
                                    "prompt_version": PROMPT_VERSION}
 
 
-_GENE_AFTER = (r"(?:\s*-\s*|\s+)(?:variants?|mutations?|pathogenic|deficien\w*|related|associated|ndd|cdg|encephalopath\w*|"
+# lowercase qualifiers may sit between the symbol and the noun ("GRIN2B loss-of-function pathogenic variants");
+# only lowercase words, so another gene symbol is never swallowed (2026-11-06)
+_QUAL = r"(?:[a-z][a-z-]*\s+){0,3}"
+_GENE_AFTER = (r"(?:\s*-\s*|\s+)" + _QUAL + r"(?:variants?|mutations?|pathogenic|deficien\w*|related|associated|ndd|cdg|encephalopath\w*|"
                r"disorders?|disease|patients?|carriers?|individuals?|syndrome|child(?:ren)?|infants?|girls?|boys?|siblings?|famil\w*)\b"
                r"|(?:\s*,\s*[A-Z][A-Z0-9]+)*,?\s+(?:and|or)\s+[A-Z][A-Z0-9]+\s+(?:variants?|mutations?)\b")   # "GRIN2B, GRIN1 and GRIN2A variants"
 _GENE_BEFORE = r"\b(?:variants?|mutations?|carriers?|pathogenic variants?|patients?|individuals?|children)\s+(?:with\s+|in\s+|of\s+)?(?:a\s+|an\s+|the\s+)?(?:\w+\s+){0,2}"
 _CANCER = re.compile(r"\b(?:cancer|carcinoma|tumou?rs?|neoplas\w*|malignan\w*|leuka?emi\w*|lymphoma|metasta\w*|chemotherapy)\b", re.I)
+
+
+def gene_family(gene: str | None) -> str | None:
+    """The gene-family prefix a paper may use for this gene's cohort ("GRIN2B" -> "GRIN"), or None.
+
+    Only the alphabetic prefix that the symbol's first digit cuts off, and only when it is at least four letters,
+    so GRIN2B and CACNA1A have families (GRIN, CACNA) while ANO10, SCN2A, COL1A1 and SLC35A2 do not. It counts
+    only in the same gene-as-condition patterns as the full symbol, so a bare mention is still not enough
+    (2026-11-06: the L-serine trial, PMID 38380699, describes its cohort as "GRIN loss-of-function pathogenic
+    variants" and names GRIN2B only elsewhere in the abstract).
+    """
+    m = re.match(r"^([A-Z]{4,})\d", (gene or "").upper())
+    return m.group(1) if m else None
 
 
 def names_in(quote: str, names: list[str], gene: str | None) -> str | None:
@@ -365,10 +381,12 @@ def names_in(quote: str, names: list[str], gene: str | None) -> str | None:
         if re.search(rf"(?<![A-Za-z0-9]){re.escape(n.strip())}(?![A-Za-z0-9])", quote or "", 0 if short else re.I):
             return n
     if gene and not _CANCER.search(quote or ""):
-        g = re.escape(gene)
-        if re.search(rf"(?<![A-Za-z0-9]){g}{_GENE_AFTER}", quote or "", re.I) or \
-                re.search(rf"{_GENE_BEFORE}{g}(?![A-Za-z0-9])", quote or "", re.I):
-            return gene
+        for g, found in ((re.escape(gene), gene), (re.escape(gene_family(gene) or "\0"), gene_family(gene))):
+            if not found:
+                continue
+            if re.search(rf"(?<![A-Za-z0-9]){g}{_GENE_AFTER}", quote or "", re.I) or \
+                    re.search(rf"{_GENE_BEFORE}{g}(?![A-Za-z0-9])", quote or "", re.I):
+                return found
     return None
 
 

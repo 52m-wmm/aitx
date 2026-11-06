@@ -244,3 +244,30 @@ def test_check_catches_what_the_contract_forbids():
     # a verdict that did not use the mechanism (AAV capacity) needs no mechanism evidence
     size = BS.problems(_rows(gene_replacement={"evidence_ids": [], "facts": {"used_mechanism": False}}), ["B"])
     assert "cites no evidence" not in " ".join(size)
+
+
+# --- the mechanism source must state the mechanism, not guess it (2026-11-06)
+
+@pytest.mark.parametrize("quote,is_hedge", [
+    ("COL1A1 c.934C>T Unknown; possible dominant-negative activity", True),
+    ("Variants may act through a dominant-negative mechanism", True),
+    ("The mechanism is likely loss of function", True),
+    ("These variants are thought to cause haploinsufficiency", True),
+    ("qualitative changes, which impart a dominant-negative effect", False),
+    ("Decreased production of structurally normal type I procollagen results in a reduction in the amount of bone",
+     False),
+])
+def test_hedged_quotes_are_not_a_mechanism_source(quote, is_hedge):
+    assert BS.hedged(quote) is is_hedge
+
+
+def test_mechanism_rejects_a_hedged_quote_and_records_it(monkeypatch):
+    from aitx.evidence import genereviews as GR
+    from aitx.disease import extract as X
+    text = "COL1A1 c.934C>T Unknown; possible dominant-negative activity"
+    monkeypatch.setattr(GR, "section_text", lambda nbk, sec: text if sec == BS.MECH_SECTIONS[0] else None)
+    monkeypatch.setattr(X, "_cached_chat", lambda *a, **k: {"served_model": "m", "content": ""})
+    monkeypatch.setattr(X, "_parse", lambda r: {"parsed": {"mechanism": "dominant_negative", "quote": text}})
+    got = BS.mechanism_of("COL1A1", ["NBK1244"], "missense", use_cache=True)
+    assert got["mechanism"] is None
+    assert got["rejected"] and got["rejected"][0]["why"] == BS.NO_FIRM_MECHANISM

@@ -284,7 +284,10 @@ class Ledger:
             if st != "searched":
                 continue
             for b in branch_ids:
-                has_action = any(b in e["applies_to"] for e in self.in_section(s))
+                # an action row for this branch also fills the section: 3d judgements rest on step 1 facts and
+                # need no fetched evidence of their own (2026-11-06)
+                has_action = any(b in e["applies_to"] for e in self.in_section(s)) or \
+                    any(a["section"] == s and b in a.get("applies_to", []) for a in self.actions)
                 has_neg = any(e["kind"] == "negative" and e["status"] == "verified" and e["section"] == s
                               and b in e["applies_to"] for e in ev)
                 if not has_action and not has_neg:
@@ -321,6 +324,13 @@ class Ledger:
         missing = {m["variable"] for m in self.missing_information}
         for a in self.actions:
             tag = a.get("action_key") or f"{a['section']} (searched_none)"
+            if a.get("modality"):
+                # 3d rows judge a therapeutic modality, not whether an action fits this patient, so they carry no
+                # requirement lines and no per-branch status; bespoke_consistent checks them instead (2026-11-06).
+                if a.get("action_key") or a.get("requirements") or not set(a["applies_to"]) <= branch_ids:
+                    bad.append(f"{a['section']} {a['modality']}: a modality judgement must name existing branches "
+                               f"and carry no action key or requirement lines")
+                continue
             if not set(a["applies_to"]) <= branch_ids or set(a["status_by_branch"]) != set(a["applies_to"]):
                 bad.append(f"{tag}: branches")
             for r in a["requirements"]:

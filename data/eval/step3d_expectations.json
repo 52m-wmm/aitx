@@ -142,25 +142,29 @@
    "added": "2026-11-05: step 3d first acceptance set"
   },
   {
-   "id": "col1a1-replacement-dominant-negative",
+   "id": "col1a1-replacement-not-a-shortage",
    "case": "PRAC-COL1A1",
    "branch": null,
    "modality": "gene_replacement",
    "expect": {
     "classification": "not_applicable",
-    "failed_criterion": "dominant negative",
-    "mechanism": "dominant_negative"
+    "failed_criterion": "adding a normal copy does not",
+    "mechanism": [
+     "gain_of_function",
+     "dominant_negative"
+    ]
    },
    "what": {
-    "zh": "COL1A1 p.Gly560Ser（三螺旋区甘氨酸替换）/ 基因替代：不适用（机制为显性负效应，补正常拷贝不能消除异常蛋白的作用）；机制须引用 GeneReviews 原文",
-    "en": "COL1A1 p.Gly560Ser (glycine substitution in the triple helix) / gene replacement: not applicable (dominant-negative mechanism; a normal copy does not remove the abnormal protein's effect), with the GeneReviews quote"
+    "zh": "COL1A1 p.Gly560Ser（三螺旋区甘氨酸替换）/ 基因替代：不适用——机制不是产物不足，补一份正常拷贝不能消除异常蛋白的作用；机制须引用 GeneReviews 原文",
+    "en": "COL1A1 p.Gly560Ser (glycine substitution in the triple helix) / gene replacement: not applicable - the mechanism is not a shortage of product, so a normal copy does not remove the abnormal protein's effect; the GeneReviews quote is required"
    },
    "source": {
-    "doc": "GeneReviews NBK1295 (COL1A1- and COL1A2-Related Osteogenesis Imperfecta), section Molecular Genetics / Molecular Pathogenesis, local archive; read verbatim 2026-11-05",
+    "doc": "GeneReviews NBK1295 (COL1A1- and COL1A2-Related Osteogenesis Imperfecta), section Molecular Genetics / Molecular Pathogenesis, local archive; read verbatim 2026-11-06. The chapter uses both words for the same thing - qualitative changes - so either is accepted: the heading says 'gain of function', the body says 'dominant-negative effect'. Both lead to the same verdict here.",
     "url": "https://www.ncbi.nlm.nih.gov/books/NBK1295/",
-    "quote": "Quantitative changes, which lead to loss of function, tend to have a milder phenotype when compared to qualitative changes, which impart a dominant-negative effect."
+    "quote": "Perinatally lethal OI, progressively deforming OI, and common variable OI (qualitative, gain of function): Substitutions for glycine within the triple-helical domain of the pro-α chain delay triple helix formation",
+    "quote_2": "Quantitative changes, which lead to loss of function, tend to have a milder phenotype when compared to qualitative changes, which impart a dominant-negative effect."
    },
-   "added": "2026-11-05: step 3d first acceptance set"
+   "added": "2026-11-05 added; 2026-11-06 widened after reading the chapter again: the source names the mechanism of a glycine substitution both ways, so the expectation accepts either word and pins the conclusion instead."
   },
   {
    "id": "col1a1-skip-unassessable",

@@ -420,9 +420,14 @@ def test_gene_may_be_named_in_the_patient_count_quote():
           "n_quote": "Patients had GRIN2B, GRIN1 and GRIN2A variants (12, 6 and 5 cases, respectively)", "n_disease": 12}
     assert O.check_item(it, text, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") is None
     assert O.checked_counts(it)["n_disease"] == 12
-    # reverse: neither quote names GRIN2B -> not a precedent for this gene
-    it2 = {**it, "n_quote": "Patients aged 2-18 years"}
-    assert O.check_item(it2, text, ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") == \
+    # 2026-11-06: the use quote alone ("GRIN loss-of-function pathogenic variants") is now enough on its own,
+    # because GRIN is this gene's family named as the cohort's condition (see gene_family)
+    assert O.check_item({**it, "n_quote": "Patients aged 2-18 years"}, text,
+                        ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") is None
+    # reverse: another gene's family is not this patient's condition
+    other = "Patients with SCN loss-of-function pathogenic variants received L-serine for 52 weeks"
+    assert O.check_item({"name": "L-serine", "use_quote": other}, "A trial.\n" + other,
+                        ["GRIN2B-related neurodevelopmental disorder"], "GRIN2B") == \
         "use quote names neither the disease nor the gene"
 
 
@@ -488,3 +493,23 @@ def test_round_robin_covers_many_drugs_before_repeating_one():
     pool = [r("1", ["a"]), r("2", ["a"]), r("3", ["a"]), r("4", ["b"], "b in the title"), r("5", []), r("6", ["c"])]
     assert [x["pmid"] for x in O.pick(pool, 4)] == ["4", "1", "6", "2"]       # b (title) first, then a, c, then a again
     assert [x["pmid"] for x in O.pick(pool, 10)][-1] == "5"                 # no new drug: last
+
+
+# --- gene family as the cohort's condition (2026-11-06)
+
+@pytest.mark.parametrize("gene,family", [("GRIN2B", "GRIN"), ("CACNA1A", "CACNA"), ("KCNT1", "KCNT"),
+                                         ("ANO10", None), ("SCN2A", None), ("COL1A1", None), ("SLC35A2", None),
+                                         ("AGXT", None), ("", None), (None, None)])
+def test_gene_family_only_for_long_prefixes(gene, family):
+    assert O.gene_family(gene) == family
+
+
+def test_family_counts_only_as_the_patients_condition():
+    q = "patients aged 2-18 years with GRIN loss-of-function pathogenic variants received L-serine"
+    assert O.names_in(q, [], "GRIN2B") == "GRIN"
+    assert O.names_in("L-serine treatment in patients with GRIN-related encephalopathy", [], "GRIN2B") == "GRIN"
+    # a bare mention, a different family, and a cancer context still do not count
+    assert O.names_in("GRIN receptors were measured", [], "GRIN2B") is None
+    assert O.names_in("patients with SCN1A variants received stiripentol", [], "GRIN2B") is None
+    assert O.names_in("GRIN2B expression in colorectal carcinoma patients", [], "GRIN2B") is None
+    assert O.names_in("patients with ANO variants", [], "ANO10") is None          # prefix too short to be a family

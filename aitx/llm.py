@@ -56,6 +56,10 @@ def _read_stream(r) -> dict:
     return {"id": rid, "model": model, "choices": [{"index": 0, "message": msg, "finish_reason": finish}], "usage": usage}
 
 
+class NoServedModel(RuntimeError):
+    """The response carried no model name, so the served model could not be confirmed (retryable)."""
+
+
 class ModelMismatch(RuntimeError):
     pass
 
@@ -105,6 +109,11 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
         f.write(json.dumps({"ts": int(t0), "requested": cfg["model"], "served": served,
                             "base_url": cfg["base_url"], "usage": resp.get("usage"),
                             "seconds": round(time.time() - t0, 2)}) + "\n")
+    if cfg["expect_model_prefix"] and not served:
+        # no chunk of the stream carried a model name: we cannot confirm who answered, but this is a stream
+        # artifact rather than a model switch, so the caller retries it (2026-11-06: it lost a whole case)
+        raise NoServedModel(f"the response carried no model name (requested {cfg['model']}); not accepted "
+                            f"without confirming the model")
     if cfg["expect_model_prefix"] and not served.startswith(cfg["expect_model_prefix"]):
         raise ModelMismatch(f"requested {cfg['model']} but server reports {served!r}")
     return resp

@@ -176,3 +176,8 @@
     - **病例明确否认该症状 → 不适用**（2026-11-05 批准）。按病人事实的否定核验规则（同 3b 契约"病人事实"：引用里必须有否定词，`patient_facts.DENIAL`）：Step 2 标为"无"、且病例原文引用含 no / not / never / without / denies 等词，才判"不满足"；标为"无"但引用里没有否定词 → 当作没提到（有条件，备注 `UNVERIFIED_ABSENT_NOTE`），不用这条事实。
     - 测试：`test_target_quote_must_be_verbatim`、`test_target_status`（明确否认 → 不满足；反向：没有否定词或没有引用 → 未知）、`test_target_lines`（明确否认 → 不适用、不记缺失信息；有一个先例治疗疾病本身 → 不加条件；两个并发症 → 互为替代）。
 14. **验收只计新鲜输出**（2026-11-05 批准，3a / 3b / 3c 验收脚本同用 `runmeta.freshness`）。输出的 `_meta` 新增 `code_fingerprint`（`aitx/`、`config/`、`scripts/run_pipeline.py` 下所有受版本管理或新建文件内容的 sha256，未提交的改动也能区分）。下列任一情况判"过期"，该病例的期望**不计分**、整体不通过：没有输出；没有代码指纹（本检查之前生成）；代码指纹与当前不一致；病例输入指纹不一致；上游 Step 1 / Step 2 输出文件在此后改变。测试 `tests/test_freshness.py`。
+15. **基因家族名可以代表病人的遗传病因**（2026-11-06，`gene_family`）。起因：L-serine 的 2A 期试验（PMID 38380699）把入组人群写成 "patients aged 2-18 years with GRIN loss-of-function pathogenic variants"，标题写 "GRIN-related encephalopathy"，GRIN2B 只出现在摘要别处；按原规则这篇被判"引文既没提疾病也没提基因"，GRIN2B 病人因此拿不到这条先例。
+    - 规则：基因符号中被第一个数字截断的字母前缀，**且至少 4 个字母**，才算家族名（GRIN2B → GRIN、CACNA1A → CACNA、KCNT1 → KCNT；ANO10、SCN2A、COL1A1、SLC35A2、AGXT 没有家族名）。家族名只在与完整符号相同的"基因作为病人病因"句式里才算（"GRIN variants"、"GRIN-related encephalopathy"），单纯提到不算，癌症语境照旧排除。
+    - 同时放宽句式：基因符号与病因名词之间允许最多 3 个**小写**限定词（"GRIN2B loss-of-function pathogenic variants"）。只允许小写，避免把另一个基因符号吞进来。
+    - 性质：放宽收录（会多出先例、可能新增有条件条目），不会产生新的"不适用"。按审批规则先做后报。
+    - 测试：`test_gene_family_only_for_long_prefixes`、`test_family_counts_only_as_the_patients_condition`（含反向：裸提及、别的家族、癌症语境、前缀过短都不算）；`test_gene_may_be_named_in_the_patient_count_quote` 的反向用例改为"别的基因家族"，并注明原用例为何不再适用。

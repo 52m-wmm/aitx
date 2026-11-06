@@ -898,3 +898,30 @@ def test_every_timeout_handler_also_catches_socket_timeout():
             if re.search(r"except\s*\(.*\bTimeoutError\b", line) and "socket.timeout" not in line:
                 bad.append(f"{f.relative_to(root)}:{n}")
     assert not bad, bad
+
+
+def test_a_response_without_a_model_name_is_retried_then_fails(monkeypatch, tmp_path):
+    """2026-11-06: one stream carried no model name and the case was lost. It must be retried, and an actually
+    different model must still fail at once."""
+    monkeypatch.setattr(X, "CACHE_DIR", tmp_path)
+    monkeypatch.setenv("AITX_EXPECT_MODEL_PREFIX", "deepseek-flash")
+    monkeypatch.setattr(X.time, "sleep", lambda *_: None)
+    calls = {"n": 0}
+
+    def flaky(messages, **kw):
+        calls["n"] += 1
+        model = "" if calls["n"] < 3 else "deepseek-flash"
+        if not model:
+            raise X.llm.NoServedModel("no model name")
+        return {"model": model, "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+
+    monkeypatch.setattr(X.llm, "chat", flaky)
+    out = X._cached_chat([{"role": "user", "content": "hi"}], 0, False, prompt_version="t")
+    assert out["served_model"] == "deepseek-flash" and calls["n"] == 3
+
+    def wrong(messages, **kw):
+        raise X.llm.ModelMismatch("requested deepseek-flash but server reports 'other'")
+
+    monkeypatch.setattr(X.llm, "chat", wrong)
+    with pytest.raises(X.llm.ModelMismatch):
+        X._cached_chat([{"role": "user", "content": "hi2"}], 0, False, prompt_version="t")

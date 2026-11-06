@@ -1075,7 +1075,28 @@ def _req_table(a: dict, s3: dict, cols: list[dict]) -> str:
     return "<div class='wrap'><table>" + "<tr>" + "".join(f"<th>{h}</th>" for h in head) + "</tr>" + "".join(rows) + "</table></div>"
 
 
+_MODALITY_CLASS = {"eligible": "ok", "likely_eligible": "ok", "unlikely_eligible": "cond", "not_eligible": "no",
+                   "theoretically_possible": "ok", "not_applicable": "no", "unable_to_assess": "cond",
+                   "not_graded": "cond"}
+
+
+def _modality_card(a: dict, cols: list[dict], span: str = "") -> str:
+    cls = _MODALITY_CLASS.get(a.get("classification"), "cond")
+    bits = [f"<div class='muted'>{e(a['conclusion'])}</div>"]
+    if a.get("criteria_met"):
+        bits.append("<ul>" + "".join(f"<li>{e(x)}</li>" for x in a["criteria_met"]) + "</ul>")
+    if a.get("unassessable_reason"):
+        bits.append(f"<div class='muted'>{L('缺', 'missing')}: "
+                    + "; ".join(e(x) for x in a["unassessable_reason"]) + "</div>")
+    if a.get("exceptions"):
+        bits.append("<div class='muted'>" + "<br>".join(e(x) for x in a["exceptions"]) + "</div>")
+    return (f"<div class='card {span}'><div class='row'><b>{e(a['label'])}</b>"
+            f"{tag(cls, e((a.get('classification') or '').replace('_', ' ')))}</div>" + "".join(bits) + "</div>")
+
+
 def _card(a: dict, s3: dict, cols: list[dict], span: str = "") -> str:
+    if a.get("modality"):                       # 3d: a modality judgement, not a per-patient action (2026-11-06)
+        return _modality_card(a, cols, span)
     sts = {b: v["status"] for b, v in a["status_by_branch"].items()}
     overall = next(iter(set(sts.values()))) if len(set(sts.values())) == 1 else "mixed"
     reasons = {v["reason"] for v in a["status_by_branch"].values()}
@@ -1117,10 +1138,15 @@ def v_board(s3: dict | None) -> str:
     cols = _branch_cols(s3)
     acts = s3.get("actions") or []
     shown = [a for a in acts if a.get("report") is not False]
-    counts = {s: sum(1 for a in shown for v in a["status_by_branch"].values() if v["status"] == s) for s in ACT_ORDER}
+    # 3d rows carry a modality verdict instead of a per-branch status, so they are counted separately
+    counts = {s: sum(1 for a in shown for v in (a.get("status_by_branch") or {}).values() if v["status"] == s)
+              for s in ACT_ORDER}
+    n_modality = sum(1 for a in shown if a.get("modality"))
     hidden = len(acts) - len(shown)
     unit = L("（按 行动 × 分支 计）", " (action × branch)") if len(cols) > 1 else ""
     top = " ".join(f"{tag(ACT_CLS[s], act_label(s))} <b>{counts[s]}</b>" for s in ACT_ORDER)
+    if n_modality:
+        top += f" {tag('cond', L('手段判定', 'modality verdicts'))} <b>{n_modality}</b>"
     top += f" <span class='muted'>{unit}{L(f' · 不写入报告 {hidden}', f' · not reported {hidden}')}</span>"
     miss = s3.get("missing_information") or []
     miss_html = ("<details class='miss'><summary>" + L(f"缺失信息 {len(miss)} 项", f"Missing information: {len(miss)}") + "</summary><ul>"
@@ -1142,7 +1168,8 @@ def v_board(s3: dict | None) -> str:
                 not_searched.append(sec)
                 continue
             vis = sorted([a for a in here if a.get("report") is not False],
-                         key=lambda a: (min(order.get(v["status"], 9) for v in a["status_by_branch"].values()), a["label"].lower()))
+                         key=lambda a: (min([order.get(v["status"], 9) for v in
+                                             (a.get("status_by_branch") or {}).values()] or [9]), a["label"].lower()))
             hid = [a for a in here if a.get("report") is False]
             cards = "".join(_card(a, s3, cols, _span(a, cols)) for a in vis) or f"<p class='muted'>{L('（无行动）', '(no actions)')}</p>"
             fold = (f"<details class='hidden-acts'><summary class='muted'>{L(f'不写入报告的条目 {len(hid)} 个', f'{len(hid)} items not written to the report')}</summary>"
