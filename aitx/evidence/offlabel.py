@@ -29,7 +29,8 @@ from aitx.evidence import trials as T
 
 ROOT = Path(__file__).resolve().parents[2]
 SECTION = "off_label_expanded_access"
-PROMPT_VERSION = "3c-v2"          # v2 (2026-11-05): anaesthesia / sedation / procedural / diagnostic uses excluded
+PROMPT_VERSION = "3c-v3"          # v2 (2026-11-05): anaesthesia / sedation / procedural / diagnostic uses excluded
+                                  # v3 (2026-11-05): outcome_measure (what improved) and target_quote (complication treated)
 N_PAPERS = 20                                     # decision 4
 SUPPLEMENTS = ROOT / "config" / "supplements.json"
 SUPPLEMENT_NOTE = "Not an FDA-approved drug; product quality and dosing are not regulated."
@@ -325,6 +326,8 @@ character for character from the text. For each product return one item:
  "n_quote": "<the words giving how many patients received it, or empty>", "n_disease": <number with this disease or gene, or null>,
  "n_total": <number of all treated patients, or null>,
  "outcome_quote": "<the sentence stating the result for these patients, or empty>",
+ "outcome_measure": "<the words inside outcome_quote naming what was measured or observed to change (for example \"plasma oxalate\", \"ocular findings\", \"seizure frequency\"), copied exactly, or empty>",
+ "target_quote": "<if the product was given for one complication or symptom of the disease rather than for the disease itself, the exact words naming that complication or symptom; otherwise empty>",
  "direction": "positive" | "negative" | "mixed" | "not_reported",
  "co_treatment_quote": "<the words naming another treatment given at the same time, or empty>",
  "dose_quote": "<the words giving the dose used, or empty>",
@@ -397,7 +400,7 @@ def check_item(it: dict, text: str, names: list[str], gene: str | None) -> str |
     if not names_in(use, names, gene) and not (nq and LG.quote_in(nq, text) and names_in(nq, names, gene)) \
             and not (names_in(title, names, gene) and drug_in(title, name)):
         return "use quote names neither the disease nor the gene"
-    for k in ("n_quote", "outcome_quote", "co_treatment_quote", "dose_quote", "design_quote"):
+    for k in ("n_quote", "outcome_quote", "co_treatment_quote", "dose_quote", "design_quote", "target_quote"):
         if it.get(k) and not LG.quote_in(str(it[k]), text):
             return f"{k} not verbatim"
     return None
@@ -410,12 +413,22 @@ def checked_counts(it: dict) -> dict:
     return {k: (it.get(k) if it.get(k) is not None and number_in(it.get(k), q) else None) for k in ("n_disease", "n_total")}
 
 
-def direction_claim(d: str, drug: str, disease: str) -> str:
+def outcome_measure(it: dict) -> str | None:
+    """What the source says changed: the LLM's words, kept only when they are inside the outcome quote."""
+    m, q = str(it.get("outcome_measure") or "").strip(), str(it.get("outcome_quote") or "")
+    return m if m and len(m) >= 3 and m.lower() in q.lower() else None
+
+
+def direction_claim(d: str, drug: str, disease: str, measure: str | None = None) -> str:
     """Claim the support check judges. Number-neutral (2026-11-05): with "patients" the judges answered
     "partially supported - one infant, not patients generally" for every single-case report, so no case report could
-    ever carry a direction. How many patients is recorded separately (n_disease), not inside this claim."""
+    ever carry a direction. How many patients is recorded separately (n_disease), not inside this claim.
+    Positive is about the measured outcome, not the patient as a whole (decision 2026-11-05): "plasma oxalate fell"
+    supports "plasma oxalate improved", never "the patient improved"."""
     who = f"the patient or patients with {disease} described in this report"
-    return {"positive": f"After receiving {drug}, {who} improved.",
+    pos = (f"After receiving {drug}, {measure} improved in {who}." if measure else
+           f"After receiving {drug}, an outcome measured or observed improved in {who}.")
+    return {"positive": pos,
             "negative": f"{drug} did not achieve the intended effect in {who}.",
             "mixed": f"{drug} had both beneficial and absent or adverse effects in {who}."}[d]
 
@@ -426,7 +439,7 @@ def direction(it: dict, drug: str, disease: str, use_cache: bool) -> str:
     d, q = it.get("direction"), str(it.get("outcome_quote") or "")
     if d not in ("positive", "negative", "mixed") or not q:
         return "not_reported"
-    claim = direction_claim(d, drug, disease)
+    claim = direction_claim(d, drug, disease, outcome_measure(it))
     # both quotes from the same article: who received the drug, and what happened (2026-11-05: the outcome sentence
     # alone - "SLC35A2-CDG patients demonstrated improvements" - does not name the drug)
     sc = SC.check_support(f"{drug} effect in {disease}", [claim], [str(it.get("use_quote") or ""), q], use_cache=use_cache)
@@ -454,16 +467,20 @@ def aggregate(directions: list[str]) -> str:
 CONCLUSION = {
     "inconsistent": "Reports conflict: improvement and no benefit have both been reported.",
     "reported_ineffective": "Reported ineffective; not recommended.",
-    "reported_improvement": "Improvement has been reported; this is not proof of efficacy.",
+    "reported_improvement": "Improvement has been reported in {measures}; this is not proof of efficacy.",
     "insufficient": "Use has been reported, but there is no evidence that it is effective.",
 }
 
 
-def conclusion(agg: str, directions: list[str]) -> str:
-    """Code-made sentence, never stronger than the sources; counts what it rests on."""
+def conclusion(agg: str, directions: list[str], measures: list[str | None] | None = None) -> str:
+    """Code-made sentence, never stronger than the sources; counts what it rests on. An improvement names what
+    improved (the measure from the positive precedents), never "the patient" (decision 2026-11-05)."""
     n = {d: directions.count(d) for d in DIRECTIONS if directions.count(d)}
     parts = ", ".join(f"{v} {k.replace('_', ' ')}" for k, v in n.items())
-    return f"{CONCLUSION[agg]} ({parts})"
+    ms = measures or [None] * len(directions)
+    named = list(dict.fromkeys(m for d, m in zip(directions, ms) if d in ("positive", "mixed") and m))
+    what = ", ".join(named) if named else "an outcome the source does not name"
+    return f"{CONCLUSION[agg].format(measures=what)} ({parts})"
 
 
 # ------------------------------------------------------------------ US status
@@ -676,6 +693,7 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
                      "design_quote": it.get("design_quote") or None, "via_review": bool(p.get("via_review")),
                      "n_disease": n["n_disease"], "n_total": n["n_total"], "n_quote": it.get("n_quote") or None,
                      "use_quote": it["use_quote"], "outcome_quote": it.get("outcome_quote") or None, "direction": d,
+                     "outcome_measure": outcome_measure(it), "target_quote": it.get("target_quote") or None,
                      "co_treatment_quote": it.get("co_treatment_quote") or None, "dose_quote": it.get("dose_quote") or None,
                      "open_access_full_text": bool(p.get("full_text")), "retracted": False,
                      "_text": paper_text(p), "_conditions": it.get("conditions") or [], "_llm": llm})
@@ -713,13 +731,15 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
                 line["patient_fact"] = dict(fact, field=var)
                 led.note_missing(var, drug, t[:120], "3c")
             lines.append(line)
+    lines += target_lines(led, prec, drug, pf, bid, src_of=lambda x: {"type": "pmid", "id": x["pmid"], "url": x["url"]},
+                          key=g["key"], start=len(lines))
     res = [l["result"] for l in lines]
     reason = ("not met: " + next(l["requirement"] for l in lines if l["result"] == "fail")[:80] if "fail" in res else
               "depends on: " + "; ".join(sorted({l["patient_fact"]["field"] for l in lines if l["result"] == "unknown"}))[:100]
               if "unknown" in res else CONCLUSION[agg])
     rec = LG.action_record(key, SECTION, drug, [bid], lines, [e["id"] for e in evs if e["status"] == "verified"], {bid: reason})
     rec.update(precedents=[{k: v for k, v in x.items() if not k.startswith("_")} for x in prec], efficacy_direction=agg,
-               conclusion=conclusion(agg, directions), access_route=route, access_route_label=ROUTE_LABEL[route],
+               conclusion=conclusion(agg, directions, [x["outcome_measure"] for x in prec]), access_route=route, access_route_label=ROUTE_LABEL[route],
                regulatory={"fda": {k: v for k, v in fda.items() if k != "search"}, "supplement": sup, "gras": gras,
                            "expanded_access": ea},
                strength=strongest(prec))
@@ -734,6 +754,50 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
     led.actions.append(rec)
     made_for.setdefault(bid, set()).add(key)
     decisions.append({"drug": drug, "key": key, "decision": f"3c (access: {route})"})
+
+
+TARGET_NOTE = "used for this complication in the source; the case does not report it"
+ABSENT_NOTE = "the case states this complication is absent (kept conditional: a 'not applicable' needs review)"
+
+
+def target_status(text: str, pf: dict) -> tuple[str, dict | None, str]:
+    """Does the patient have the complication the precedent treated? Same HPO matching as 3a's manifestation
+    conditions. Never a 'not applicable' (approval rule 2026-11-05): absent or not reported -> unknown (conditional)."""
+    st, fact = E.manifestation_status(text, pf)
+    if st == "satisfies":
+        return st, fact, ""
+    fact = fact or {"field": "manifestation", "value": None, "quote": None, "step": None}
+    return "unknown", dict(fact, field="manifestation"), ABSENT_NOTE if st == "does_not_satisfy" else TARGET_NOTE
+
+
+def target_lines(led, prec: list[dict], drug: str, pf: dict, bid: str, *, src_of, key, start: int) -> list[dict]:
+    """A drug the sources used only for one complication (every precedent names a target) carries that complication
+    as a condition (decision 2026-11-05). Several different targets are alternatives: any one present is enough.
+    If any precedent treated the disease itself, there is no target condition."""
+    if not prec or not all(x.get("target_quote") for x in prec):
+        return []
+    out, seen = [], {}
+    for x in prec:
+        t = x["target_quote"]
+        if t.lower() in seen:
+            continue
+        seen[t.lower()] = True
+        ev = led.add(LG.sourced(f"PMID {x['pmid']} used {drug} for: {t[:80]}", SECTION, [bid], src_of(x), t, x["_text"],
+                                led_time(), produced_by=x["_llm"], retrieved_by="3c pubmed", action=key))
+        st, fact, note = target_status(t, pf)
+        out.append((t, ev, st, fact, note))
+    alt = len(out) > 1
+    lines = []
+    for i, (t, ev, st, fact, note) in enumerate(out):
+        line = LG.requirement(f"r{start + i + 1}", "label_condition", t, ev["id"], fact, st, [bid], note,
+                              alternative=f"target{i + 1}" if alt else None)
+        line["target_symptom"] = True
+        if line["result"] == "unknown":
+            var = E.variable_type("manifestation")
+            line["patient_fact"] = dict(fact, field=var)
+            led.note_missing(var, drug, t[:120], "3c")
+        lines.append(line)
+    return lines
 
 
 def led_time() -> int:

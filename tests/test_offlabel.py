@@ -101,6 +101,81 @@ def test_direction_claim_does_not_require_several_patients():
     assert O.direction_claim("negative", "stiripentol", "PH1").startswith("stiripentol did not achieve")
 
 
+def test_outcome_measure_is_kept_only_inside_the_outcome_quote():
+    q = "a drastic decrease of plasma oxalate was observed after lanthanum carbonate"
+    assert O.outcome_measure({"outcome_quote": q, "outcome_measure": "Plasma oxalate"}) == "Plasma oxalate"
+    assert O.outcome_measure({"outcome_quote": q, "outcome_measure": "kidney function"}) is None     # not in the quote
+    assert O.outcome_measure({"outcome_quote": q, "outcome_measure": ""}) is None
+
+
+def test_positive_claim_is_about_the_measure_not_the_patient():
+    c = O.direction_claim("positive", "lanthanum carbonate", "PH1", "plasma oxalate")
+    assert c == "After receiving lanthanum carbonate, plasma oxalate improved in the patient or patients with PH1 described in this report."
+    assert "an outcome measured or observed" in O.direction_claim("positive", "x", "PH1")
+    assert O.direction_claim("negative", "x", "PH1", "plasma oxalate") == O.direction_claim("negative", "x", "PH1")  # unchanged
+
+
+def test_improvement_conclusion_names_what_improved():
+    c = O.conclusion("reported_improvement", ["positive", "not_reported"], ["plasma oxalate", "eyes"])
+    assert c.startswith("Improvement has been reported in plasma oxalate;") and "eyes" not in c
+    assert "an outcome the source does not name" in O.conclusion("reported_improvement", ["positive"], [None])
+    assert "patient improved" not in c and "patients improved" not in c
+
+
+def test_target_quote_must_be_verbatim():
+    it = {"name": "stiripentol", "use_quote": "We administered Stiripentol as compassionate use in an anuric infant with "
+          "dialysis-dependent PH1", "target_quote": "retinal oxalate deposits"}
+    assert O.check_item(it, TEXT, ["PH1"], "AGXT") == "target_quote not verbatim"
+
+
+def _pf():
+    return {"present": [{"hpo_id": "HP:0000505", "label": "Visual impairment", "quote": "poor vision"}], "excluded": []}
+
+
+@pytest.mark.parametrize("ms,want_status,want_note", [
+    (("satisfies", {"field": "manifestation", "value": "Visual impairment", "quote": "poor vision", "step": 2}), "satisfies", ""),
+    (("unknown", None), "unknown", O.TARGET_NOTE),                     # not reported -> conditional
+    (("does_not_satisfy", {"field": "manifestation", "value": "NOT x", "quote": "no eye findings", "step": 2}),
+     "unknown", O.ABSENT_NOTE),                                         # reverse: never a new 'not applicable'
+])
+def test_target_status_never_not_applicable(monkeypatch, ms, want_status, want_note):
+    monkeypatch.setattr(O.E, "manifestation_status", lambda t, pf: ms)
+    st, fact, note = O.target_status("ocular findings", _pf())
+    assert (st, note) == (want_status, want_note) and fact["field"] == "manifestation"
+
+
+class _Led:
+    def __init__(self):
+        self.missing = []
+    def add(self, ev):
+        return {"id": "e1", **ev}
+    def note_missing(self, var, action, detail, by):
+        self.missing.append((var, action))
+        return var
+
+
+def _prec(pmid, target):
+    return {"pmid": pmid, "url": "u", "target_quote": target, "_text": f"t {target or ''}", "_llm": {}}
+
+
+def test_target_lines(monkeypatch):
+    monkeypatch.setattr(O.LG, "sourced", lambda *a, **k: {"status": "verified"})
+    monkeypatch.setattr(O.E, "manifestation_status", lambda t, pf: ("unknown", None))
+    led = _Led()
+    lines = O.target_lines(led, [_prec("1", "ocular complication")], "bevacizumab", _pf(), "B",
+                           src_of=lambda x: {}, key={}, start=0)
+    assert len(lines) == 1 and lines[0]["result"] == "unknown" and lines[0]["target_symptom"] and "alternative" not in lines[0]
+    assert led.missing and led.missing[0][1] == "bevacizumab"
+    # one precedent treated the disease itself -> no target condition
+    assert O.target_lines(_Led(), [_prec("1", "ocular complication"), _prec("2", None)], "x", _pf(), "B",
+                          src_of=lambda x: {}, key={}, start=0) == []
+    # two different targets -> alternatives (any one present is enough)
+    two = O.target_lines(_Led(), [_prec("1", "ocular complication"), _prec("2", "skin calcification")], "x", _pf(), "B",
+                         src_of=lambda x: {}, key={}, start=3)
+    assert [l["alternative"] for l in two] == ["target1", "target2"] and two[0]["id"] == "r4"
+    assert all(l["result"] != "fail" for l in two)
+
+
 # --- variant function (three tiers)
 
 def _s1(cls, nmd):

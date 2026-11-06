@@ -169,3 +169,9 @@
     - 性质：让核查能确认原文本来就写了的结果（未知 → 确定的"报告无效"或"报告改善"）。这只是"写清原文说了什么"，不涉及适用 / 不适用判定。司替戊醇的期望已在审阅中定为"没有支持有效的证据"，这次改动正是为了让它成立。
     - 离线测试：`test_direction_claim_does_not_require_several_patients`。反向验证：STS（40432890）的引文没写出患者是 PH1，仍判"不支持"，方向保持 not_reported；贝伐珠单抗、碳酸镧见下条待定。
     - **待定（未改）**：正向论断写的是"患者改善"，而负向论断写的是"没达到预期效果"，两者不对称。贝伐珠单抗（33737053，眼部病变对治疗有反应）和碳酸镧（34258537，血浆草酸明显下降）的原文只说某个具体指标或并发症好转，核查答"部分支持：不是整体改善"，所以仍是 not_reported。要不要把正向论断改成"报告中所测的指标或并发症好转"，并把指标写进记录（报告里只能说"血浆草酸下降"，不能说"患者改善"），等审阅决定。
+12. **阳性结论只写"所测指标或并发症改善"**（2026-11-05 决定；提示词 `3c-v3`）。抽取时多取 `outcome_measure`（结果句里所测或观察到的指标，逐字，必须在 `outcome_quote` 里，否则视为未给出）。阳性核查论断改为"After receiving X, <指标> improved in the patient or patients …"；没有给出指标时写"an outcome measured or observed improved"。结论句写"Improvement has been reported in <指标>"；没有指标时写"an outcome the source does not name"，**不写"患者好转"**。阴性论断不变。
+    - 测试：`test_outcome_measure_is_kept_only_inside_the_outcome_quote`、`test_positive_claim_is_about_the_measure_not_the_patient`、`test_improvement_conclusion_names_what_improved`。
+13. **针对特定并发症的用药带"针对的症状"条件**（2026-11-05 决定）。抽取时多取 `target_quote`（文献说明该药是用于某个并发症或症状而非疾病本身时，逐字；不在原文里的整条否决）。**所有**先例都写明针对的并发症时，每个不同的并发症记一条条件（`target_symptom: true`），几个并发症之间是"任一满足即可"的关系（alternative）；只要有一个先例是治疗疾病本身，就不加这个条件。
+    - 病人是否有该症状：沿用 3a 的 HPO 上下位匹配（`established.manifestation_status`）。有 → 满足；没报告 → 未知（有条件），记入缺失信息"manifestation"。
+    - **病例明确写了没有这个症状**时，按审批规则**暂不判"不适用"**，仍为有条件，备注 `ABSENT_NOTE`；是否改判"不适用"待审。
+    - 测试：`test_target_quote_must_be_verbatim`、`test_target_status_never_not_applicable`（含反向：明确没有 → 不是不适用）、`test_target_lines`（有一个先例治疗疾病本身 → 不加条件；两个并发症 → 互为替代）。
