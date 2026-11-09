@@ -21,14 +21,22 @@
 | 子组 | 抽 | 从哪抽 | 临床描述 |
 | --- | --- | --- | --- |
 | **B1 有专章** | 5 个基因 | 本地 GeneReviews 归档里有 OMIM 疾病号、且不在已用 16 个基因里的章节 | 逐字取该章节 Clinical Characteristics 第一段列出的 2–4 条表型 |
-| **B2 无专章** | 5 个基因 | **GenCC 评级为 Definitive**、且在 GeneReviews 里没有专章、也不在已用 16 个基因里 | **由代码按该病的 HPO 表型生成**：取 HPO 注释里该病频率最高的 3–4 条表型名，拼成一句描述，并在病例 JSON 里标 `"description_source": "synthetic_from_hpo"`，报告里也要能看出这一点 |
+| **B2 无专章** | 5 个基因 | **GenCC 评级为 Definitive**、且在 GeneReviews 里没有专章、也不在已用基因里 | **由代码按该病的 HPO 表型生成**（2026-11-08 定）：只取频率为 Obligate / Very frequent / Frequent 的表型，按频率从高到低；不足 2 条时按频率往下补到 2 条，最多 4 条；每条记录取它的理由（频率带 + 原始值）。病例 JSON 标 `"description_source": "synthetic_from_hpo"`，报告里也要能看出这一点 |
 
 **抽样规则（写死、可复现，脚本 `scripts/sample_blind_cases.py`，无 LLM）**：
-1. 候选池：B1 从 `.cache/datasets/genereviews` 的章节清单构建；B2 从 GenCC 下载的 Definitive 记录构建；两池都先剔除已用 16 个基因（AGXT、ANO10、CFTR、COL1A1、DMD、GRIN2B、KMT2B、NF1、OTC、SLC35A2、ACTL6B、DDC、ITPR1、KCNT1、SPTLC1、SYT1）。
+1. 候选池：两池都要求 GenCC 评级 Definitive、且该病能映射到 OMIM 号（B2 的描述要用按 OMIM 建索引的 HPO 注释，映射不到就没法生成）；B1 要求该基因有 GeneReviews 专章，B2 要求没有。剔除名单见下。
+   **数据快照必须钉死**：抽样只读 `.cache/datasets/<数据集>/<日期>/` 里已有的快照，**不触发任何下载**，快照日期写进 `sample.json`。起因：2026-11-08 两次运行之间 `ensure_all()` 刷新了数据集，B2 候选池从 1020 变成 1021，抽中的基因就变了两个——盲测的抽样必须可复现。
 2. 排序：按基因符号字典序排好，消除来源顺序的影响。
 3. 抽样：`random.Random("blind-2026-11-08").sample(pool, 5)`，种子写进脚本常量，抽样结果连同两个候选池的大小一起写入 `out/blind/<批次>/sample.json`。
-4. 变异：取 ClinVar 中该基因**评级为 Pathogenic、提交最早**的一条编码区变异（规则写死）；取不到就按排序取下一个基因，并记录跳过原因。
-5. **抽到哪些基因先给你看**，你确认后才跑 Step 1–3。
+4. 变异：取 ClinVar 中该基因**评级为 Pathogenic**、标题里给出转录本和 c. 变化、且**位于编码区**的变异里，**VCV 登记号最小**的那一条。"提交最早"操作化成"登记号最小"：ClinVar 的登记号是按顺序发的，而且任何人都能从记录上读到，不像提交日期因提交者而异。**内含子变异不取**（标题里 c. 位置带 +/- 的），因为 Step 1 要读蛋白层后果——CTDP1 就因此被跳过（它在 ClinVar 里唯一的非 CNV 致病变异是内含子奠基者变异 c.863+389C>T）。
+5. 合子状态：由 GenCC 记录的遗传方式决定（X 连锁 → 半合子，常染色体隐性 → 纯合，其余 → 杂合），不由我判断。
+6. 跳过与替补：某个基因取不到合格变异就跳过，按同一个种子排出的顺序取下一个，**每次跳过都记进 `sample.json`**。
+7. **抽到哪些基因先给你看**，你确认后才跑 Step 1–3。
+
+**剔除名单（写死在 `scripts/sample_blind_cases.py`）**：
+- **评测病例的基因 ACTL6B、ITPR1、SPTLC1、SYT1：永久剔除**，不进任何盲测或调参用的病例集（2026-11-08 决定）。
+- 练习病例的 10 个基因（AGXT、ANO10、CFTR、COL1A1、DMD、GRIN2B、KMT2B、NF1、OTC、SLC35A2）：流水线是在它们身上调出来的。
+- Phase 1 Validator 的 DDC、KCNT1：作为 A 组单独使用。
 
 **合成描述的风险要写在报告里**：B2 的描述不是真实病历，HPO 频率最高的表型未必在同一个病人身上共存。所以 B2 的统计单独列一栏，不与 B1、A 混在一起算总率。
 
