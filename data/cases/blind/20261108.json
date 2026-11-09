@@ -1,0 +1,525 @@
+[
+ {
+  "id": "AITX-00007",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "DDC",
+     "transcript": "NM_001082971.2",
+     "variant_cdna": "c.286G>A",
+     "variant_protein": "p.(Gly96Arg)",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_context": "Global developmental delay"
+  },
+  "question": {
+   "category": "Established_Targeted",
+   "answer_format": "string_match",
+   "prompt": "What is the youngest age for which a gene therapy is approved for this patient's genetic condition in the united kingdom? Answer with the format \"X months\".",
+   "date_submitted": "2025-08-01"
+  },
+  "answer_expected": "18 months",
+  "answer_explanation": "specified on GeneReviews",
+  "difficulty_rationale": "",
+  "sources": [
+   "GeneReviews"
+  ],
+  "citations": [
+   "https://www.ncbi.nlm.nih.gov/books/NBK595821/"
+  ],
+  "blind": {
+   "group": "A",
+   "source": "Phase 1 Validator case, used as given",
+   "description_source": "official"
+  }
+ },
+ {
+  "id": "AITX-00011",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "KCNT1",
+     "transcript": "NM_020822.3",
+     "variant_cdna": "c.2849G>A",
+     "variant_protein": "p.Arg950Gln",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_context": "early-onset seizures and developmental delays"
+  },
+  "question": {
+   "category": "Clinical_Trials",
+   "answer_format": "string_match",
+   "prompt": "For which clinical trials evaluating new therapeutics is this patient eligible? Provide a clinical trial ID or answer None.",
+   "date_submitted": "2025-08-01"
+  },
+  "answer_expected": "None",
+  "answer_explanation": "Only a natural history study is listed.",
+  "difficulty_rationale": "",
+  "sources": [
+   "ClinicalTrials.gov"
+  ],
+  "citations": [
+   "https://clinicaltrials.gov/search?cond=KCNT1"
+  ],
+  "blind": {
+   "group": "A",
+   "source": "Phase 1 Validator case, used as given",
+   "description_source": "official"
+  }
+ },
+ {
+  "id": "BLIND-LRPPRC",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "LRPPRC",
+     "transcript": "NM_133259.4",
+     "variant_cdna": "c.1061C>T",
+     "variant_protein": "p.Ala354Val",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_description": "Nuclear gene-encoded Leigh syndrome spectrum (LSS) is a continuum of progressive neurodegenerative disorders caused by abnormalities of mitochondrial energy generation. Onset of nuclear gene-encoded LSS is typically in infancy or early childhood with sudden neurodevelopmental regression. This decompensation is often associated with elevated lactate concentration in the blood and/or cerebrospinal fluid (CSF) following an intercurrent illness or metabolic challenge (e.g., surgery, anesthesia, prolonged fasting)."
+  },
+  "blind": {
+   "group": "B1",
+   "gencc": {
+    "disease": "MONDO:0009723",
+    "disease_title": "Leigh syndrome",
+    "moi": "Autosomal recessive",
+    "submitter": "ClinGen",
+    "omim": "OMIM:256000"
+   },
+   "clinvar": "VCV000003110",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Clinical Characteristics of Nuclear Gene-Encoded Leigh Syndrome Spectrum",
+   "chapters": [
+    "NBK320989"
+   ]
+  }
+ },
+ {
+  "id": "BLIND-MPZ",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "MPZ",
+     "transcript": "NM_000530.8",
+     "variant_cdna": "c.286A>G",
+     "variant_protein": "p.Lys96Glu",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Charcot-Marie-Tooth (CMT) hereditary neuropathy refers to a group of disorders characterized by a chronic motor and sensory polyneuropathy, also known as hereditary motor and sensory neuropathy (HMSN)."
+  },
+  "blind": {
+   "group": "B1",
+   "gencc": {
+    "disease": "MONDO:0007307",
+    "disease_title": "Charcot-Marie-Tooth disease type 1B",
+    "moi": "Autosomal dominant",
+    "submitter": "Laboratory for Molecular Medicine",
+    "omim": "OMIM:118200"
+   },
+   "clinvar": "VCV000014166",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Clinical Characteristics of Charcot-Marie-Tooth (CMT) Hereditary Neuropathy",
+   "chapters": [
+    "NBK1358"
+   ]
+  }
+ },
+ {
+  "id": "BLIND-SNRNP200",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "SNRNP200",
+     "transcript": "NM_014014.5",
+     "variant_cdna": "c.3260C>T",
+     "variant_protein": "p.Ser1087Leu",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Retinitis pigmentosa (RP) refers to a group of inherited disorders in which abnormalities of the photoreceptors (rods and cones) of the retina lead to progressive visual loss. RP is classified as nonsyndromic, or \"simple\" (not affecting other organs or tissues); syndromic (affecting other neurosensory systems such as hearing); or systemic (affecting multiple tissues). This overview focuses on nonsyndromic forms of RP."
+  },
+  "blind": {
+   "group": "B1",
+   "gencc": {
+    "disease": "MONDO:0012477",
+    "disease_title": "retinitis pigmentosa 33",
+    "moi": "Autosomal dominant",
+    "submitter": "Ambry Genetics",
+    "omim": "OMIM:610359"
+   },
+   "clinvar": "VCV000007928",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Clinical Characteristics of Nonsyndromic Retinitis Pigmentosa",
+   "chapters": [
+    "NBK1417"
+   ]
+  }
+ },
+ {
+  "id": "BLIND-RRM2B",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "RRM2B",
+     "transcript": "NM_015713.5",
+     "variant_cdna": "c.850C>T",
+     "variant_protein": "p.Gln284Ter",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_description": "RRM2B mitochondrial DNA maintenance defects (RRM2B-MDMD) are an important cause of both childhood- and adult-onset mitochondrial disease. To date, 78 individuals from 52 families with molecularly confirmed RRM2B-MDMD have been reported. In general, the clinical manifestations are similar in males and females."
+  },
+  "blind": {
+   "group": "B1",
+   "gencc": {
+    "disease": "MONDO:0012792",
+    "disease_title": "mitochondrial DNA depletion syndrome 8a",
+    "moi": "Autosomal recessive",
+    "submitter": "G2P",
+    "omim": "OMIM:612075"
+   },
+   "clinvar": "VCV000005386",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Clinical Characteristics / Clinical Description",
+   "chapters": [
+    "NBK195854"
+   ]
+  }
+ },
+ {
+  "id": "BLIND-SFTPC",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "SFTPC",
+     "transcript": "NM_001317778.2",
+     "variant_cdna": "c.218T>C",
+     "variant_protein": "p.Ile73Thr",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Individuals with pulmonary fibrosis typically present with shortness of breath with exertion and a dry cough. Disease onset during adulthood is most common, but onset can range over multiple decades. Most individuals with pulmonary fibrosis have had a history of smoking or fibrogenic environmental exposures [Borie et al 2016, Newton et al 2016, Salisbury et al 2020]."
+  },
+  "blind": {
+   "group": "B1",
+   "gencc": {
+    "disease": "MONDO:0024465",
+    "disease_title": "surfactant metabolism dysfunction, pulmonary, 2",
+    "moi": "Autosomal dominant",
+    "submitter": "Laboratory for Molecular Medicine",
+    "omim": "OMIM:610913"
+   },
+   "clinvar": "VCV000013208",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Clinical Characteristics of Pulmonary Fibrosis / Clinical Features of Pulmonary Fibrosis",
+   "chapters": [
+    "NBK1230"
+   ]
+  }
+ },
+ {
+  "id": "BLIND-FOXF1",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "FOXF1",
+     "transcript": "NM_001451.3",
+     "variant_cdna": "c.225C>A",
+     "variant_protein": "p.Tyr75Ter",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Misalignment of the pulmonary veins; Alveolar capillary dysplasia; Patent ductus arteriosus"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0009934",
+    "disease_title": "alveolar capillary dysplasia with misalignment of pulmonary veins",
+    "moi": "Autosomal dominant",
+    "submitter": "G2P",
+    "omim": "OMIM:265380"
+   },
+   "clinvar": "VCV000008462",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "phenotypes": [
+    {
+     "hpo_id": "HP:0033186",
+     "label": "Misalignment of the pulmonary veins",
+     "frequency_raw": "44/51",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (44/51)",
+     "counted_in": 51
+    },
+    {
+     "hpo_id": "HP:0033208",
+     "label": "Alveolar capillary dysplasia",
+     "frequency_raw": "44/51",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (44/51)",
+     "counted_in": 51
+    },
+    {
+     "hpo_id": "HP:0001643",
+     "label": "Patent ductus arteriosus",
+     "frequency_raw": "22/51",
+     "frequency_band": "Frequent",
+     "why": "Frequent (22/51)",
+     "counted_in": 51
+    }
+   ]
+  }
+ },
+ {
+  "id": "BLIND-GEMIN5",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "GEMIN5",
+     "transcript": "NM_015465.5",
+     "variant_cdna": "c.2738A>G",
+     "variant_protein": "p.His913Arg",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_description": "Global developmental delay; Motor delay; Cerebellar atrophy; Delayed speech and language development"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0859152",
+    "disease_title": "neurodevelopmental disorder with cerebellar atrophy and motor dysfunction",
+    "moi": "Autosomal recessive",
+    "submitter": "ClinGen",
+    "omim": "OMIM:619333"
+   },
+   "clinvar": "VCV001120192",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "phenotypes": [
+    {
+     "hpo_id": "HP:0001263",
+     "label": "Global developmental delay",
+     "frequency_raw": "30/30",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (30/30)",
+     "counted_in": 30
+    },
+    {
+     "hpo_id": "HP:0001270",
+     "label": "Motor delay",
+     "frequency_raw": "30/30",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (30/30)",
+     "counted_in": 30
+    },
+    {
+     "hpo_id": "HP:0001272",
+     "label": "Cerebellar atrophy",
+     "frequency_raw": "30/30",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (30/30)",
+     "counted_in": 30
+    },
+    {
+     "hpo_id": "HP:0000750",
+     "label": "Delayed speech and language development",
+     "frequency_raw": "26/27",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (26/27)",
+     "counted_in": 27
+    }
+   ]
+  }
+ },
+ {
+  "id": "BLIND-THRA",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "THRA",
+     "transcript": "NM_199334.5",
+     "variant_cdna": "c.134G>T",
+     "variant_protein": "p.Ser45Ile",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Macroglossia; Hypertelorism"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0013757",
+    "disease_title": "congenital nongoitrous hypothyroidism 6",
+    "moi": "Autosomal dominant",
+    "submitter": "G2P",
+    "omim": "OMIM:614450"
+   },
+   "clinvar": "VCV000029913",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "phenotypes": [
+    {
+     "hpo_id": "HP:0000158",
+     "label": "Macroglossia",
+     "frequency_raw": "",
+     "frequency_band": "not stated",
+     "why": "taken to reach the minimum of 2; not stated (none stated)",
+     "counted_in": null
+    },
+    {
+     "hpo_id": "HP:0000316",
+     "label": "Hypertelorism",
+     "frequency_raw": "",
+     "frequency_band": "not stated",
+     "why": "taken to reach the minimum of 2; not stated (none stated)",
+     "counted_in": null
+    }
+   ],
+   "caveat": "HPO carries no frequency annotation for this disease, so the description fell back to HPO id order: low confidence. Also check whether step 2 calls this ambiguous or low-confidence rather than picking one disease outright (review request 2026-11-09)."
+  }
+ },
+ {
+  "id": "BLIND-PSMD12",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "PSMD12",
+     "transcript": "NM_002816.5",
+     "variant_cdna": "c.367C>T",
+     "variant_protein": "p.Arg123Ter",
+     "zygosity": "heterozygous"
+    }
+   ],
+   "clinical_description": "Global developmental delay; Low-set ears; Mild intellectual disability; Intellectual disability"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0054591",
+    "disease_title": "Stankiewicz-Isidor syndrome",
+    "moi": "Autosomal dominant",
+    "submitter": "ClinGen",
+    "omim": "OMIM:617516"
+   },
+   "clinvar": "VCV000427779",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "phenotypes": [
+    {
+     "hpo_id": "HP:0001263",
+     "label": "Global developmental delay",
+     "frequency_raw": "7/7",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (7/7)",
+     "counted_in": 7
+    },
+    {
+     "hpo_id": "HP:0000369",
+     "label": "Low-set ears",
+     "frequency_raw": "5/5",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (5/5)",
+     "counted_in": 5
+    },
+    {
+     "hpo_id": "HP:0001256",
+     "label": "Mild intellectual disability",
+     "frequency_raw": "5/5",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (5/5)",
+     "counted_in": 5
+    },
+    {
+     "hpo_id": "HP:0001249",
+     "label": "Intellectual disability",
+     "frequency_raw": "4/4",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (4/4)",
+     "counted_in": 4
+    }
+   ],
+   "caveat": "every chosen phenotype is Very frequent but counted in very few patients (1/1, 5/5, 7/7): the frequency band rests on small denominators (review note 2026-11-09)."
+  }
+ },
+ {
+  "id": "BLIND-MFSD2A",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "MFSD2A",
+     "transcript": "NM_032793.5",
+     "variant_cdna": "c.476C>T",
+     "variant_protein": "p.Thr159Met",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_description": "Microcephaly; Hypotonia; Spastic tetraparesis; Cerebellar hypoplasia"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0014660",
+    "disease_title": "microcephaly 15, primary, autosomal recessive",
+    "moi": "Autosomal recessive",
+    "submitter": "G2P",
+    "omim": "OMIM:616486"
+   },
+   "clinvar": "VCV000372260",
+   "zygosity_rule": "from the GenCC mode of inheritance",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "phenotypes": [
+    {
+     "hpo_id": "HP:0000252",
+     "label": "Microcephaly",
+     "frequency_raw": "3/3",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (3/3)",
+     "counted_in": 3
+    },
+    {
+     "hpo_id": "HP:0001252",
+     "label": "Hypotonia",
+     "frequency_raw": "3/3",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (3/3)",
+     "counted_in": 3
+    },
+    {
+     "hpo_id": "HP:0001285",
+     "label": "Spastic tetraparesis",
+     "frequency_raw": "3/3",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (3/3)",
+     "counted_in": 3
+    },
+    {
+     "hpo_id": "HP:0001321",
+     "label": "Cerebellar hypoplasia",
+     "frequency_raw": "3/3",
+     "frequency_band": "Very frequent",
+     "why": "Very frequent (3/3)",
+     "counted_in": 3
+    }
+   ]
+  }
+ }
+]
