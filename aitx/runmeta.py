@@ -102,6 +102,26 @@ def code_fingerprint(root: Path = ROOT) -> str:
     return h.hexdigest()
 
 
+EVAL_FILE = ROOT / "data/cases/aitx_final_patients.json"
+
+
+def eval_ids(path: Path = EVAL_FILE) -> set[str]:
+    """Ids of the evaluation cases, read from their own file (decision 2026-11-08: nothing but an explicit
+    --eval run may touch them, acceptance scripts included)."""
+    if not Path(path).exists():
+        return set()
+    data = json.loads(Path(path).read_text())
+    return {c["id"] for c in (data if isinstance(data, list) else [data])}
+
+
+def refuse_eval_cases(case_ids, what: str = "acceptance") -> None:
+    """Stop an acceptance run that names an evaluation case: expectations are tuned against what they show."""
+    held = sorted(set(case_ids) & eval_ids())
+    if held:
+        raise SystemExit(f"{what} must not use the evaluation case(s) {held}: expectations are written from what "
+                         f"a case shows, so using them would fit the pipeline to the cases it is judged on")
+
+
 def find_case(case_id: str, files=CASE_FILES) -> dict | None:
     for f in files:
         if Path(f).exists():

@@ -78,6 +78,7 @@ def compare(item: dict, led: dict | None) -> dict:
 def main() -> int:
     spec = json.loads(EXPECT.read_text())
     leds = {}
+    runmeta.refuse_eval_cases({i["case"] for i in spec["items"]}, "step 3c acceptance")
     for cid in {i["case"] for i in spec["items"]}:
         p = runmeta.path(3, cid)
         leds[cid] = json.loads(p.read_text()) if p.exists() else None

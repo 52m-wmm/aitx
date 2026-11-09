@@ -27,22 +27,52 @@ from aitx import runmeta  # noqa: E402
 
 PLANNED = {4: "report synthesis", 5: "verification"}
 USES_LLM = {2}                        # steps that call the LLM (the viewer warns before rerunning them)
-CASE_FILES = [ROOT / "data/cases/practice/official_examples.json", ROOT / "data/cases/aitx_final_patients.json",
+EVAL_FILE = ROOT / "data/cases/aitx_final_patients.json"      # the four cases the entry is judged on
+CASE_FILES = [ROOT / "data/cases/practice/official_examples.json", EVAL_FILE,
               ROOT / "data/cases/validation/phase1_hf_unseen_genes.json"]
+EVAL_NOTE = ("the evaluation cases are only run with --eval (decision 2026-11-08: a run without --case had "
+             "regenerated three of them, which is how development ends up fitted to them)")
 
 
-def load_cases(path: Path | None, ids: list[str] | None) -> list[dict]:
-    """Cases from `path` (default: every file in CASE_FILES), optionally only the given ids."""
+def eval_ids(path: Path = EVAL_FILE) -> set[str]:
+    """The ids of the evaluation cases, read from their own file - never guessed from a name pattern."""
+    if not Path(path).exists():
+        return set()
+    data = json.loads(Path(path).read_text())
+    return {c["id"] for c in (data if isinstance(data, list) else [data])}
+
+
+def load_cases(path: Path | None, ids: list[str] | None, include_eval: bool = False) -> list[dict]:
+    """Cases from `path` (default: every file in CASE_FILES), optionally only the given ids.
+
+    The evaluation cases are left out unless include_eval is set (--eval), whether they were reached through
+    the default file list, a --case id or an explicit file: looking at their output is what turns development
+    into fitting to them, so reaching them has to be deliberate.
+    """
     files = [path] if path else [f for f in CASE_FILES if f.exists()]
     cases = []
     for f in files:
-        data = json.loads(f.read_text())
+        data = json.loads(Path(f).read_text())
         cases += data if isinstance(data, list) else [data]
     if ids:
         missing = set(ids) - {c["id"] for c in cases}
         if missing:
             raise SystemExit(f"case id(s) not found: {sorted(missing)}")
         cases = [c for c in cases if c["id"] in ids]
+    if not include_eval:
+        held = eval_ids()
+        dropped = sorted(c["id"] for c in cases if c["id"] in held)
+        cases = [c for c in cases if c["id"] not in held]
+        # asked for by name (--case) or through their own file: refuse, so the hold-back is never silent;
+        # reached only through the default file list: skip them with a note
+        asked = sorted(set(ids or []) & held) or (dropped if path and Path(path).resolve() == EVAL_FILE.resolve()
+                                                  else [])
+        if asked:
+            raise SystemExit(f"refusing to run the evaluation case(s) {asked} without --eval: {EVAL_NOTE}")
+        if dropped:
+            print(f"[HELD BACK] {len(dropped)} evaluation case(s) not run: {dropped} - pass --eval to include them")
+        if not cases:
+            raise SystemExit(f"no case left to run: {EVAL_NOTE}")
     return cases
 
 
@@ -123,6 +153,8 @@ def main() -> int:
     ap.add_argument("--from-step", type=int, default=1)
     ap.add_argument("--to-step", type=int, default=max(STEPS))
     ap.add_argument("--no-cache", action="store_true", help="bypass LLM and API caches")
+    ap.add_argument("--eval", action="store_true", dest="eval_cases",
+                    help="also run the four evaluation cases, which are held back by default")
     ap.add_argument("--refresh-trials", action="store_true",
                     help="refetch ClinicalTrials.gov even if cached < 1 day ago (required before final reports)")
     ap.add_argument("--offpeak-only", action="store_true",
@@ -140,7 +172,10 @@ def main() -> int:
     if args.refresh_trials:
         from aitx import http
         http.FORCE_REFRESH.add("https://clinicaltrials.gov/")
-    return run(load_cases(args.cases, args.ids), args.from_step, args.to_step, not args.no_cache)
+    cases = load_cases(args.cases, args.ids, include_eval=args.eval_cases)
+    if args.eval_cases:
+        print(f"[EVAL] including the evaluation cases: {sorted(set(c['id'] for c in cases) & eval_ids())}")
+    return run(cases, args.from_step, args.to_step, not args.no_cache)
 
 
 if __name__ == "__main__":

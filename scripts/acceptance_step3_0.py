@@ -7,7 +7,7 @@
   HARD  every loaded rule has re-verified quotes; the DMD reading-frame rule applies to PRAC-DMD-del,
         Becker is promoted to a branch and Duchenne is kept
   HARD  ClinicalTrials.gov cache: refetched when forced, served from cache within the day
-  SOFT  printed for review: AITX-40003 branches and SPTLC1 rule outcome, dropped branches, skipped rules
+  SOFT  printed for review: SPTLC1 rule outcome, dropped branches, skipped rules (practice cases only)
           (evaluation cases are reported only, never tuned on)
 
 Usage:  python3 scripts/acceptance_step3_0.py
@@ -216,10 +216,8 @@ def main() -> int:
                 print(f"      dropped: {d['diagnosis']['label']} (score {d['step2_score']})")
             for r in l["rules_applied"]:
                 print(f"      rule {r['rule_id']}: {r['statement'][:110]}  promotions {r.get('promotions')}")
-    l3 = ledgers.get("AITX-40003")
-    if l3:
-        print(f"  AITX-40003 branches: {[b['diagnosis']['label'] for b in l3['branches']]}; "
-              f"rules applied: {[r['rule_id'] for r in l3['rules_applied']] or 'none'}")
+    # the evaluation cases are not printed for review any more (decision 2026-11-08): reading what they produce
+    # is what fits the pipeline to them
     sp = ROOT / "data" / "rules" / "SPTLC1.json"
     if sp.exists():
         d = json.loads(sp.read_text())

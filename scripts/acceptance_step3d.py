@@ -93,6 +93,7 @@ def unassessable_summary(ledgers: dict[str, dict]) -> dict:
 def run() -> dict:
     spec = json.loads(EXPECT.read_text())
     cases = sorted({i["case"] for i in spec["items"]})
+    runmeta.refuse_eval_cases(cases, f"step 3d acceptance")
     leds, code = {}, runmeta.code_fingerprint()
     for cid in cases:
         p = runmeta.path(3, cid)
