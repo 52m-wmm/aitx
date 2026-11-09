@@ -52,7 +52,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | ✅ 已验收（2026-11-06，tag `step3c-accepted`）：5 个练习病例 7/7 核实期望成立、全部新鲜输出、账本校验全过。契约 `docs/step3c_contract.md`（规则变更见文末 1–15 条） |
 | 3d | 定制疗法（Bespoke Therapies） | ✅ 已验收（2026-11-08，tag `step3d-accepted`）：12 个练习病例 8/8 核实期望成立、全部新鲜输出。48 条判定中 12 条"无法评估"（25%）：PAM 5、结构域 3、天然跳跃证据 3、上调靶点 1——全是审阅决定暂缓接入的数据源，**没有一条因机制取不到**（GeneReviews 供得上）。契约 `docs/step3d_contract.md` |
 | 3e | 药物重定位（Drug Repurposing） | ✅ 已验收（2026-11-08，tag `step3e-accepted`）：5/5 核实期望成立。12 个练习病例里只有 GRIN2B 产出候选（62 条机制记录排除 56 条，全因方向相反；保留 NEBOGLAMINE / RAPASTINEL / APIMOSTINEL，均标注"对本亚基选择性未知"）；DMD 的外显子跳跃 ASO 按药物类型转交 3d；其余基因在 Open Targets 无药物记录，整节留"检索无结果"负面证据。契约 `docs/step3e_contract.md` |
-| 盲测 | 在未调过参的病例上量写错 / 漏写 / 有条件率 | 方案草案 `docs/blind_test_plan.md`（v0.1，2026-11-08），5 个问题待你决定；未执行 |
+| 盲测 | 在未调过参的病例上量写错 / 漏写 / 有条件率 | 方案 `docs/blind_test_plan.md`（v0.2，2026-11-08）：A 组 2 个（Phase 1 Validator）+ B 组 10 个（5 个有 GeneReviews 专章、5 个只有 GenCC Definitive 评级，后者的临床描述由代码按 HPO 表型合成并标注）；抽样规则写死可复现，抽到的基因先过目；机器先判六项可机判的检查，其余列给审阅人；**盲测期间冻结代码**；写错率偏高的处理顺序已定（先通用修复 → 换新一批验证 → 3a 必须修好或降为有条件才能进 Step 4，3d/3e 降级措辞或整节写无法评估）。约 \$0.5，待充值后执行 |
 | 4 | 报告组装（按官方模板生成 markdown、格式校验、引用核验） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
@@ -69,7 +69,9 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 - `run_pipeline.py` 不带 `--eval` 时**跳过**评测病例并打印 `[HELD BACK]`；**点名**跑（`--case AITX-4000x` 或直接给它们的文件）会被拒绝并提示用 `--eval`；评测病例的 id 从它们自己的文件读，不靠名字猜。
 - 所有 step 3 验收脚本（3.0 / 3a / 3b / 3c / 3d / 3e）调用 `runmeta.refuse_eval_cases`，碰到评测病例直接退出；`acceptance_step3_0.py` 里原来打印 AITX-40003 分支的那段已删除。
 - 测试 `tests/test_eval_holdback.py`（含静态检查：任何 step 3 验收脚本或期望文件都不许出现评测病例 id）。
-- **仍待处理**：`scripts/acceptance_step1.py` 和 `acceptance_step2.py` 的期望是**早期按评测病例写的**（AITX-40001～40004 的 ptc 位置、OMIM 归类等），这两个脚本还没加保险。它们判的是确定性解析和疾病归一化、不是治疗内容，但严格讲同样属于"用评测病例调参"。待决定：改写成练习病例的等价期望，还是保留现状。
+- **Step 1 / Step 2 的评测病例期望已挪走**（2026-11-08 决定）：这些期望当年是按公开数据库记录（RefSeq、UniProt、OMIM、ClinVar）定的，所以保留，但移到 `scripts/acceptance_eval_cases.py`，**只有加 `--eval` 才会运行**；`acceptance_step1.py` / `acceptance_step2.py` 现在只读练习病例并调用 `refuse_eval_cases`。期望内容和出处存 `data/eval/eval_case_expectations.json`。
+  - 被一起挪走的还有 Step 2 的一条硬检查（"同一基因里另一个变异不得用于排序"，原来写在 AITX-40002 上）。**常规 Step 2 验收因此少了精确匹配的反向检查**，正向检查（CFTR 的 P/LP 记录链到 CF）仍在。待补一个练习病例的等价反向用例。
+  - `acceptance_eval_cases.py` 的 Step 2 部分只读 `out/step2/` 已有输出，自己不跑流水线、不调 LLM。
 
 ## 用户背景
 

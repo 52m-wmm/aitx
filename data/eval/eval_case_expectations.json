@@ -1,0 +1,43 @@
+{
+ "schema": "eval-case-expectations-v1",
+ "why_kept": "These expectations were written from public database records (RefSeq, UniProt, OMIM) when the evaluation cases were still being run during development. They are kept because the records they rest on are public and checkable, but they are only run with --eval: regular acceptance must not touch the evaluation cases (decision 2026-11-08).",
+ "moved_on": "2026-11-08",
+ "step1_hard": [
+  {
+   "case": "AITX-40001",
+   "path": "ptc_aa_position",
+   "want": 414,
+   "source": "Gln367 + Ter48 - 1 (ACTL6B frameshift, RefSeq record)"
+  }
+ ],
+ "step1_soft": [
+  {
+   "case": "AITX-40001",
+   "path": "nmd",
+   "note": "ACTL6B frameshift: NMD?"
+  },
+  {
+   "case": "AITX-40001",
+   "path": "exon",
+   "note": "ACTL6B exon"
+  }
+ ],
+ "step2_soft": [
+  {
+   "case": "AITX-40001",
+   "note": "expected DEE76 618468; AD 618470 downgraded by inheritance"
+  },
+  {
+   "case": "AITX-40002",
+   "note": "expected SCA29 117360; Gillespie needs aniridia (not stated)"
+  },
+  {
+   "case": "AITX-40003",
+   "note": "HSAN1 162400 vs ALS27 620285; possibly ambiguous"
+  },
+  {
+   "case": "AITX-40004",
+   "note": "BAGOS 618218 named in text, should be adopted"
+  }
+ ]
+}

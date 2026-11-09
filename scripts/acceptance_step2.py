@@ -43,16 +43,15 @@ SOFT = {
     "PRAC-GRIN2B": "ID6 613970 vs DEE27 616139",
     "PRAC-SLC35A2-ex7": "SLC35A2-CDG named in the text",
     "PRAC-SLC35A2-ex8": "primary and confidence (no diagnosis named)",
-    "AITX-40001": "expected DEE76 618468; AD 618470 downgraded by inheritance",
-    "AITX-40002": "expected SCA29 117360; Gillespie needs aniridia (not stated)",
-    "AITX-40003": "HSAN1 162400 vs ALS27 620285; possibly ambiguous",
-    "AITX-40004": "BAGOS 618218 named in text, should be adopted",
 }
 
 
 def load_cases() -> list[dict]:
+    """Practice cases only; the evaluation cases moved to scripts/acceptance_eval_cases.py (2026-11-08)."""
     cases = json.loads((ROOT / "data/cases/practice/official_examples.json").read_text())
-    return cases + json.loads((ROOT / "data/cases/aitx_final_patients.json").read_text())
+    from aitx import runmeta
+    runmeta.refuse_eval_cases([c["id"] for c in cases], "step 2 acceptance")
+    return cases
 
 
 def omims(r: dict, key: str) -> set[str]:
@@ -126,8 +125,9 @@ def main() -> int:
     hard({"OMIM:310200", "OMIM:300376"} <= all_omim, f"PRAC-DMD-del: Duchenne 310200 and Becker 300376 in candidates")
 
     print("\n== ClinVar exact match (HARD) ==")
-    used = [(rec["vcv"], rec["title"]) for rec in results["AITX-40002"]["clinvar"][0]["records"]]
-    hard(all("c.101A>G" not in t for _, t in used), f"AITX-40002 ITPR1: c.101A>G not used -> {used}")
+    # the negative side of exact matching (a different variant in the same gene must not be used for ranking)
+    # was written against AITX-40002 and moved to scripts/acceptance_eval_cases.py (2026-11-08). A practice-case
+    # equivalent is still missing: see CLAUDE.md.
     cf = results["PRAC-CFTR-F508del"]["clinvar"][0]
     cf_ok = [rec for rec in cf["records"] if rec["used_for_ranking"]
              and any("OMIM:219700" in omims(results["PRAC-CFTR-F508del"], k) for k in rec["mapped_candidates"])]

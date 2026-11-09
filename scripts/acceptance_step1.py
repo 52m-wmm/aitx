@@ -1,6 +1,7 @@
 """Online acceptance test for step 1 (run where NCBI is reachable).
 
-Runs the four challenge cases and the official Phase 0 example variants
+Runs the official Phase 0 example variants (the evaluation cases are held back: see
+scripts/acceptance_eval_cases.py)
 against the real RefSeq records and checks:
   HARD  every variant passes all consistency checks (reference base,
         reference amino acid, codon math, transcript version)
@@ -39,14 +40,11 @@ HARD = [
     ("PRAC-SLC35A2-ex7", "variant_class", "start_lost", "p.Met1Ile"),
     ("PRAC-SLC35A2-ex8", "variant_class", "start_lost", "p.Met1Ile"),
     ("PRAC-GRIN2B", "variant_class", "nonsense", "p.Gln919Ter"),
-    ("AITX-40001", "ptc_aa_position", 414, "Gln367 + Ter48 - 1"),
 ]
 SOFT = [
     ("PRAC-ANO10", "exon.coding_fraction_of_cds", "official example answer: 0.1 (to nearest tenth)"),
     ("PRAC-DMD-del", "exon", "official explanation mentions exons 52-63"),
     ("PRAC-KMT2B", "nmd", "reasons"),
-    ("AITX-40001", "nmd", "ACTL6B frameshift: NMD?"),
-    ("AITX-40001", "exon", "ACTL6B exon"),
 ]
 
 
@@ -74,8 +72,11 @@ def wrong_notation(p_raw: str, protein: str) -> str:
 
 
 def load_cases() -> list[dict]:
-    cases = json.loads((ROOT / "data/cases/aitx_final_patients.json").read_text())
-    cases += json.loads((ROOT / "data/cases/practice/official_examples.json").read_text())
+    """Practice cases only. The evaluation cases moved to scripts/acceptance_eval_cases.py, which runs only
+    with --eval (decision 2026-11-08)."""
+    cases = json.loads((ROOT / "data/cases/practice/official_examples.json").read_text())
+    from aitx import runmeta
+    runmeta.refuse_eval_cases([c["id"] for c in cases], "step 1 acceptance")
     return cases
 
 
