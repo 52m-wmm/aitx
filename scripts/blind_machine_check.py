@@ -26,6 +26,34 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from aitx import runmeta  # noqa: E402
+
+# A blind-test case lives in data/cases/blind/<batch>.json, which runmeta.CASE_FILES does not list, so
+# runmeta.freshness would call every blind output "made from another case input". The batch file is added to
+# that list at runtime (2026-11-09 review): the frozen modules are not edited, and after the freeze the list
+# itself should name the folder.
+BLIND_CASES = ROOT / "data" / "cases" / "blind"
+
+
+def teach_runmeta_about_blind_cases(batch: str) -> None:
+    """Make runmeta.find_case look in the batch file first.
+
+    Appending to runmeta.CASE_FILES is not enough: find_case binds that list as a default argument, so the
+    value is fixed when the module is defined. The two group-A cases also exist in the validation file in a
+    different form (the batch adds a `blind` block), and the step 3 output was made from the batch version, so
+    the batch file has to win (2026-11-09 review).
+    """
+    f = BLIND_CASES / f"{batch}.json"
+    if not f.exists():
+        return
+    original = runmeta.find_case
+
+    def find_case(case_id: str, files=None):
+        for c in json.loads(f.read_text()):
+            if c.get("id") == case_id:
+                return c
+        return original(case_id) if files is None else original(case_id, files)
+
+    runmeta.find_case = find_case
 from aitx.evidence import ledger as LG  # noqa: E402
 from aitx.evidence import repurposing as RP  # noqa: E402
 
@@ -57,14 +85,72 @@ def check_quotes(led: dict) -> list[dict]:
     return out
 
 
+_FACT = re.compile(r"^step(?P<step>\d)+:(?P<case>[^:]+):(?P<path>.+)$")
+
+
+def fact_resolves(value: str) -> tuple[bool, str]:
+    """A `pipeline_fact` source points into this project's own step 1 / step 2 output, not at an external
+    record, so it is checked by walking that path in the file (2026-11-09: the first version of this script
+    called all nine of them unrecognisable ids, which would have put a dozen bogus "wrong" entries on every
+    case and wrecked the statistics)."""
+    m = _FACT.match(value or "")
+    if not m:
+        return False, f"not a step-output pointer: {value!r}"
+    path = runmeta.path(int(m.group("step")), m.group("case"))
+    if not path.exists():
+        return False, f"no step {m.group('step')} output for {m.group('case')}"
+    node = json.loads(path.read_text())
+    for part in re.findall(r"[^.\[\]]+", m.group("path")):
+        if isinstance(node, dict):
+            if part in node:
+                node = node[part]
+                continue
+            hit = next((v for v in node.values() if isinstance(v, dict) and part in v), None)
+            if hit is not None:
+                node = hit[part]
+                continue
+            # the part may name an item inside a list-valued field, e.g. clinvar[0].VCV000973440 means the
+            # record whose "vcv" is that id, inside clinvar[0]["records"]
+            found = None
+            for v in node.values():
+                if isinstance(v, list):
+                    found = next((x for x in v if isinstance(x, dict)
+                                  and part in (x.get("key"), x.get("id"), x.get("vcv"), x.get("nbk"))), None)
+                    if found is not None:
+                        break
+            if found is not None:
+                node = found
+                continue
+            return False, f"{value}: {part!r} not found in the step output"
+        if isinstance(node, list):
+            if part.isdigit() and int(part) < len(node):
+                node = node[int(part)]
+                continue
+            hit = next((x for x in node if isinstance(x, dict) and part in (x.get("key"), x.get("id"),
+                                                                           x.get("vcv"), x.get("nbk"))), None)
+            if hit is None:
+                return False, f"{value}: {part!r} not found in the step output"
+            node = hit
+            continue
+        return False, f"{value}: {part!r} cannot be followed"
+    return True, ""
+
+
 def check_records(led: dict, online: bool) -> list[dict]:
-    """Check 2: every cited id has the shape of a resolvable id; with --online, a sample is fetched."""
+    """Check 2: every cited id resolves - an external record by its shape (and with --online by fetching it),
+    an internal `pipeline_fact` pointer by walking it in the step output it names."""
     out, seen = [], set()
     for e in led.get("evidence", []):
         src = e.get("source") or {}
         if not src:
             continue
         value = src.get("id") or ""
+        if src.get("type") == "pipeline_fact":
+            ok, why = fact_resolves(value)
+            if not ok:
+                out.append({"check": "record-resolvable", "evidence": e["id"], "section": e.get("section"),
+                            "detail": why})
+            continue
         kind = id_kind(value)
         if value and kind is None:
             out.append({"check": "record-resolvable", "evidence": e["id"], "section": e.get("section"),
@@ -123,13 +209,26 @@ def check_direction(led: dict) -> list[dict]:
     return out
 
 
+NEGATED = re.compile(r"\b(no|not|never|without|lacks|lacking|insufficient)\b[^.]{0,40}$", re.I)
+
+
+def claims_efficacy(text: str) -> str | None:
+    """The word that claims efficacy, or None. A negated use is not a claim: the code-made 3c conclusion
+    "Use has been reported, but there is no evidence that it is effective" contains "effective" precisely to
+    deny it (2026-11-09: the first version flagged eight such conclusions as wrong)."""
+    for m in STRONG.finditer(text or ""):
+        if not NEGATED.search(text[:m.start()]):
+            return m.group(0)
+    return None
+
+
 def check_wording(led: dict) -> list[dict]:
     out = []
     for a in led.get("actions", []):
         text = a.get("conclusion") or ""
-        if STRONG.search(text):
+        if claims_efficacy(text):
             out.append({"check": "wording", "action": a.get("label"), "section": a["section"],
-                        "detail": f"conclusion claims efficacy: {text[:140]!r}"})
+                        "detail": f"conclusion claims efficacy ({claims_efficacy(text)!r}): {text[:140]!r}"})
         if a["section"] in ("bespoke_therapies", "drug_repurposing") and DOSE.search(text):
             out.append({"check": "wording", "action": a.get("label"), "section": a["section"],
                         "detail": f"hypothetical-layer conclusion carries a dose: {text[:140]!r}"})
@@ -173,8 +272,11 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--batch", default="20261108")
     ap.add_argument("--online", action="store_true", help="also fetch the cited PubMed records")
+    ap.add_argument("--sample-supportive", type=int, default=0,
+                    help="draw this many supportive-management entries for review, with a fixed seed")
     args = ap.parse_args()
     d = ROOT / "out" / "blind" / args.batch
+    teach_runmeta_about_blind_cases(args.batch)
     sample = json.loads((d / "sample.json").read_text())
     cases = [c["id"] for c in json.loads((ROOT / "data" / "cases" / "blind" / f"{args.batch}.json").read_text())]
     wrong, listed, per_case = [], [], {}
@@ -192,7 +294,7 @@ def main() -> int:
         ent = entries(led, cid)
         listed += ent
         per_case[cid] = {"ran": True, "entries": len(ent), "machine_wrong": len(found),
-                         "ledger_ok": led.get("ok"),
+                         "ledger_ok": led.get("ok"), "freshness": runmeta.freshness(3, cid),
                          "failed_checks": [c["name"] for c in led.get("checks", []) if c["status"] == "fail"],
                          "sections": {s: sum(1 for a in led.get("actions", []) if a["section"] == s)
                                       for s in SECTIONS}}
@@ -209,8 +311,10 @@ def main() -> int:
         if not m.get("ran"):
             print(f"  {cid:<16} NOT RUN")
             continue
+        fresh = m["freshness"]
         print(f"  {cid:<16} entries {m['entries']:<4} machine-wrong {m['machine_wrong']:<3} "
-              f"ledger {'ok' if m['ledger_ok'] else 'FAILED ' + str(m['failed_checks'])}")
+              f"ledger {'ok' if m['ledger_ok'] else 'FAILED ' + str(m['failed_checks'])}  "
+              f"{'fresh' if fresh['fresh'] else 'STALE: ' + '; '.join(fresh['reasons'])}")
     if wrong:
         print(f"\n{len(wrong)} machine-judged WRONG entries:")
         for w in wrong:
@@ -218,6 +322,17 @@ def main() -> int:
     else:
         print("\nno entry failed a machine check")
     print(f"\n{len(listed)} entries need a human judgement -> {(d / 'machine.json').relative_to(ROOT)}")
+    if args.sample_supportive:
+        import random
+        sup = [r for r in listed if r["section"] == "supportive_management"]
+        pick = sorted(random.Random(f"{args.batch}-supportive").sample(sup, min(args.sample_supportive, len(sup))),
+                      key=lambda r: (r["case"], r["label"] or ""))
+        out["sampled_supportive"] = {"seed": f"{args.batch}-supportive", "of": len(sup), "rows": pick}
+        (d / "machine.json").write_text(json.dumps(out, indent=1, ensure_ascii=False))
+        print(f"\nseeded sample of {len(pick)} supportive entries (of {len(sup)}), seed "
+              f"{args.batch}-supportive:")
+        for r in pick:
+            print(f"  {r['case']} | {r['label']} | {r['status']}")
     return 0
 
 
