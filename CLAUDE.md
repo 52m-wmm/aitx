@@ -50,15 +50,26 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 3a | 已确立层（Existing Targeted / Supportive / Contraindications） | ✅ 已验收（2026-11-04，tag `step3a-accepted`）；补充修复（提示词 `3a-v5`：表格行与段首限定作条件、治疗类转介、漏抽补抽、放宽从句、按变量合并缺失信息等）✅ 已验收（2026-11-05，tag `step3a.1-accepted`）：6 个练习病例 20/20 核实期望成立。规则变更见 3a 契约文末 |
 | 3b | 临床试验 | ✅ 已验收（2026-11-05，tag `step3b-accepted`）：5 个练习病例 8/8 核实期望成立；逐条标准映射（LLM 映射、代码核验与比较）、病人事实模块、eGFR 公式（与 NKF 计算器核对）。契约 `docs/step3b_contract.md` |
 | 3c | 老药新用 / 扩展使用（Off-label & Expanded Access） | ✅ 已验收（2026-11-06，tag `step3c-accepted`）：5 个练习病例 7/7 核实期望成立、全部新鲜输出、账本校验全过。契约 `docs/step3c_contract.md`（规则变更见文末 1–15 条） |
-| 3d | 定制疗法（Bespoke Therapies） | 实现完成（`aitx/evidence/bespoke.py`，6 种手段逐一判定），离线测试 36 条；验收 2/8 成立、6 条因输出过期未计分（预算上限截断，明天补跑）。首轮统计：24 条判定中 10 条"无法评估"（41.7%），全部落在外显子跳跃（结构域、天然跳跃证据）和碱基编辑（PAM），都是审阅决定暂缓接入的数据源。契约 `docs/step3d_contract.md` |
-| 3e | 药物重定位（Drug Repurposing） | 实现完成（`aitx/evidence/repurposing.py`），离线测试 50 条；契约 `docs/step3e_contract.md` 待定问题已全部定稿。GRIN2B 单病例离线试跑通过：50 条机制记录里 28 条因方向相反（NMDA 拮抗剂）被排除，保留 3 条 PAM / 部分激动剂，全部标注"对本亚基选择性未知"。首次联网接入排在周六补跑 |
-| 4 | 查现成方案（FDA 说明书、ClinicalTrials.gov API v2、PubMed） | 未开始 |
+| 3d | 定制疗法（Bespoke Therapies） | ✅ 已验收（2026-11-08，tag `step3d-accepted`）：12 个练习病例 8/8 核实期望成立、全部新鲜输出。48 条判定中 12 条"无法评估"（25%）：PAM 5、结构域 3、天然跳跃证据 3、上调靶点 1——全是审阅决定暂缓接入的数据源，**没有一条因机制取不到**（GeneReviews 供得上）。契约 `docs/step3d_contract.md` |
+| 3e | 药物重定位（Drug Repurposing） | ✅ 已验收（2026-11-08，tag `step3e-accepted`）：5/5 核实期望成立。12 个练习病例里只有 GRIN2B 产出候选（62 条机制记录排除 56 条，全因方向相反；保留 NEBOGLAMINE / RAPASTINEL / APIMOSTINEL，均标注"对本亚基选择性未知"）；DMD 的外显子跳跃 ASO 按药物类型转交 3d；其余基因在 Open Targets 无药物记录，整节留"检索无结果"负面证据。契约 `docs/step3e_contract.md` |
+| 盲测 | 在未调过参的病例上量写错 / 漏写 / 有条件率 | 方案草案 `docs/blind_test_plan.md`（v0.1，2026-11-08），5 个问题待你决定；未执行 |
+| 4 | 报告组装（按官方模板生成 markdown、格式校验、引用核验） | 未开始 |
 | 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
 
 ## 练习与验收数据
 
 `data/cases/practice/official_examples.json`：官网 Phase 0 的 12 个示例病例，临床描述逐字取自官网（2026-11-03 核对；SLC35A2 拆为 ex7 / ex8），部分有标准答案（例如 KMT2B c.8079delC 不触发 NMD）。
 开发调试优先用这些练习病例，最后才跑 4 个评测病例，避免过拟合。
+
+### 评测病例的保险（2026-11-08）
+
+**起因**：一条不带 `--case` 的 `run_pipeline.py --from-step 3` 按 `CASE_FILES` 跑了全部文件，把 AITX-40001/40002/40003 的 step 3 输出重新生成了（40004 保持 11-03 的旧文件）。跑它们本身不算过拟合，**看它们的输出并据此调代码才算**；当时已立即停掉进程，没有读这三个文件的内容。
+**处置**：`out/step3/AITX-4000{1,2,3,4}.json` 四个文件已删除，回到"评测病例未跑"的状态（step 3 之后没有任何产物，最近的查看页导出是 11-05，早于这次误跑）。`out/step1`、`out/step2` 下评测病例的旧输出保留——它们是确定性变异解析和疾病归一化，不含治疗内容。
+**保险**：
+- `run_pipeline.py` 不带 `--eval` 时**跳过**评测病例并打印 `[HELD BACK]`；**点名**跑（`--case AITX-4000x` 或直接给它们的文件）会被拒绝并提示用 `--eval`；评测病例的 id 从它们自己的文件读，不靠名字猜。
+- 所有 step 3 验收脚本（3.0 / 3a / 3b / 3c / 3d / 3e）调用 `runmeta.refuse_eval_cases`，碰到评测病例直接退出；`acceptance_step3_0.py` 里原来打印 AITX-40003 分支的那段已删除。
+- 测试 `tests/test_eval_holdback.py`（含静态检查：任何 step 3 验收脚本或期望文件都不许出现评测病例 id）。
+- **仍待处理**：`scripts/acceptance_step1.py` 和 `acceptance_step2.py` 的期望是**早期按评测病例写的**（AITX-40001～40004 的 ptc 位置、OMIM 归类等），这两个脚本还没加保险。它们判的是确定性解析和疾病归一化、不是治疗内容，但严格讲同样属于"用评测病例调参"。待决定：改写成练习病例的等价期望，还是保留现状。
 
 ## 用户背景
 
