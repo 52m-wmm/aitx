@@ -9,6 +9,7 @@ broke; everything else is listed for the reviewer to judge.
   4 direction           3e candidates act in the direction the branch's mechanism calls for
   5 wording             no conclusion claims efficacy, and no 3d/3e conclusion carries a dose
   6 patient-facts       a requirement said to be met has a quoted patient fact; an unknown one is in missing_information
+  7 duplicate           the same drug does not appear twice in one section under two different action keys
 
 Usage: python scripts/blind_machine_check.py --batch 20261108 [--online]
 Writes out/blind/<batch>/machine.json and prints a summary plus the reviewer's list.
@@ -173,6 +174,34 @@ def check_records(led: dict, online: bool) -> list[dict]:
     return out
 
 
+def bare_name(label: str) -> str:
+    """A drug label with its parenthesised abbreviation and punctuation stripped, for duplicate detection:
+    "potassium bromide (KBr)" and "potassium bromide" are the same drug (2026-11-09)."""
+    text = re.sub(r"\([^)]*\)", " ", (label or "").lower())
+    return " ".join(re.findall(r"[a-z0-9-]+", text))
+
+
+def check_duplicates(led: dict) -> list[dict]:
+    """Check 7 (added 2026-11-09): the same drug must not appear twice in one section.
+
+    Found by review: potassium bromide was written twice in 3c, once as drug:rxcui:34299 ("potassium bromide")
+    and once as drug:name:kbr ("potassium bromide (KBr)"), because the parenthesised abbreviation defeated the
+    RxNorm lookup and the fallback key was built from the abbreviation - the same failure as "(STS)" earlier.
+    """
+    out, by = [], {}
+    for a in led.get("actions", []):
+        if not a.get("action_key") or not a.get("label"):
+            continue
+        by.setdefault((a["section"], bare_name(a["label"])), {}).setdefault(a["action_key"], []).extend(
+            a.get("applies_to") or [])
+    for (section, name), keys in by.items():
+        if len(keys) > 1:
+            out.append({"check": "duplicate", "section": section, "action": name,
+                        "detail": f"the same drug appears under {len(keys)} action keys: "
+                                  + "; ".join(f"{k} for {sorted(set(b))}" for k, b in keys.items())})
+    return out
+
+
 def check_sections(led: dict) -> list[dict]:
     out, by_key = [], {}
     for a in led.get("actions", []):
@@ -287,7 +316,8 @@ def main() -> int:
             continue
         led = json.loads(p.read_text())
         found = (check_quotes(led) + check_records(led, args.online) + check_sections(led)
-                 + check_direction(led) + check_wording(led) + check_patient_facts(led))
+                 + check_direction(led) + check_wording(led) + check_patient_facts(led)
+                 + check_duplicates(led))
         for f in found:
             f["case"] = cid
         wrong += found
