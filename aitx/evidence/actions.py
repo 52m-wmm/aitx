@@ -89,11 +89,44 @@ def strip_dose(name: str) -> str:
     return re.sub(r"\s+", " ", _DOSE.sub(" ", name)).strip()
 
 
+_PAREN = re.compile(r"\s*\(([^)]*)\)")
+
+
+def strip_abbrev(name: str) -> str:
+    """Drop a parenthesised abbreviation: "potassium bromide (KBr)" -> "potassium bromide".
+
+    Only a short, mostly upper-case parenthetical is dropped, because that is what an abbreviation looks like.
+    A spelled-out synonym or qualifier is kept ("vitamin B6 (pyridoxine)", "insulin (human)"), since dropping
+    it could throw away the only real drug name.
+
+    Reason (2026-11-09, found in the blind test): with the abbreviation in the label, RxNorm finds nothing and
+    the fallback key is built from the abbreviation itself, so one drug gets two action keys and the "no action
+    twice" rule fails. Seen three times: "sodium thiosulfate (STS)", "potassium bromide (KBr)" and
+    "anti-seizure medication (ASM)" - the last two wrote the same drug twice in one report, with conflicting
+    conclusions.
+    """
+    def drop(m: re.Match) -> str:
+        inner = m.group(1).strip()
+        letters = re.sub(r"[^A-Za-z]", "", inner)
+        if not letters or len(inner) > 8:
+            return m.group(0)
+        return " " if sum(c.isupper() for c in letters) >= max(1, len(letters) // 2) else m.group(0)
+
+    out = re.sub(r"\s+", " ", _PAREN.sub(drop, name or "")).strip()
+    return out or (name or "").strip()
+
+
 def components(name: str) -> list[str]:
     """Ingredient names of a (possibly combined) drug name: 'Foo sodium / Bar' -> ['bar', 'foo']."""
     out = []
-    for part in _SPLIT.split(strip_dose(name).lower()):
-        words = [w for w in re.sub(r"[^a-z0-9\- ]+", " ", part).split() if w not in SALTS]
+    for part in _SPLIT.split(strip_abbrev(strip_dose(name)).lower()):
+        all_words = re.sub(r"[^a-z0-9\- ]+", " ", part).split()
+        words = [w for w in all_words if w not in SALTS]
+        # every word was a salt word ("potassium bromide", "potassium chloride"): keep them, or the name
+        # collapses to nothing and two different drugs share the empty fallback key drug:name:
+        # (2026-11-09, found by the reverse test for the abbreviation fix)
+        if not words:
+            words = all_words
         if words:
             out.append(" ".join(words))
     return sorted(set(out))
@@ -149,7 +182,7 @@ def chembl_parent(name: str) -> dict | None:
 def drug_key(name: str) -> dict:
     """{key, normalized, method, ingredients, input}"""
     out = {"input": name}
-    name = strip_dose(name) or name
+    name = strip_abbrev(strip_dose(name)) or name
     ing = rxnorm_ingredients(name)
     if ing:
         return {**out, "key": "drug:rxcui:" + "+".join(c["rxcui"] for c in ing), "normalized": True,
