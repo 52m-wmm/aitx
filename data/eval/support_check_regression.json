@@ -1,5 +1,5 @@
 {
- "description": "Support-check regression cases. kind 'rule' (default): rules a person reviewed, expected = supported (accepted) or blocked (vetoed), collected automatically. kind 'claim': report claims a person found wrong, judged on claim + quotes + context_quotes, added by hand. Never used as prompt examples.",
+ "description": "Support-check regression cases. kind 'rule' (default): rules a person reviewed, expected = supported (accepted) or blocked (vetoed), collected automatically. kind 'claim': report claims a person found wrong, judged on claim + quotes + context_quotes, added by hand. kind 'same_action': two report entries a person found to be one action (expected 'same'); listed, not scored, until a cross-section judge exists. Never used as prompt examples.",
  "cases": [
   {
    "identity": "cedfa0d611b87f1f1ae6dc13c8b20fbc19defb73ffb3170a8c13d2134df15aeb",
@@ -491,6 +491,66 @@
     ],
     "reason": "The quotes state that two patients had neurological improvements after CoQ10, but they do not identify the patients as having the specific neurodevelopmental disorder with cerebellar atrophy and motor dysfunction."
    }
+  },
+  {
+   "identity": "9b07b03bda7ba6be5e0f2a51fde527910bcf22a2851801b1f5ce29deb07d01ea",
+   "kind": "claim",
+   "rule_id": "CLAIM-SNRNP200-BRIGHT-LIGHT",
+   "gene": "SNRNP200",
+   "expected": "blocked",
+   "note": "结论强过证据：引文的依据是动物模型、而且主要是另一个基因（视紫红质 RHO）的模型，报告却把'避免强光'判为对本病人适用（已确立层）。核查应判为不支持或部分支持。",
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind batch 3: 'avoid bright light' marked applicable from animal-model evidence in another gene (rhodopsin)."
+   },
+   "collected_at": "2026-11-11",
+   "source": {
+    "nbk": "NBK1417",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1417/"
+   },
+   "claim": {
+    "topic": "avoiding bright light in retinitis pigmentosa 33",
+    "items": [
+     "Avoiding bright light is recommended for patients with retinitis pigmentosa 33 caused by SNRNP200 variants."
+    ],
+    "quotes": [
+     "Increased exposure to light has been demonstrated to accelerate progression in animal models of retinitis pigmentosa, particularly those with pathogenic variants in the gene encoding rhodopsin [Naash et al 1996, LaVail et al 1999]; thus, avoidance of bright light and use of UV-blocking sunglasses ar"
+    ],
+    "context_quotes": []
+   }
+  },
+  {
+   "identity": "a6a299a0eddaa2b58215cb755aa28ad4828a892a427bf0fbb4fd699463f6ce7b",
+   "kind": "same_action",
+   "rule_id": "SAME-SNRNP200-UV-SUNGLASSES",
+   "gene": "SNRNP200",
+   "expected": "same",
+   "note": "换说法的跨章节重复：禁忌节的 'UV-blocking sunglasses' 和支持治疗节的 'UV-A and UV-B blocking sunglasses' 是同一行动。同义合并目前只在同一小节内做，所以两节各留一条，违反'同一行动不跨章节重复'。目前没有跨章节的判定器，评测脚本只列出、不计分。",
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind batch 3: the same action reworded in two sections."
+   },
+   "collected_at": "2026-11-11",
+   "source": {
+    "nbk": "NBK1417",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK1417/"
+   },
+   "entries": [
+    {
+     "section": "contraindications_precautions",
+     "label": "UV-blocking sunglasses",
+     "quote": "Increased exposure to light has been demonstrated to accelerate progression in animal models of retinitis pigmentosa, particularly those with pathogenic variants in the gene encoding rhodopsin [Naash et al 1996, LaVail et al 1999]; thus, avoidance of bright light and use of UV-blocking sunglasses ar"
+    },
+    {
+     "section": "supportive_management",
+     "label": "UV-A and UV-B blocking sunglasses",
+     "quote": "Because of the concern of acceleration of retinal degeneration from short-wavelength light exposure, use of UV-A and UV-B blocking sunglasses is recommended."
+    }
+   ]
   }
  ]
 }

@@ -145,3 +145,25 @@ def test_claim_cases_survive_collection_and_leak_check(tmp_path):
     E.collect(rules_dir=tmp_path / "no_rules", path=path)
     assert [x["rule_id"] for x in json.loads(path.read_text())["cases"]] == ["CLAIM-GEMIN5-COQ10"]
     assert E.leaks([c]) == []
+
+
+def test_batch3_cases_are_in_the_set():
+    E = _eval_module()
+    cases = {c["rule_id"]: c for c in json.loads(E.SET.read_text())["cases"]}
+    light = cases["CLAIM-SNRNP200-BRIGHT-LIGHT"]
+    assert light["expected"] == "blocked" and "animal models" in light["claim"]["quotes"][0]
+    same = cases["SAME-SNRNP200-UV-SUNGLASSES"]
+    assert same["expected"] == "same" and {x["section"] for x in same["entries"]} == {
+        "contraindications_precautions", "supportive_management"}
+
+
+def test_same_action_cases_are_listed_not_scored(monkeypatch):
+    E = _eval_module()
+    cases = json.loads(E.SET.read_text())["cases"]
+    same = [c for c in cases if c.get("kind") == "same_action"]
+    claim = [c for c in cases if c["rule_id"] == "CLAIM-SNRNP200-BRIGHT-LIGHT"]
+    fake(monkeypatch, {"items": [{"item": 1, "verdict": "partially_supported", "reason": "animal models"}]})
+    r = E.evaluate(same + claim)
+    assert r["n"] == 1 and r["unscored"] == [c["rule_id"] for c in same]
+    assert r["false_pass"] == [] and r["accuracy"] == 1.0     # blocked as expected
+    assert E.leaks(same) == []

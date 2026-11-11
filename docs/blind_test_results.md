@@ -96,7 +96,34 @@
 - **MPZ 支持治疗 13 条的证据层级核对**：账本 `supportive_tiers` 记为 `overview`（L2，"disease-group advice (GeneReviews overview, not a chapter on this disease)"），每条行动 `tier_source = overview`。**标对了，不计写错。**
 - **抽样问题（已定：重新标组、不重抽，见本节开头"分组"；抽样当天其实已记为已知限定条件，这里是批次 2 审阅时重新核对）**：MPZ 的 NBK1358 是 CMT 总论（36 个基因），不是专章。查了 B1 全部 5 个：LRPPRC NBK320989（78 个基因）、MPZ NBK1358（36）、SNRNP200 NBK1417（80）、SFTPC NBK1230（12）是多基因章节，只有 RRM2B NBK195854（1 个基因）是单基因专章。抽样脚本 `sample_blind_cases.py` 的 B1 条件是"GeneReviews 里有任何列出该基因的章节"，没有区分专章和总论，与方案"B1 有专章"不符。
 
-### 盲测结束后统一修的问题（冻结期内只记录）
+### 批次 3（2026-11-11）：SNRNP200（B1-L2）+ THRA（B2）
+
+花费 **\$0.0203**（10 次调用，全部非高峰），上限 \$0.35；首次用 `scripts/run_blind_batch.sh`（整个包在 `caffeinate -i` 里）。两个病例新鲜输出，机器检查 0 条写错。
+
+| 病例 | 写出条目 | 机器判定写错 |
+| --- | --- | --- |
+| SNRNP200（视网膜色素变性，RP 总论 NBK1417） | 26（支持治疗 13、禁忌 4、定制疗法 6，已有靶向 / 临床试验 / 老药新用均 "None found"） | 0 |
+| THRA | 11（Tier 1 三节均 "None found"、临床试验 1、老药新用 "None found"、定制疗法 6） | 0 |
+
+### 批次 3 审阅判定（2026-11-11）
+
+- **写错 3 条**：
+  - 防紫外线墨镜跨两节（禁忌 "UV-blocking sunglasses" 与支持治疗 "UV-A and UV-B blocking sunglasses"）：换说法的跨章节重复，同义合并只在同小节内做。**已收进语义核查测试集**（`SAME-SNRNP200-UV-SUNGLASSES`，跨章节判定器还没有，只列不计分）。
+  - "避免强光"判为适用：依据是另一个基因（视紫红质）的动物模型，结论强过证据。**已收进语义核查测试集**（`CLAIM-SNRNP200-BRIGHT-LIGHT`，期望不支持）。
+  - Argus II：来源过时（审阅人已核实约 2019–2020 年停产）。Step 4 待办：写明来源更新日期，器械 / 产品类尤其要写。
+- **正确**：戒烟。
+- **疑似漏写，等召回评估**：SNRNP200 临床试验 "None found"。
+- **漏写（系统性）**：THRA 支持治疗为空。见下面"盲测后优先修"第 1 条。
+
+### FOXF1 与 THRA 的 L3 空结果：不是同一个原因（2026-11-11 用缓存查证，0 次新调用）
+
+| | THRA | FOXF1 |
+| --- | --- | --- |
+| L3 检索式里的病名 | 只有 MONDO / OMIM 名（"congenital nongoitrous hypothyroidism 6"、"CHNG6" 等），没有文献常用的 "resistance to thyroid hormone alpha / RTHα" | 有常用名（ACDMPV、alveolar capillary dysplasia） |
+| 检索结果 | **0 篇** | 8 篇，含 2026 年新生儿遗传性呼吸衰竭的管理综述（PMID 42276726，开放全文） |
+| 卡在哪 | 检索：病名覆盖不到文献叫法 | **抽取之后**：① 那篇管理综述全文 35 000 字、送给 LLM 的窗口 12 000 字，窗口按"管理章节优先"选了通用段落，**ACDMPV 一节被截掉**（窗口里 ACDMPV / FOXF1 出现 0 次），抽取 0 条；② 另一篇综述抽出"肺移植"，原文是"病情较轻的部分 ACDMPV 病人可考虑肺移植"，但 L3 的核查论断写成无条件的"文章推荐肺移植"，3 次判定一致"部分支持" → 被丢弃，而不是降为有条件 |
+
+
 
 | 记录时间 | 问题 | 出处 |
 | --- | --- | --- |
@@ -106,3 +133,10 @@
 | 2026-11-10 | 被新相关性规则排除的癌症试验，排除理由仍是旧文案 "no Condition or Keyword entry names the disease or gene"，应改为"基因出现在癌症语境或作为标志物" | `found_during_freeze.md` 第 10 节 |
 | 2026-11-11 | 3c 疗效方向的支持度核查只给用药句和结局句，看不到"病人是谁"；摘要把病人身份写在另一句时，阳性被压成"未报告"（GEMIN5 辅酶 Q10） | `found_during_freeze.md` 第 11 节 |
 | 2026-11-11 | 3c "证据不足"档固定措辞 "no evidence that it is effective" 改为中性（如 "The available reports are not enough to judge whether it works."）；同时修核查论断里指标名自带方向词时的病句（"improvements improved"） | 同上 |
+| 2026-11-11 | 同义合并只在同一小节内做，换说法的同一行动会跨章节各留一条（SNRNP200 防紫外线墨镜）；需要跨章节判定 | 测试集 `SAME-SNRNP200-UV-SUNGLASSES` |
+| 2026-11-11 | 动物模型、而且是别的基因的证据，被判成"已确立 / 适用"（SNRNP200 避免强光）；证据类型要能降级为有条件或假设 | 测试集 `CLAIM-SNRNP200-BRIGHT-LIGHT` |
+
+### 盲测后优先修（2026-11-11 定）
+
+1. **L3 文献检索的病名覆盖不到文献常用叫法（系统性）**：检索式只用 MONDO / OMIM 病名及其同义词，THRA 的 "resistance to thyroid hormone alpha / RTHα" 不在其中，0 篇。修法：加入"基因名 + related disorder / syndrome / deficiency"等常见叫法（如 "THRA-related"、"FOXF1-related"），以及 Orphanet、OMIM 的同义词。**会影响没有 GeneReviews 专章的评测病例**（它们的支持治疗同样只能靠 L3 / L4），所以排在前面。
+2. **FOXF1 的 L3 是另外两个原因**（见上面对照表）：长综述的 12 000 字窗口没有优先选本病那一节；L3 核查论断不带条件，原文"较轻病例可考虑"的建议被整条丢弃而不是降为有条件。两处都是通用问题，一并修。

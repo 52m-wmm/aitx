@@ -50,3 +50,7 @@ KCNT1 病例的"已有靶向治疗"节写 `None found`，而支持治疗节里�
 ## 指向外部清单的禁忌条目（2026-11-11，盲测批次 2 发现）
 
 GeneReviews 有时只给一个外部清单而不点名药物（MPZ / CMT 总论："Medications that are toxic or potentially toxic to persons with CMT … See the Charcot-Marie-Tooth Association website (pdf) for an up-to-date list."）。3a 把它记成一条禁忌行动"toxic or potentially toxic medications"。**Step 4 呈现时写成可操作的形式："用药前对照 CMT 协会的神经毒性药物清单"**，并附清单出处，而不是只写一个泛称。
+
+## 写明来源更新日期（2026-11-11，盲测批次 3 发现）
+
+SNRNP200 的 RP 总论（NBK1417）说 Argus II 视网膜假体"已获 FDA 批准、在临床使用"，但该器械约 2019–2020 年已停产（审阅人核实）。报告逐字引用了过时的来源。**Step 4 每条引用都要写明来源的最后更新日期**（GeneReviews 章节的 "Last Update"、说明书版本日期、试验登记的最后更新），**器械 / 产品类条目尤其要写**，并在来源早于一定年限时提示"可能已过时，请核实是否仍在供应"。

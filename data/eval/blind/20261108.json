@@ -41,6 +41,54 @@
    "verdict": "wrong",
    "note": "结论与原文矛盾：原文两例用后神经症状改善；根因见 found_during_freeze.md 第 11 节",
    "at": 1794396243
+  },
+  "9cb2ca34d27e": {
+   "case": "BLIND-SNRNP200",
+   "section": "contraindications_precautions",
+   "label": "UV-blocking sunglasses",
+   "verdict": "wrong",
+   "note": "跨章节重复：与支持治疗的 'UV-A and UV-B blocking sunglasses' 是同一行动换说法（同义合并只在同小节内做）",
+   "at": 1794397076
+  },
+  "6381fe59c843": {
+   "case": "BLIND-SNRNP200",
+   "section": "contraindications_precautions",
+   "label": "bright light",
+   "verdict": "wrong",
+   "note": "结论强过证据：依据是其他基因（视紫红质）的动物模型，却判为适用",
+   "at": 1794397076
+  },
+  "0e178032907a": {
+   "case": "BLIND-SNRNP200",
+   "section": "contraindications_precautions",
+   "label": "smoking",
+   "verdict": "correct",
+   "note": "",
+   "at": 1794397076
+  },
+  "54697741e3ab": {
+   "case": "BLIND-SNRNP200",
+   "section": "supportive_management",
+   "label": "Argus II",
+   "verdict": "wrong",
+   "note": "来源过时：Argus II 约 2019–2020 年停产（审阅人已核实）；Step 4 写明来源更新日期",
+   "at": 1794397076
+  },
+  "9eae9a8836a8": {
+   "case": "BLIND-SNRNP200",
+   "section": "clinical_trial_eligibility",
+   "label": "None found",
+   "verdict": "unsure",
+   "note": "疑似漏写，等召回评估",
+   "at": 1794397076
+  },
+  "m316bd2d2cbc": {
+   "case": "BLIND-THRA",
+   "section": "supportive_management",
+   "label": "supportive management for resistance to thyroid hormone alpha (RTHα)",
+   "verdict": "missed",
+   "note": "系统性：L3 只用 MONDO/OMIM 病名检索，文献常用叫法 RTHα 不在同义词里，0 篇",
+   "at": 1794397076
   }
  }
 }

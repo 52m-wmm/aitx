@@ -70,6 +70,8 @@ def collect(rules_dir: Path = RULES_DIR, path: Path = SET) -> list[str]:
 
 
 def case_quotes(c: dict) -> list[str]:
+    if c.get("kind") == "same_action":
+        return [x["quote"] for x in c["entries"]]
     if c.get("kind") == "claim":
         return list(c["claim"]["quotes"]) + list(c["claim"].get("context_quotes") or [])
     return [s["quote"] for s in c["rule"]["sources"]]
@@ -96,6 +98,9 @@ def check_case(c: dict, use_cache: bool) -> dict:
 
 
 def evaluate(cases: list[dict], *, use_cache: bool = True) -> dict:
+    # same_action cases (2026-11-11) have no judge yet: listed, not scored
+    unscored = [c["rule_id"] for c in cases if c.get("kind") == "same_action"]
+    cases = [c for c in cases if c.get("kind") != "same_action"]
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(lambda c: check_case(c, use_cache), cases))
     rows, fp, fb, ok = [], [], [], 0
@@ -111,12 +116,15 @@ def evaluate(cases: list[dict], *, use_cache: bool = True) -> dict:
                      "items": [(i["item"].split(":")[0], i["judgements"]) for i in r["items"]]})
     n = len(cases)
     return {"prompt_version": SC.PROMPT_VERSION, "n_checks": SC.N_CHECKS, "n": n,
-            "accuracy": round(ok / n, 3) if n else None, "false_pass": fp, "false_block": fb, "rows": rows}
+            "accuracy": round(ok / n, 3) if n else None, "false_pass": fp, "false_block": fb, "rows": rows,
+            "unscored": unscored}
 
 
 def report(r: dict) -> None:
     print(f"support check {r['prompt_version']} (x{r['n_checks']}): {r['n']} cases, accuracy {r['accuracy']}, "
           f"false passes {len(r['false_pass'])} {r['false_pass']}, false blocks {len(r['false_block'])} {r['false_block']}")
+    if r.get("unscored"):
+        print(f"  not scored (no cross-section judge yet): {r['unscored']}")
     for row in r["rows"]:
         print(f"  {'OK ' if row['correct'] else 'BAD'} {row['rule_id']:<10} expected {row['expected']:<9} check {row['check']:<20} {row['items']}")
 
