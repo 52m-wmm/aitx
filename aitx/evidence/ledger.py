@@ -224,6 +224,7 @@ class Ledger:
         self.branch_order: list[str] = [b["id"] for b in branches]
         self.actions: list[dict] = []
         self.dropped_conditions: list[dict] = []
+        self.possible_duplicates: list[dict] = []      # N3 / N4 (2026-11-11): flagged for Step 4, never auto-deleted
         self.reextracted_rows: list[dict] = []
         self.supportive_tiers: dict = {}
         self.offlabel_searches: dict = {}            # 3c: per branch, PubMed search, papers and why each was not used             # fallback chain: tier, chapters, literature, symptoms, per branch     # 3a: table rows no extracted action covered, extracted again   # 3a: requirements refused by a code rule (text, rule, source)
@@ -420,8 +421,47 @@ class Ledger:
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
                 "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
+                "possible_duplicates": self.possible_duplicates,
                 "supportive_tiers": self.supportive_tiers, "offlabel_searches": self.offlabel_searches,
                 "bespoke_mechanism": self.bespoke_mechanism, "bespoke_unassessable": self.bespoke_unassessable,
                 "repurposing_searches": self.repurposing_searches,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}
+
+
+# ------------------------------------------------------------------ possible duplicates across sections (fix plan N3)
+
+DUP_SECTIONS = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions",
+                "off_label_expanded_access")
+_DUP_STOP = {"a", "an", "and", "or", "the", "of", "for", "with", "to", "in", "use", "using", "on"}
+
+
+def _content_words(label: str) -> list[str]:
+    return [t for t in re.findall(r"[a-z0-9]+", (label or "").lower()) if t not in _DUP_STOP]
+
+
+def possible_duplicates(actions: list[dict], evidence: dict) -> list[dict]:
+    """Pairs of written entries in different sections that may be one action (2026-11-11, blind test: "UV-blocking
+    sunglasses" under precautions and "UV-A and UV-B blocking sunglasses" under supportive care, same chapter).
+    Deterministic and conservative: the same action key, or the same source with one label's content words inside the
+    other's and the same head noun. Flagged for Step 4, which writes the action once; nothing is deleted here."""
+    rows = [a for a in actions if a.get("section") in DUP_SECTIONS and a.get("label") != "None found"]
+    out = []
+    for i, a in enumerate(rows):
+        for b in rows[i + 1:]:
+            if a["section"] == b["section"]:
+                continue
+            why = None
+            if a.get("action_key") and a.get("action_key") == b.get("action_key"):
+                why = "same action key"
+            else:
+                sa = {(evidence.get(e) or {}).get("source", {}).get("id") for e in a.get("evidence_ids") or []} - {None}
+                sb = {(evidence.get(e) or {}).get("source", {}).get("id") for e in b.get("evidence_ids") or []} - {None}
+                wa, wb = _content_words(a["label"]), _content_words(b["label"])
+                if sa & sb and wa and wb and wa[-1] == wb[-1] and (set(wa) <= set(wb) or set(wb) <= set(wa)):
+                    why = f"same source, one label within the other ('{a['label']}' / '{b['label']}')"
+            if why:
+                out.append({"kind": "cross_section", "why": why,
+                            "entries": [{"section": x["section"], "label": x["label"], "action_key": x.get("action_key")}
+                                        for x in (a, b)]})
+    return out

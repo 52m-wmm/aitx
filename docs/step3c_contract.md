@@ -181,3 +181,7 @@
     - 同时放宽句式：基因符号与病因名词之间允许最多 3 个**小写**限定词（"GRIN2B loss-of-function pathogenic variants"）。只允许小写，避免把另一个基因符号吞进来。
     - 性质：放宽收录（会多出先例、可能新增有条件条目），不会产生新的"不适用"。按审批规则先做后报。
     - 测试：`test_gene_family_only_for_long_prefixes`、`test_family_counts_only_as_the_patients_condition`（含反向：裸提及、别的家族、癌症语境、前缀过短都不算）；`test_gene_may_be_named_in_the_patient_count_quote` 的反向用例改为"别的基因家族"，并注明原用例为何不再适用。
+
+## 跨分支同一药物合并（2026-11-11，盲测后修复 N4）
+
+同一药物（同一行动键）在多个诊断分支各生成了 3c 行动时：各分支的先例**一致**（同样的文章、同样的方向和对象判定）→ 合并为一条行动（`applies_to`、`status_by_branch` 合并，要求行重新编号，记 `merged_branches`）；**不一致** → 保持分开，互相标 `same_action_other_branches`，并记入账本 `possible_duplicates`（kind `cross_branch`），由 Step 4 决定呈现。起因：SFTPC 的甲泼尼龙在两个分支各写了一条（同一篇 PMID 33179299）。不一致的例子：GRIN2B 的美金刚，两个分支的病名不同，上下文核查对同一篇文章给了不同方向（not_reported / mixed）。测试：`tests/test_duplicates.py`。

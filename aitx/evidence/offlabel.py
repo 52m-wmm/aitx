@@ -669,6 +669,7 @@ def add_offlabel(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_ca
             "rejected_items": rejected}
         for k, g in groups.items():
             _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, made_for, use_cache)
+    merge_branches(led)
     led.mark_searched(SECTION)
     for b in [b for b in led.branches if b.get("diagnosis")]:
         if b["id"] in made_for or b["id"] not in led.offlabel_searches or led.offlabel_searches[b["id"]].get("error"):
@@ -700,6 +701,41 @@ def source_alias(drug: str, earlier: dict, evidence: dict) -> dict | None:
                 if re.search(rf"(?<![a-z0-9]){re.escape(d)}(?![a-z0-9])", m.group(1)):
                     return {"action_key": k, "section": a["section"], "quote": m.group(0)}
     return None
+
+
+def _precedent_view(a: dict) -> list[tuple]:
+    return sorted((p["pmid"], p.get("direction"), p.get("subject")) for p in a.get("precedents") or [])
+
+
+def merge_branches(led) -> None:
+    """One drug placed for several diagnosis branches is one action (fix plan N4, 2026-11-11, blind test: SFTPC's
+    methylprednisolone was written twice from the same article). Merged when the branches' precedents agree (same
+    articles, same direction and subject); when they do not, both stay, cross-referenced and flagged for Step 4."""
+    groups: dict[str, list[dict]] = {}
+    for a in led.actions:
+        if a["section"] == SECTION and a.get("action_key"):
+            groups.setdefault(a["action_key"], []).append(a)
+    for key, acts in groups.items():
+        if len(acts) < 2:
+            continue
+        if all(_precedent_view(x) == _precedent_view(acts[0]) for x in acts[1:]):
+            first = acts[0]
+            reqs = [dict(r) for x in acts for r in x["requirements"]]
+            for i, r in enumerate(reqs, 1):
+                r["id"] = f"r{i}"
+            first.update(applies_to=sorted({b for x in acts for b in x["applies_to"]}),
+                         status_by_branch={b: st for x in acts for b, st in x["status_by_branch"].items()},
+                         requirements=reqs,
+                         evidence_ids=list(dict.fromkeys(e for x in acts for e in x["evidence_ids"])),
+                         merged_branches=[x["label"] for x in acts])
+            for x in acts[1:]:
+                led.actions.remove(x)
+        else:
+            bids = [b for x in acts for b in x["applies_to"]]
+            for x in acts:
+                x["same_action_other_branches"] = [b for b in bids if b not in x["applies_to"]]
+            led.possible_duplicates.append({"kind": "cross_branch", "action_key": key, "branches": bids,
+                                            "why": "the branches' precedents differ (direction or subject); kept apart"})
 
 
 def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, made_for, use_cache) -> None:

@@ -114,6 +114,7 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     add_established(led, step1, step2)                 # 3a: Tier 1 sections
     add_trials(led, case, step1, step2)                # 3b: Clinical Trial Eligibility
     add_offlabel(led, case, step1, step2)              # 3c: Off-label / Expanded Access
+    led.possible_duplicates += LG.possible_duplicates(led.actions, led.evidence)    # N3: flagged, never deleted
     add_bespoke(led, case, step1, step2)               # 3d: Bespoke Therapies
     add_repurposing(led, case, step1, step2)           # 3e: Drug Repurposing
     out = led.to_dict()

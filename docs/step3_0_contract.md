@@ -354,3 +354,7 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 5. 审阅补充：**阴性结果证据**（1.2 节）；**"同一行动"按标准化标识判定**（1.3 节）。
 6. 药物查不到编号时用**标准化通用名兜底键**，`normalized = false`，允许进章节、页面警告（1.3 节）。
    已知局限：查不到的商品名（如 Kaftrio）无法换成通用名，与其通用名的键不同，跨章节重复时唯一性校验发现不了；靠页面警告提醒人工留意。
+
+## 跨章节可能重复的标记（2026-11-11，盲测后修复 N3）
+
+账本新增 `possible_duplicates`：在 3a 三节与 3c 之间，**同一行动键**出现在两节，或**同一来源**里两条标签的实词一条包含另一条、且中心词相同（"UV-blocking sunglasses" / "UV-A and UV-B blocking sunglasses"），记为可能重复（kind `cross_section`）。**只标记，不删除**，由 Step 4 只写一次并交叉引用。现有账本离线扫描：SNRNP200 墨镜（真重复）；NF1 "radiotherapy" 两节同名、OTC "glycerol phenylbutyrate" / "phenylbutyrate"（不同产品，误标）——由 Step 4 审阅。测试：`tests/test_duplicates.py`。
