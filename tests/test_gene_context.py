@@ -119,3 +119,14 @@ def test_a_patient_with_that_other_disorder_keeps_the_row():
     """Reverse: the same row stays for the patient who does have primary CoQ10 deficiency (gene COQ4)."""
     assert E.row_for_other_disorder(TABLE, "Coenzyme Q10 supplementation", {"COQ4"},
                                     ["Primary coenzyme Q10 deficiency"]) is None
+
+
+def test_a_one_word_quote_inside_the_disorder_cell_is_still_dropped():
+    """The quote "Thiamine" also appears in its row's disorder cell ("Biotin-thiamine-responsive basal ganglia
+    disease"); the disorder cell must still be checked (2026-11-10 regression)."""
+    names = ["congenital lactic acidosis, Saguenay-Lac-Saint-Jean type"]
+    assert E.row_for_other_disorder(TABLE, "Thiamine", {"LRPPRC"}, names)
+    assert E.row_for_other_disorder(TABLE, "Biotin", {"LRPPRC"}, names)
+    # and the patient whose disorder that row is for keeps it
+    assert E.row_for_other_disorder(TABLE, "Thiamine", {"SLC19A3"},
+                                    ["Biotin-thiamine-responsive basal ganglia disease"]) is None

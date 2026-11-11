@@ -376,7 +376,10 @@ def row_for_other_disorder(shown: str, quote: str, genes: set[str], names: list[
     pairs = row_pairs(shown, quote)
     if not pairs:
         return None
-    cells = [c for h, c in pairs if _DISORDER_HEADER.search(h) and not LG.quote_in(quote, c)]
+    # every disorder-column cell is checked, even when the item's quote also appears in it: a one-word quote
+    # such as "Thiamine" is inside "Biotin-thiamine-responsive basal ganglia disease", and skipping that cell
+    # let thiamine through as applicable (2026-11-10, caught by the batch-1 cache rerun)
+    cells = [c for h, c in pairs if _DISORDER_HEADER.search(h)]
     if not cells:
         return None
     cell = " ".join(cells)
