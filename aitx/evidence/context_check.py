@@ -21,7 +21,8 @@ from concurrent.futures import ThreadPoolExecutor
 from aitx.disease import extract as X
 from aitx.evidence import ledger as LG
 
-PROMPT_VERSION = "context-check-v2"   # v2 (2026-11-11): compact answers, reasoning_effort "low" (budget)
+PROMPT_VERSION = "context-check-v3"   # v2: compact answers, reasoning_effort "low"; v3: disease / gene apart,
+                                     # evidence as a choice, limit tied to the entry's quote (validation 2026-11-11)
 N_CHECKS = 3
 # the DeepSeek chat API takes reasoning_effort none / low / high / max, default high (api-docs.deepseek.com, read
 # 2026-11-11); the context check runs at "low" to fit the budget (decision 2026-11-11, validated on judged entries)
@@ -133,19 +134,27 @@ def summary(res: dict) -> dict:
 AVOID_SECTION = "contraindications_precautions"
 
 
-def questions_3a(section: str, action: str, disease: str, lines: list[dict]) -> list[dict]:
+EVIDENCE = ("this_disease_patients", "other_gene_or_subtype_patients", "animals_or_cells", "not_stated")
+WEAK_EVIDENCE = ("other_gene_or_subtype_patients", "animals_or_cells")
+
+
+def questions_3a(section: str, action: str, disease: str, lines: list[dict], quote: str | None = None) -> list[dict]:
     """The questions for one Tier 1 entry. Polarity is asked only for conditions of an avoidance; "meets" only for
-    conditions the code found met from the patient's findings."""
+    conditions the code found met from the patient's findings. `quote` is the entry's own words in the passage: the
+    limit question is about that advice only (validation 2026-11-11: a limit from the next sentence of the same
+    paragraph had been put on another entry)."""
+    own = f" - the advice in the quoted words \"{quote}\"" if quote else ""
     qs = [{"id": "subject", "allowed": YES_NO,
            "text": f"Is this passage's advice about '{action}' given for people with {disease} (or for a group of "
                    f"conditions that includes it), and not only for another disease, subtype or gene?"},
-          {"id": "animal_only", "allowed": YES_NO,
-           "text": f"Does the passage say that the advice about '{action}' rests only on animal or laboratory studies "
-                   f"(not on findings in people)?"},
+          {"id": "evidence", "allowed": EVIDENCE,
+           "text": f"What evidence does the passage give for the advice about '{action}': findings in patients with "
+                   f"this disease, findings in patients with another gene or subtype, findings in animals or cells, "
+                   f"or none stated?"},
           {"id": "limit", "allowed": YES_NO,
-           "text": f"Does the passage limit the advice about '{action}' to only some patients by a characteristic of "
-                   f"the patient (for example severity, age or a particular finding - not where or how a service is "
-                   f"provided), beyond these conditions already recorded: "
+           "text": f"Considering only the advice about '{action}'{own}: does the passage limit it to only some "
+                   f"patients by a characteristic of the patient (for example severity, age or a particular finding - "
+                   f"not where or how a service is provided), beyond these conditions already recorded: "
                    f"{'; '.join(l['requirement'] for l in lines) or 'none'}? If yes, quote the limiting words."}]
     for l in lines:
         if section == AVOID_SECTION and l["result"] == "unknown":
@@ -179,10 +188,12 @@ def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: 
     if subj and subj != "yes":
         add("the source passage concerns this patient's disease", "the passage was not unanimously judged to be about "
             "this disease (another disease, subtype or gene, or not stated)")
-    ani = by.get("animal_only") or {}
-    if majority(ani.get("answers") or [], "yes"):       # trial run 2026-11-11: "rests on human findings?" was answered
-        add("the advice rests on findings in people",   # "not stated" for ordinary clinical advice; ask the other way
-            "the passage says the advice rests only on animal or laboratory studies")
+    evi = (by.get("evidence") or {}).get("answers") or []
+    # validation 2026-11-11: "rests only on animal studies?" swung yes / not stated / no for advice "recommended for all"
+    # yet based on animal models of another gene; asking what the evidence is gives a clear answer
+    if sum(1 for a in evi if a in WEAK_EVIDENCE) * 2 > max(len(evi), 1):
+        add("the evidence for this advice comes from patients with this disease",
+            "the passage bases this advice on animals or cells, or on patients with another gene or subtype")
     lim = by.get("limit") or {}
     if lim.get("final") == "yes":                       # unanimous only: a 2-of-3 split had made "In the US" a limit
         q = next((x for x in lim.get("quotes") or [] if LG.quote_in(x, passage)), None)
@@ -208,11 +219,20 @@ def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: 
 
 # ------------------------------------------------------------------ 3c: one precedent (one article)
 
+GENE_ANSWERS = ("yes", "other_gene", "not_stated")
+
+
 def questions_3c(drug: str, disease: str, gene: str | None) -> list[dict]:
-    who = f"{disease}" + (f" (variants in {gene})" if gene else "")
-    return [{"id": "subject", "allowed": YES_NO,
-             "text": f"Did the patients who received {drug} in this report have {who}? Quote the words that say which "
-                     f"disease or gene they had."},
+    """Disease and gene are asked apart (validation 2026-11-11: "a patient with Leigh syndrome" matched the disease, so
+    one combined question never asked whether the report says which gene - reading rule R3)."""
+    qs = [{"id": "disease", "allowed": YES_NO,
+           "text": f"Did the patients who received {drug} in this report have {disease} (or a group of conditions "
+                   f"that includes it)? Quote the words that say which disease they had."}]
+    if gene:
+        qs.append({"id": "gene", "allowed": GENE_ANSWERS,
+                   "text": f"Does the report say that these patients had variants in {gene}? Answer other_gene if it "
+                           f"names a different gene, not_stated if it names none. Quote the words."})
+    return qs + [
             {"id": "purpose", "allowed": YES_NO,
              "text": f"Was {drug} given to treat {disease} or one of its manifestations (not for another condition)?"},
             {"id": "harm", "allowed": YES_NO,
@@ -233,10 +253,13 @@ def decide_3c(res: dict) -> dict:
     # side effects during treatment do not disqualify a precedent (trial run 2026-11-11: L-serine and memantine had
     # been dropped for "irritability", "rare adverse events"); only a drug given for something else that then harmed is
     # an adverse report - a precaution candidate, never a contraindication (decision 2026-11-11)
+    dis, gen = f("disease"), (f("gene") if "gene" in by else "yes")
+    subject = ("other" if dis == "no" or gen == "other_gene" else
+               "same" if dis == "yes" and gen == "yes" else "not_stated")
     return {"treatment": treatment,
             "adverse": not treatment and majority((by.get("harm") or {}).get("answers") or [], "yes"),
             "side_effects": treatment and f("harm") == "yes",
-            "subject": {"yes": "same", "no": "other"}.get(f("subject"), "not_stated"),
-            "subject_quote": q1("subject"),
+            "subject": subject,
+            "subject_quote": q1("gene") or q1("disease"),
             "direction": DIRECTION_OF.get(f("direction"), "not_reported"),
             "direction_quote": q1("direction")}

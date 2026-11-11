@@ -11,7 +11,8 @@ review judged correct; GeneReviews-sourced only, so the passage is rebuilt exact
 For each entry the script rebuilds what the pipeline would send (passage, patient, questions) from the existing blind
 ledgers, runs the check, applies the code's decision, and compares:
   caught  - a wrong entry gets the correction its verdict calls for (EXPECT below);
-  harmed  - a correct entry changes status, or its precedent is dropped or no longer counted as this disease's.
+  harmed  - a correct entry changes status, or its precedent is dropped (decision 2026-11-11: a "gene not stated"
+            mark that leaves the status unchanged follows reading rule R3 and is reported apart).
 Caveat lines added to a correct entry that leave its status unchanged are reported apart.
 Pass mark (decision 2026-11-11): caught >= 80 %, harmed <= 5 %.
 """
@@ -119,7 +120,7 @@ def checks_for(entry: dict) -> list[dict]:
         main = next(ev[i] for i in a["evidence_ids"] if (ev[i].get("source") or {}).get("type") in E.CONTEXT_SOURCES)
         header, passage = E.context_passage({"src": main["source"], "quote": main["quote"], "source_text": ""})
         return [{"kind": "3a", "header": header, "passage": passage, "patient": patient, "ev_id": main["id"],
-                 "questions": CC.questions_3a(entry["section"], a["label"], disease, a["requirements"]),
+                 "questions": CC.questions_3a(entry["section"], a["label"], disease, a["requirements"], main["quote"]),
                  "action": a, "branches": a["applies_to"]}]
     recs = O._fetch_records([p["pmid"] for p in a.get("precedents") or []])
     out = []
@@ -152,18 +153,21 @@ def judge(entry: dict, out: dict) -> tuple[bool, str]:
         if what == "status":
             return out["status_after"] == [want], f"status {out['status_before']} -> {out['status_after']}"
         ps = out["precedents"]
-        if what == "direction":
+        if what == "direction":           # the verdict was about the conclusion contradicting a reported improvement
             got = [p["direction"] for p in ps if p["treatment"]]
-            return want in got, f"directions {got}"
+            agg = O.aggregate(got)
+            return agg in ("reported_improvement", "partial_improvement"), f"directions {got} -> {agg}"
         if what == "treatment":
             return all(p["treatment"] is False for p in ps), f"treatment {[p['treatment'] for p in ps]}"
         if what == "subject":
             return any(p["subject"] != "same" for p in ps), f"subjects {[p['subject'] for p in ps]}"
     if entry["section"] in S3A:
         return out["status_after"] != out["status_before"], f"status {out['status_before']} -> {out['status_after']}"
+    # harm (decision 2026-11-11): the status changes or the precedent is dropped. A "gene not stated" mark on a precedent
+    # that stays conditional follows reading rule R3 (as for idebenone) and is reported apart, not counted as harm.
     ps = out["precedents"]
-    bad = [p for p in ps if not p["treatment"] or p["subject"] != "same"]
-    return bool(bad), f"treatment {[p['treatment'] for p in ps]}, subjects {[p['subject'] for p in ps]}"
+    dropped = [p for p in ps if not p["treatment"]]
+    return bool(dropped), f"treatment {[p['treatment'] for p in ps]}, subjects {[p['subject'] for p in ps]}"
 
 
 def main() -> int:
@@ -199,7 +203,8 @@ def main() -> int:
     wrong = [r for r in rows if r["verdict"] == "wrong"]
     corr = [r for r in rows if r["verdict"] == "correct"]
     caught, harmed = sum(r["hit"] for r in wrong), sum(r["hit"] for r in corr)
-    caveats = [r for r in corr if r["section"] in S3A and not r["hit"] and r["outcome"].get("added")]
+    caveats = [r for r in corr if not r["hit"] and (r["outcome"].get("added") or any(
+        p["subject"] != "same" for p in r["outcome"].get("precedents") or []))]
     sys.path.insert(0, str(ROOT / "scripts"))
     import llm_cost  # noqa: E402
     cost = llm_cost.summarize(t0)
@@ -207,7 +212,9 @@ def main() -> int:
            "caught": caught, "wrong": len(wrong), "harmed": harmed, "correct": len(corr),
            "caught_rate": round(caught / len(wrong), 3) if wrong else None,
            "harmed_rate": round(harmed / len(corr), 3) if corr else None,
-           "caveats_on_correct": [{"case": r["case"], "label": r["label"], "added": r["outcome"]["added"]} for r in caveats],
+           "caveats_on_correct": [{"case": r["case"], "label": r["label"], "added": r["outcome"].get("added"),
+                                   "subjects": [p["subject"] for p in r["outcome"].get("precedents") or []]} for r in caveats],
+           "harm_measure": "status changed or precedent dropped (decision 2026-11-11)",
            "cost": cost, "pass": bool(wrong and corr and caught / len(wrong) >= 0.8 and harmed / len(corr) <= 0.05),
            "rows": rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False))

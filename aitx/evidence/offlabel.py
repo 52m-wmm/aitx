@@ -481,15 +481,22 @@ def direction(it: dict, drug: str, disease: str, use_cache: bool) -> str:
 
 def aggregate(directions: list[str]) -> str:
     """Drug-level efficacy (decision 2026-11-05, in this order): positive and negative -> inconsistent; negative without
-    positive -> reported_ineffective; positive without negative -> reported_improvement; otherwise insufficient."""
-    pos = any(d in ("positive", "mixed") for d in directions)
-    neg = any(d in ("negative", "mixed") for d in directions)
-    if pos and neg:
+    positive -> reported_ineffective; positive without negative -> reported_improvement; otherwise insufficient.
+    A "mixed" report (some measures improved, others did not) is one report, not a conflict between reports
+    (2026-11-11, context-check validation: GEMIN5 coenzyme Q10 "neurological improvements, although MRI abnormalities
+    remained" had become "Reports conflict"): mixed reports alone -> partial_improvement; with a negative report ->
+    inconsistent; with a positive report and no negative -> reported_improvement."""
+    pos = "positive" in directions
+    neg = "negative" in directions
+    mix = "mixed" in directions
+    if neg and (pos or mix):
         return "inconsistent"
     if neg:
         return "reported_ineffective"
     if pos:
         return "reported_improvement"
+    if mix:
+        return "partial_improvement"
     return "insufficient"
 
 
@@ -497,6 +504,8 @@ CONCLUSION = {
     "inconsistent": "Reports conflict: improvement and no benefit have both been reported.",
     "reported_ineffective": "Reported ineffective; not recommended.",
     "reported_improvement": "Improvement has been reported in {measures}; this is not proof of efficacy.",
+    "partial_improvement": "Improvement has been reported in {measures}, while other measures did not improve; "
+                           "this is not proof of efficacy.",
     # neutral (fix plan S2, 2026-11-11): the old "there is no evidence that it is effective" contradicted sources that
     # did report an improvement the support check could not confirm (6 wrong entries in the blind test)
     "insufficient": "Use has been reported; the available reports are not enough to judge whether it works.",
@@ -732,7 +741,8 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
                     single = n.get("n_disease") == 1 or n.get("n_total") == 1      # only when the paper says one
                     led.offlabel_searches[bid].setdefault("precaution_candidates", []).append(
                         {"drug": drug, "pmid": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/",
-                         "quote": (res["questions"][2]["quotes"] or [it["use_quote"]])[0],
+                         "quote": (next((q["quotes"] for q in res["questions"] if q["id"] == "harm"), None)
+                                   or [it["use_quote"]])[0],
                          "note": ("case report: worsened after use (single case; not a contraindication)" if single
                                   else "reported to worsen after use (not a contraindication)")})
                 continue

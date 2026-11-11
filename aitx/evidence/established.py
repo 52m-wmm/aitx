@@ -1185,7 +1185,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             header, passage = context_passage(a["specs"][main])
             br = by_id[branches[0]]
             res = CC.ask(header, passage, CC.patient_text(pf, br),
-                         CC.questions_3a(section, a["label"], (br.get("diagnosis") or {}).get("label") or "", lines),
+                         CC.questions_3a(section, a["label"], (br.get("diagnosis") or {}).get("label") or "", lines,
+                                         a["specs"][main]["quote"]),
                          use_cache=use_cache)
             lines, cc_notes = CC.decide_3a(res, lines, evs[main]["id"], passage, branches)
             cc = dict(CC.summary(res), notes=cc_notes, header=header, passage=passage)

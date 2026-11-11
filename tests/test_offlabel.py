@@ -11,7 +11,9 @@ from aitx.evidence import offlabel as O
 
 @pytest.mark.parametrize("dirs,want", [
     (["positive", "negative"], "inconsistent"),
-    (["mixed"], "inconsistent"),
+    (["mixed"], "partial_improvement"),              # one report, some measures better: not a conflict (2026-11-11)
+    (["mixed", "negative"], "inconsistent"),
+    (["mixed", "positive"], "reported_improvement"),
     (["negative"], "reported_ineffective"),
     (["negative", "combined_unattributable"], "reported_ineffective"),      # stiripentol in PH1
     (["negative", "not_reported"], "reported_ineffective"),

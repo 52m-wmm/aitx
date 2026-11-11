@@ -78,14 +78,28 @@ def test_reverse_nothing_changes_when_every_answer_confirms():
 
 
 def test_animal_model_evidence_makes_the_entry_conditional():          # R3 / S5: avoid bright light
-    out, notes = CC.decide_3a(_res(subject="yes", animal_only="yes", limit="no"), [], "ev1", "p", ["B"])
-    assert LG.status_of(out, "B")[0] == "conditional" and out[0]["context_check"] == "scope"
+    for ev in ("animals_or_cells", "other_gene_or_subtype_patients"):
+        out, notes = CC.decide_3a(_res(subject="yes", evidence=ev, limit="no"), [], "ev1", "p", ["B"])
+        assert LG.status_of(out, "B")[0] == "conditional" and out[0]["context_check"] == "scope"
+
+
+def test_reverse_evidence_from_this_disease_or_not_stated_changes_nothing():
+    for ev in ("this_disease_patients", "not_stated"):
+        out, _ = CC.decide_3a(_res(subject="yes", evidence=ev, limit="no"), [], "ev1", "p", ["B"])
+        assert out == []
+
+
+def test_the_limit_question_is_about_the_entrys_own_words():
+    qs = CC.questions_3a("supportive_management", "surgery", "CMT", [], "Surgery is sometimes required for hip dysplasia")
+    lim = next(q for q in qs if q["id"] == "limit")
+    assert "Surgery is sometimes required for hip dysplasia" in lim["text"]
 
 
 def test_reverse_clinical_advice_not_said_to_be_animal_only_is_unchanged():
     """Trial run 2026-11-11: "rests on human findings?" got "not stated" for GeneReviews therapy referrals."""
     res = _res(subject="yes", limit="no")
-    res["questions"].append({"id": "animal_only", "final": "split", "answers": ["no", "not_stated", "yes"], "quotes": []})
+    res["questions"].append({"id": "evidence", "final": "split",
+                             "answers": ["this_disease_patients", "not_stated", "animals_or_cells"], "quotes": []})
     out, _ = CC.decide_3a(res, [], "ev1", "p", ["B"])
     assert out == []
 
@@ -144,11 +158,10 @@ def test_questions_ask_polarity_only_for_avoidances_and_degree_only_for_patient_
 
 # --- 3c decisions
 
-def _res3c(subject, purpose, harm, direction):
-    return {"questions": [{"id": "subject", "final": subject, "answers": [subject] * 3, "quotes": ["two GEMIN5 patients"]},
-                          {"id": "purpose", "final": purpose, "answers": [purpose] * 3, "quotes": []},
-                          {"id": "harm", "final": harm, "answers": [harm] * 3, "quotes": []},
-                          {"id": "direction", "final": direction, "answers": [direction] * 3, "quotes": ["improved"]}]}
+def _res3c(disease, purpose, harm, direction, gene="yes"):
+    q = lambda i, v, quote=None: {"id": i, "final": v, "answers": [v] * 3, "quotes": [quote] if quote else []}
+    return {"questions": [q("disease", disease, "two of these patients"), q("gene", gene, "GEMIN5"),
+                          q("purpose", purpose), q("harm", harm), q("direction", direction, "improved")]}
 
 
 def test_an_adverse_report_is_not_a_treatment_precedent():              # R4 / S4: voriconazole
@@ -168,8 +181,26 @@ def test_a_reported_improvement_with_the_patients_identified_is_positive():  # R
 
 
 def test_a_precedent_whose_patients_gene_is_not_stated_is_marked():    # R3: idebenone
-    assert CC.decide_3c(_res3c("not_stated", "yes", "no", "improved"))["subject"] == "not_stated"
+    """Validation 2026-11-11: "a patient with Leigh syndrome" matches the disease; the gene question is separate."""
+    assert CC.decide_3c(_res3c("yes", "yes", "no", "improved", gene="not_stated"))["subject"] == "not_stated"
+    assert CC.decide_3c(_res3c("yes", "yes", "no", "improved", gene="other_gene"))["subject"] == "other"   # sildenafil
     assert CC.decide_3c(_res3c("no", "yes", "no", "improved"))["subject"] == "other"
+    assert CC.decide_3c(_res3c("not_stated", "yes", "no", "improved"))["subject"] == "not_stated"
+
+
+def test_disease_and_gene_are_asked_apart():
+    ids = [q["id"] for q in CC.questions_3c("idebenone", "Leigh syndrome", "LRPPRC")]
+    assert ids[:2] == ["disease", "gene"]
+    assert "gene" not in [q["id"] for q in CC.questions_3c("x", "D", None)]
+
+
+def test_a_single_mixed_report_is_a_partial_improvement_not_a_conflict():
+    """Validation 2026-11-11: GEMIN5 coenzyme Q10 "neurological improvements, although MRI abnormalities remained"."""
+    from aitx.evidence import offlabel as O
+    d = CC.decide_3c(_res3c("yes", "yes", "no", "mixed"))
+    assert d["direction"] == "mixed" and O.aggregate([d["direction"]]) == "partial_improvement"
+    c = O.conclusion("partial_improvement", ["mixed"], ["neurological improvements"])
+    assert "Improvement has been reported in neurological improvements" in c and "conflict" not in c
 
 
 def test_a_split_direction_is_not_reported():
