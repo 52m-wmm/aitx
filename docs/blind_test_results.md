@@ -166,6 +166,53 @@
 
 **流水线的稳健性缺口**（记入盲测后修）：病人描述字段缺失或为空时，流水线默默按空描述往下跑。应当在入口处直接报错停止。
 
+### B 组重跑结果（2026-11-11，带描述）
+
+10 个 B 组病例全部从 Step 1 重跑（Step 1 的输出记录了病例输入的指纹，字段名变了必须重跑；它是确定性的、不调 LLM，PSMD12 重跑前后逐字段一致）。先试跑 PSMD12（\$0.0032），确认表型与账本正常后，按原来的配对依次跑，每对各自 \$0.35（当天已花 + 0.35），全部非高峰。
+
+| 配对 | 花费 |
+| --- | --- |
+| 试跑 PSMD12 | \$0.0032 |
+| LRPPRC + FOXF1 | \$0.1570 |
+| MPZ + GEMIN5 | \$0.1073 |
+| SNRNP200 + THRA | \$0.0048 |
+| RRM2B | \$0.0015 |
+| 批次 5：SFTPC + MFSD2A（首次运行） | \$0.0581 |
+| **合计** | **\$0.3319**（当天累计 \$0.3887） |
+
+12 个病例账本齐全、全部新鲜，机器检查 0 条写错（共 347 条）。
+
+**上游健康**：
+
+| 病例 | 组 | 表型 | 病人事实 | 诊断 | 支持治疗层级 |
+| --- | --- | --- | --- | --- | --- |
+| LRPPRC | 不计入 | 2 | 1 | resolved：**Leigh syndrome**（原为 LRPPRC 法裔加拿大型） | overview |
+| MPZ | B1-L2 | **0** | **0** | resolved：**Charcot-Marie-Tooth disease**（原为 CMT1B） | overview |
+| SNRNP200 | B1-L2 | 2 | 0 | resolved：retinitis pigmentosa 33 | overview |
+| RRM2B | B1-L1 | **0** | **0** | resolved：mitochondrial DNA depletion syndrome 8a | chapter |
+| SFTPC | B1-L2 | 2 | 1 | **ambiguous**：surfactant metabolism dysfunction, pulmonary, 2 / chronic respiratory distress with surfactant metabolism deficiency | none |
+| FOXF1 | B2 | 3 | 0 | resolved | none |
+| GEMIN5 | B2 | 4 | 0 | resolved | **symptomatic（L4 发育迟缓类）** |
+| THRA | B2 | 2 | 0 | resolved | none |
+| PSMD12 | B2 | 3 | 0 | resolved | **symptomatic（L4 发育迟缓类）** |
+| MFSD2A | B2 | 4 | 0 | resolved | none |
+
+- **MPZ、RRM2B 表型仍为 0**：它们的描述是 GeneReviews 第一段，只是在定义这一类病（"CMT … refers to a group of disorders …"、"RRM2B-MDMD are an important cause of …"），不是病人的表现，抽不出病人表型是对的。这是 B1 描述规则（2026-11-08 定：取 Clinical Characteristics 第一段）本身的局限。
+- **B1-L2 的诊断变宽了**：LRPPRC、MPZ 的描述第一句点名了病种群（Leigh 综合征谱系、CMT），Step 2 按"临床文本里明确点名的诊断优先"选了这个更宽的名字，压过了 ClinVar 指向的更具体的病（LRPPRC 法裔加拿大型——批次 1 审阅判为正确；CMT1B）。规则本身按设计执行，但输入是人造的：总论第一段的病种群名不是医生下的诊断。**待决定**：这类病例按哪个诊断判；以及流水线是否应在"点名的病种群"包含 ClinVar 更具体的病时取更具体的那个（会影响评测病例，属于"可能产生新判定"的改动，需审批）。
+
+**判定沿用**（按条目 ID）：
+- 沿用 10 条；另有 4 条（MPZ 的骨科手术、手术、避免肥胖、毒性药物清单）判定沿用，但诊断分支从 CMT1B 换成了 CMT，状态值没变。
+- 已判的 3 条漏写：GEMIN5、PSMD12 的支持治疗这次由 L4 产出了早期干预等 3 条（漏写在新输入下已不成立）；THRA 仍为空。
+- 消失 6 条（均未判）：LRPPRC、MPZ 的若干 "None found"、MPZ 原来的唯一试验 NCT07461896、GEMIN5 / PSMD12 支持治疗的 "None found"。
+- 未判、状态值真正改变的 2 条（LRPPRC：有条件 → 适用）；其余 40 条只是诊断分支编号变了。
+- **新条目 58 条待判**：LRPPRC 试验 10、老药新用 4；MPZ 试验 10、老药新用 5；GEMIN5、PSMD12 的 L4 各 3；SFTPC 12、MFSD2A 11（首次运行）。
+
+**重跑新暴露的问题**（机器检查没拦住，待审）：
+1. **3b 用 2–3 个字母的缩写当病名检索与匹配（系统性，严重）**：LRPPRC 的病名清单是 `Leigh syndrome / LS / LSS`，10 条新试验里 9 条是靠 "LS"、"LSS" 进来的——"Limited-stage Small Cell Lung Cancer (LS-SCLC)"（5 条癌症试验）、HIV 抗体 "3BNC117-LS"、"ePGT121v1-LS"、"Lumbar Spinal Stenosis (LSS)"。只有 TTI-0102 是真正的 Leigh 综合征试验。癌症排除规则只作用于基因路径，病名路径没有拦。**会影响任何病名有短缩写的评测病例。**
+2. **MPZ 的伏立康唑被列为老药新用、状态"适用"**：出处 PMID 18837430 是"伏立康唑加重了一名未确诊 X 连锁 CMT 病人的长春新碱神经病变"——这是有害报告，不是用药先例。3c 把"用过这个药"当成了治疗用途。
+3. **SFTPC 的甲泼尼龙在同一节出现两条**：同一药物键 `drug:rxcui:6902`、同一篇文献，因为 SFTPC 有两个诊断分支、每个分支各生成了一条行动，没有合并。
+4. **MPZ 的新试验里有 CMT4J 专用的 ELP-02 试验**：诊断变宽成"CMT"后，按亚型限定的试验也进来了（状态"有条件"）。
+
 ### 盲测结束后统一修的问题（冻结期内只记录）
 
 | 记录时间 | 问题 | 出处 |
@@ -180,6 +227,9 @@
 | 2026-11-11 | 动物模型、而且是别的基因的证据，被判成"已确立 / 适用"（SNRNP200 避免强光）；证据类型要能降级为有条件或假设 | 测试集 `CLAIM-SNRNP200-BRIGHT-LIGHT` |
 | 2026-11-11 | 禁忌语境下 "only in / unless / except" 引出的例外被当成触发条件，方向反了（RRM2B 丙戊酸） | 测试集 `CLAIM-RRM2B-VALPROATE-*` |
 | 2026-11-11 | **流水线读不到描述字段、或描述为空时，应直接报错停止，不能默认空串继续**（`aitx/disease/pipeline.py:74`、`aitx/evidence/patient_facts.py:98` 现在都是 `.get("clinical_context", "")`）；盲测 B 组前 4 批因此全部丢了描述 | 本文"事故"一节 |
+| 2026-11-11 | **3b 用 2–3 字母缩写（LS、LSS）当病名检索和匹配**，引入肺癌、HIV、腰椎管狭窄等无关试验；病名路径缺少癌症 / 无关语境排除（重跑 LRPPRC 发现，系统性） | 本文"B 组重跑结果" |
+| 2026-11-11 | 3c 把有害报告（药物加重神经病变）当成用药先例（MPZ 伏立康唑） | 同上 |
+| 2026-11-11 | 多个诊断分支时同一药物键在同一节生成多条行动，未合并（SFTPC 甲泼尼龙） | 同上 |
 
 ### 盲测后优先修（2026-11-11 定）
 
