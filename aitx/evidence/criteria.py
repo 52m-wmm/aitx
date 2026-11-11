@@ -17,6 +17,7 @@ import time
 
 from aitx.disease import extract as X
 from aitx.evidence import derived as DV
+from aitx.evidence import genecontext as GC
 from aitx.evidence import established as E
 from aitx.evidence import labs as LABS
 from aitx.evidence import ledger as LG
@@ -156,6 +157,48 @@ def _unk(var: str, note: str) -> tuple[str, dict, str, dict]:
 
 
 AGE_BY_REGISTRY = LG.AGE_BY_REGISTRY_NOTE
+GENOTYPE_FACTS = ("genetic_confirmation", "variant", "variant_class", "zygosity")
+_GENE_WORDS = re.compile(r"\b(?:genes?|variants?|mutations?|mutated|duplications?|deletions?|pathogenic|alleles?|"
+                         r"genetic(?:ally)?|genotyp\w*|carriers?)\b", re.I)
+
+
+# "there will not be a requirement for confirmed CDKN2A/B deletion" asks for nothing; a tumour's mutation is somatic,
+# not the patient's reported (germline) genotype (offline scan of the existing ledgers, 2026-11-11)
+_NOT_REQUIRED = re.compile(r"\b(?:not|no|without|regardless|irrespective|need\s+not)\b", re.I)
+_SOMATIC = re.compile(r"\b(?:tumou?rs?|somatic|cancer|carcinoma|neoplas\w*|malignan\w*)\b", re.I)
+ALTERNATIVE_GENE_NOTE = LG.ALTERNATIVE_GENE_NOTE
+
+
+def other_gene_required(quote: str, branch: dict, pf: dict) -> list[str]:
+    """Genes a genotype criterion requires that are not the patient's (fix plan D2, decision 2026-11-11): the
+    patient's reported genotype is a known fact, so "genetic testing showing duplication of the PMP22 gene" is not met
+    by an MPZ patient. Only when the criterion speaks of genes and names known gene symbols, none of them the
+    patient's; a criterion that names no gene ("genetic confirmation of CMT") is left to the other rules."""
+    if not _GENE_WORDS.search(quote or "") or _NOT_REQUIRED.search(quote) or _SOMATIC.search(quote):
+        return []
+    named = GC.genes_named(quote)
+    mine = {branch.get("gene")} | {v["gene"] for v in pf.get("variants") or []}
+    if not named or any(g in mine for g in named):
+        return []
+    # "a confirmed diagnosis of CDG or NGLY1 deficiency": an alternative that names no gene (a disease group that may
+    # include the patient's) keeps the rule out; it decides only when every alternative names a gene
+    parts = [x for x in re.split(r"\bor\b|/|;", quote) if x.strip()]
+    if len(parts) > 1 and any(not GC.genes_named(x) and _names_disease(x) for x in parts):
+        return []
+    return named
+
+
+_DISEASE_WORD = re.compile(r"\b(?:deficiency|disease|disorders?|syndrome|dystroph\w*|neuropath\w*|"
+                           r"encephalopath\w*|ataxia|CDG)\b", re.I)
+
+
+def _names_disease(part: str) -> bool:
+    """An alternative that names a disease: a disease word, or an upper-case acronym that is not a gene symbol ("coding
+    or non-coding mutation" has neither - it is one condition, not two)."""
+    if _DISEASE_WORD.search(part):
+        return True
+    acr = re.findall(r"(?<![A-Za-z0-9])[A-Z]{2,6}(?![A-Za-z0-9])", part)
+    return any(a not in GC.known_genes() for a in acr)
 _ANY_SEX = re.compile(r"\b(?:all|both|any)\s+(?:genders?|sexes)\b|\bmales?\s*(?:and|or|/|&)\s*females?\b|"
                       r"\bfemales?\s*(?:and|or|/|&)\s*males?\b|\bregardless\s+of\s+(?:gender|sex)\b", re.I)
 
@@ -173,6 +216,13 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kin
         # cohorts ("adolescents >= 12", "children 6 to 11", "children 2 to 5") make text age clauses alternatives the
         # item tree does not show; age is decided by the registry minimumAge / maximumAge lines (decision 2026-11-04)
         return "not_assessed", None, AGE_BY_REGISTRY, {}
+    if fact in GENOTYPE_FACTS:
+        other = other_gene_required(quote, branch, pf)
+        if other:
+            vs = [v for v in pf["variants"] if v["gene"] == branch.get("gene")] or pf["variants"]
+            return "does_not_satisfy", {"field": "variant", "value": vs[0]["protein"] if vs else None,
+                                        "quote": vs[0]["quote"] if vs else None, "step": 1}, \
+                f"the criterion requires {', '.join(other)}; the patient's reported variant is in {branch.get('gene')}", {}
     if fact in ("sex", "variant", "variant_class", "zygosity"):
         req = {"field": fact, "op": op, "value": nums[0] if fact == "age" and nums else m.get("value"),
                "unit": _age_unit(m.get("unit") or quote), "text": quote}
@@ -329,6 +379,15 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
                 groups.setdefault(m["group"], []).append(line)
             else:
                 out.append(line)
+    # genotype criteria naming different genes, one of them the patient's: alternatives a registry lists one per line
+    # (DEEPTYPE: "mutation in SLC16A2" / "mutation in THRA" / "abnormal fT3/fT4 ratio") - the other-gene lines decide
+    # nothing for this patient (fix plan D2, 2026-11-11)
+    mine = {branch.get("gene")} | {v["gene"] for v in pf.get("variants") or []}
+    names_mine = any(l.get("fact") in GENOTYPE_FACTS and set(GC.genes_named(l["text"])) & mine for l in out)
+    if names_mine:
+        for l in out:
+            if str(l.get("note") or "").startswith("the criterion requires "):
+                l.update(patient_status="not_assessed", patient_fact=None, note=ALTERNATIVE_GENE_NOTE)
     for g, opts in groups.items():
         parent = items[g]
         sts = [o["patient_status"] for o in opts if o["patient_status"] != "not_assessed"]

@@ -26,3 +26,31 @@ def biomarker_use(gene: str, text: str) -> bool:
     """The symbol is used as a marker ("LRPPRC Positive", "KRAS-mutant", "EGFR expression")."""
     g = rf"(?<![A-Za-z0-9]){re.escape(gene)}(?![A-Za-z0-9])"
     return re.search(rf"{g}[\s-]{{1,3}}{BIOMARKER.pattern}", text or "", re.I) is not None
+
+
+# ------------------------------------------------------------------ known gene symbols (fix plan D2, 2026-11-11)
+
+_KNOWN: set[str] | None = None
+
+
+def known_genes() -> set[str]:
+    """HGNC symbols that GenCC curates (the step 2 dataset already on disk), so that a criterion naming a gene can be
+    compared with the patient's reported gene by code. Empty if the dataset is unavailable (then nothing is decided)."""
+    global _KNOWN
+    if _KNOWN is None:
+        import csv
+        from aitx.disease import datasets as D
+        try:
+            f = D.ensure("gencc")
+            with open(f.path, newline="") as fh:
+                _KNOWN = {(r.get("gene_symbol") or "").strip() for r in csv.DictReader(fh, delimiter="\t")} - {""}
+        except (OSError, RuntimeError, KeyError, ValueError):
+            _KNOWN = set()
+    return _KNOWN
+
+
+def genes_named(text: str, known: set[str] | None = None) -> list[str]:
+    """Gene symbols written in `text` as whole words, same letter case, that are known HGNC symbols."""
+    known = known_genes() if known is None else known
+    toks = re.findall(r"(?<![A-Za-z0-9-])[A-Z][A-Z0-9]{1,9}(?:-[A-Z0-9]+)?(?![A-Za-z0-9])", text or "")
+    return list(dict.fromkeys(t for t in toks if t in known))

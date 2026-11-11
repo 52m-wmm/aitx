@@ -182,3 +182,13 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 - 3a–3e 验收全部通过（30/30、8/8、7/7、8/8、5/5）。
 
 **审批**：B 类（排除原收入的试验），按盲测后修复计划 v1.0 已批准。测试：`tests/test_trial_abbrev.py`（24 条，含正反向）。
+
+## 基因型类入组标准由代码对照病人基因型（2026-11-11，盲测后修复 D2 第 1 点，用户批准）
+
+病人报告的基因型是已知事实。基因型类标准（`genetic_confirmation` / `variant` / `variant_class` / `zygosity`）里**写明了基因、且都不是病人的基因**时，判"不满足"，理由写"the criterion requires <基因>; the patient's reported variant is in <基因>"。基因符号须是 GenCC 收录的 HGNC 符号（Step 2 已下载的数据集）、整词、大小写一致。
+**不由这条规则判定的**（保持原来的判断，通常为未知）：标准里没写基因（"genetic confirmation of CMT"）；写了病人的基因（"MPZ or PMP22"）；否定或不要求（"there will not be a requirement for confirmed CDKN2A/B deletion"）；肿瘤 / 体细胞语境（"Tumor positive for … BRAF alteration"）；"或"连接的选项里有一项是病名（"confirmed diagnosis of CDG or NGLY1 deficiency"——CDG 包含病人的 SLC35A2-CDG）。
+**同一试验逐行列出的基因选项**（DEEPTYPE："mutation in SLC16A2" / "mutation in THRA" / "abnormal fT3/fT4 ratio"）：只要有一条基因型标准写了病人的基因，其余"要求别的基因"的行视为备选项，记 not_assessed（`ALTERNATIVE_GENE_NOTE`），不决定状态、也不列入缺失信息。
+**起因**：盲测 MPZ 病人进了要求 PMP22 重复（CMT1A）的试验（判"有条件"）和 CMT4J 专用试验。
+**现有账本离线扫描（未重跑）**：会改为"不满足"的——MPZ 的 NCT07140614（PMP22 ×2）、ELP-02（FIG4，CMT4J）、EQUIVIB-CMT（"PMP22 gene duplication"，该试验只收 CMT1A）；THRA 的 DEEPTYPE 中 SLC16A2 行按备选项处理。扫描中发现并加了守卫的误判：NF1 的否定句和肿瘤突变句、SLC35A2 的"CDG or NGLY1 deficiency"。
+**D2 其余各点**：第 3 点（3c 先例病人的基因 / 亚型）由上下文核查完成；第 4 点（亚型专用试验）D1 修正诊断后由病名匹配自然排除，不另加规则；**第 2 点（多病种试验里挂在别的病种亚组下的标准）未做**——按架构原则 2（上下文核查完成后冻结新增的语义类代码规则），待定。
+**测试**：`tests/test_criteria_genotype.py`。
