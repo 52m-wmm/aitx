@@ -19,6 +19,7 @@ import urllib.parse
 from pathlib import Path
 
 from aitx import http
+from aitx.evidence import context_check as CC
 from aitx.evidence import actions as A
 from aitx.evidence import established as E
 from aitx.evidence import fallback as F
@@ -438,6 +439,11 @@ def outcome_measure(it: dict) -> str | None:
     return m if m and len(m) >= 3 and m.lower() in q.lower() else None
 
 
+# an outcome measure that already says which way it went ("neurological improvements", "symptomatic relief")
+DIRECTIONAL = re.compile(r"\b(improv\w*|relief|benefit\w*|recover\w*|regression|better|worse\w*|declin\w*|"
+                         r"deteriorat\w*|reduc\w*|decreas\w*|increas\w*|resolution|resolved)\b", re.I)
+
+
 def direction_claim(d: str, drug: str, disease: str, measure: str | None = None) -> str:
     """Claim the support check judges. Number-neutral (2026-11-05): with "patients" the judges answered
     "partially supported - one infant, not patients generally" for every single-case report, so no case report could
@@ -445,8 +451,12 @@ def direction_claim(d: str, drug: str, disease: str, measure: str | None = None)
     Positive is about the measured outcome, not the patient as a whole (decision 2026-11-05): "plasma oxalate fell"
     supports "plasma oxalate improved", never "the patient improved"."""
     who = f"the patient or patients with {disease} described in this report"
-    pos = (f"After receiving {drug}, {measure} improved in {who}." if measure else
-           f"After receiving {drug}, an outcome measured or observed improved in {who}.")
+    if measure and DIRECTIONAL.search(measure):      # "neurological improvements improved" (fix plan S2)
+        pos = f"After receiving {drug}, {who} showed {measure}."
+    elif measure:
+        pos = f"After receiving {drug}, {measure} improved in {who}."
+    else:
+        pos = f"After receiving {drug}, an outcome measured or observed improved in {who}."
     return {"positive": pos,
             "negative": f"{drug} did not achieve the intended effect in {who}.",
             "mixed": f"{drug} had both beneficial and absent or adverse effects in {who}."}[d]
@@ -487,7 +497,9 @@ CONCLUSION = {
     "inconsistent": "Reports conflict: improvement and no benefit have both been reported.",
     "reported_ineffective": "Reported ineffective; not recommended.",
     "reported_improvement": "Improvement has been reported in {measures}; this is not proof of efficacy.",
-    "insufficient": "Use has been reported, but there is no evidence that it is effective.",
+    # neutral (fix plan S2, 2026-11-11): the old "there is no evidence that it is effective" contradicted sources that
+    # did report an improvement the support check could not confirm (6 wrong entries in the blind test)
+    "insufficient": "Use has been reported; the available reports are not enough to judge whether it works.",
 }
 
 
@@ -705,8 +717,30 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
         if p["pmid"] in seen_pmid:                                 # one precedent per article
             continue
         seen_pmid.add(p["pmid"])
-        d = direction(it, drug, b["diagnosis"]["label"], use_cache)
         n = checked_counts(it)
+        cc = None
+        if CC.ENABLED:     # context check (fix plan, 2026-11-11): title + abstract + patient, answers decide
+            passage = "\n".join(x for x in (p.get("title"), p.get("abstract")) if x)
+            res = CC.ask(f"PubMed {p['pmid']} ({p['year']})", passage, CC.patient_text(pf, b),
+                         CC.questions_3c(drug, b["diagnosis"]["label"], gene), use_cache=use_cache)
+            dec = CC.decide_3c(res)
+            cc = dict(CC.summary(res), decision=dec)
+            if not dec["treatment"]:
+                led.offlabel_searches[bid].setdefault("not_treatment_precedents", []).append(
+                    {"drug": drug, "pmid": p["pmid"], "adverse": dec["adverse"], "context_check": cc})
+                if dec["adverse"]:          # an adverse report: a precaution candidate, never a contraindication
+                    single = n.get("n_disease") == 1 or n.get("n_total") == 1      # only when the paper says one
+                    led.offlabel_searches[bid].setdefault("precaution_candidates", []).append(
+                        {"drug": drug, "pmid": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/",
+                         "quote": (res["questions"][2]["quotes"] or [it["use_quote"]])[0],
+                         "note": ("case report: worsened after use (single case; not a contraindication)" if single
+                                  else "reported to worsen after use (not a contraindication)")})
+                continue
+            d = dec["direction"]
+            if d == "positive" and it.get("co_treatment_quote"):
+                d = "combined_unattributable"
+        else:
+            d = direction(it, drug, b["diagnosis"]["label"], use_cache)
         prec.append({"pmid": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/", "year": p["year"],
                      "pub_types": p["pub_types"], "design": design(p["pub_types"], it.get("design_quote") or ""),
                      "design_quote": it.get("design_quote") or None, "via_review": bool(p.get("via_review")),
@@ -715,7 +749,12 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
                      "outcome_measure": outcome_measure(it), "target_quote": it.get("target_quote") or None,
                      "co_treatment_quote": it.get("co_treatment_quote") or None, "dose_quote": it.get("dose_quote") or None,
                      "open_access_full_text": bool(p.get("full_text")), "retracted": False,
-                     "_text": paper_text(p), "_conditions": it.get("conditions") or [], "_llm": llm})
+                     "_text": paper_text(p), "_conditions": it.get("conditions") or [], "_llm": llm,
+                     **({"subject": cc["decision"]["subject"], "subject_quote": cc["decision"]["subject_quote"],
+                         "context_check": cc} if cc else {})})
+    if CC.ENABLED and not prec and g["items"]:
+        decisions.append({"drug": drug, "key": key, "decision": "no treatment precedent after the context check"})
+        return
     if route == "trial_only":                                     # only through the trial: 3b, precedents attached
         for a in trials:
             have = {x["pmid"] for x in a.setdefault("supporting_precedents", [])}
@@ -750,6 +789,17 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
                 line["patient_fact"] = dict(fact, field=var)
                 led.note_missing(var, drug, t[:120], "3c")
             lines.append(line)
+    for x in prec:                 # precedent patients not confirmed to have this disease: conditional (fix plan D2.3)
+        if x.get("subject") in ("other", "not_stated"):
+            ev = next((e for e in evs if e.get("source", {}).get("id") == x["pmid"]), None)
+            if ev is not None:
+                why = ("the report's patients had another disease or gene" if x["subject"] == "other"
+                       else "the report does not say which disease or gene its patients had")
+                lines.append(LG.requirement(f"r{len(lines) + 1}", "other",
+                                            f"PMID {x['pmid']}: the treated patients had this patient's disease", ev["id"],
+                                            {"field": "precedent population", "value": None, "quote": x.get("subject_quote"),
+                                             "step": None}, "unknown", [bid], f"context check: {why}"))
+                lines[-1]["context_check"] = "scope"
     lines += target_lines(led, prec, drug, pf, bid, src_of=lambda x: {"type": "pmid", "id": x["pmid"], "url": x["url"]},
                           key=g["key"], start=len(lines))
     res = [l["result"] for l in lines]
@@ -863,7 +913,7 @@ def problems(actions: list[dict]) -> list[str]:
         if a.get("efficacy_direction") == "reported_ineffective" and "not recommended" not in c:
             bad.append(f"{k}: reported ineffective without 'not recommended'")
         if _STRONG_WORDS.search(c.replace("Reported ineffective; not recommended", "").replace("not proof of efficacy", "")
-                                .replace("no evidence that it is effective", "")):
+                                .replace("not enough to judge whether it works", "")):
             bad.append(f"{k}: conclusion stronger than the sources")
         if any(p.get("dose_quote") and p["dose_quote"] in c for p in pr):
             bad.append(f"{k}: dose in the conclusion")

@@ -33,6 +33,9 @@ KINDS = ("sourced", "reasoning", "negative")
 STATUSES = ("candidate", "verified", "rejected")
 ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none")
 REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
+# lines the context check adds or changes: scope / limit of the source (not patient variables), an exemption from an
+# avoidance (decides nothing), a degree the patient's finding was not shown to reach (an ordinary unknown)
+CONTEXT_LINE_KINDS = ("scope", "limit", "exemption", "degree")
 PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown", "not_assessed")
 NOT_ASSESSED_NOTE = "screening assessment"   # administrative criteria (consent, adherence, visits): left to trial screening
 AGE_BY_REGISTRY_NOTE = "age: decided by the registry age fields"   # 3b: text age clauses, shown, not compared
@@ -350,10 +353,23 @@ class Ledger:
                 bad.append(f"{tag}: branches")
             for r in a["requirements"]:
                 ev = self.evidence.get(r["requirement_evidence"]) or {}
-                if ev.get("status") != "verified" or not quote_in(r["requirement"], str(ev.get("quote", ""))):
+                cc = r.get("context_check")         # lines the context check added or changed (2026-11-11)
+                if cc and cc not in CONTEXT_LINE_KINDS:
+                    bad.append(f"{tag}: requirement {r['id']} unknown context-check kind {cc!r}")
+                if cc and not str(r.get("note") or "").count("context check:"):
+                    bad.append(f"{tag}: requirement {r['id']} context-check line without its reason")
+                verbatim = quote_in(r["requirement"], str(ev.get("quote", ""))) or (
+                    cc == "limit" and quote_in(r["requirement"], str((a.get("context_check") or {}).get("passage", ""))))
+                if ev.get("status") != "verified" or not (verbatim or cc == "scope"):
                     bad.append(f"{tag}: requirement {r['id']} not verbatim in verified evidence {r['requirement_evidence']}")
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
                     bad.append(f"{tag}: requirement {r['id']} result inconsistent")
+                if cc == "exemption":
+                    if r["result"] != "not_assessed":
+                        bad.append(f"{tag}: requirement {r['id']} an exemption decides nothing (not_assessed)")
+                    continue
+                if cc in ("scope", "limit"):         # a limit of the source, not a missing patient variable
+                    continue
                 if r["result"] == "not_assessed":
                     if r["kind"] not in ("inclusion", "exclusion") or r.get("note") not in (NOT_ASSESSED_NOTE, UNMAPPED_NOTE, AGE_BY_REGISTRY_NOTE) or r.get("patient_fact"):
                         bad.append(f"{tag}: requirement {r['id']} not_assessed must be a trial criterion noted "

@@ -58,3 +58,7 @@ SNRNP200 的 RP 总论（NBK1417）说 Argus II 视网膜假体"已获 FDA 批�
 ## 状态类标签写成具体动作（2026-11-11，盲测批次 4 发现）
 
 RRM2B 的禁忌条目标签是 "catabolism"，原文是 "Catabolism should be prevented by minimizing preoperative fasting and administering intravenous glucose perioperatively during prolonged anesthesia"。只写 "catabolism" 看不出要做什么。**Step 4 呈现时把这类"要避免的状态"写成具体动作**：缩短术前禁食；长时间麻醉时围手术期静脉给葡萄糖；条件写在动作后面。
+
+## 输出面收窄：每节条目上限（2026-11-11，修复计划架构原则 4）
+
+每节写进报告的条目设上限，例如 3b、3c 各取**证据最强的前 3–5 条**，其余只留在账本里（报告注明"另有 N 条见账本"）。排序依据各节已有的排序字段（3b：未知项数、试验类型、阶段；3c：疗效方向与证据规模；3d：契约定的排序字段）。目的：写错比不写更糟，少写弱证据条目直接降低写错面。具体上限值在 Step 4 契约里定。

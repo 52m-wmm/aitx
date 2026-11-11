@@ -14,3 +14,11 @@ def _no_live_guards(monkeypatch):
     """
     monkeypatch.setenv(B.ENV, "off")
     monkeypatch.delenv(P.ENV, raising=False)
+
+
+@pytest.fixture(autouse=True)
+def _context_check_off(monkeypatch):
+    """Tests written before the context check (2026-11-11) exercise the code paths it sits on top of; it is off for
+    them. Tests of the context check itself switch it on (tests/test_context_check.py)."""
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", False)

@@ -22,6 +22,7 @@ from aitx.disease import datasets as D
 from aitx.disease import extract as X
 from aitx.disease.hpo import Ontology
 from aitx.evidence import actions as A
+from aitx.evidence import context_check as CC
 from aitx.evidence import fallback as F
 from aitx.evidence import genereviews as GR
 from aitx.evidence import labels as LB
@@ -821,7 +822,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
     seen_drop = set()                  # the same clause can be refused twice (item quote, then its row)
     led.dropped_conditions = [d for d in dropped_conditions
                               if (k := (d["text"], d["source"], d["action"])) not in seen_drop and not seen_drop.add(k)]
-    _records(led, found, pf, searches)
+    _records(led, found, pf, searches, use_cache)
 
 
 def _label_text(lb: dict) -> str:
@@ -1058,7 +1059,37 @@ def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
     return "unknown", {"field": "pregnancy status", "value": None, "quote": None, "step": None}
 
 
-def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> None:
+_SHOWN: dict[str, dict] = {}
+CONTEXT_SOURCES = ("nbk", "pmid", "spl_setid")      # L4 guidelines are human-verified: not checked
+
+
+def context_passage(spec: dict) -> tuple[str, str]:
+    """(header, passage) the context check reads for one Tier 1 item: a GeneReviews table row with its table title,
+    or the paragraph, under the chapter title and section path; for an article or a label, the text around the quote."""
+    src, quote = spec["src"], spec["quote"]
+    if src["type"] == "nbk":
+        nbk, path = src["id"], src.get("section") or ""
+        if nbk not in _SHOWN:
+            try:
+                _SHOWN[nbk] = GR.sections_for_llm(nbk)
+            except (OSError, KeyError, ValueError, RuntimeError):
+                _SHOWN[nbk] = {}
+        lines = (_SHOWN[nbk].get(path) or "").splitlines()
+        for i, ln in enumerate(lines):
+            if LG.quote_in(quote, ln):
+                if ln.startswith("Row "):
+                    title = next((lines[j] for j in range(i - 1, -1, -1) if not lines[j].startswith("Row ")), "")
+                    ln = f"{title}\n{ln}" if title else ln
+                return f"GeneReviews {nbk} ({F.GR_title(nbk) or nbk}), section: {path}", ln
+    text = spec.get("source_text") or ""
+    i = text.find(quote[:60]) if quote else -1
+    lo, hi = (max(0, i - 1200), i + len(quote) + 1200) if i >= 0 else (0, 2400)
+    head = text[:300] if lo > 300 else ""
+    kind = {"pmid": "PubMed", "spl_setid": "FDA drug label", "nbk": "GeneReviews"}.get(src["type"], src["type"])
+    return f"{kind} {src.get('id')}", (head + "\n...\n" if head else "") + text[lo:hi]
+
+
+def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_cache: bool = True) -> None:
     by_id = {b["id"]: b for b in led.branches}
     placed: dict[str, set[str]] = {s: set() for s in SECTIONS_3A}
     unreported: list[str] = []
@@ -1147,6 +1178,28 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                 line["patient_fact"] = dict(fact or {"value": None, "quote": None, "step": None}, field=var)
                 led.note_missing(var, a["label"], r["text"][:120], "3a")
             lines.append(line)
+        cc = None
+        main = next((i for i, sp in enumerate(a["specs"]) if sp["src"]["type"] in CONTEXT_SOURCES
+                     and evs[i]["status"] == "verified"), None)
+        # an entry already conditional can only stay conditional (every answer moves towards it) - except an avoidance,
+        # whose open condition may turn out to be an exemption; checking it would cost and change nothing (2026-11-11)
+        can_change = any(LG.status_of(lines, b)[0] == "applicable" for b in branches) or (
+            section == CC.AVOID_SECTION and any(l["result"] == "unknown" for l in lines))
+        if CC.ENABLED and main is not None and not can_change:
+            cc = {"skipped": "already conditional: no answer could change its status"}
+        elif CC.ENABLED and main is not None:            # context check (fix plan, 2026-11-11): answers -> lines
+            header, passage = context_passage(a["specs"][main])
+            br = by_id[branches[0]]
+            res = CC.ask(header, passage, CC.patient_text(pf, br),
+                         CC.questions_3a(section, a["label"], (br.get("diagnosis") or {}).get("label") or "", lines),
+                         use_cache=use_cache)
+            lines, cc_notes = CC.decide_3a(res, lines, evs[main]["id"], passage, branches)
+            cc = dict(CC.summary(res), notes=cc_notes, header=header, passage=passage)
+            for l in lines:                # a degree the patient was not shown to reach is ordinary missing information
+                if l.get("context_check") == "degree":
+                    var = variable_type((l.get("patient_fact") or {}).get("field") or "other")
+                    l["patient_fact"] = dict(l.get("patient_fact") or {}, field=var)
+                    led.note_missing(var, a["label"], l["requirement"][:120], "3a")
         for b in branches:
             st, alt = LG.status_of(lines, b)
             mine = [l for l in lines if b in l["applies_to"] and l.get("alternative") in (None, alt)]
@@ -1157,6 +1210,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict]) -> Non
                           else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        if cc is not None:
+            rec["context_check"] = cc
         if section == "supportive_management":
             rec["tier_source"] = F.best_tier(a["specs"])
             if a.get("for_symptom"):

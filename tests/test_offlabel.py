@@ -30,7 +30,8 @@ def test_conclusions_never_stronger_than_the_sources():
         "Reported ineffective; not recommended.")
     assert "1 negative, 1 combined unattributable" in O.conclusion("reported_ineffective", ["negative", "combined_unattributable"])
     assert "not proof of efficacy" in O.conclusion("reported_improvement", ["positive"])
-    assert "no evidence that it is effective" in O.conclusion("insufficient", ["combined_unattributable"])
+    c = O.conclusion("insufficient", ["combined_unattributable"])
+    assert "not enough to judge whether it works" in c and "no evidence" not in c     # S2: neutral wording
 
 
 # --- design and counts from PubMed fields
@@ -513,3 +514,15 @@ def test_family_counts_only_as_the_patients_condition():
     assert O.names_in("patients with SCN1A variants received stiripentol", [], "GRIN2B") is None
     assert O.names_in("GRIN2B expression in colorectal carcinoma patients", [], "GRIN2B") is None
     assert O.names_in("patients with ANO variants", [], "ANO10") is None          # prefix too short to be a family
+
+
+# --- fix plan S2 (2026-11-11): no doubled direction words in the claim the support check judges
+
+@pytest.mark.parametrize("measure,want,unwanted", [
+    ("neurological improvements", "showed neurological improvements", "improvements improved"),
+    ("symptomatic relief", "showed symptomatic relief", "relief improved"),
+    ("plasma oxalate", "plasma oxalate improved", None),            # reverse: a neutral measure keeps the old form
+])
+def test_direction_claim_reads_naturally(measure, want, unwanted):
+    c = O.direction_claim("positive", "Coenzyme Q10", "GEMIN5 disorder", measure)
+    assert want in c and (unwanted is None or unwanted not in c)
