@@ -217,6 +217,166 @@
    "verdict": "wrong",
    "note": "跨诊断分支重复：与 'Methylprednisolone' 同一药物键、同一文献，未合并",
    "at": 1794402181
+  },
+  "8f82a7977b13": {
+   "case": "BLIND-LRPPRC",
+   "section": "supportive_management",
+   "label": "Sodium bicarbonate",
+   "verdict": "wrong",
+   "note": "'明显酸中毒' ≠ 乳酸升高，应为有条件",
+   "at": 1794402565
+  },
+  "b79052db9eeb": {
+   "case": "BLIND-LRPPRC",
+   "section": "supportive_management",
+   "label": "Sodium citrate",
+   "verdict": "wrong",
+   "note": "'明显酸中毒' ≠ 乳酸升高，应为有条件",
+   "at": 1794402565
+  },
+  "c72cdf3f6ddf": {
+   "case": "BLIND-LRPPRC",
+   "section": "off_label_expanded_access",
+   "label": "sildenafil citrate (Revatio ® )",
+   "verdict": "wrong",
+   "note": "先例为 MT-ATP6 病人，非本基因",
+   "at": 1794402565
+  },
+  "4bf06666db7c": {
+   "case": "BLIND-LRPPRC",
+   "section": "off_label_expanded_access",
+   "label": "riboflavin",
+   "verdict": "wrong",
+   "note": "‘没有证据表明有效’与原文报告的改善矛盾（S1/S2）",
+   "at": 1794402565
+  },
+  "29192b701335": {
+   "case": "BLIND-LRPPRC",
+   "section": "off_label_expanded_access",
+   "label": "intravenous ketogenic emulsion",
+   "verdict": "wrong",
+   "note": "‘没有证据表明有效’与原文报告的改善矛盾（S1/S2）",
+   "at": 1794402565
+  },
+  "d458a2809424": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "A First in Human Study to Assess the Safety, Tolerability, and Pharmacokinetics of EDK060 in Adults With CMT1A. (NCT07140614)",
+   "verdict": "wrong",
+   "note": "要求 PMP22 重复（CMT1A），病人是 MPZ；亚型 / 基因型标准未对照（D2）",
+   "at": 1794402565
+  },
+  "449dc1c375f9": {
+   "case": "BLIND-MPZ",
+   "section": "off_label_expanded_access",
+   "label": "PXT3003",
+   "verdict": "wrong",
+   "note": "先例均为 CMT1A，亚型不符",
+   "at": 1794402565
+  },
+  "798f9ceed977": {
+   "case": "BLIND-MPZ",
+   "section": "off_label_expanded_access",
+   "label": "pilocarpine",
+   "verdict": "wrong",
+   "note": "‘没有证据表明有效’与原文报告的改善矛盾（S1/S2）",
+   "at": 1794402565
+  },
+  "ed9568e156f3": {
+   "case": "BLIND-SFTPC",
+   "section": "off_label_expanded_access",
+   "label": "Methylprednisolone",
+   "verdict": "wrong",
+   "note": "‘没有证据表明有效’与原文报告的改善矛盾（S1/S2）",
+   "at": 1794402565
+  },
+  "c51508a43734": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "A Dose-ranging Study of TTI-0102 in Adults and Children With Leigh Syndrome Spectrum (LSS) (NCT06990984)",
+   "verdict": "correct",
+   "note": "",
+   "at": 1794402565
+  },
+  "f9f01a5351b8": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "Evaluate the Safety and Efficacy of EN001 in Patients With Charcot-Marie-Tooth Disease Type 1A(CMT1A) (Phase 1b: Open-label, Dose-escalation, Single-center; Phase 2a: Randomized, Double-blind, Placebo-controlled, Multicenter) (NCT06328712)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "b50e2fbf99cb": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "PETRA-NMD (NCT06708468)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "02111bef0745": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "Fit4MR-ChrMND (NCT06881979)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "40e2d6ddf41d": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "PNP (NCT07152197)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "631cd2d13110": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "CMT Gait, Mobility, Balance - AOFAS Grant (NCT07188415)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "c4dfbe03fba3": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "CMT-VX (NCT07665424)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "e028eb992e5d": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "EQUIVIB-CMT (NCT07726043)",
+   "verdict": "correct",
+   "note": "一般性 CMT 试验",
+   "at": 1794402565
+  },
+  "c00509e6361a": {
+   "case": "BLIND-MPZ",
+   "section": "off_label_expanded_access",
+   "label": "essential fatty acids (EFA), linoleic and gamma-linolenic acids",
+   "verdict": "correct",
+   "note": "",
+   "at": 1794402565
+  },
+  "7077094e2248": {
+   "case": "BLIND-MPZ",
+   "section": "off_label_expanded_access",
+   "label": "vitamin E",
+   "verdict": "correct",
+   "note": "",
+   "at": 1794402565
+  },
+  "1b270b7d16df": {
+   "case": "BLIND-LRPPRC",
+   "section": "off_label_expanded_access",
+   "label": "idebenone",
+   "verdict": "unsure",
+   "note": "待确认先例病人的基因",
+   "at": 1794402565
   }
  },
  "not_counted": {
