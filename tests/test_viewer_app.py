@@ -217,3 +217,75 @@ def test_structure_files_and_3d_script(tmp_path, monkeypatch):
     assert c.get("/structures/..%2Fx.pdb").status_code == 404
     page = c.get("/cases/X-1.html").text
     assert VA.MOL_LIB in page and "按 AlphaFold 预测可信度" in page
+
+
+# --- blind-test page and verdicts (2026-11-10)
+
+def _blind_tree(tmp_path: Path) -> str:
+    batch = "20991231"
+    (tmp_path / "data" / "cases" / "blind").mkdir(parents=True)
+    (tmp_path / "data" / "cases" / "blind" / f"{batch}.json").write_text(json.dumps(
+        [{"id": "BLIND-X", "patient": {"genotype": [], "clinical_description": "d"}, "blind": {"group": "B1"}}]))
+    return batch
+
+
+def test_a_verdict_is_saved_and_replaced(tmp_path):
+    batch = _blind_tree(tmp_path)
+    req = VA.JudgeRequest(entry_id="0123456789ab", case="BLIND-X", section="supportive_management", label="OT",
+                          verdict="correct", note="fine")
+    rec = VA.save_judgement(batch, req, root=tmp_path)
+    data = json.loads((tmp_path / "data" / "eval" / "blind" / f"{batch}.json").read_text())
+    assert data["judgements"]["0123456789ab"]["verdict"] == "correct" and rec["note"] == "fine"
+    VA.save_judgement(batch, VA.JudgeRequest(entry_id="0123456789ab", case="BLIND-X", verdict="wrong"), root=tmp_path)
+    data = json.loads((tmp_path / "data" / "eval" / "blind" / f"{batch}.json").read_text())
+    assert data["judgements"]["0123456789ab"]["verdict"] == "wrong" and len(data["judgements"]) == 1
+
+
+def test_a_missed_entry_gets_its_own_id(tmp_path):
+    batch = _blind_tree(tmp_path)
+    rec = VA.save_judgement(batch, VA.JudgeRequest(case="BLIND-X", verdict="missed", label="ECMO", note="GeneReviews"),
+                            root=tmp_path)
+    assert rec["entry_id"].startswith("m") and rec["label"] == "ECMO"
+
+
+@pytest.mark.parametrize("batch,kw,code", [
+    ("../etc", dict(case="BLIND-X", entry_id="0123456789ab", verdict="correct"), 400),         # path escape
+    ("20991231", dict(case="BLIND-X", entry_id="0123456789ab", verdict="great"), 400),         # unknown verdict
+    ("20991231", dict(case="BLIND-X", entry_id="../../x", verdict="correct"), 400),            # bad id
+    ("20991231", dict(case="BLIND-X", verdict="correct"), 400),                                # no id, not missed
+    ("20991231", dict(case="BLIND-X", verdict="missed", label="  "), 400),                     # missed without a label
+    ("20991231", dict(case="AITX-40001", entry_id="0123456789ab", verdict="correct"), 404),    # not in the batch
+])
+def test_bad_verdicts_are_refused(tmp_path, batch, kw, code):
+    _blind_tree(tmp_path)
+    with pytest.raises(VA.HTTPException) as ex:
+        VA.save_judgement(batch, VA.JudgeRequest(**kw), root=tmp_path)
+    assert ex.value.status_code == code
+
+
+def test_the_endpoint_saves(tmp_path, monkeypatch):
+    batch = _blind_tree(tmp_path)
+    monkeypatch.setattr(VA, "ROOT", tmp_path)
+    app = VA.create_app(runner=VA.Runner(runs_dir=tmp_path / "runs"), watcher=VA.Watcher(root=tmp_path, interval=60))
+    orig = VA.save_judgement
+    monkeypatch.setattr(VA, "save_judgement", lambda b, r, root=tmp_path: orig(b, r, root=tmp_path))
+    with TestClient(app) as c:
+        r = c.post(f"/api/blind/{batch}/judge", json={"entry_id": "0123456789ab", "case": "BLIND-X",
+                                                      "verdict": "unsure", "note": "check"})
+        assert r.status_code == 200 and r.json()["verdict"] == "unsure"
+        assert c.post(f"/api/blind/{batch}/judge", json={"case": "BLIND-X", "verdict": "nope"}).status_code == 400
+
+
+def test_the_blind_page_does_not_reload_on_its_own_saves():
+    assert "data/eval/blind/" in VA.LIVE_JS and "blind-stale" in VA.LIVE_JS
+
+
+@pytest.mark.skipif(not (Path(__file__).resolve().parents[1] / "out" / "blind").exists(),
+                    reason="needs a blind batch in out/")
+def test_blind_and_acceptance_pages_render():
+    import build_viewer as BV
+    html_ = BV.render_page("blind.html")
+    assert html_ and "blind-page" in html_ and "judge" in html_
+    for step in BV.ACCEPT_STEPS:
+        assert BV.render_page(f"acceptance_{step}.html"), step
+    assert BV.group_of("BLIND-MPZ") == "blind"

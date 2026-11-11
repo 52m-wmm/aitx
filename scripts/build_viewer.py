@@ -60,13 +60,13 @@ def step_names() -> dict[int, str]:
 
 
 STEPS = (1, 2, 3, 4, 5)
-GROUP_ORDER = ["practice", "validation_clean", "validation_used", "eval", "other"]
+GROUP_ORDER = ["practice", "validation_clean", "validation_used", "blind", "eval", "other"]
 
 
 def group_label(g: str) -> str:
     return {"practice": L("练习", "Practice"), "validation_clean": L("验证（干净）", "Validation (clean)"),
             "validation_used": L("验证（已用于发现问题）", "Validation (used to find issues)"),
-            "eval": L("评测", "Evaluation"), "other": L("其他", "Other")}[g]
+            "blind": L("盲测", "Blind test"), "eval": L("评测", "Evaluation"), "other": L("其他", "Other")}[g]
 
 
 def status_label(s: str) -> str:
@@ -93,6 +93,8 @@ STATUS_CLS = {"resolved": "pass", "ambiguous": "warn", "unresolved": "fail"}
 def group_of(cid: str) -> str:
     if cid.startswith("PRAC-"):
         return "practice"
+    if cid.startswith("BLIND-"):
+        return "blind"
     if cid in CLEAN_VALIDATION:
         return "validation_clean"
     if cid in USED_VALIDATION:
@@ -280,7 +282,9 @@ def page(title: str, body: str, base: str, depth: int = 0) -> str:
             f"<style>{CSS}</style></head><body><main><p class='muted'>{switch}"
             f"<a href='{up}{fn('index')}'>{L('总表', 'Overview')}</a> · "
             f"<a href='{up}{fn('compare')}'>{L('版本对比', 'Run comparison')}</a> · "
-            f"<a href='{up}{fn('acceptance')}'>{L('3a 验收对照', '3a acceptance')}</a></p>{body}</main>"
+            f"<a href='{up}{fn('acceptance')}'>{L('验收对照', 'Acceptance')}</a> "
+            + "".join(f"<a href='{up}{fn('acceptance_' + k)}'>{k}</a> " for k in ACCEPT_STEPS)
+            + f"· <a href='{up}{fn('blind')}'>{L('盲测', 'Blind test')}</a></p>{body}</main>"
             f"{SWITCH_JS % DEFAULT_LANG}</body></html>")
 
 
@@ -980,6 +984,11 @@ def v_sources(s2: dict) -> str:
 ACT_ORDER = ["applicable", "conditional", "not_applicable", "searched_none"]
 ACT_CLS = {"applicable": "pass", "conditional": "warn", "not_applicable": "fail", "searched_none": "not_run", "mixed": "mixed"}
 ACCEPTANCE = OUT / "acceptance" / "step3a.json"      # written by scripts/acceptance_step3a.py
+ACCEPT_STEPS = ("3b", "3c", "3d", "3e")               # the other acceptance pages, one generic layout
+BLIND_OUT = OUT / "blind"                             # out/blind/<batch>/{sample,machine,recall}.json
+BLIND_CASES = ROOT / "data" / "cases" / "blind"       # data/cases/blind/<batch>.json
+BLIND_JUDGED = ROOT / "data" / "eval" / "blind"       # data/eval/blind/<batch>.json (the reviewer's verdicts)
+VERDICTS = ("correct", "wrong", "missed", "unsure")
 
 
 def act_label(s: str) -> str:
@@ -1242,6 +1251,263 @@ def acceptance_page(res: dict | None) -> str:
     return page(title, body, "acceptance")
 
 
+def _compact(v, depth: int = 0) -> str:
+    """A readable rendering of an acceptance row's `actual` value, whatever its shape."""
+    if v is None or v == [] or v == {}:
+        return f"<span class='muted'>{L('无', 'none')}</span>"
+    if isinstance(v, dict):
+        if depth > 1:
+            return e(json.dumps(v, ensure_ascii=False)[:300])
+        return "".join(f"<div><b>{e(str(k))}</b>: {_compact(x, depth + 1)}</div>" for k, x in v.items())
+    if isinstance(v, list):
+        if all(not isinstance(x, (dict, list)) for x in v):
+            return e(", ".join(str(x) for x in v)[:400])
+        return "".join(f"<div>{_compact(x, depth + 1)}</div>" for x in v[:12]) + (
+            f"<div class='muted'>{L(f'另有 {len(v) - 12} 项', f'{len(v) - 12} more')}</div>" if len(v) > 12 else "")
+    return e(str(v)[:400])
+
+
+def acceptance_generic(step: str, res: dict | None) -> str:
+    """Verified expectations next to the ledger results for step 3b-3e (scripts/acceptance_step<step>.py output,
+    shown as is). One layout for all four, because their row shapes differ but every row has what / actual /
+    ok / problem / source."""
+    title = L(f"Step {step} 验收对照", f"Step {step} acceptance")
+    if not res:
+        body = (f"<h1>{title}</h1><p class='muted'>{L('还没有验收结果。运行', 'No acceptance result yet. Run')} "
+                f"<code>python3 scripts/acceptance_step{step}.py</code>.</p>")
+        return page(title, body, f"acceptance_{step}")
+    made = time.strftime("%Y-%m-%d %H:%M", time.localtime(res.get("created_at", 0)))
+    overall = tag("pass" if res.get("ok") else "fail", "PASS" if res.get("ok") else "FAIL")
+    cases = res.get("cases") or {c: {"ledger_ok": ok} for c, ok in (res.get("ledgers_ok") or {}).items()}
+    crow = []
+    for cid, m in cases.items():
+        fr = m.get("fresh") if isinstance(m, dict) else None
+        fresh = "" if fr is None else (tag("pass", L("新鲜", "fresh")) if fr.get("fresh") else
+                                       tag("warn", L("过期", "stale") + ": " + "; ".join(fr.get("reasons") or [])))
+        ok = (m or {}).get("ledger_ok")
+        chk = tag("pass", L("通过", "pass")) if ok else tag("fail", L("未通过", "failed"))
+        crow.append(f"<tr><td><a href='cases/{e(fn(cid))}#board'>{e(cid)}</a></td><td>{chk}</td><td>{fresh}</td></tr>")
+    rows = []
+    for r in res.get("rows") or []:
+        mark = ("<b class='pass'>✓</b>" if r.get("ok") else
+                f"<b class='fail'>✗</b> <span class='{'warn' if r.get('stale') else 'fail'}'>{e(r.get('problem') or '')}</span>")
+        src = r.get("source") or {}
+        quote = f"<q>{e(src['quote'])}</q>" if src.get("quote") else ""
+        what = (r.get("what") or {}).get("en" if LANG == "en" else "zh") or r.get("id")
+        rows.append(f"<tr class='{'' if r.get('ok') else 'badrow'}'><td>{e(what)}<div class='muted'>{e(r.get('case', ''))}"
+                    f" · {e(r.get('id', ''))}</div></td><td>{_compact(r.get('actual'))}</td><td>{mark}</td>"
+                    f"<td>{link(src.get('url') or None, src.get('doc') or '')}{quote}</td></tr>")
+    extra = ""
+    if res.get("unassessable_summary"):
+        u = res["unassessable_summary"]
+        extra = (f"<h2>{L('无法评估统计', 'Unable-to-assess tally')}</h2><p>"
+                 + L(f"{u.get('unassessable_rows')} / {u.get('judgements')} 条判定无法评估（{u.get('share_of_judgements')}）",
+                     f"{u.get('unassessable_rows')} of {u.get('judgements')} judgements unassessable "
+                     f"({u.get('share_of_judgements')})")
+                 + "</p><ul>" + "".join(f"<li>{n} — {e(w)}</li>" for w, n in (u.get("by_reason") or {}).items()) + "</ul>")
+    body = (f"<h1>{title} {overall}</h1><p class='muted'>"
+            + L(f"{res.get('n_ok')}/{res.get('n')} 条期望成立 · 结果生成于 {made}（代码 {res.get('code_commit')}）。"
+                f"本页只显示 scripts/acceptance_step{step}.py 的输出，不做计算。",
+                f"{res.get('n_ok')}/{res.get('n')} expectations hold · result made {made} (code {res.get('code_commit')}). "
+                f"This page only shows the output of scripts/acceptance_step{step}.py.")
+            + f"</p><h2>{L('账本', 'Ledgers')}</h2><div class='wrap'><table><tr><th>{L('病例', 'Case')}</th>"
+            f"<th>{L('账本校验', 'Ledger checks')}</th><th>{L('新鲜度', 'Freshness')}</th></tr>" + "".join(crow)
+            + f"</table></div><h2>{L('期望与实际', 'Expected vs actual')}</h2><div class='wrap'><table><tr>"
+            f"<th>{L('核实期望', 'Verified expectation')}</th><th>{L('账本实际', 'Ledger result')}</th><th></th>"
+            f"<th>{L('期望出处', 'Source')}</th></tr>" + "".join(rows) + "</table></div>" + extra)
+    return page(title, body, f"acceptance_{step}")
+
+
+def load_acceptance_step(step: str) -> dict | None:
+    p = OUT / "acceptance" / f"step{step}.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
+# ------------------------------------------------------------------ blind test page
+
+def blind_batches() -> list[str]:
+    return sorted((p.name for p in BLIND_OUT.iterdir() if (p / "machine.json").exists()), reverse=True) \
+        if BLIND_OUT.exists() else []
+
+
+def entry_id(r: dict) -> str:
+    """A stable id for one written entry: the same case, section, label and conclusion give the same id."""
+    import hashlib
+    key = "|".join([r.get("case", ""), r.get("section", ""), str(r.get("label") or ""), r.get("conclusion") or ""])
+    return hashlib.sha256(key.encode()).hexdigest()[:12]
+
+
+def load_judged(batch: str) -> dict:
+    p = BLIND_JUDGED / f"{batch}.json"
+    return json.loads(p.read_text()) if p.exists() else {"schema": "blind-judged-v1", "batch": batch, "judgements": {}}
+
+
+VERDICT_LABEL = {"correct": ("正确", "Correct"), "wrong": ("写错", "Wrong"), "missed": ("漏写", "Missed"),
+                 "unsure": ("不确定", "Unsure")}
+
+
+def _status_text(st) -> str:
+    if isinstance(st, dict):
+        return " / ".join(sorted({act_label(v) for v in st.values()}))
+    return act_label(st) if st else ""
+
+
+def blind_page(batch: str | None = None, live: bool = False) -> str:
+    """Overview, entry-by-entry judging and recall detail for one blind-test batch.
+
+    The verdicts are saved by scripts/viewer_app.py (POST /api/blind/<batch>/judge) to data/eval/blind/<batch>.json;
+    the static export shows them read-only."""
+    title = L("盲测", "Blind test")
+    batches = blind_batches()
+    batch = batch or (batches[0] if batches else None)
+    if not batch:
+        none = L("还没有盲测批次（out/blind/<批次>/machine.json）。", "No blind batch yet.")
+        return page(title, f"<h1>{title}</h1><p class='muted'>{none}</p>", "blind")
+    d = BLIND_OUT / batch
+    machine = json.loads((d / "machine.json").read_text())
+    recall = json.loads((d / "recall.json").read_text()) if (d / "recall.json").exists() else None
+    sample = json.loads((d / "sample.json").read_text()) if (d / "sample.json").exists() else {}
+    judged = load_judged(batch)["judgements"]
+    cases_file = BLIND_CASES / f"{batch}.json"
+    groups = {c["id"]: (c.get("blind") or {}).get("group", "?") for c in json.loads(cases_file.read_text())} \
+        if cases_file.exists() else {}
+    wrong_by_case: dict[str, list[dict]] = {}
+    for w in machine.get("machine_wrong") or []:
+        wrong_by_case.setdefault(w["case"], []).append(w)
+    rows_by_case: dict[str, list[dict]] = {}
+    for r in machine.get("for_review") or []:
+        rows_by_case.setdefault(r["case"], []).append(r)
+
+    pending = L("待算", "pending")
+
+    def recall_cell(cid: str, key: str) -> str:
+        v = ((recall or {}).get("cases") or {}).get(cid, {}).get(key)
+        if v is None:
+            return f"<span class='muted'>{pending}</span>"
+        if isinstance(v, dict) and v.get("rate") is not None:
+            return e(f"{v['rate']:.0%}") + f" <span class='muted'>({v.get('hit')}/{v.get('of')})</span>"
+        return e(str(v))
+
+    ov = []
+    for cid, m in (machine.get("cases") or {}).items():
+        ran = m.get("ran")
+        mine = [judged[entry_id(r)] for r in rows_by_case.get(cid, []) if entry_id(r) in judged]
+        n_wrong = sum(1 for j in mine if j["verdict"] == "wrong")
+        n_missed = sum(1 for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed")
+        link_case = f"<a href='cases/{e(fn(cid))}#board'>{e(cid)}</a>" if ran else e(cid)
+        ov.append(f"<tr><td>{link_case}</td><td>{e(groups.get(cid, '?'))}</td>"
+                  + (f"<td>{m.get('entries')}</td><td>{m.get('machine_wrong')}</td>"
+                     f"<td>{n_wrong} <span class='muted'>({len(mine)}/{m.get('entries')} {L('已判', 'judged')})</span></td>"
+                     f"<td>{n_missed}</td>" if ran else f"<td colspan='4' class='muted'>{L('未跑', 'not run')}</td>")
+                  + "".join(f"<td>{recall_cell(cid, k)}</td>" for k in ("genereviews", "trials", "fda")) + "</tr>")
+    overview = (f"<div class='wrap'><table><tr><th>{L('病例', 'Case')}</th><th>{L('组', 'Group')}</th>"
+                f"<th>{L('写出条数', 'Entries')}</th><th>{L('机器写错', 'Machine wrong')}</th><th>{L('人工写错', 'Human wrong')}</th>"
+                f"<th>{L('漏写', 'Missed')}</th><th>{L('GeneReviews 覆盖率', 'GeneReviews coverage')}</th>"
+                f"<th>{L('试验召回率', 'Trial recall')}</th><th>{L('FDA 靶向召回率', 'FDA targeted recall')}</th></tr>"
+                + "".join(ov) + "</table></div>")
+
+    can_save = live
+    ro = L("这是静态快照，判定只能查看。要保存判定，请用实时查看页：python3 scripts/viewer_app.py",
+           "Static snapshot: verdicts are read-only. To save them, use the live app: python3 scripts/viewer_app.py")
+    note = "" if can_save else f"<p class='warn'>{ro}</p>"
+    blocks = []
+    for cid, rows in rows_by_case.items():
+        mw = wrong_by_case.get(cid, [])
+        by_sec: dict[str, list[dict]] = {}
+        for r in rows:
+            by_sec.setdefault(r["section"], []).append(r)
+        secs = []
+        for sec in sorted(by_sec, key=lambda x: (x == "supportive_management", x)):
+            items = []
+            for r in sorted(by_sec[sec], key=lambda r: r.get("label") or ""):
+                eid = entry_id(r)
+                j = judged.get(eid, {})
+                hits = [w for w in mw if (w.get("action") or "").lower() in (str(r.get("label") or "").lower(),)]
+                mcheck = (tag("fail", L("机器判定：写错", "machine: wrong")) + "".join(
+                    f"<div class='fail'>[{e(w['check'])}] {e(w['detail'][:200])}</div>" for w in hits)) if hits \
+                    else tag("pass", L("机器检查通过", "machine checks pass"))
+                cites = "".join(
+                    f"<div class='muted'>{e(c.get('type') or '')} {link(c.get('url') or None, c.get('id') or '')}"
+                    f"{': <q>' + e(c['quote']) + '</q>' if c.get('quote') else ''}</div>" for c in r.get("cites") or [])
+                radios = "".join(
+                    f"<label><input type='radio' name='v-{eid}' value='{v}'{' checked' if j.get('verdict') == v else ''}"
+                    f"{'' if can_save else ' disabled'}> {L(*VERDICT_LABEL[v])}</label> " for v in VERDICTS)
+                form = (f"<div class='judge' data-eid='{eid}' data-case='{e(cid)}' data-section='{e(sec)}' "
+                        f"data-label='{e(str(r.get('label') or ''))}'>{radios}"
+                        f"<input class='note' type='text' placeholder='{L('备注', 'note')}' value='{e(j.get('note', ''))}'"
+                        f"{'' if can_save else ' disabled'}>"
+                        + (f" <button{'' if can_save else ' disabled'}>{L('保存', 'Save')}</button>" if can_save else "")
+                        + (f" <span class='muted'>{L('已判', 'judged')} {e(time.strftime('%m-%d %H:%M', time.localtime(j['at'])))}</span>"
+                           if j.get("at") else "") + "<span class='saved'></span></div>")
+                items.append(f"<div class='card{' judged' if j else ''}'><div class='row'><b>{e(str(r.get('label') or ''))}</b> "
+                             f"{tag('cond', _status_text(r.get('status')))} {mcheck}</div>"
+                             + (f"<div>{e(r['conclusion'])}</div>" if r.get("conclusion") else "")
+                             + cites + form + "</div>")
+            secs.append(f"<details{' open' if sec != 'supportive_management' else ''}><summary>"
+                        f"{e(section_label(sec))} ({len(by_sec[sec])})</summary>{''.join(items)}</details>")
+        missed_here = [j for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed"]
+        ph = L("漏写条目（如：MAOI 与多巴胺激动剂相互作用）", "missed entry")
+        add_missed = (f"<div class='judge missed-add' data-case='{e(cid)}' data-section='' data-label=''>"
+                      f"<input class='label' type='text' placeholder='{ph}'>"
+                      f"<input class='note' type='text' placeholder='{L('出处 / 备注', 'source / note')}'>"
+                      f"<button>{L('记一条漏写', 'Add a missed entry')}</button><span class='saved'></span></div>") if can_save else ""
+        listed = "".join(f"<li>{e(j.get('label', ''))} <span class='muted'>{e(j.get('note', ''))}</span></li>" for j in missed_here)
+        blocks.append(f"<h3 id='case-{e(cid)}'>{e(cid)} <span class='muted'>{e(groups.get(cid, ''))}</span></h3>"
+                      + "".join(secs) + f"<p><b>{L('漏写', 'Missed')}</b></p><ul>{listed or '<li class=muted>' + L('无', 'none') + '</li>'}</ul>"
+                      + add_missed)
+
+    if recall:
+        rec = []
+        for cid, m in (recall.get("cases") or {}).items():
+            miss = "".join(f"<li>{e(x.get('item', ''))} <span class='muted'>— {e(x.get('cause', ''))}</span>"
+                           f"{' ' + link(x.get('url'), L('来源', 'source')) if x.get('url') else ''}</li>"
+                           for x in m.get("missed") or [])
+            excl = "".join(f"<li>{e(x.get('item', ''))} <span class='muted'>— {e(x.get('rule', ''))}</span></li>"
+                           for x in m.get("rule_excluded") or [])
+            rec.append(f"<h3>{e(cid)}</h3><p><b>{L('漏掉的条目', 'Missed items')}</b></p><ul>{miss or '<li class=muted>—</li>'}</ul>"
+                       f"<p><b>{L('规则有意排除', 'Excluded by a rule')}</b></p><ul>{excl or '<li class=muted>—</li>'}</ul>")
+        recall_html = "".join(rec)
+    else:
+        nr = L("召回尚未计算（B 组全部跑完后统一计算，方案 docs/blind_recall_plan.md）。", "Recall not computed yet.")
+        recall_html = f"<p class='muted'>{nr}</p>"
+
+    frozen = sample.get("code_fingerprint", "")[:12]
+    others = " ".join(f"<a href='?batch={e(b)}'>{e(b)}</a>" for b in batches if b != batch)
+    stale = L("结果文件有更新。保存好正在写的备注后，点此刷新。", "Results changed. Save your notes, then click to reload.")
+    body = (f"<div id='blind-page'></div><p id='blind-stale' class='warn' style='display:none;cursor:pointer' "
+            f"onclick='location.reload()'>{stale}</p><h1>{title} · {e(batch)}</h1><p class='muted'>"
+            + L(f"冻结指纹 {frozen} · 判定保存在 data/eval/blind/{batch}.json · 结论句保留报告原文（英文），"
+                f"中文只用于界面与状态。", f"frozen fingerprint {frozen} · verdicts in data/eval/blind/{batch}.json")
+            + (f" · {L('其他批次', 'other batches')}: {others}" if others else "") + "</p>"
+            + f"<h2>{L('总览', 'Overview')}</h2>{overview}<h2>{L('逐条判定', 'Entry by entry')}</h2>{note}"
+            + "".join(blocks) + f"<h2>{L('召回明细', 'Recall detail')}</h2>{recall_html}"
+            + (BLIND_JS % json.dumps(batch) if can_save else ""))
+    return page(title, body, "blind")
+
+
+BLIND_JS = """<script>(function(){
+var batch=%s;
+function save(box, extra){
+  var r=box.querySelector('input[type=radio]:checked');
+  var body=Object.assign({entry_id:box.dataset.eid||'', case:box.dataset.case, section:box.dataset.section,
+    label:box.dataset.label, verdict:r?r.value:'', note:(box.querySelector('.note')||{}).value||''}, extra||{});
+  var out=box.querySelector('.saved'); out.textContent=' …';
+  fetch('/api/blind/'+encodeURIComponent(batch)+'/judge',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)}).then(function(x){return x.json().then(function(j){return [x.ok,j];});})
+    .then(function(p){out.textContent=p[0]?' ✓':' ✗ '+(p[1].detail||'');}).catch(function(){out.textContent=' ✗';});
+}
+document.querySelectorAll('.judge').forEach(function(box){
+  var b=box.querySelector('button'); if(!b) return;
+  b.addEventListener('click',function(ev){ev.preventDefault();
+    if(box.classList.contains('missed-add')){
+      var l=box.querySelector('.label').value; if(!l) return;
+      save(box,{entry_id:'', verdict:'missed', label:l});
+    } else save(box);
+  });
+});
+})();</script>"""
+
+
 def load_acceptance() -> dict | None:
     return json.loads(ACCEPTANCE.read_text()) if ACCEPTANCE.exists() else None
 
@@ -1376,12 +1642,15 @@ def snapshots_index() -> None:
 # ----------------------------------------------------------------------- main
 
 def contexts() -> dict[str, str]:
+    """Clinical text per case: the case files, then any blind-test batch (data/cases/blind/<batch>.json), whose
+    cases carry their description as `clinical_description`."""
     from run_pipeline import CASE_FILES
     out = {}
-    for f in CASE_FILES:
+    for f in list(CASE_FILES) + sorted(BLIND_CASES.glob("*.json")):
         if f.exists():
             for c in json.loads(f.read_text()):
-                out[c["id"]] = c["patient"].get("clinical_context", "")
+                pt = c.get("patient") or {}
+                out.setdefault(c["id"], pt.get("clinical_context") or pt.get("clinical_description") or "")
     return out
 
 
@@ -1465,6 +1734,11 @@ def render_page(rel: str, against: str | None = None) -> str | None:
         return index_page(rows, live, runmeta.code_commit())
     if base == "acceptance":
         return acceptance_page(load_acceptance())
+    if base.startswith("acceptance_") and base[len("acceptance_"):] in ACCEPT_STEPS:
+        step = base[len("acceptance_"):]
+        return acceptance_generic(step, load_acceptance_step(step))
+    if base == "blind":
+        return blind_page(against, live=True)
     if base == "compare":
         prev, prev_name = compare_rows(against)
         out = compare_page(rows, prev, live, prev_name)
@@ -1518,6 +1792,9 @@ def main() -> int:
         (d / fn("index")).write_text(index_page(rows, snap, commit))
         (d / fn("compare")).write_text(compare_page(rows, prev, snap, prev_name))
         (d / fn("acceptance")).write_text(acceptance_page(load_acceptance()))
+        for step in ACCEPT_STEPS:
+            (d / fn(f"acceptance_{step}")).write_text(acceptance_generic(step, load_acceptance_step(step)))
+        (d / fn("blind")).write_text(blind_page(live=False))
     snapshots_index()
     print(f"{len(rows)} cases x 2 languages -> {d}/index.html")
     return 1 if problems else 0
