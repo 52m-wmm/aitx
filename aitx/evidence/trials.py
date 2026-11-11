@@ -172,6 +172,19 @@ def abbrev_only(study: dict, names: list[str]) -> str | None:
     return None
 
 
+def exclusion_reason(study: dict, names: list[str], gene: str) -> str:
+    """Why a study is not relevant, in the words of the rule that excluded it (fix plan O3, 2026-11-11: cancer studies
+    excluded by the gene-as-condition rule still said "no entry names the gene", though their entries did)."""
+    ab = abbrev_only(study, names)
+    if ab:
+        return (f"only the short abbreviation '{ab}' matched, and nothing else in the record names the disease or "
+                f"gene")
+    if gene and any(gene_matches(gene, e) for e in list(study.get("conditions") or []) + list(study.get("keywords") or [])):
+        return ("the gene is named only in a cancer study or as a marker (tumour status, expression), not as the "
+                "patient's condition")
+    return "no Condition or Keyword entry names the disease or gene"
+
+
 def specific(study: dict, names: list[str], gene: str) -> bool:
     """Every listed condition names the branch disease or gene (not a many-disease study)."""
     conds = study["conditions"]
@@ -306,10 +319,7 @@ def plan_branch(names: list[str], gene: str | None, patient_age_months: float | 
     for st in seen.values():
         rel = relevance(st, names, gene or "")
         if not rel:
-            ab = abbrev_only(st, names)
-            excluded.append(_ex(st, "relevance", (
-                f"only the short abbreviation '{ab}' matched, and nothing else in the record names the disease or "
-                f"gene" if ab else "no Condition or Keyword entry names the disease or gene")))
+            excluded.append(_ex(st, "relevance", exclusion_reason(st, names, gene or "")))
         elif st["status"] not in OPEN:
             closed_rel.append(st)
         else:

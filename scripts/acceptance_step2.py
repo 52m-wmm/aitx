@@ -126,13 +126,31 @@ def main() -> int:
 
     print("\n== ClinVar exact match (HARD) ==")
     # the negative side of exact matching (a different variant in the same gene must not be used for ranking)
-    # was written against AITX-40002 and moved to scripts/acceptance_eval_cases.py (2026-11-08). A practice-case
-    # equivalent is still missing: see CLAUDE.md.
+    # was written against AITX-40002 and moved to scripts/acceptance_eval_cases.py (2026-11-08); its practice-case
+    # equivalent (PRAC-AGXT-c33dup) is checked right below (fix plan O3, 2026-11-11).
     cf = results["PRAC-CFTR-F508del"]["clinvar"][0]
     cf_ok = [rec for rec in cf["records"] if rec["used_for_ranking"]
              and any("OMIM:219700" in omims(results["PRAC-CFTR-F508del"], k) for k in rec["mapped_candidates"])]
     hard(bool(cf_ok), "PRAC-CFTR-F508del: P/LP record linked to cystic fibrosis -> "
          + str([(x["vcv"], x["clinical_significance"], x["match"]) for x in cf_ok]))
+
+    # reverse of the exact match (fix plan O3, 2026-11-11): the check that stood on an evaluation case (another variant
+    # in the same gene must not be used for ranking) moved there with --eval; this is its practice-case equivalent -
+    # the AGXT c.33dup lookup also returns c.508G>A, another Pathogenic AGXT variant, which must be rejected
+    agx = results.get("PRAC-AGXT-c33dup")
+    if agx:
+        used = [rec["title"] for cv in agx["clinvar"] for rec in cv.get("records") or [] if rec.get("used_for_ranking")]
+        rej = [rec["title"] for cv in agx["clinvar"] for rec in cv.get("rejected") or []]
+        hard(not any("c.508G>A" in t for t in used) and any("c.508G>A" in t for t in rej),
+             f"PRAC-AGXT-c33dup: c.508G>A (another AGXT variant) rejected, not used for ranking -> used {used}")
+    for case in cases:                       # every record used is the patient's own c. change
+        r = results.get(case["id"])
+        if not r:
+            continue
+        wanted = {v["variant_cdna"] for v in case["patient"]["genotype"]}
+        used = [rec["title"] for cv in r["clinvar"] for rec in cv.get("records") or [] if rec.get("used_for_ranking")]
+        bad = [t for t in used if not any(w in t for w in wanted)]
+        hard(not bad, f"{case['id']}: ClinVar records used are the patient's variant" + (f" -> {bad}" if bad else ""))
 
     print("\n== patient_facts (HARD) ==")
     f = results["PRAC-OTC"]["patient_facts"]

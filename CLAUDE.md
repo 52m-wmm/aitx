@@ -81,7 +81,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 - 所有 step 3 验收脚本（3.0 / 3a / 3b / 3c / 3d / 3e）调用 `runmeta.refuse_eval_cases`，碰到评测病例直接退出；`acceptance_step3_0.py` 里原来打印 AITX-40003 分支的那段已删除。
 - 测试 `tests/test_eval_holdback.py`（含静态检查：任何 step 3 验收脚本或期望文件都不许出现评测病例 id）。
 - **Step 1 / Step 2 的评测病例期望已挪走**（2026-11-08 决定）：这些期望当年是按公开数据库记录（RefSeq、UniProt、OMIM、ClinVar）定的，所以保留，但移到 `scripts/acceptance_eval_cases.py`，**只有加 `--eval` 才会运行**；`acceptance_step1.py` / `acceptance_step2.py` 现在只读练习病例并调用 `refuse_eval_cases`。期望内容和出处存 `data/eval/eval_case_expectations.json`。
-  - 被一起挪走的还有 Step 2 的一条硬检查（"同一基因里另一个变异不得用于排序"，原来写在 AITX-40002 上）。**常规 Step 2 验收因此少了精确匹配的反向检查**，正向检查（CFTR 的 P/LP 记录链到 CF）仍在。待补一个练习病例的等价反向用例。
+  - 被一起挪走的还有 Step 2 的一条硬检查（"同一基因里另一个变异不得用于排序"，原来写在 AITX-40002 上）。**2026-11-11 已补练习病例的等价反向用例**：PRAC-AGXT-c33dup 的 ClinVar 检索也返回了另一个致病变异 c.508G>A，必须被拒、不得用于排序；另加一条通用硬检查：每个练习病例用于排序的 ClinVar 记录都必须是病人自己的 c. 变化。
   - `acceptance_eval_cases.py` 的 Step 2 部分只读 `out/step2/` 已有输出，自己不跑流水线、不调 LLM。
 
 ## 用户背景

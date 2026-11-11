@@ -122,14 +122,26 @@ def refuse_eval_cases(case_ids, what: str = "acceptance") -> None:
                          f"a case shows, so using them would fit the pipeline to the cases it is judged on")
 
 
-def find_case(case_id: str, files=CASE_FILES) -> dict | None:
+BLIND_CASE_DIR = ROOT / "data/cases/blind"     # blind-test batches (fix plan O3, 2026-11-11)
+
+
+def case_versions(case_id: str, files=None) -> list[dict]:
+    """Every version of a case in the case files and the blind-test batches. The two group-A blind cases exist both in
+    the validation file and, with a `blind` block, in their batch file; an output may come from either."""
+    files = list(CASE_FILES if files is None else files)
+    if files is CASE_FILES or files == list(CASE_FILES):
+        files += sorted(BLIND_CASE_DIR.glob("*.json")) if BLIND_CASE_DIR.exists() else []
+    out = []
     for f in files:
         if Path(f).exists():
             data = json.loads(Path(f).read_text())
-            for c in data if isinstance(data, list) else data.get("cases", []):
-                if c.get("id") == case_id:
-                    return c
-    return None
+            out += [c for c in (data if isinstance(data, list) else data.get("cases", [])) if c.get("id") == case_id]
+    return out
+
+
+def find_case(case_id: str, files=CASE_FILES) -> dict | None:
+    vs = case_versions(case_id, files)
+    return vs[0] if vs else None
 
 
 def freshness(step: int, case_id: str, out: Path = OUT, code: str | None = None) -> dict:
@@ -145,8 +157,9 @@ def freshness(step: int, case_id: str, out: Path = OUT, code: str | None = None)
         why.append(f"no code fingerprint (made {meta.get('code_commit')}, before the freshness check)")
     elif have != (code or code_fingerprint()):
         why.append(f"made by other code ({meta.get('code_commit')})")
-    case = find_case(case_id)
-    if case is None or meta.get("input_fingerprint") != fingerprint(case):
+    # fresh when the output was made from any current version of the case (O3, 2026-11-11: replaces the blind
+    # checker's runtime patch of find_case)
+    if meta.get("input_fingerprint") not in {fingerprint(c) for c in case_versions(case_id)}:
         why.append("made from another case input")
     for k, h in (meta.get("upstream") or {}).items():
         up = path(int(k), case_id, out)

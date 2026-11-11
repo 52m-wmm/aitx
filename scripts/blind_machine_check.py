@@ -28,33 +28,14 @@ sys.path.insert(0, str(ROOT))
 
 from aitx import runmeta  # noqa: E402
 
-# A blind-test case lives in data/cases/blind/<batch>.json, which runmeta.CASE_FILES does not list, so
-# runmeta.freshness would call every blind output "made from another case input". The batch file is added to
-# that list at runtime (2026-11-09 review): the frozen modules are not edited, and after the freeze the list
-# itself should name the folder.
+# Blind-test batch files are part of runmeta's case lookup since the fix plan O3 (2026-11-11); the runtime patch of
+# runmeta.find_case that stood here during the freeze is gone.
 BLIND_CASES = ROOT / "data" / "cases" / "blind"
 
 
 def teach_runmeta_about_blind_cases(batch: str) -> None:
-    """Make runmeta.find_case look in the batch file first.
-
-    Appending to runmeta.CASE_FILES is not enough: find_case binds that list as a default argument, so the
-    value is fixed when the module is defined. The two group-A cases also exist in the validation file in a
-    different form (the batch adds a `blind` block), and the step 3 output was made from the batch version, so
-    the batch file has to win (2026-11-09 review).
-    """
-    f = BLIND_CASES / f"{batch}.json"
-    if not f.exists():
-        return
-    original = runmeta.find_case
-
-    def find_case(case_id: str, files=None):
-        for c in json.loads(f.read_text()):
-            if c.get("id") == case_id:
-                return c
-        return original(case_id) if files is None else original(case_id, files)
-
-    runmeta.find_case = find_case
+    """Kept for callers; runmeta.case_versions reads data/cases/blind itself (O3)."""
+    return None
 from aitx.evidence import ledger as LG  # noqa: E402
 from aitx.evidence import repurposing as RP  # noqa: E402
 
@@ -321,6 +302,21 @@ def entries(led: dict, case: str) -> list[dict]:
     return out
 
 
+def upstream_health(cid: str) -> dict:
+    """What step 2 read from the case (fix plan O3, 2026-11-11 - group B ran four batches with no description and no
+    check noticed): phenotypes present, patient facts quoted, diagnosis status. A zero is a warning, not a wrong entry;
+    some cases legitimately state no facts."""
+    p = runmeta.path(2, cid)
+    if not p.exists():
+        return {"warnings": ["no step 2 output"]}
+    s2 = json.loads(p.read_text())
+    ph = sum(1 for x in s2.get("phenotypes") or [] if x.get("status") == "present")
+    facts = sum(1 for f in (s2.get("patient_facts") or {}).values() if isinstance(f, dict) and f.get("quote"))
+    dx = (s2.get("primary") or {}).get("status")
+    warn = [w for w, bad in (("no phenotypes", ph == 0), ("no patient facts", facts == 0), ("no diagnosis", not dx)) if bad]
+    return {"phenotypes": ph, "facts": facts, "diagnosis": dx, "warnings": warn}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--batch", default="20261108")
@@ -349,6 +345,7 @@ def main() -> int:
         listed += ent
         per_case[cid] = {"ran": True, "entries": len(ent), "machine_wrong": len(found),
                          "ledger_ok": led.get("ok"), "freshness": runmeta.freshness(3, cid),
+                         "upstream": upstream_health(cid),
                          "failed_checks": [c["name"] for c in led.get("checks", []) if c["status"] == "fail"],
                          "sections": {s: sum(1 for a in led.get("actions", []) if a["section"] == s)
                                       for s in SECTIONS}}
@@ -366,9 +363,12 @@ def main() -> int:
             print(f"  {cid:<16} NOT RUN")
             continue
         fresh = m["freshness"]
+        up = m.get("upstream") or {}
         print(f"  {cid:<16} entries {m['entries']:<4} machine-wrong {m['machine_wrong']:<3} "
               f"ledger {'ok' if m['ledger_ok'] else 'FAILED ' + str(m['failed_checks'])}  "
-              f"{'fresh' if fresh['fresh'] else 'STALE: ' + '; '.join(fresh['reasons'])}")
+              f"{'fresh' if fresh['fresh'] else 'STALE: ' + '; '.join(fresh['reasons'])}  "
+              f"upstream: phenotypes {up.get('phenotypes')}, facts {up.get('facts')}, diagnosis {up.get('diagnosis')}"
+              + (f"  WARNING: {', '.join(up['warnings'])}" if up.get("warnings") else ""))
     if wrong:
         print(f"\n{len(wrong)} machine-judged WRONG entries:")
         for w in wrong:

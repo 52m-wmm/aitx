@@ -29,3 +29,16 @@ def test_any_other_url_still_fails():
 
 def test_shaped_ids_unaffected():
     assert M.check_records({"evidence": [{"id": "e", "source": {"type": "pmid", "id": "38316953"}}]}, online=False) == []
+
+
+def test_upstream_health_warns_on_zero(tmp_path, monkeypatch):
+    import json
+    monkeypatch.setattr(M.runmeta, "path", lambda step, cid, out=None: tmp_path / f"{cid}.json")
+    (tmp_path / "X.json").write_text(json.dumps({"phenotypes": [], "patient_facts": {"age": {"quote": None}},
+                                                 "primary": {"status": "resolved"}}))
+    h = M.upstream_health("X")
+    assert h["phenotypes"] == 0 and "no phenotypes" in h["warnings"] and "no diagnosis" not in h["warnings"]
+    (tmp_path / "Y.json").write_text(json.dumps({"phenotypes": [{"status": "present"}],
+                                                 "patient_facts": {"age": {"quote": "3 months"}},
+                                                 "primary": {"status": "resolved"}}))
+    assert M.upstream_health("Y")["warnings"] == []

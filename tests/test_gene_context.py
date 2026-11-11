@@ -130,3 +130,13 @@ def test_a_one_word_quote_inside_the_disorder_cell_is_still_dropped():
     # and the patient whose disorder that row is for keeps it
     assert E.row_for_other_disorder(TABLE, "Thiamine", {"SLC19A3"},
                                     ["Biotin-thiamine-responsive basal ganglia disease"]) is None
+
+
+def test_the_exclusion_reason_names_the_rule_that_excluded_the_study():
+    """O3 (2026-11-11): cancer studies excluded by the gene-as-condition rule had the old 'no entry names the gene'."""
+    crc = _study("Gossypol in mCRC With LRPPRC Positive", ["Colorectal Cancer", "LRPPRC Positive"])
+    assert "cancer study or as a marker" in T.exclusion_reason(crc, ["Leigh syndrome"], "LRPPRC")
+    other = _study("Asthma study", ["Asthma"])
+    assert T.exclusion_reason(other, ["Leigh syndrome"], "LRPPRC") == "no Condition or Keyword entry names the disease or gene"
+    lung = _study("SHARP", ["Small Cell Lung Cancer"], ["LS-SCLC"])
+    assert T.exclusion_reason(lung, ["Leigh syndrome", "LS"], "LRPPRC").startswith("only the short abbreviation 'LS'")
