@@ -394,3 +394,11 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 病人描述只从 `patient.clinical_context` 读，统一经过 `aitx/caseinput.py` 的 `clinical_context(case)`：字段缺失、不是文本或只有空白时抛 `MissingDescription`，不再默认空串继续。`run_pipeline.py` 在跑任何一步之前先检查所有选中的病例，有问题就逐条打印 `[INPUT]` 并以退出码 5 结束（3 = 高峰时段，4 = 当日预算）。
 **起因**：盲测 B 组的病例文件把描述写成了 `clinical_description`，流水线读到空串，10 个病例在没有描述的情况下跑完，没有任何警告（`docs/blind_test_results.md` 事故一节）。
 测试：`tests/test_caseinput.py`（缺字段 / 错字段名 / 空串 / 空白 / None；`run_pipeline.py` 在第一步之前停下；仓库里所有病例文件都可读）。
+
+## 原文点名的病种群让位给 ClinVar 指向的更具体疾病（2026-11-11，盲测后修复 D1，用户批准）
+
+**规则**：临床文本点名的疾病（`explicit`）在 MONDO 中**包含** ClinVar 把本变异指向的另一个候选疾病时，取那个更具体的疾病；两者无上下位关系、或原文点名的更具体、或 ClinVar 没有链接时，仍以原文为准。多个被包含的候选按 ClinVar 星级、再按表型分数取。选择结果的 basis 仍为 `explicit`，另记 `refined_from`（原文点名的疾病），理由写明两者和 ClinVar 记录。
+**层级来源**：MONDO 祖先由 OLS4 的 `hierarchicalAncestors` 取得（`live.mondo_ancestors`，Step 2 原有的数据源，走 HTTP 缓存）；OLS 不可用时不做细化，原文点名的疾病照旧。
+**起因**：盲测 B1 的描述取自 GeneReviews 总论首段，点名的是病种群（Leigh 综合征谱系、CMT），Step 2 因"文本点名优先"选了更宽的名字，压过了 ClinVar 指向的 LRPPRC 法裔加拿大型和 CMT1B，随后引入了亚型不符的试验（CMT4J）。已核对：OLS 中 MONDO:0009069（法裔加拿大型）的祖先含 MONDO:0009723（Leigh 综合征），MONDO:0007307（CMT1B）的祖先含 MONDO:0015626（CMT），反向不成立。
+**测试**：`tests/test_diagnosis_refine.py`（两个盲测例子；反向：无上下位关系、原文更具体、无 ClinVar 链接、无层级时都不变；多个被包含者取星级高的）。
+**验收**：Step 2 验收与 `acceptance_eval_cases.py --eval`（确认 4 个评测病例诊断不变）留到修复全部写完后的统一重跑。

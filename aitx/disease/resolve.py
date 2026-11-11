@@ -387,8 +387,13 @@ def _lead(ranked: list[dict]) -> float | None:
     return round(_gap(ranked[0]["phenotype"]["score"], ranked[1]["phenotype"]["score"]), 3)
 
 
-def select(cands: list[dict], present: list[str], excluded: list[str], explicit: list[str]) -> dict:
-    """Pick the primary disease from scored candidate dicts. Pure function of its inputs."""
+def select(cands: list[dict], present: list[str], excluded: list[str], explicit: list[str],
+           contains=None) -> dict:
+    """Pick the primary disease from scored candidate dicts. Pure function of its inputs.
+
+    `contains(group, specific)` says whether MONDO places disease `specific` within disease `group` (fix plan D1,
+    decision 2026-11-11). When the text names a disease group and ClinVar links the variant to a more specific disease
+    inside it, the more specific one is used; with no such relation the named disease stands. None = no hierarchy."""
     elig = [c for c in cands if not c["excluded"]]
     if not elig:
         return {"status": "unresolved", "id": None, "basis": None, "reasons": ["no eligible candidate"], "tied": []}
@@ -400,8 +405,20 @@ def select(cands: list[dict], present: list[str], excluded: list[str], explicit:
     exp = [c for c in elig if c["key"] in explicit]
     if exp:
         top = by_pheno(exp)
-        reasons.append(f"named in the clinical text: {top[0]['label']}")
-        return {"status": "resolved", "id": top[0]["key"], "basis": "explicit", "reasons": reasons,
+        named = top[0]
+        inside = [c for c in elig if c["clinvar"] and c["key"] != named["key"] and contains is not None
+                  and contains(named["key"], c["key"])]
+        if inside:
+            best = max(max(l["stars"] for l in c["clinvar"]) for c in inside)
+            pick = by_pheno([c for c in inside if max(l["stars"] for l in c["clinvar"]) == best])[0]
+            rec = pick["clinvar"][0]
+            reasons.append(f"named in the clinical text: {named['label']}; ClinVar {rec['vcv']} ({rec['clinical_significance']}, "
+                           f"{best} star) links this variant to {pick['label']}, which MONDO places within it - the more "
+                           f"specific disease is used (decision 2026-11-11)")
+            return {"status": "resolved", "id": pick["key"], "basis": "explicit", "reasons": reasons,
+                    "tied": [], "refined_from": named["key"]}
+        reasons.append(f"named in the clinical text: {named['label']}")
+        return {"status": "resolved", "id": named["key"], "basis": "explicit", "reasons": reasons,
                 "tied": [c["key"] for c in top[1:]]}
 
     cv = [c for c in elig if c["clinvar"]]

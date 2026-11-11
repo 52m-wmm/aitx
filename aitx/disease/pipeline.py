@@ -141,7 +141,13 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
         c["merge"] = groups[c["key"]]
         c["compete"] = groups[c["key"]]["role"] == "representative"
 
-    sel = R.select(cands, present, excluded, explicit_keys)
+    def contains(group: str, specific: str) -> bool:       # fix plan D1: MONDO places `specific` within `group`
+        try:
+            return group in live.mondo_ancestors(specific, use_cache=res.use_cache)
+        except (OSError, ValueError, KeyError, RuntimeError):  # OLS unavailable: no refinement, the named disease stands
+            return False
+
+    sel = R.select(cands, present, excluded, explicit_keys, contains)
 
     # stability: the same selection on each LLM sample's own terms
     per_sample = []
@@ -149,7 +155,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
         sp = sorted(t for t, st in s["terms"] if st == "present")
         sx = sorted(t for t, st in s["terms"] if st == "excluded")
         sc = [dict(c, phenotype=_score(rc, res, sp, sx, onset)) for c, rc in zip(cands, raw)]
-        ss = R.select(sc, sp, sx, explicit_keys)
+        ss = R.select(sc, sp, sx, explicit_keys, contains)
         per_sample.append({"status": ss["status"], "id": ss["id"]})
     distinct = {(p["status"], p["id"]) for p in per_sample}
     if len(distinct) > 1 and sel["status"] == "resolved":
