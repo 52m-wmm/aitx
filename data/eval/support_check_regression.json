@@ -1,5 +1,5 @@
 {
- "description": "Support-check regression cases: rules a person reviewed. expected = supported (accepted) or blocked (vetoed). Collected automatically; never used as prompt examples.",
+ "description": "Support-check regression cases. kind 'rule' (default): rules a person reviewed, expected = supported (accepted) or blocked (vetoed), collected automatically. kind 'claim': report claims a person found wrong, judged on claim + quotes + context_quotes, added by hand. Never used as prompt examples.",
  "cases": [
   {
    "identity": "cedfa0d611b87f1f1ae6dc13c8b20fbc19defb73ffb3170a8c13d2134df15aeb",
@@ -446,6 +446,50 @@
       "juvenile amyotrophic lateral sclerosis type 27"
      ]
     }
+   }
+  },
+  {
+   "identity": "50dca6fc4ca93053a9ba22c692b24f0598b759081d4126943d3ef8c5c25e2dbf",
+   "kind": "claim",
+   "rule_id": "CLAIM-GEMIN5-COQ10",
+   "gene": "GEMIN5",
+   "expected": "supported",
+   "note": "核查需要完整上下文：用药句和结局句是同一句，只说 'these patients'；病人是谁（GEMIN5 复合杂合）写在摘要另一句和题目里。按流水线当时只给这两条引文，3 次判定一致 partially_supported（看不到病人身份），阳性被压成 not_reported。期望：把题目和病人身份句一起给核查时，应判 supported。",
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind batch 2: the report said 'no evidence that it is effective' while the source reports neurological improvement in both treated GEMIN5 patients (out/blind/20261108/found_during_freeze.md section 11)."
+   },
+   "collected_at": "2026-11-11",
+   "source": {
+    "pmid": "38316953",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38316953/"
+   },
+   "claim": {
+    "topic": "Coenzyme Q10 (CoQ10) effect in neurodevelopmental disorder with cerebellar atrophy and motor dysfunction",
+    "items": [
+     "After receiving Coenzyme Q10 (CoQ10), neurological improvements improved in the patient or patients with neurodevelopmental disorder with cerebellar atrophy and motor dysfunction described in this report."
+    ],
+    "quotes": [
+     "We treated two of these patients with oral Coenzyme Q10 (CoQ10), which resulted in neurological improvements, although MRI abnormalities remained.",
+     "We treated two of these patients with oral Coenzyme Q10 (CoQ10), which resulted in neurological improvements, although MRI abnormalities remained."
+    ],
+    "context_quotes": [
+     "Mutations of GEMIN5 are associated with coenzyme Q10 deficiency: long-term follow-up after treatment.",
+     "Whole Exome Sequencing demonstrated compound heterozygosity at the GEMIN5 gene in both cases"
+    ]
+   },
+   "as_run": {
+    "prompt_version": "support-check-v5",
+    "quotes": "quotes only (no context)",
+    "overall": "partially_supported",
+    "judgements": [
+     "partially_supported",
+     "partially_supported",
+     "partially_supported"
+    ],
+    "reason": "The quotes state that two patients had neurological improvements after CoQ10, but they do not identify the patients as having the specific neurodevelopmental disorder with cerebellar atrophy and motor dysfunction."
    }
   }
  ]

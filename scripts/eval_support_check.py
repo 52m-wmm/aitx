@@ -69,21 +69,35 @@ def collect(rules_dir: Path = RULES_DIR, path: Path = SET) -> list[str]:
     return added
 
 
+def case_quotes(c: dict) -> list[str]:
+    if c.get("kind") == "claim":
+        return list(c["claim"]["quotes"]) + list(c["claim"].get("context_quotes") or [])
+    return [s["quote"] for s in c["rule"]["sources"]]
+
+
 def leaks(cases: list[dict]) -> list[str]:
     """Test material that appears in the check's prompt (must be empty)."""
     out = []
     for c in cases:
         if c["gene"] in SC.SYSTEM:
             out.append(f"{c['rule_id']}: gene {c['gene']} in prompt")
-        for s in c["rule"]["sources"]:
-            if s["quote"][:40] and s["quote"][:40] in SC.SYSTEM:
+        for q in case_quotes(c):
+            if q[:40] and q[:40] in SC.SYSTEM:
                 out.append(f"{c['rule_id']}: quote in prompt")
     return out
 
 
+def check_case(c: dict, use_cache: bool) -> dict:
+    """A reviewed rule goes through check_rule; a report claim (kind 'claim', added 2026-11-11) is judged with its
+    quotes AND its context quotes - the case records that the check needs the full context (who the patients are)."""
+    if c.get("kind") == "claim":
+        return SC.check_support(c["claim"]["topic"], c["claim"]["items"], case_quotes(c), use_cache=use_cache)
+    return SC.check_rule(c["rule"], c["names"], use_cache=use_cache)
+
+
 def evaluate(cases: list[dict], *, use_cache: bool = True) -> dict:
     with ThreadPoolExecutor(max_workers=4) as pool:
-        results = list(pool.map(lambda c: SC.check_rule(c["rule"], c["names"], use_cache=use_cache), cases))
+        results = list(pool.map(lambda c: check_case(c, use_cache), cases))
     rows, fp, fb, ok = [], [], [], 0
     for c, r in zip(cases, results):
         passed = r["overall"] == "supported"

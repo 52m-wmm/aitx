@@ -101,3 +101,47 @@ def test_rule_items_say_the_narrowing_conditions(monkeypatch):
     cond = SC.rule_items(loss, {})[0]
     assert "remove the whole of exon 6" in cond and "splice variant at its boundary" in cond
     assert "lie in exon 6" not in cond                      # not the old, wider wording
+
+
+# --- report-claim cases in the regression set (2026-11-11, blind batch 2: GEMIN5 CoQ10)
+
+def _eval_module():
+    import importlib.util
+    from pathlib import Path
+    p = Path(__file__).resolve().parents[1] / "scripts" / "eval_support_check.py"
+    spec = importlib.util.spec_from_file_location("eval_support_check", p)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _claim_case():
+    E = _eval_module()
+    cases = json.loads(E.SET.read_text())["cases"]
+    return E, next(c for c in cases if c.get("kind") == "claim" and c["rule_id"] == "CLAIM-GEMIN5-COQ10")
+
+
+def test_the_gemin5_claim_case_records_why_it_needs_context():
+    _, c = _claim_case()
+    assert c["expected"] == "supported" and "完整上下文" in c["note"]
+    assert c["as_run"]["overall"] == "partially_supported"
+    ctx = " ".join(c["claim"]["context_quotes"])
+    assert "GEMIN5" in ctx and not any("GEMIN5" in q for q in c["claim"]["quotes"])   # identity only in context
+
+
+def test_a_claim_case_is_judged_with_its_context_quotes(monkeypatch):
+    E, c = _claim_case()
+    seen = fake(monkeypatch, {"items": [{"item": 1, "verdict": "supported", "reason": "stated"}]})
+    r = E.check_case(c, use_cache=True)
+    assert r["overall"] == "supported"
+    for q in c["claim"]["quotes"] + c["claim"]["context_quotes"]:
+        assert q in seen["prompt"]
+
+
+def test_claim_cases_survive_collection_and_leak_check(tmp_path):
+    E, c = _claim_case()
+    path = tmp_path / "set.json"
+    path.write_text(json.dumps({"description": "d", "cases": [c]}))
+    E.collect(rules_dir=tmp_path / "no_rules", path=path)
+    assert [x["rule_id"] for x in json.loads(path.read_text())["cases"]] == ["CLAIM-GEMIN5-COQ10"]
+    assert E.leaks([c]) == []

@@ -989,6 +989,10 @@ BLIND_OUT = OUT / "blind"                             # out/blind/<batch>/{sampl
 BLIND_CASES = ROOT / "data" / "cases" / "blind"       # data/cases/blind/<batch>.json
 BLIND_JUDGED = ROOT / "data" / "eval" / "blind"       # data/eval/blind/<batch>.json (the reviewer's verdicts)
 VERDICTS = ("correct", "wrong", "missed", "unsure")
+# blind-test groups (B1 split 2026-11-11: single-gene chapter vs overview only)
+BLIND_GROUP_ORDER = ["A", "B1-L1", "B1-L2", "B1", "B2"]
+BLIND_GROUP_LABEL = {"A": "A（Validator）", "B1-L1": "B1-L1 有专章", "B1-L2": "B1-L2 只有总论",
+                     "B1": "B1（未分）", "B2": "B2 无章节"}
 
 
 def act_label(s: str) -> str:
@@ -1371,6 +1375,10 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
     cases_file = BLIND_CASES / f"{batch}.json"
     groups = {c["id"]: (c.get("blind") or {}).get("group", "?") for c in json.loads(cases_file.read_text())} \
         if cases_file.exists() else {}
+    # B1 is split into L1 (single-gene chapter) and L2 (overview only), from sample.json (decision 2026-11-11)
+    for c in sample.get("cases") or []:
+        if c.get("subgroup"):
+            groups[f"BLIND-{c['gene']}"] = c["subgroup"]
     wrong_by_case: dict[str, list[dict]] = {}
     for w in machine.get("machine_wrong") or []:
         wrong_by_case.setdefault(w["case"], []).append(w)
@@ -1389,13 +1397,25 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
         return e(str(v))
 
     ov = []
+    per_group: dict[str, dict] = {}
     for cid, m in (machine.get("cases") or {}).items():
         ran = m.get("ran")
         mine = [judged[entry_id(r)] for r in rows_by_case.get(cid, []) if entry_id(r) in judged]
         n_wrong = sum(1 for j in mine if j["verdict"] == "wrong")
         n_missed = sum(1 for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed")
+        g = groups.get(cid, "?")
+        t = per_group.setdefault(g, {"cases": 0, "ran": 0, "entries": 0, "machine": 0, "judged": 0, "wrong": 0,
+                                     "missed": 0})
+        t["cases"] += 1
+        if ran:
+            t["ran"] += 1
+            t["entries"] += m.get("entries") or 0
+            t["machine"] += m.get("machine_wrong") or 0
+            t["judged"] += len(mine)
+            t["wrong"] += n_wrong
+            t["missed"] += n_missed
         link_case = f"<a href='cases/{e(fn(cid))}#board'>{e(cid)}</a>" if ran else e(cid)
-        ov.append(f"<tr><td>{link_case}</td><td>{e(groups.get(cid, '?'))}</td>"
+        ov.append(f"<tr><td>{link_case}</td><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td>"
                   + (f"<td>{m.get('entries')}</td><td>{m.get('machine_wrong')}</td>"
                      f"<td>{n_wrong} <span class='muted'>({len(mine)}/{m.get('entries')} {L('已判', 'judged')})</span></td>"
                      f"<td>{n_missed}</td>" if ran else f"<td colspan='4' class='muted'>{L('未跑', 'not run')}</td>")
@@ -1405,6 +1425,16 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
                 f"<th>{L('漏写', 'Missed')}</th><th>{L('GeneReviews 覆盖率', 'GeneReviews coverage')}</th>"
                 f"<th>{L('试验召回率', 'Trial recall')}</th><th>{L('FDA 靶向召回率', 'FDA targeted recall')}</th></tr>"
                 + "".join(ov) + "</table></div>")
+    by_group_rows = "".join(
+        f"<tr><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td><td>{t['ran']}/{t['cases']}</td><td>{t['entries']}</td>"
+        f"<td>{t['machine']}</td><td>{t['wrong']} <span class='muted'>({t['judged']}/{t['entries']})</span></td>"
+        f"<td>{t['missed']}</td></tr>"
+        for g, t in sorted(per_group.items(), key=lambda kv: BLIND_GROUP_ORDER.index(kv[0])
+                           if kv[0] in BLIND_GROUP_ORDER else 99))
+    overview += (f"<h3>{L('按组统计（各组分开，不合并成总率）', 'By group (kept apart, never pooled)')}</h3>"
+                 f"<div class='wrap'><table><tr><th>{L('组', 'Group')}</th><th>{L('已跑', 'Run')}</th>"
+                 f"<th>{L('写出条数', 'Entries')}</th><th>{L('机器写错', 'Machine wrong')}</th>"
+                 f"<th>{L('人工写错', 'Human wrong')}</th><th>{L('漏写', 'Missed')}</th></tr>{by_group_rows}</table></div>")
 
     can_save = live
     ro = L("这是静态快照，判定只能查看。要保存判定，请用实时查看页：python3 scripts/viewer_app.py",

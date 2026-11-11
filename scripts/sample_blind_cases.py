@@ -83,6 +83,65 @@ def genereviews_genes() -> dict[str, list[str]]:
     return out
 
 
+def index_gene_counts() -> dict[str, int]:
+    """NBK id -> how many genes the archive index lists for it."""
+    out: dict[str, int] = defaultdict(int)
+    for line in (newest("genereviews") / "genereviews.txt").read_text().splitlines():
+        parts = line.split("|")
+        if len(parts) >= 3 and parts[2]:
+            out[parts[1].strip()] += 1
+    return out
+
+
+def chapter_kind(nbk: str, n_genes: int, title_of=None) -> dict:
+    """Single-gene chapter (L1) or multi-gene overview (L2), by the pipeline's own rule (decision 2026-11-11).
+
+    The pipeline (`fallback.is_overview`) calls a chapter an overview when its title says "Overview"; the archive
+    index drops that word from the titles, so the title is read from the local chapter. Only when the chapter is not
+    available locally does the index's gene count decide (more than one gene -> overview), and the record says so.
+    """
+    if title_of is None:
+        from aitx.evidence import fallback as F
+        title_of = F.GR_title
+    title = title_of(nbk)
+    if title:
+        return {"nbk": nbk, "kind": "overview" if "overview" in title.lower() else "chapter", "title": title,
+                "n_genes": n_genes, "rule": "chapter title (pipeline rule)"}
+    return {"nbk": nbk, "kind": "overview" if n_genes > 1 else "chapter", "title": None, "n_genes": n_genes,
+            "rule": "archive index gene count (chapter not available locally)"}
+
+
+def subgroup_of(kinds: list[dict]) -> str:
+    """B1-L1 when the gene has at least one single-gene chapter (the pipeline uses it and ignores overviews);
+    B1-L2 when it is listed only in overviews (the pipeline falls back to disease-group advice)."""
+    return "B1-L1" if any(k["kind"] == "chapter" for k in kinds) else "B1-L2"
+
+
+SUBGROUP_LABEL = {"B1-L1": "有专章 L1", "B1-L2": "只有总论 L2", "B2": "无章节", "A": "Validator"}
+
+
+def regroup(batch: str, title_of=None) -> dict:
+    """Label an existing draw's B1 cases L1 / L2 without redrawing (decision 2026-11-11). The genes, variants and
+    descriptions are untouched; the labels and the reason are added to sample.json and the change is logged."""
+    p = ROOT / "out" / "blind" / batch / "sample.json"
+    sample = json.loads(p.read_text())
+    counts = index_gene_counts()
+    for c in sample.get("cases") or []:
+        if c["group"] == "B1":
+            c["chapter_kinds"] = [chapter_kind(n, counts.get(n, 0), title_of) for n in c["chapters"]]
+            c["subgroup"] = subgroup_of(c["chapter_kinds"])
+        else:
+            c["subgroup"] = c["group"]
+    sample.setdefault("regrouped", []).append({
+        "at": int(time.time()),
+        "why": "B1 was drawn as 'listed in any GeneReviews chapter', which counts multi-gene overviews; the plan meant "
+               "a chapter on the disease. Not redrawn: B1 is split into L1 (single-gene chapter) and L2 (overview "
+               "only) and reported in separate columns next to B2 (decision 2026-11-11)",
+        "subgroups": {c["gene"]: c["subgroup"] for c in sample.get("cases") or []}})
+    p.write_text(json.dumps(sample, indent=1, ensure_ascii=False))
+    return sample
+
+
 def gencc_definitive() -> dict[str, list[dict]]:
     """gene symbol -> its Definitive GenCC records (disease curie, title, mode of inheritance)."""
     out: dict[str, list[dict]] = defaultdict(list)
@@ -276,12 +335,21 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--pools-only", action="store_true", help="show the pools and the drawn genes, fetch nothing")
     ap.add_argument("--batch", default=time.strftime("%Y%m%d"))
+    ap.add_argument("--regroup", action="store_true",
+                    help="label an existing batch's B1 cases L1 / L2 in its sample.json; draws nothing")
     args = ap.parse_args()
+    if args.regroup:
+        s = regroup(args.batch)
+        for c in s.get("cases") or []:
+            kinds = ", ".join(f"{k['nbk']} {k['kind']} ({k['n_genes']} genes)" for k in c.get("chapter_kinds", []))
+            print(f"{c['subgroup']:<6} {c['gene']:<10} {kinds}")
+        return 0
     p = pools()
     b1, b2 = draw(p["b1"]), draw(p["b2"])
     print(f"seed {SEED!r}; excluded {len(EXCLUDED)} genes "
           f"({len(EVAL_GENES)} evaluation, {len(PRACTICE_GENES)} practice, {len(VALIDATOR_GENES)} validator)")
-    print(f"B1 pool (GenCC Definitive with an OMIM disease AND a GeneReviews chapter): {len(p['b1'])} genes")
+    print(f"B1 pool (GenCC Definitive with an OMIM disease AND listed in a GeneReviews chapter or overview; "
+          f"drawn cases are labelled L1 single-gene chapter / L2 overview only): {len(p['b1'])} genes")
     print(f"   drawn: {b1}")
     print(f"B2 pool (GenCC Definitive with an OMIM disease, no GeneReviews chapter): {len(p['b2'])} genes")
     print(f"   drawn: {b2}")
@@ -297,7 +365,7 @@ def main() -> int:
                      "skip": "a gene with no eligible variant is skipped and the next gene in the seeded order "
                              "is taken; every skip is recorded"}}
     if not args.pools_only:
-        names = hpo_names()
+        names, counts = hpo_names(), index_gene_counts()
         out["cases"], out["skipped"] = [], []
         for group, pool in (("B1", p["b1"]), ("B2", p["b2"])):
             taken = 0
@@ -314,6 +382,11 @@ def main() -> int:
                 taken += 1
                 case = {"group": group, "gene": g, "gencc": rec, "chapters": p["chapters"].get(g, []),
                         "variant": v, "zygosity": zygosity_for(rec["moi"])}
+                if group == "B1":            # the draw itself is unchanged; L1 / L2 is reported (2026-11-11)
+                    case["chapter_kinds"] = [chapter_kind(n, counts.get(n, 0)) for n in case["chapters"]]
+                    case["subgroup"] = subgroup_of(case["chapter_kinds"])
+                else:
+                    case["subgroup"] = group
                 if group == "B2":
                     case["phenotypes"] = phenotypes_for(rec["omim"], names)
                 out["cases"].append(case)

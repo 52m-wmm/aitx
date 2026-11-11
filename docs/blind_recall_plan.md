@@ -1,4 +1,4 @@
-# 盲测的机械召回评估——方案 v1.0（2026-11-10 定稿；B 组跑完后对 12 个病例统一计算）
+# 盲测的机械召回评估——方案 v1.1（2026-11-10 定稿，11-11 增补 B1 分栏；B 组跑完后对 12 个病例统一计算）
 
 > 目的：人工判定只能看"写出来的条目对不对"，看不出"该写没写"。这一项用**不调用 LLM 的确定性脚本**，对每个盲测病例从三个结构化来源列出"应该出现的条目"，再和报告比对，量出漏写。
 > 范围：GeneReviews 管理章节（3a 覆盖率）、ClinicalTrials.gov（3b 召回率）、FDA 说明书（3a 靶向节召回率）。**文献类（3c、L3）不做机械召回**，继续人工审查。
@@ -7,8 +7,14 @@
 
 ## 1. GeneReviews → 3a 覆盖率
 
+**分栏（2026-11-11 定）**：B1 不重抽，按章节类型拆成两栏，与 B2 并列、各算各的，不合并成总率：
+- **B1-L1 有专章**（RRM2B，NBK195854）：分母来源是该病的单基因专章；
+- **B1-L2 只有总论**（LRPPRC NBK320989、MPZ NBK1358、SNRNP200 NBK1417、SFTPC NBK1230）：**分母来源是该总论章节**，也就是 3a 在 L2 实际读的那一章。总论里点名别的基因、或表格行属于别的病种的条目，3a 按规则丢弃（`dropped_conditions`），按第 5 节决定 2 移出分母、逐条列出——所以总论组的分母自然只剩适用于本病人的条目和通用的病种群建议；
+- **B2**：仍为"不适用"（决定 5）。
+- 组别取自 `out/blind/<批次>/sample.json` 每个病例的 `subgroup`（`sample_blind_cases.py --regroup` 按流水线同一条规则判定：章节标题含 "Overview" 即总论）。
+
 **参考集怎么来（确定性）**
-- 章节：Step 2 给该病例分配的 GeneReviews 章节（`step2.genereviews[gene]`），就是 3a 实际读的那几章。
+- 章节：Step 2 给该病例分配的 GeneReviews 章节（`step2.genereviews[gene]`），就是 3a 实际读的那几章（L1 病例是专章；L2 病例是总论，见上面分栏）。
 - 小节：Management 下的 `Treatment of Manifestations`（含其下各子节）、`Targeted Therapies`、`Prevention of Primary Manifestations`、`Prevention of Secondary Complications`、`Agents/Circumstances to Avoid`、`Pregnancy Management`。
   **排除**：`Evaluations Following Initial Diagnosis`、`Surveillance`、`Evaluation of Relatives at Risk`、`Therapies Under Investigation`（与 3a 契约一致：最后这节留给 3b/3c）。
 - 条目单位（三种都计）：
@@ -69,7 +75,7 @@
 ## 4. 产出
 
 - `out/blind/<批次>/recall.json`：每个病例三项的参考集、命中、漏写清单（含原因标注和原文链接）。
-- `docs/blind_test_results.md` 新增一节：12 个病例的三项召回率表（按 A / B1 / B2 分栏，因为 B2 没有 GeneReviews 章节，第 1 项对 B2 不适用），以及漏写清单的汇总（按原因分类计数）。
+- `docs/blind_test_results.md` 新增一节：12 个病例的三项召回率表（按 A / B1-L1 / B1-L2 / B2 分栏，因为 B2 没有 GeneReviews 章节，第 1 项对 B2 不适用），以及漏写清单的汇总（按原因分类计数）。
 - 费用：**0 LLM 调用**。CT.gov 与 openFDA 是免费接口，走现有缓存。
 
 ## 5. 决定（2026-11-10 全部定稿）
@@ -79,3 +85,4 @@
 3. ~~CT.gov 参考集要不要加基因查询~~ **已定（2026-11-10）**：参考集仍只用病名；**另加一栏"只靠基因查到、且通过新相关性规则的试验"**，单独计数、不并入召回率分母，用来观察修过的基因路径有没有漏掉"登记里只写基因、不写病名"的罕见病试验。这一栏的每条试验都要列出它是靠哪个 Condition / Keyword 条目、以什么句式通过的，便于人工核对新规则有没有放进不该放的、或挡掉该放的。
 4. **FDA 的病名匹配是否包含疾病类别**：**定**——包含（如 "urea cycle disorders"），与 3a 规则 (i) 用同一个 `label_names`。
 5. **B2 的 GeneReviews 一项**：**定**——写"不适用"，不改用只是提到该基因的其他章节，保持 B1 / B2 的对比只取决于有没有专章。
+6. **B1 拆成 L1 / L2（2026-11-11 定）**：抽样时 B1 的条件是"GeneReviews 里有任何列出该基因的章节"，把多基因总论也算了进去，5 个里 4 个只有总论。**不重抽**，拆成"有专章 L1"（RRM2B）和"只有总论 L2"（LRPPRC、MPZ、SNRNP200、SFTPC）两栏，与 B2 并列统计；第 1 项按此分栏，总论组以总论章节为分母来源。
