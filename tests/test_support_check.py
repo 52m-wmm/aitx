@@ -176,3 +176,10 @@ def test_valproate_polarity_pair_is_in_the_set():
     assert inv["expected"] == "blocked" and ok["expected"] == "supported"        # reverse pair on the same quote
     assert inv["claim"]["quotes"] == ok["claim"]["quotes"] == ["Valproic acid should be used only in exceptional circumstances."]
     assert "极性反转" in inv["note"] and "极性反转" in ok["note"]
+
+
+def test_voriconazole_adverse_report_case_is_in_the_set():
+    E = _eval_module()
+    c = {c["rule_id"]: c for c in json.loads(E.SET.read_text())["cases"]}["CLAIM-MPZ-VORICONAZOLE-ADVERSE"]
+    assert c["expected"] == "blocked" and "不良反应报告误读为治疗先例" in c["note"]
+    assert "exacerbated by voriconazole" in c["claim"]["quotes"][0]

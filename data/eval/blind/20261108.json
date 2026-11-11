@@ -122,27 +122,141 @@
    "note": "交召回评估",
    "at": 1794397825
   },
-  "m991e520d921": {
-   "case": "BLIND-PSMD12",
-   "section": "supportive_management",
-   "label": "early developmental intervention (L4 developmental delay)",
-   "verdict": "missed",
-   "note": "描述含全面发育迟缓、智力障碍，L4 应至少给出早期干预；根因是盲测病例文件把描述写在 clinical_description，流水线只读 clinical_context，描述为空",
-   "at": 1794397825
+  "55689ee373aa": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "SURPASS (NCT05623267)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
   },
-  "md1571a6e68e": {
-   "case": "BLIND-GEMIN5",
-   "section": "supportive_management",
-   "label": "early developmental intervention (L4 developmental delay)",
-   "verdict": "missed",
-   "note": "同 PSMD12：描述含全面发育迟缓，L4 未触发；根因同上",
-   "at": 1794397825
+  "c206e623816c": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "Phase 3 Study of Toripalimab Alone or in Combination With Tifcemalimab as Consolidation Therapy in Patients With Limited-stage Small Cell Lung Cancer (LS-SCLC) (NCT06095583)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "781a5932f6b7": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "A Prospective, Multicenter Exploratory Clinical Study on Consolidation Therapy With Tislelizumab Combined With Nintedanib for Limited-stage Small Cell Lung Cancer (NCT07485920)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "a8d28e7f88a5": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "Aurora004 (NCT07538258)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "f7509d6dc3af": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "ENABLE 1 (NCT07655128)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "7bf0d321c711": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "ENABLE 2 (NCT07655141)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "2405efdf6c47": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "IDUNN (NCT07820813)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "a57b35a1166d": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "ASSET (NCT07825480)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "f606534ffb60": {
+   "case": "BLIND-LRPPRC",
+   "section": "clinical_trial_eligibility",
+   "label": "SHARP SCLC (NCT07920549)",
+   "verdict": "wrong",
+   "note": "3b 短缩写误匹配（LS / LSS），系统性、严重",
+   "at": 1794402181
+  },
+  "5397207791af": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "Study of Intrathecal ELP-02 for Charcot-Marie-Tooth Disease Type 4J (CMT4J) (NCT07447557)",
+   "verdict": "wrong",
+   "note": "亚型不符（CMT4J 专用试验，病人是 MPZ），源于诊断变宽",
+   "at": 1794402181
+  },
+  "6b576271761f": {
+   "case": "BLIND-MPZ",
+   "section": "off_label_expanded_access",
+   "label": "voriconazole",
+   "verdict": "wrong",
+   "note": "不良反应报告误读为治疗先例：病人因其他适应证用药后神经病变加重",
+   "at": 1794402181
+  },
+  "c6b52cb5da59": {
+   "case": "BLIND-SFTPC",
+   "section": "off_label_expanded_access",
+   "label": "methylprednisolone",
+   "verdict": "wrong",
+   "note": "跨诊断分支重复：与 'Methylprednisolone' 同一药物键、同一文献，未合并",
+   "at": 1794402181
   }
  },
  "not_counted": {
   "BLIND-LRPPRC": {
    "at": "2026-11-11",
    "why": "已用于修复（批次 1 的 3b 癌症试验和总论表格两处），不计入盲测率"
+  }
+ },
+ "revoked": [
+  {
+   "case": "BLIND-PSMD12",
+   "section": "supportive_management",
+   "label": "early developmental intervention (L4 developmental delay)",
+   "verdict": "missed",
+   "note": "描述含全面发育迟缓、智力障碍，L4 应至少给出早期干预；根因是盲测病例文件把描述写在 clinical_description，流水线只读 clinical_context，描述为空",
+   "at": 1794397825,
+   "entry_id": "m991e520d921",
+   "revoked_at": "2026-11-11",
+   "why": "输入错误造成（B 组前 4 批没有描述）；带描述重跑后 L4 已产出早期干预"
+  },
+  {
+   "case": "BLIND-GEMIN5",
+   "section": "supportive_management",
+   "label": "early developmental intervention (L4 developmental delay)",
+   "verdict": "missed",
+   "note": "同 PSMD12：描述含全面发育迟缓，L4 未触发；根因同上",
+   "at": 1794397825,
+   "entry_id": "md1571a6e68e",
+   "revoked_at": "2026-11-11",
+   "why": "输入错误造成（B 组前 4 批没有描述）；带描述重跑后 L4 已产出早期干预"
+  }
+ ],
+ "phenotype_dependent_not_counted": {
+  "BLIND-MPZ": {
+   "at": "2026-11-11",
+   "why": "表型为 0 是 B1 描述规则的局限（描述是 GeneReviews 第一段的病种定义，不是病人表现）；依赖表型的判定（L4、表型决定的适用 / 有条件、入组标准里的表型项）不计入统计"
+  },
+  "BLIND-RRM2B": {
+   "at": "2026-11-11",
+   "why": "表型为 0 是 B1 描述规则的局限（描述是 GeneReviews 第一段的病种定义，不是病人表现）；依赖表型的判定（L4、表型决定的适用 / 有条件、入组标准里的表型项）不计入统计"
   }
  }
 }

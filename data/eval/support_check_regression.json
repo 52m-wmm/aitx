@@ -609,6 +609,35 @@
     ],
     "context_quotes": []
    }
+  },
+  {
+   "identity": "71249040bd23fbe20b0a43b2188d13c6e4f3bbef2a6f29324c2fac154bf1735b",
+   "kind": "claim",
+   "rule_id": "CLAIM-MPZ-VORICONAZOLE-ADVERSE",
+   "gene": "MPZ",
+   "expected": "blocked",
+   "note": "不良反应报告误读为治疗先例：文献报告的是病人因其他适应证（抗真菌）用伏立康唑后，长春新碱相关神经病变加重；3c 把'用过这个药'当成了治疗用途，列为老药新用、状态'适用'。核查应判不支持。",
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind group B rerun: an adverse-reaction report was taken as an off-label treatment precedent."
+   },
+   "collected_at": "2026-11-11",
+   "source": {
+    "pmid": "18837430",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/18837430/"
+   },
+   "claim": {
+    "topic": "voriconazole as a treatment for Charcot-Marie-Tooth disease",
+    "items": [
+     "Voriconazole was given as a treatment for Charcot-Marie-Tooth disease in the patient described in this report."
+    ],
+    "quotes": [
+     "We report a case of vincristine related neuropathy that was exacerbated by voriconazole in a patient with previously undiagnosed, X-linked CMT."
+    ],
+    "context_quotes": []
+   }
   }
  ]
 }
