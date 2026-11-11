@@ -46,3 +46,7 @@ KCNT1 病例的"已有靶向治疗"节写 `None found`，而支持治疗节里�
 
 **Step 4 要求**：当"已有靶向治疗"节为空、而支持治疗节里存在针对该分支分子机制的药物时，靶向节**写一句交叉说明**（如"没有获批的靶向疗法；支持治疗节中的奎尼丁在文献中按 KCNT1 通道机制使用，但 GeneReviews 未将其列为靶向治疗"），避免评审看到"靶向=无"就认为系统漏了。
 判断依据不能靠 LLM 常识：用 3d 已经取到的疾病机制 + 该药在 3c/文献里的方向记录。
+
+## 指向外部清单的禁忌条目（2026-11-11，盲测批次 2 发现）
+
+GeneReviews 有时只给一个外部清单而不点名药物（MPZ / CMT 总论："Medications that are toxic or potentially toxic to persons with CMT … See the Charcot-Marie-Tooth Association website (pdf) for an up-to-date list."）。3a 把它记成一条禁忌行动"toxic or potentially toxic medications"。**Step 4 呈现时写成可操作的形式："用药前对照 CMT 协会的神经毒性药物清单"**，并附清单出处，而不是只写一个泛称。

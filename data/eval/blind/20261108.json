@@ -1,0 +1,46 @@
+{
+ "schema": "blind-judged-v1",
+ "batch": "20261108",
+ "judgements": {
+  "b16491d9c0b7": {
+   "case": "BLIND-MPZ",
+   "section": "supportive_management",
+   "label": "orthopedic surgery",
+   "verdict": "correct",
+   "note": "有条件正确",
+   "at": 1794396243
+  },
+  "99b8df30cb6a": {
+   "case": "BLIND-MPZ",
+   "section": "supportive_management",
+   "label": "surgery",
+   "verdict": "correct",
+   "note": "有条件正确",
+   "at": 1794396243
+  },
+  "6d83138bd879": {
+   "case": "BLIND-MPZ",
+   "section": "contraindications_precautions",
+   "label": "obesity",
+   "verdict": "correct",
+   "note": "出自 Agents/Circumstances to Avoid",
+   "at": 1794396243
+  },
+  "eaf1c69c4380": {
+   "case": "BLIND-MPZ",
+   "section": "contraindications_precautions",
+   "label": "toxic or potentially toxic medications",
+   "verdict": "correct",
+   "note": "Step 4 写成'用药前对照该清单'",
+   "at": 1794396243
+  },
+  "d53c75707151": {
+   "case": "BLIND-GEMIN5",
+   "section": "off_label_expanded_access",
+   "label": "Coenzyme Q10 (CoQ10)",
+   "verdict": "wrong",
+   "note": "结论与原文矛盾：原文两例用后神经症状改善；根因见 found_during_freeze.md 第 11 节",
+   "at": 1794396243
+  }
+ }
+}

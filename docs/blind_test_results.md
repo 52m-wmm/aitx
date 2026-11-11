@@ -71,6 +71,22 @@
 - **漏写 1 条**：FOXF1 几乎是空报告（ACDMPV 的呼吸支持、ECMO、肺移植评估等）。B 组全部跑完后用缓存查 L3 为何无结果，再定。
 - **LRPPRC 归一化到法裔加拿大型：正确**（审阅确认）。
 
+### 批次 2（2026-11-11）：MPZ（B1）+ GEMIN5（B2）
+
+花费 **\$0.0202**（17 次调用，全部非高峰），上限 \$0.35。原定 02:05 的定时任务因 Mac 睡眠没有触发（`sleep` 不计睡眠时间），03:10 手动启动。两个病例 Step 1–3 全部完成、新鲜输出，机器检查 0 条写错。
+
+| 病例 | 写出条目 | 机器判定写错 |
+| --- | --- | --- |
+| MPZ（CMT1B） | 25（支持治疗 13、禁忌 3、已有靶向 1 "None found"、临床试验 1、老药新用 1 "None found"、定制疗法 6） | 0 |
+| GEMIN5 | 11（Tier 1 三节均 "None found"、临床试验 1、老药新用 1、定制疗法 6） | 0 |
+
+### 批次 2 审阅判定（2026-11-11）
+
+- **写错 1 条**：GEMIN5 的辅酶 Q10——原文说两例用后神经症状改善，报告写"没有证据表明有效"，与原文矛盾。根因已查清（支持度核查看不到病人身份 → 方向记为未报告 → 证据不足档的固定措辞），确认文中病人为 GEMIN5 复合杂合。只记录不修，见 `found_during_freeze.md` 第 11 节。
+- **正确**："有毒或潜在有毒药物"（Step 4 写成"用药前对照该清单"，已记入 Step 4 待办）；"避免肥胖"（出自 Agents/Circumstances to Avoid）；两条手术的"有条件"。
+- **MPZ 支持治疗 13 条的证据层级核对**：账本 `supportive_tiers` 记为 `overview`（L2，"disease-group advice (GeneReviews overview, not a chapter on this disease)"），每条行动 `tier_source = overview`。**标对了，不计写错。**
+- **抽样问题（系统性，待定）**：MPZ 的 NBK1358 是 CMT 总论（36 个基因），不是专章。查了 B1 全部 5 个：LRPPRC NBK320989（78 个基因）、MPZ NBK1358（36）、SNRNP200 NBK1417（80）、SFTPC NBK1230（12）是多基因章节，只有 RRM2B NBK195854（1 个基因）是单基因专章。抽样脚本 `sample_blind_cases.py` 的 B1 条件是"GeneReviews 里有任何列出该基因的章节"，没有区分专章和总论，与方案"B1 有专章"不符。
+
 ### 盲测结束后统一修的问题（冻结期内只记录）
 
 | 记录时间 | 问题 | 出处 |
@@ -79,3 +95,5 @@
 | 2026-11-09 | `runmeta.CASE_FILES` 不含盲测批次文件；判定脚本目前在运行时打补丁，冻结结束后应把 `data/cases/blind/` 写进清单 | `blind_machine_check.py` 注释 |
 | 2026-11-09 | Step 2 精确匹配的反向检查（原写在评测病例 AITX-40002 上，已挪走）需补一个练习病例的等价用例 | CLAUDE.md |
 | 2026-11-10 | 被新相关性规则排除的癌症试验，排除理由仍是旧文案 "no Condition or Keyword entry names the disease or gene"，应改为"基因出现在癌症语境或作为标志物" | `found_during_freeze.md` 第 10 节 |
+| 2026-11-11 | 3c 疗效方向的支持度核查只给用药句和结局句，看不到"病人是谁"；摘要把病人身份写在另一句时，阳性被压成"未报告"（GEMIN5 辅酶 Q10） | `found_during_freeze.md` 第 11 节 |
+| 2026-11-11 | 3c "证据不足"档固定措辞 "no evidence that it is effective" 改为中性（如 "The available reports are not enough to judge whether it works."）；同时修核查论断里指标名自带方向词时的病句（"improvements improved"） | 同上 |
