@@ -1030,9 +1030,11 @@ def _literature(led, b, rec, put, step2, use_cache) -> None:
             name, q = str(it.get("name") or "").strip(), str(it.get("quote") or "")
             if not name or not LG.quote_in(q, text):
                 continue
+            # "for some or all patients" (fix plan S6, 2026-11-11): a recommendation limited to some patients ("in a
+            # milder form ... lung transplantation may be an option") is kept; its limit is taken by the context check
             sc = SC.check_support(f"{name} for {b['diagnosis']['label']}",
-                                  [f"The article recommends {name} for patients with {b['diagnosis']['label']}."], [q],
-                                  use_cache=use_cache)
+                                  [f"The article recommends or presents {name} as an option for some or all patients "
+                                   f"with {b['diagnosis']['label']}."], [q], use_cache=use_cache)
             if sc["overall"] != "supported":
                 continue
             tt = A.therapy_type(name)

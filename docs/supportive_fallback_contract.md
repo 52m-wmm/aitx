@@ -156,4 +156,4 @@
 - **N2 检索名单**：在分支病名之外，加入 Orphanet 与 GenCC 给该基因标注的病名（Step 2 已下载的数据集）和"<基因>-related"。基因仍是必需条件（`(<基因>[tiab]) AND (...)`），宽泛的病名不会单独带进文章；判对错交给上下文核查（架构原则 1）。**2026-11-10 的规则不变**：分支没有可用病名（≥ 4 字符）时不检索。起因：THRA 的检索式只有 MONDO / OMIM 名，文献叫 "resistance to thyroid hormone alpha"，0 篇；Orphanet 的名字是 "Resistance to thyroid hormone due to a mutation in thyroid hormone receptor alpha"。
 - **O2 长文窗口**：12 000 字窗口的顺序改为：标题点名本病或基因的小节 → 正文提到本病或基因、且标题是治疗 / 管理的小节 → 其他提到本病或基因的小节 → 治疗 / 管理小节 → 其余；每篇文章在账本记 `window_focus_hits`（窗口里本病名和基因出现的次数），0 即模型没看到本病。起因：FOXF1 的一篇 35 000 字新生儿呼吸衰竭综述，窗口里 ACDMPV / FOXF1 出现 0 次，抽取 0 条。所有小节都提到本病时，顺序与原来相同。
 - **测试**：`tests/test_l3_names_window.py`；2026-11-10 的"无病名不检索"测试保持通过。
-- **L3 的有条件建议（S6，FOXF1 肺移植）**：由上下文核查的"限定"问题处理（`docs/context_check_contract.md`）。注意 L3 的推荐核查（`_literature` 里的 `check_support`）仍在上下文核查之前，单句无条件论断会先把有限定的建议丢掉——见修复计划进度表备注。
+- **L3 的有条件建议（S6，FOXF1 肺移植）**：由上下文核查的"限定"问题处理（`docs/context_check_contract.md`）。L3 的推荐核查（`_literature` 里的 `check_support`）在上下文核查之前；原来的论断是无条件的"文章推荐 X 给 D 病人"，会先把有限定的建议丢掉，2026-11-11 改为"文章推荐或把 X 作为选项给部分或全部 D 病人"，限定由上下文核查的"限定"问题加上（S6）。
