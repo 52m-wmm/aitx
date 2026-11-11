@@ -21,8 +21,12 @@ from concurrent.futures import ThreadPoolExecutor
 from aitx.disease import extract as X
 from aitx.evidence import ledger as LG
 
-PROMPT_VERSION = "context-check-v1"
+PROMPT_VERSION = "context-check-v2"   # v2 (2026-11-11): compact answers, reasoning_effort "low" (budget)
 N_CHECKS = 3
+# the DeepSeek chat API takes reasoning_effort none / low / high / max, default high (api-docs.deepseek.com, read
+# 2026-11-11); the context check runs at "low" to fit the budget (decision 2026-11-11, validated on judged entries)
+CALL_PARAMS = {"temperature": 0, "max_tokens": 16384, "response_format": {"type": "json_object"},
+               "reasoning_effort": "low"}
 ENABLED = True        # tests that predate the context check switch it off (tests/conftest.py)
 YES_NO = ("yes", "no", "not_stated")
 DIRECTIONS = ("improved", "not_improved", "worsened", "mixed", "not_stated")
@@ -41,9 +45,9 @@ Principles:
    degree; a related finding of unknown degree does not meet it.
 7. When the passage limits advice to some patients, that limit stands.
 8. When the passage or the patient information does not say, answer "not_stated".
-Answer every question with one of the answers listed for it. For each answer give the shortest verbatim quote from
-the passage it rests on ("" if none) and one short reason.
-Return only JSON: {"answers": [{"q": <number>, "answer": "<one of the listed answers>", "quote": "...", "reason": "..."}]}"""
+Answer every question with one of the answers listed for it, and the shortest verbatim quote from the passage it
+rests on (at most 20 words; "" if none). No explanations.
+Return only JSON: {"answers": [{"q": <number>, "answer": "<one of the listed answers>", "quote": "..."}]}"""
 
 
 # ------------------------------------------------------------------ prompt parts (code)
@@ -93,7 +97,7 @@ def ask(header: str, passage: str, patient: str, questions: list[dict], *, use_c
     msgs = messages(header, passage, patient, questions)
 
     def one(k):
-        r = X._parse(X._cached_chat(msgs, k, use_cache, prompt_version=PROMPT_VERSION))
+        r = X._parse(X._cached_chat(msgs, k, use_cache, prompt_version=PROMPT_VERSION, call_params=CALL_PARAMS))
         got = {}
         for a in (r["parsed"].get("answers") or []):
             try:

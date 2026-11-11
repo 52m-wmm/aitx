@@ -1181,13 +1181,7 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
         cc = None
         main = next((i for i, sp in enumerate(a["specs"]) if sp["src"]["type"] in CONTEXT_SOURCES
                      and evs[i]["status"] == "verified"), None)
-        # an entry already conditional can only stay conditional (every answer moves towards it) - except an avoidance,
-        # whose open condition may turn out to be an exemption; checking it would cost and change nothing (2026-11-11)
-        can_change = any(LG.status_of(lines, b)[0] == "applicable" for b in branches) or (
-            section == CC.AVOID_SECTION and any(l["result"] == "unknown" for l in lines))
-        if CC.ENABLED and main is not None and not can_change:
-            cc = {"skipped": "already conditional: no answer could change its status"}
-        elif CC.ENABLED and main is not None:            # context check (fix plan, 2026-11-11): answers -> lines
+        if CC.ENABLED and main is not None:              # context check (fix plan, 2026-11-11): answers -> lines
             header, passage = context_passage(a["specs"][main])
             br = by_id[branches[0]]
             res = CC.ask(header, passage, CC.patient_text(pf, br),

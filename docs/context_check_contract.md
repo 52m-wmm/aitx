@@ -45,7 +45,8 @@
   - 治疗中出现副作用（purpose yes、harm yes）不影响先例，标 `side_effects`；
   - direction 一致时取其方向（improved → positive，not_improved / worsened → negative，mixed → mixed），否则 not_reported；有合并用药时 positive 记为 combined_unattributable；
   - subject 不是一致 "yes" → 先例标 `subject`（other / not_stated）并引原文，条目加 scope 行 → 有条件。
-- **不检查的条目**：L4 人工核实的指南；**3a 中已经是"有条件"、又不在禁忌节的条目**（任何答案都只会让它保持有条件，查了不改变结果——记 `context_check.skipped`）。
+- **不检查的条目**：只有 L4 人工核实的指南。**有条件条目照查**（2026-11-11 决定；曾试过"已有条件的非禁忌条目跳过"以省钱，已撤回）。
+- **调用设置**（2026-11-11 决定，预算）：`reasoning_effort: "low"`（DeepSeek 聊天接口取值 none / low / high / max，默认 high，见 api-docs.deepseek.com）、精简 JSON（每题只给答案和不超过 20 词的引文，不给理由），提示词版本 `context-check-v2`。缓存只复用参数完全相同的答案。**是否采用以已判条目验证为准**：抓住 ≥ 80%、误伤 ≤ 5% 才采用（`scripts/validate_context_check.py`）。
 
 ## 5. 账本规则
 
@@ -67,7 +68,7 @@
   2. "In the US" 在 2:1 分歧下被当成病人限定 → limit 只认一致 "yes"，问题里排除地点和服务方式；
   3. "建议是否基于人的发现"对普通临床建议常答"未说明"，造成无谓降级 → 改问"原文是否说只基于动物或实验室研究"，多数 "yes" 才降级。
 - 修正后 GRIN2B 各条目状态与核查前完全一致（没有误伤），两个先例保留，病人基因有原文引用（"GRIN2B, GRIN1 and GRIN2A variants"）。
-- 加上"已是有条件的非禁忌条目不查"之后，GRIN2B 的 3a 只需查 1 条（原来 8 条）。
+- 曾加"已是有条件的非禁忌条目不查"以省钱，2026-11-11 按用户决定撤回：有条件条目照查。
 
 ## 7. 测试
 

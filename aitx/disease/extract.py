@@ -107,10 +107,16 @@ def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_vers
                                      sort_keys=True).encode()).hexdigest()
 
 
-def _cache_usable(entry: dict, cfg: dict) -> bool:
-    """Reuse only answers made with the current call parameters and, if an expected model
+def retry_params(params: dict) -> dict:
+    """The one retry after a truncated answer: the same parameters with a larger output budget."""
+    return {**params, "max_tokens": 32768}
+
+
+def _cache_usable(entry: dict, cfg: dict, params: dict | None = None) -> bool:
+    """Reuse only answers made with the requested call parameters (default CALL_PARAMS) and, if an expected model
     prefix is set, served by that model (guards against a silent alias switch)."""
-    if entry.get("call_params") not in (CALL_PARAMS, LENGTH_RETRY_PARAMS):
+    params = params or CALL_PARAMS
+    if entry.get("call_params") not in (params, retry_params(params)):
         return False
     prefix = cfg.get("expect_model_prefix")
     return not prefix or str(entry.get("served_model", "")).startswith(prefix)
@@ -140,13 +146,14 @@ def cross_provider_ok(entry: dict, cfg: dict) -> bool:
     return bool(want) and str(entry.get("served_model") or "") == want
 
 
-def cache_lookup(messages: list[dict], k: int, cfg: dict, prompt_version: str | None = None) -> dict | None:
+def cache_lookup(messages: list[dict], k: int, cfg: dict, prompt_version: str | None = None,
+                 params: dict | None = None) -> dict | None:
     """This endpoint's cached answer, else one from a listed other endpoint under cross_provider_ok. The provider
     that produced the answer is recorded on the entry (`provider`) and every cross-endpoint reuse is logged."""
     path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
     if path.exists():
         entry = json.loads(path.read_text())
-        if _cache_usable(entry, cfg):
+        if _cache_usable(entry, cfg, params):
             entry.setdefault("provider", cfg["base_url"])
             return entry
     for src in cache_sources(cfg):
@@ -154,7 +161,7 @@ def cache_lookup(messages: list[dict], k: int, cfg: dict, prompt_version: str | 
         if not other.exists():
             continue
         entry = json.loads(other.read_text())
-        if _cache_usable(entry, cfg) and cross_provider_ok(entry, cfg):
+        if _cache_usable(entry, cfg, params) and cross_provider_ok(entry, cfg):
             entry.setdefault("provider", src["base_url"])
             entry["reused_on"] = cfg["base_url"]
             log = llm.LOG.parent / REUSE_LOG
@@ -166,15 +173,19 @@ def cache_lookup(messages: list[dict], k: int, cfg: dict, prompt_version: str | 
     return None
 
 
-def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: str | None = None) -> dict:
-    """One chat completion, cached under cache_key(). Other modules pass their own prompt_version."""
+def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: str | None = None,
+                 call_params: dict | None = None) -> dict:
+    """One chat completion, cached under cache_key(). Other modules pass their own prompt_version and, if they need
+    other settings (2026-11-11: the context check runs with reasoning_effort "low"), their own call parameters."""
     cfg = llm.config()
+    base = call_params or CALL_PARAMS
+    retry = retry_params(base)
     path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
     if use_cache:
-        entry = cache_lookup(messages, k, cfg, prompt_version)
+        entry = cache_lookup(messages, k, cfg, prompt_version, base)
         if entry is not None:
             return entry
-    attempts, params = 5, CALL_PARAMS
+    attempts, params = 5, base
     for attempt in range(attempts):
         peak.check_before_call()               # --offpeak-only: never start a call inside a peak window
         budget.check_before_call()             # daily spend cap (2026-11-05): stop instead of overspending
@@ -195,12 +206,12 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
         choice = resp["choices"][0]
         content = choice["message"].get("content") or ""
         if choice.get("finish_reason") == "length":
-            if params is LENGTH_RETRY_PARAMS:          # never cache a truncated answer; never retry it again
-                raise RuntimeError(f"LLM output truncated twice (max_tokens {CALL_PARAMS['max_tokens']}, "
-                                   f"then {LENGTH_RETRY_PARAMS['max_tokens']})")
-            params = LENGTH_RETRY_PARAMS
-            print(f"[llm] output truncated at {CALL_PARAMS['max_tokens']} tokens; one retry with "
-                  f"{LENGTH_RETRY_PARAMS['max_tokens']}", flush=True)
+            if params is retry:                        # never cache a truncated answer; never retry it again
+                raise RuntimeError(f"LLM output truncated twice (max_tokens {base['max_tokens']}, "
+                                   f"then {retry['max_tokens']})")
+            params = retry
+            print(f"[llm] output truncated at {base['max_tokens']} tokens; one retry with "
+                  f"{retry['max_tokens']}", flush=True)
             continue
         if content.strip():
             break

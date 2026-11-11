@@ -19,8 +19,8 @@ def fake_llm(monkeypatch, *answer_sets):
     """answer_sets[k] is what judgement k returns; one set is repeated for every judgement."""
     seen = []
 
-    def chat(messages, k, use_cache, prompt_version=None):
-        seen.append({"messages": messages, "version": prompt_version})
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        seen.append({"messages": messages, "version": prompt_version, "params": call_params})
         a = answer_sets[k if len(answer_sets) > 1 else 0]
         return {"content": json.dumps({"answers": a}), "served_model": "fake"}
     monkeypatch.setattr(CC.X, "_cached_chat", chat)
@@ -230,10 +230,17 @@ def test_no_test_case_material_in_the_prompt():
         assert word.lower() not in CC.SYSTEM.lower()
 
 
-def test_an_entry_that_cannot_change_is_not_checked(monkeypatch):
-    """Cost rule (2026-11-11): a conditional entry outside the avoidance section is skipped - every answer would
-    only keep it conditional. Applicable entries and avoidances with an open condition are checked."""
-    import inspect
-    from aitx.evidence import established as E
-    src = inspect.getsource(E._records)
-    assert "can_change" in src and "already conditional" in src
+
+def test_the_check_runs_with_low_reasoning_effort(monkeypatch):
+    seen = fake_llm(monkeypatch, answers(**{"1": ("yes", "")}))
+    CC.ask("h", "p", "pt", [{"id": "a", "text": "A?", "allowed": CC.YES_NO}])
+    assert seen[0]["params"]["reasoning_effort"] == "low" and seen[0]["params"]["response_format"]["type"] == "json_object"
+
+
+def test_cache_entries_with_other_parameters_are_not_reused():
+    from aitx.disease import extract as X
+    low = CC.CALL_PARAMS
+    assert X._cache_usable({"call_params": low, "served_model": "m"}, {"expect_model_prefix": ""}, low)
+    assert not X._cache_usable({"call_params": X.CALL_PARAMS, "served_model": "m"}, {"expect_model_prefix": ""}, low)
+    assert not X._cache_usable({"call_params": low, "served_model": "m"}, {"expect_model_prefix": ""})   # default callers
+    assert X._cache_usable({"call_params": X.retry_params(low), "served_model": "m"}, {"expect_model_prefix": ""}, low)
