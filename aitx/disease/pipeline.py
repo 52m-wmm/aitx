@@ -1,6 +1,7 @@
 """Step 2 assembly: one patient case -> DiseaseResolution (schema disease-resolution-v1)."""
 from __future__ import annotations
 
+from aitx import caseinput
 from aitx.disease import extract as X
 from aitx.disease import live
 from aitx.disease import resolve as R
@@ -71,7 +72,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     """step1: the case's step-1 VariantProfile output, if available (adds variant class / NMD to the evidence)."""
     pid = case["id"]
     genotype = case["patient"]["genotype"]
-    context = case["patient"].get("clinical_context", "")
+    context = caseinput.clinical_context(case)          # missing or empty: input error, never "" (fix plan O1)
     genes = sorted({v["gene"] for v in genotype})
 
     ext = extraction or X.extract(context, res.ont, use_cache=use_cache)
@@ -215,8 +216,8 @@ def _chk(name: str, ok: bool, detail: str = "", warn: bool = False) -> dict:
 
 
 def checks(out: dict, case: dict, res: R.Resources) -> list[dict]:
-    ctx = case["patient"].get("clinical_context", "")
-    allc = out["candidates"] + out["not_supported"]
+    ctx = caseinput.clinical_context(case)
+    allc =out["candidates"] + out["not_supported"]
     keys = {c["key"] for c in allc}
     res_ = []
     res_.append(_chk("datasets_complete", len(out["sources_manifest"]) == len(R.D.STEP2_DATASETS),

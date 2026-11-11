@@ -162,3 +162,23 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 ## 验收新鲜度（2026-11-05）
 
 验收脚本只给新鲜输出计分：代码指纹、病例输入指纹或上游输出指纹与当前不一致的病例判"过期"，不计分，整体不通过。规则见 3c 契约第 14 条，实现 `aitx/runmeta.py` 的 `freshness`。
+
+
+## 短缩写不得单独作为病名证据（2026-11-11，盲测后修复 N1）
+
+**规则**：大写短缩写（一个词、无小写字母、字母不超过 5 个，可含数字和连字符：LS、LSS、CMT、PH1、CHNG6、STISS）
+1. **不作为 CT.gov 检索词**：`query.cond` 只用前 3 个非缩写病名（原来是前 3 个病名，缩写也占名额）；
+2. **不单独作为相关依据**：只靠缩写命中的试验，同一记录的标题 / Conditions / Keywords 里还必须有全称（或长同义词），或者基因作为病人病因出现（`gene_names_condition`，癌症语境和标志物用法不算），才算相关；相关性记录里写 `corroborated_by`；
+3. 只靠缩写命中而被排除的试验，排除理由写明"only the short abbreviation 'X' matched …"。
+
+**起因**：盲测 LRPPRC（病名 Leigh syndrome / LS / LSS），10 条试验 9 条靠缩写进来——小细胞肺癌 "LS-SCLC"、HIV 抗体 "3BNC117-LS"、"Lumbar Spinal Stenosis (LSS)"（阅读规则 R10）。
+
+**影响（练习病例，缓存重跑 + DMD 1 次新映射调用）**：
+- DMD：已写出的试验 ROXA-BN-HD（NCT06917950）原来是靠关键词 "Bone Mineral Density (BMD)" 命中 Becker 分支的——**修掉了一条原有的写错**；腾出的名额由 "Duchenne Electronic Health Record Study"（NCT07609394）补上。
+- CFTR：两条原判"不符合"的试验（只靠 "CF" 命中）被排除。
+- NF1：22 个只靠 "NF1"（肿瘤突变）命中的肿瘤研究被排除，均未写出。
+- **召回代价**：只写缩写、不写全称的真实研究也会被排除——AGXT 的 Rare Kidney Stone Consortium 登记（只写 "PH1"）、DMD 的跌倒风险研究和瑞士神经肌肉病登记（只写 "DMD"）。三者原本都没写出（不在前 10 或未招募），报告不变，但召回会降。
+- 盲测 LRPPRC（缓存重放）：9 条无关试验不再被检索到；相关试验由 1 条变为 6 条（TTI-0102 和 5 个 Leigh 综合征登记 / 研究），原来被无关试验挤出了前 10。
+- 3a–3e 验收全部通过（30/30、8/8、7/7、8/8、5/5）。
+
+**审批**：B 类（排除原收入的试验），按盲测后修复计划 v1.0 已批准。测试：`tests/test_trial_abbrev.py`（24 条，含正反向）。

@@ -11,9 +11,11 @@ _spec.loader.exec_module(B)
 
 
 def test_the_builder_writes_the_field_the_pipeline_reads():
-    assert B.DESCRIPTION_FIELD == "clinical_context"
+    from aitx import caseinput
+    assert B.DESCRIPTION_FIELD == caseinput.FIELD == "clinical_context"
     for f in ("aitx/disease/pipeline.py", "aitx/evidence/patient_facts.py"):
-        assert 'get("clinical_context"' in (ROOT / f).read_text(), f
+        text = (ROOT / f).read_text()
+        assert "caseinput.clinical_context(case)" in text and 'get("clinical_context"' not in text, f
 
 
 def test_every_blind_case_has_a_nonempty_description_in_that_field():

@@ -116,23 +116,67 @@ def gene_names_condition(gene: str, entry: str, study: dict) -> bool:
     return not GC.cancer_context(whole) and not GC.biomarker_use(gene, entry)
 
 
+def is_abbrev(name: str) -> bool:
+    """A short upper-case abbreviation: one token, no lower-case letter, at most 5 letters (digits and hyphens
+    allowed): LS, LSS, CMT, PH1, CHNG6, STISS. Such a name never counts on its own (fix plan N1, 2026-11-11):
+    "LS" also stands for limited-stage lung cancer, an HIV antibody suffix, lumbar stenosis..."""
+    n = (name or "").strip()
+    return bool(re.fullmatch(r"[A-Z0-9][A-Z0-9\-]*", n)) and 1 <= sum(ch.isalpha() for ch in n) <= 5
+
+
+def corroboration(study: dict, names: list[str], gene: str) -> str | None:
+    """What else in the same record names this patient's disease: a full name (not an abbreviation) in the title,
+    a Condition or a Keyword, or the gene as the patient's condition. None when nothing does."""
+    full = [n for n in names if n and not is_abbrev(n)]
+    for text in [study.get("title") or ""] + list(study.get("conditions") or []) + list(study.get("keywords") or []):
+        for n in full:
+            if name_matches(n, text):
+                return n
+        if gene and gene_names_condition(gene, text, study):
+            return gene
+    return None
+
+
+def _names_entry(n: str, entry: str, study: dict, names: list[str], gene: str) -> tuple[bool, str | None]:
+    """(match, corroborated by) for one name and one entry; an abbreviation needs corroboration."""
+    if not name_matches(n, entry):
+        return False, None
+    if not is_abbrev(n):
+        return True, None
+    by = corroboration(study, names, gene)
+    return by is not None, by
+
+
 def relevance(study: dict, names: list[str], gene: str) -> dict | None:
-    """Which registry field names the branch disease or gene; None = not relevant (filtered)."""
+    """Which registry field names the branch disease or gene; None = not relevant (filtered). A short abbreviation
+    alone never makes a study relevant: the same record must also carry a full name or the gene (fix plan N1)."""
     for field in ("conditions", "keywords"):
         for entry in study[field]:
             for n in names:
-                if name_matches(n, entry):
-                    return {"by": "disease", "field": field, "entry": entry, "name": n}
+                ok, by = _names_entry(n, entry, study, names, gene)
+                if ok:
+                    rel = {"by": "disease", "field": field, "entry": entry, "name": n}
+                    return {**rel, "corroborated_by": by} if by else rel
             if gene and gene_names_condition(gene, entry, study):
                 return {"by": "gene", "field": field, "entry": entry, "name": gene}
+    return None
+
+
+def abbrev_only(study: dict, names: list[str]) -> str | None:
+    """The abbreviation a not-relevant study matched on its own, if any (for the exclusion reason)."""
+    for field in ("conditions", "keywords"):
+        for entry in study[field]:
+            for n in names:
+                if is_abbrev(n) and name_matches(n, entry):
+                    return n
     return None
 
 
 def specific(study: dict, names: list[str], gene: str) -> bool:
     """Every listed condition names the branch disease or gene (not a many-disease study)."""
     conds = study["conditions"]
-    return bool(conds) and all(any(name_matches(n, c) for n in names) or (gene and gene_names_condition(gene, c, study))
-                               for c in conds)
+    return bool(conds) and all(any(_names_entry(n, c, study, names, gene)[0] for n in names)
+                               or (gene and gene_names_condition(gene, c, study)) for c in conds)
 
 
 # ------------------------------------------------------------------ structured prefilter (contract step 3)
@@ -246,8 +290,12 @@ def plan_branch(names: list[str], gene: str | None, patient_age_months: float | 
     ineligible (open, relevant, registry age / sex / healthy-only rules the patient out -> not_applicable
     action with the registry field as the requirement; no LLM needed), excluded (not relevant, or
     another status; with the reason)."""
-    names = [n for n in dict.fromkeys(names) if n][:MAX_NAMES]
-    searches = [search({"query.cond": n}, use_cache=use_cache) for n in names]
+    names = [n for n in dict.fromkeys(names) if n]
+    # an abbreviation is never a search term on its own (fix plan N1): search with the first full names, match with
+    # those plus the abbreviations, which count only when the same record also carries a full name or the gene
+    search_names = [n for n in names if not is_abbrev(n)][:MAX_NAMES]
+    names = search_names + [n for n in names if is_abbrev(n)]
+    searches = [search({"query.cond": n}, use_cache=use_cache) for n in search_names]
     if gene:
         searches.append(search({"query.term": gene}, use_cache=use_cache))
     seen: dict[str, dict] = {}
@@ -258,7 +306,10 @@ def plan_branch(names: list[str], gene: str | None, patient_age_months: float | 
     for st in seen.values():
         rel = relevance(st, names, gene or "")
         if not rel:
-            excluded.append(_ex(st, "relevance", "no Condition or Keyword entry names the disease or gene"))
+            ab = abbrev_only(st, names)
+            excluded.append(_ex(st, "relevance", (
+                f"only the short abbreviation '{ab}' matched, and nothing else in the record names the disease or "
+                f"gene" if ab else "no Condition or Keyword entry names the disease or gene")))
         elif st["status"] not in OPEN:
             closed_rel.append(st)
         else:

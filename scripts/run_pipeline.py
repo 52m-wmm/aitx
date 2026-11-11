@@ -173,6 +173,13 @@ def main() -> int:
         from aitx import http
         http.FORCE_REFRESH.add("https://clinicaltrials.gov/")
     cases = load_cases(args.cases, args.ids, include_eval=args.eval_cases)
+    from aitx import caseinput
+    bad = caseinput.problems(cases)                 # before any step runs (fix plan O1, 2026-11-11)
+    if bad:
+        for m in bad:
+            print(f"[INPUT] {m}")
+        print(f"[INPUT] nothing run: {len(bad)} case(s) have no readable clinical description")
+        return caseinput.EXIT_CODE
     if args.eval_cases:
         print(f"[EVAL] including the evaluation cases: {sorted(set(c['id'] for c in cases) & eval_ids())}")
     return run(cases, args.from_step, args.to_step, not args.no_cache)

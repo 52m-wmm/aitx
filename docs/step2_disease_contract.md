@@ -387,3 +387,10 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
      输出 `grouping` 字段写明依据。(c) 其余宽泛概念在 3.0 作为伞状分支处理（展开、无法展开时标注、报告措辞上区分）。
    - **已实现**：18 个病例的诊断结论全部不变；被标为分组的 2 个候选（AITX-00011 MONDO:0020072、DMD MONDO:0016106）原本就未参与比较。
 2. **"ranked above N candidates"的计数**只计进入比较的候选（已实现；40001 由 4 改为 2）。
+
+
+## 病人描述读不到时报错停止（2026-11-11，盲测后修复 O1）
+
+病人描述只从 `patient.clinical_context` 读，统一经过 `aitx/caseinput.py` 的 `clinical_context(case)`：字段缺失、不是文本或只有空白时抛 `MissingDescription`，不再默认空串继续。`run_pipeline.py` 在跑任何一步之前先检查所有选中的病例，有问题就逐条打印 `[INPUT]` 并以退出码 5 结束（3 = 高峰时段，4 = 当日预算）。
+**起因**：盲测 B 组的病例文件把描述写成了 `clinical_description`，流水线读到空串，10 个病例在没有描述的情况下跑完，没有任何警告（`docs/blind_test_results.md` 事故一节）。
+测试：`tests/test_caseinput.py`（缺字段 / 错字段名 / 空串 / 空白 / None；`run_pipeline.py` 在第一步之前停下；仓库里所有病例文件都可读）。

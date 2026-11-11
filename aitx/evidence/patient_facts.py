@@ -16,6 +16,7 @@ from __future__ import annotations
 import re
 import time
 
+from aitx import caseinput
 from aitx.disease import extract as X
 from aitx.evidence import labs as LABS
 from aitx.evidence import ledger as LG
@@ -95,9 +96,7 @@ def verify(raw: list, text: str, table: dict | None = None) -> tuple[list[dict],
 
 def extract(case: dict, *, use_cache: bool = True) -> dict:
     """{facts, dropped, produced_by, source_text} for one case; cached with the LLM answer."""
-    text = (case.get("patient") or {}).get("clinical_context") or ""
-    if not text.strip():
-        return {"facts": [], "dropped": [], "produced_by": "code", "source_text": text}
+    text = caseinput.clinical_context(case)            # missing or empty: input error (fix plan O1)
     parsed, pb = _llm(text, use_cache)
     facts, dropped = verify(parsed.get("facts"), text)
     return {"facts": facts, "dropped": dropped, "produced_by": pb, "source_text": text}
