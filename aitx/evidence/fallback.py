@@ -98,9 +98,39 @@ NO_DISEASE_NAME = ("no disease name of four or more characters to search with: a
                    "(decision 2026-11-10)")
 
 
+_GENE_NAMES: dict[str, list[str]] = {}
+
+
+def gene_disease_names(gene: str | None) -> list[str]:
+    """Disorder names Orphanet and GenCC attach to the gene, plus "<gene>-related" (fix plan N2, 2026-11-11: the THRA
+    query had only MONDO / OMIM names, while the literature calls the disease "resistance to thyroid hormone alpha" -
+    Orphanet's name is "Resistance to thyroid hormone due to a mutation in thyroid hormone receptor alpha"). From the
+    step 2 datasets already on disk; the gene itself stays required in the query, so a broad group name never brings
+    in papers on its own."""
+    if not gene:
+        return []
+    if gene not in _GENE_NAMES:
+        from aitx.disease import datasets as D
+        from aitx.disease import sources as S
+        try:
+            labels = [a.disease_label for a in S.load_orphanet(D.ensure("orphanet_genes"), {gene})
+                      + S.load_gencc(D.ensure("gencc"), {gene})]
+        except (OSError, RuntimeError, KeyError, ValueError):
+            labels = []
+        out, seen = [], set()
+        for n in labels + [f"{gene}-related"]:
+            if n and n.lower() not in seen:
+                seen.add(n.lower())
+                out.append(n)
+        _GENE_NAMES[gene] = out
+    return _GENE_NAMES[gene]
+
+
 def literature_query(gene: str | None, names: list[str]) -> str | None:
     """The L3 query, or None when there is no disease name to require: a bare gene symbol never admits a paper
     on its own (audit after the 3b cancer-trial bug, 2026-11-10)."""
+    if any(n and len(n) >= 4 for n in names):           # the 2026-11-10 rule stands: no disease name, no search
+        names = list(dict.fromkeys(list(names) + gene_disease_names(gene)))
     dz = " OR ".join(f'"{n}"[tiab]' for n in names if n and len(n) >= 4)
     if not dz:
         return None
@@ -189,9 +219,18 @@ MGMT_HEADING = re.compile(r"treat|therap|manag|recommend|intervention|care|clini
                           r"conclusion", re.I)
 
 
-def text_for_llm(abstract: str, full_text: str, limit: int = 12000) -> str:
-    """Abstract, then the full text's sections - those whose heading is about treatment or management first - up to the
-    limit (2026-11-05: the first 12000 characters of a long review held only its introduction and genetics)."""
+def focus_hits(text: str, focus: list[str]) -> int:
+    """How often the patient's disease names or gene appear in `text` (whole words, any case)."""
+    return sum(len(re.findall(rf"(?<![A-Za-z0-9]){re.escape(t)}(?![A-Za-z0-9])", text or "", re.I))
+               for t in dict.fromkeys(x for x in (focus or []) if x and len(x) >= 3))
+
+
+def text_for_llm(abstract: str, full_text: str, limit: int = 12000, focus: list[str] | None = None) -> str:
+    """Abstract, then the full text's sections up to the limit, in this order: sections whose heading names the
+    patient's disease or gene, sections whose body does, then those whose heading is about treatment or management,
+    then the rest (2026-11-05: the first 12000 characters of a long review held only its introduction and genetics;
+    fix plan O2, 2026-11-11: a 35 000-character review of several neonatal lung diseases filled the window with
+    general sections and cut the ACDMPV one - ACDMPV and FOXF1 appeared 0 times in what the model saw)."""
     secs, cur = [], ["", []]
     for ln in (full_text or "").splitlines():
         if ln.startswith("## "):
@@ -200,7 +239,15 @@ def text_for_llm(abstract: str, full_text: str, limit: int = 12000) -> str:
         else:
             cur[1].append(ln)
     secs.append(cur)
-    ordered = [x for x in secs if MGMT_HEADING.search(x[0])] + [x for x in secs if not MGMT_HEADING.search(x[0])]
+    secs = [x for x in secs if x[0] or any(ln.strip() for ln in x[1])]     # no empty preamble piece
+    def rank(x):
+        head, body = x[0], "\n".join(x[1])
+        if focus and focus_hits(head, focus):
+            return 0
+        if focus and focus_hits(body, focus):
+            return 1 if MGMT_HEADING.search(head) else 2
+        return 3 if MGMT_HEADING.search(head) else 4
+    ordered = sorted(secs, key=rank)                       # stable: document order within each rank
     out = abstract or ""
     for title, lines in ordered:
         piece = (f"\n## {title}\n" if title else "\n") + "\n".join(lines)

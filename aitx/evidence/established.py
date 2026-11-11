@@ -1019,7 +1019,11 @@ def _literature(led, b, rec, put, step2, use_cache) -> None:
         text = " ".join(x for x in (p["abstract"], p["full_text"]) if x)
         if not text:
             continue
-        shown = F.text_for_llm(p["abstract"], p["full_text"])       # management sections first when the text is long
+        focus = names + [b.get("gene") or ""]
+        shown = F.text_for_llm(p["abstract"], p["full_text"], focus=focus)   # this disease's sections first (O2)
+        for rp in rec["literature"]["papers"]:     # 0 = the model never saw this disease in the article: visible
+            if rp.get("pmid") == p["pmid"]:
+                rp["window_focus_hits"] = F.focus_hits(shown, focus)
         parsed, llm = _llm(F.LIT_SYSTEM, f"Disease: {b['diagnosis']['label']}\nArticle PMID {p['pmid']}:\n{shown}",
                            use_cache, f"literature PMID {p['pmid']}")
         for it in parsed.get("items") or []:
