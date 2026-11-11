@@ -374,9 +374,17 @@
    "case": "BLIND-LRPPRC",
    "section": "off_label_expanded_access",
    "label": "idebenone",
-   "verdict": "unsure",
-   "note": "待确认先例病人的基因",
-   "at": 1794402565
+   "verdict": "wrong",
+   "note": "先例病人基因未说明，不能作为 LRPPRC 先例（R3）",
+   "at": 1794403359
+  },
+  "48245ac074b4": {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "Acti-Adult (NCT07136844)",
+   "verdict": "correct",
+   "note": "试验本身正确；另计一条小写错：缺失信息里出现只针对重症肌无力亚组的'血清阳性'（R12）",
+   "at": 1794403359
   }
  },
  "not_counted": {
@@ -418,5 +426,14 @@
    "at": "2026-11-11",
    "why": "表型为 0 是 B1 描述规则的局限（描述是 GeneReviews 第一段的病种定义，不是病人表现）；依赖表型的判定（L4、表型决定的适用 / 有条件、入组标准里的表型项）不计入统计"
   }
- }
+ },
+ "minor_wrong": [
+  {
+   "case": "BLIND-MPZ",
+   "section": "clinical_trial_eligibility",
+   "label": "Acti-Adult (NCT07136844)",
+   "at": "2026-11-11",
+   "note": "小写错：缺失信息里出现不相关的'血清阳性'——该标准只约束重症肌无力亚组（R12，修复计划 D2 第 2 点）"
+  }
+ ]
 }
