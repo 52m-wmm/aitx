@@ -22,6 +22,7 @@ from aitx import http
 from aitx.evidence import actions as A
 from aitx.evidence import established as E
 from aitx.evidence import fallback as F
+from aitx.evidence import genecontext as GC
 from aitx.evidence import labels as LB
 from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
@@ -355,7 +356,7 @@ _GENE_AFTER = (r"(?:\s*-\s*|\s+)" + _QUAL + r"(?:variants?|mutations?|pathogenic
                r"disorders?|disease|patients?|carriers?|individuals?|syndrome|child(?:ren)?|infants?|girls?|boys?|siblings?|famil\w*)\b"
                r"|(?:\s*,\s*[A-Z][A-Z0-9]+)*,?\s+(?:and|or)\s+[A-Z][A-Z0-9]+\s+(?:variants?|mutations?)\b")   # "GRIN2B, GRIN1 and GRIN2A variants"
 _GENE_BEFORE = r"\b(?:variants?|mutations?|carriers?|pathogenic variants?|patients?|individuals?|children)\s+(?:with\s+|in\s+|of\s+)?(?:a\s+|an\s+|the\s+)?(?:\w+\s+){0,2}"
-_CANCER = re.compile(r"\b(?:cancer|carcinoma|tumou?rs?|neoplas\w*|malignan\w*|leuka?emi\w*|lymphoma|metasta\w*|chemotherapy)\b", re.I)
+_CANCER = GC.CANCER        # shared with 3b since 2026-11-10 (genecontext)
 
 
 def gene_family(gene: str | None) -> str | None:

@@ -93,8 +93,17 @@ def best_tier(specs: list[dict]) -> str:
 
 # ------------------------------------------------------------------ L3: literature (PubMed abstracts + PMC OA)
 
-def literature_query(gene: str | None, names: list[str]) -> str:
+NO_DISEASE_NAME = ("no disease name of four or more characters to search with: a gene-symbol-only query could "
+                   "return papers where the gene is a tumour marker, so the literature tier is not searched "
+                   "(decision 2026-11-10)")
+
+
+def literature_query(gene: str | None, names: list[str]) -> str | None:
+    """The L3 query, or None when there is no disease name to require: a bare gene symbol never admits a paper
+    on its own (audit after the 3b cancer-trial bug, 2026-11-10)."""
     dz = " OR ".join(f'"{n}"[tiab]' for n in names if n and len(n) >= 4)
+    if not dz:
+        return None
     who = f"({gene}[tiab])" if gene else ""
     subject = " AND ".join(x for x in (who, f"({dz})" if dz else "") if x)
     types = " OR ".join(f'"{t}"[pt]' for t in PUB_TYPES)
@@ -109,6 +118,9 @@ def search_literature(gene: str | None, names: list[str]) -> dict:
     """{query, url, queried_at, count, papers: [{pmid, title, year, pub_types, pmc, oa, abstract, full_text}]}.
     Only abstracts and PMC open-access full text are fetched; nothing behind an access restriction (contract L3)."""
     q = literature_query(gene, names)
+    if q is None:
+        return {"query": None, "url": None, "queried_at": int(time.time()), "count": 0, "papers": [],
+                "skipped": NO_DISEASE_NAME}
     url = f"{EUTILS}/esearch.fcgi?" + urllib.parse.urlencode({"db": "pubmed", "retmode": "json", "sort": "relevance",
                                                                "retmax": N_PAPERS, "term": q})
     d = _get_json(url)["esearchresult"]

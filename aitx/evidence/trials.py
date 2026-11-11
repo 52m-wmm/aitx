@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import json
 import re
+
+from aitx.evidence import genecontext as GC
 import urllib.parse
 
 from aitx import http
@@ -104,6 +106,16 @@ def gene_matches(gene: str, text: str) -> bool:
     return re.search(rf"{g}\W{{1,3}}{ctx}\b|(?<![A-Za-z]){ctx}\W{{1,3}}(?:(?i:in|of)\W+)?{g}", text) is not None
 
 
+def gene_names_condition(gene: str, entry: str, study: dict) -> bool:
+    """A gene match counts only as the patient's genetic condition (decision 2026-11-10, blind test): never in a
+    cancer study, and never as a marker ("LRPPRC Positive" colorectal cancer). The same rule 3c has used for
+    precedents since 2026-11-05 (genecontext)."""
+    if not gene_matches(gene, entry):
+        return False
+    whole = " ".join([study.get("title") or ""] + list(study.get("conditions") or []) + list(study.get("keywords") or []))
+    return not GC.cancer_context(whole) and not GC.biomarker_use(gene, entry)
+
+
 def relevance(study: dict, names: list[str], gene: str) -> dict | None:
     """Which registry field names the branch disease or gene; None = not relevant (filtered)."""
     for field in ("conditions", "keywords"):
@@ -111,7 +123,7 @@ def relevance(study: dict, names: list[str], gene: str) -> dict | None:
             for n in names:
                 if name_matches(n, entry):
                     return {"by": "disease", "field": field, "entry": entry, "name": n}
-            if gene and gene_matches(gene, entry):
+            if gene and gene_names_condition(gene, entry, study):
                 return {"by": "gene", "field": field, "entry": entry, "name": gene}
     return None
 
@@ -119,7 +131,8 @@ def relevance(study: dict, names: list[str], gene: str) -> dict | None:
 def specific(study: dict, names: list[str], gene: str) -> bool:
     """Every listed condition names the branch disease or gene (not a many-disease study)."""
     conds = study["conditions"]
-    return bool(conds) and all(any(name_matches(n, c) for n in names) or (gene and gene_matches(gene, c)) for c in conds)
+    return bool(conds) and all(any(name_matches(n, c) for n in names) or (gene and gene_names_condition(gene, c, study))
+                               for c in conds)
 
 
 # ------------------------------------------------------------------ structured prefilter (contract step 3)

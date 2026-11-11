@@ -344,6 +344,52 @@ def row_cells(shown: str, quote: str) -> list[str] | None:
     return None
 
 
+# A column header that says which disorder (or gene, or subtype) a row is for. Kept narrow on purpose: a
+# "Manifestation/Concern" or "Condition" column is about the patient's problem, not about which disorder.
+_DISORDER_HEADER = re.compile(r"\b(?:disorders?|genes?|gene\(s\)|subtypes?|diseases?|genetic\s+cause)\b", re.I)
+OTHER_DISORDER_ROW = ("overview table row is for another disorder (its disorder column names neither this "
+                      "patient's gene nor this disease; fallback-chain contract: overview advice aimed at another "
+                      "specific disease is not used for this one; decision 2026-11-10)")
+
+
+def row_pairs(shown: str, quote: str) -> list[tuple[str, str]] | None:
+    """(header, cell) pairs of the table row whose cell holds `quote`; None when the quote is not in a row."""
+    for line in (shown or "").splitlines():
+        if line.startswith("Row ") and LG.quote_in(quote, line):
+            body = line.split(": ", 1)[1] if ": " in line else line
+            pairs = [(m.group(1).strip(), m.group(2)) for m in _CELL.finditer(body)]
+            if any(LG.quote_in(quote, c) for _, c in pairs):
+                return pairs
+    return None
+
+
+def row_for_other_disorder(shown: str, quote: str, genes: set[str], names: list[str]) -> str | None:
+    """The disorder a gene-family overview's table row is for, when that is not this patient's; else None.
+
+    Overview tables are often laid out one row per disorder, with the disorder (or gene, or subtype) in its own
+    column: Table 7 of the Leigh syndrome overview gives biotin and thiamine for "Biotin-thiamine-responsive
+    basal ganglia disease", coenzyme Q10 for "Primary coenzyme Q10 deficiency", the ketogenic diet for primary
+    PDH deficiency. The existing filter only looked for another gene SYMBOL, so a row naming another disorder by
+    its name passed and was offered to an LRPPRC patient, conditional on a disorder he cannot have (blind test,
+    2026-11-10). A row with no such column is left to the existing filter.
+    """
+    pairs = row_pairs(shown, quote)
+    if not pairs:
+        return None
+    cells = [c for h, c in pairs if _DISORDER_HEADER.search(h) and not LG.quote_in(quote, c)]
+    if not cells:
+        return None
+    cell = " ".join(cells)
+    for g in genes:
+        if g and re.search(rf"(?<![A-Za-z0-9]){re.escape(g)}(?![A-Za-z0-9])", cell):
+            return None
+    low = cell.lower()
+    for n in names:
+        if n and len(n) >= 4 and n.lower() in low:
+            return None
+    return cells[0][:120]
+
+
 PURPOSE_RULE = "purpose or mechanism clause is not a requirement (a requirement describes the patient; decision 2026-11-04)"
 BROADENING_RULE = ("broadening clause right after 'including / even in / also in / regardless of' widens who may receive it; "
                    "it is not a requirement (decision 2026-11-05)")
@@ -597,6 +643,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         tier = F.chapter_tier(nbk, step2)
         own_genes = {b.get("gene") for b in led.branches if b["id"] in branch_ids}
         ch_genes = GR.chapter_genes(nbk) if tier == "overview" else []
+        branch_names = [n for b in led.branches if b["id"] in branch_ids for n in disease_names(b, step2)]
         searches.append({"database": "genereviews", "endpoint": GR.BOOK_URL.format(nbk=nbk),
                          "query": f"{nbk} Management sections", "queried_at": acc_book, "n_results": len(secs)})
         if not secs:
@@ -658,6 +705,12 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
                 spec["tier_source"] = tier
+                if tier == "overview":            # a row of an overview table that is for another disorder
+                    other_row = row_for_other_disorder(shown.get(path, ""), it["quote"], own_genes, branch_names)
+                    if other_row:
+                        dropped_conditions.append({"text": it["quote"][:200], "action": name, "source": f"{nbk} {path}",
+                                                   "rule": f"{OTHER_DISORDER_ROW}: {other_row}"})
+                        continue
                 if tier == "overview":            # overview advice about another gene of the chapter is not for this one
                     sc = " | ".join(row_cells(shown.get(path, ""), it["quote"]) or []) or \
                         (GR.paragraph_scope(shown.get(path, ""), it["quote"]) or it["quote"])
