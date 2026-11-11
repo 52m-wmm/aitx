@@ -167,3 +167,12 @@ def test_same_action_cases_are_listed_not_scored(monkeypatch):
     assert r["n"] == 1 and r["unscored"] == [c["rule_id"] for c in same]
     assert r["false_pass"] == [] and r["accuracy"] == 1.0     # blocked as expected
     assert E.leaks(same) == []
+
+
+def test_valproate_polarity_pair_is_in_the_set():
+    E = _eval_module()
+    cases = {c["rule_id"]: c for c in json.loads(E.SET.read_text())["cases"]}
+    inv, ok = cases["CLAIM-RRM2B-VALPROATE-INVERTED"], cases["CLAIM-RRM2B-VALPROATE-CORRECT"]
+    assert inv["expected"] == "blocked" and ok["expected"] == "supported"        # reverse pair on the same quote
+    assert inv["claim"]["quotes"] == ok["claim"]["quotes"] == ["Valproic acid should be used only in exceptional circumstances."]
+    assert "极性反转" in inv["note"] and "极性反转" in ok["note"]

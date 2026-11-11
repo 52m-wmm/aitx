@@ -54,3 +54,7 @@ GeneReviews 有时只给一个外部清单而不点名药物（MPZ / CMT 总论�
 ## 写明来源更新日期（2026-11-11，盲测批次 3 发现）
 
 SNRNP200 的 RP 总论（NBK1417）说 Argus II 视网膜假体"已获 FDA 批准、在临床使用"，但该器械约 2019–2020 年已停产（审阅人核实）。报告逐字引用了过时的来源。**Step 4 每条引用都要写明来源的最后更新日期**（GeneReviews 章节的 "Last Update"、说明书版本日期、试验登记的最后更新），**器械 / 产品类条目尤其要写**，并在来源早于一定年限时提示"可能已过时，请核实是否仍在供应"。
+
+## 状态类标签写成具体动作（2026-11-11，盲测批次 4 发现）
+
+RRM2B 的禁忌条目标签是 "catabolism"，原文是 "Catabolism should be prevented by minimizing preoperative fasting and administering intravenous glucose perioperatively during prolonged anesthesia"。只写 "catabolism" 看不出要做什么。**Step 4 呈现时把这类"要避免的状态"写成具体动作**：缩短术前禁食；长时间麻醉时围手术期静脉给葡萄糖；条件写在动作后面。

@@ -89,6 +89,54 @@
    "verdict": "missed",
    "note": "系统性：L3 只用 MONDO/OMIM 病名检索，文献常用叫法 RTHα 不在同义词里，0 篇",
    "at": 1794397076
+  },
+  "6828341727f1": {
+   "case": "BLIND-RRM2B",
+   "section": "contraindications_precautions",
+   "label": "valproic acid",
+   "verdict": "wrong",
+   "note": "禁忌语境下例外从句极性反转：原文'只在特殊情况下使用'是避免的豁免，报告当成了触发条件",
+   "at": 1794397825
+  },
+  "4ecc089e467f": {
+   "case": "BLIND-RRM2B",
+   "section": "contraindications_precautions",
+   "label": "catabolism",
+   "verdict": "correct",
+   "note": "Step 4 写成具体动作（缩短术前禁食、长时间麻醉时静脉给葡萄糖）",
+   "at": 1794397825
+  },
+  "b6c7a659c3be": {
+   "case": "BLIND-RRM2B",
+   "section": "clinical_trial_eligibility",
+   "label": "None found",
+   "verdict": "unsure",
+   "note": "交召回评估",
+   "at": 1794397825
+  },
+  "1862ca361367": {
+   "case": "BLIND-RRM2B",
+   "section": "off_label_expanded_access",
+   "label": "None found",
+   "verdict": "unsure",
+   "note": "交召回评估",
+   "at": 1794397825
+  },
+  "m991e520d921": {
+   "case": "BLIND-PSMD12",
+   "section": "supportive_management",
+   "label": "early developmental intervention (L4 developmental delay)",
+   "verdict": "missed",
+   "note": "描述含全面发育迟缓、智力障碍，L4 应至少给出早期干预；根因是盲测病例文件把描述写在 clinical_description，流水线只读 clinical_context，描述为空",
+   "at": 1794397825
+  },
+  "md1571a6e68e": {
+   "case": "BLIND-GEMIN5",
+   "section": "supportive_management",
+   "label": "early developmental intervention (L4 developmental delay)",
+   "verdict": "missed",
+   "note": "同 PSMD12：描述含全面发育迟缓，L4 未触发；根因同上",
+   "at": 1794397825
   }
  }
 }

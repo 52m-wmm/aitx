@@ -551,6 +551,64 @@
      "quote": "Because of the concern of acceleration of retinal degeneration from short-wavelength light exposure, use of UV-A and UV-B blocking sunglasses is recommended."
     }
    ]
+  },
+  {
+   "gene": "RRM2B",
+   "collected_at": "2026-11-11",
+   "source": {
+    "nbk": "NBK195854",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK195854/"
+   },
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind batch 4: the contraindication was made conditional on 'exceptional circumstances', the exemption from avoiding valproic acid, which inverts it."
+   },
+   "identity": "1cc9b4a0b9719259a3555157321a802d16ac2628e9e318bdcdce2d643e49d106",
+   "kind": "claim",
+   "rule_id": "CLAIM-RRM2B-VALPROATE-INVERTED",
+   "expected": "blocked",
+   "note": "禁忌语境下例外从句极性反转：在禁忌 / 避免的语境里，'only in / unless / except' 引出的是避免的豁免，不是触发条件。报告把 'exceptional circumstances' 当成了禁忌的前提，意思正好反了。 这一条是报告的（反转的）读法，核查应判不支持。",
+   "claim": {
+    "topic": "valproic acid in mitochondrial DNA depletion syndrome 8a",
+    "items": [
+     "Valproic acid should be avoided in patients with mitochondrial DNA depletion syndrome 8a only when exceptional circumstances apply."
+    ],
+    "quotes": [
+     "Valproic acid should be used only in exceptional circumstances."
+    ],
+    "context_quotes": []
+   }
+  },
+  {
+   "gene": "RRM2B",
+   "collected_at": "2026-11-11",
+   "source": {
+    "nbk": "NBK195854",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK195854/"
+   },
+   "review": {
+    "decision": "wrong_in_report",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-11",
+    "reason": "Blind batch 4: the contraindication was made conditional on 'exceptional circumstances', the exemption from avoiding valproic acid, which inverts it."
+   },
+   "identity": "4342990a1d3d73211aa786c6495ebcdbb9b82e6a418a8659fe3b5b6db94565d6",
+   "kind": "claim",
+   "rule_id": "CLAIM-RRM2B-VALPROATE-CORRECT",
+   "expected": "supported",
+   "note": "禁忌语境下例外从句极性反转：在禁忌 / 避免的语境里，'only in / unless / except' 引出的是避免的豁免，不是触发条件。报告把 'exceptional circumstances' 当成了禁忌的前提，意思正好反了。 这一条是正确读法（反向对照），核查应判支持。",
+   "claim": {
+    "topic": "valproic acid in mitochondrial DNA depletion syndrome 8a",
+    "items": [
+     "Valproic acid should generally be avoided in patients with mitochondrial DNA depletion syndrome 8a; it may be used only in exceptional circumstances."
+    ],
+    "quotes": [
+     "Valproic acid should be used only in exceptional circumstances."
+    ],
+    "context_quotes": []
+   }
   }
  ]
 }
