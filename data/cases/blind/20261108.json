@@ -81,7 +81,7 @@
      "zygosity": "homozygous"
     }
    ],
-   "clinical_description": "Nuclear gene-encoded Leigh syndrome spectrum (LSS) is a continuum of progressive neurodegenerative disorders caused by abnormalities of mitochondrial energy generation. Onset of nuclear gene-encoded LSS is typically in infancy or early childhood with sudden neurodevelopmental regression. This decompensation is often associated with elevated lactate concentration in the blood and/or cerebrospinal fluid (CSF) following an intercurrent illness or metabolic challenge (e.g., surgery, anesthesia, prolonged fasting)."
+   "clinical_context": "Nuclear gene-encoded Leigh syndrome spectrum (LSS) is a continuum of progressive neurodegenerative disorders caused by abnormalities of mitochondrial energy generation. Onset of nuclear gene-encoded LSS is typically in infancy or early childhood with sudden neurodevelopmental regression. This decompensation is often associated with elevated lactate concentration in the blood and/or cerebrospinal fluid (CSF) following an intercurrent illness or metabolic challenge (e.g., surgery, anesthesia, prolonged fasting)."
   },
   "blind": {
    "group": "B1",
@@ -113,7 +113,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Charcot-Marie-Tooth (CMT) hereditary neuropathy refers to a group of disorders characterized by a chronic motor and sensory polyneuropathy, also known as hereditary motor and sensory neuropathy (HMSN)."
+   "clinical_context": "Charcot-Marie-Tooth (CMT) hereditary neuropathy refers to a group of disorders characterized by a chronic motor and sensory polyneuropathy, also known as hereditary motor and sensory neuropathy (HMSN)."
   },
   "blind": {
    "group": "B1",
@@ -145,7 +145,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Retinitis pigmentosa (RP) refers to a group of inherited disorders in which abnormalities of the photoreceptors (rods and cones) of the retina lead to progressive visual loss. RP is classified as nonsyndromic, or \"simple\" (not affecting other organs or tissues); syndromic (affecting other neurosensory systems such as hearing); or systemic (affecting multiple tissues). This overview focuses on nonsyndromic forms of RP."
+   "clinical_context": "Retinitis pigmentosa (RP) refers to a group of inherited disorders in which abnormalities of the photoreceptors (rods and cones) of the retina lead to progressive visual loss. RP is classified as nonsyndromic, or \"simple\" (not affecting other organs or tissues); syndromic (affecting other neurosensory systems such as hearing); or systemic (affecting multiple tissues). This overview focuses on nonsyndromic forms of RP."
   },
   "blind": {
    "group": "B1",
@@ -177,7 +177,7 @@
      "zygosity": "homozygous"
     }
    ],
-   "clinical_description": "RRM2B mitochondrial DNA maintenance defects (RRM2B-MDMD) are an important cause of both childhood- and adult-onset mitochondrial disease. To date, 78 individuals from 52 families with molecularly confirmed RRM2B-MDMD have been reported. In general, the clinical manifestations are similar in males and females."
+   "clinical_context": "RRM2B mitochondrial DNA maintenance defects (RRM2B-MDMD) are an important cause of both childhood- and adult-onset mitochondrial disease. To date, 78 individuals from 52 families with molecularly confirmed RRM2B-MDMD have been reported. In general, the clinical manifestations are similar in males and females."
   },
   "blind": {
    "group": "B1",
@@ -209,7 +209,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Individuals with pulmonary fibrosis typically present with shortness of breath with exertion and a dry cough. Disease onset during adulthood is most common, but onset can range over multiple decades. Most individuals with pulmonary fibrosis have had a history of smoking or fibrogenic environmental exposures [Borie et al 2016, Newton et al 2016, Salisbury et al 2020]."
+   "clinical_context": "Individuals with pulmonary fibrosis typically present with shortness of breath with exertion and a dry cough. Disease onset during adulthood is most common, but onset can range over multiple decades. Most individuals with pulmonary fibrosis have had a history of smoking or fibrogenic environmental exposures [Borie et al 2016, Newton et al 2016, Salisbury et al 2020]."
   },
   "blind": {
    "group": "B1",
@@ -241,7 +241,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Misalignment of the pulmonary veins; Alveolar capillary dysplasia; Patent ductus arteriosus"
+   "clinical_context": "Misalignment of the pulmonary veins; Alveolar capillary dysplasia; Patent ductus arteriosus"
   },
   "blind": {
    "group": "B2",
@@ -296,7 +296,7 @@
      "zygosity": "homozygous"
     }
    ],
-   "clinical_description": "Global developmental delay; Motor delay; Cerebellar atrophy; Delayed speech and language development"
+   "clinical_context": "Global developmental delay; Motor delay; Cerebellar atrophy; Delayed speech and language development"
   },
   "blind": {
    "group": "B2",
@@ -359,7 +359,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Macroglossia; Hypertelorism"
+   "clinical_context": "Macroglossia; Hypertelorism"
   },
   "blind": {
    "group": "B2",
@@ -407,7 +407,7 @@
      "zygosity": "heterozygous"
     }
    ],
-   "clinical_description": "Global developmental delay; Low-set ears; Mild intellectual disability; Intellectual disability"
+   "clinical_context": "Global developmental delay; Low-set ears; Mild intellectual disability; Intellectual disability"
   },
   "blind": {
    "group": "B2",
@@ -471,7 +471,7 @@
      "zygosity": "homozygous"
     }
    ],
-   "clinical_description": "Microcephaly; Hypotonia; Spastic tetraparesis; Cerebellar hypoplasia"
+   "clinical_context": "Microcephaly; Hypotonia; Spastic tetraparesis; Cerebellar hypoplasia"
   },
   "blind": {
    "group": "B2",

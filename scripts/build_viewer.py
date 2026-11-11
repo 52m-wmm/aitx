@@ -990,9 +990,9 @@ BLIND_CASES = ROOT / "data" / "cases" / "blind"       # data/cases/blind/<batch>
 BLIND_JUDGED = ROOT / "data" / "eval" / "blind"       # data/eval/blind/<batch>.json (the reviewer's verdicts)
 VERDICTS = ("correct", "wrong", "missed", "unsure")
 # blind-test groups (B1 split 2026-11-11: single-gene chapter vs overview only)
-BLIND_GROUP_ORDER = ["A", "B1-L1", "B1-L2", "B1", "B2"]
+BLIND_GROUP_ORDER = ["A", "B1-L1", "B1-L2", "B1", "B2", "not_counted"]
 BLIND_GROUP_LABEL = {"A": "A（Validator）", "B1-L1": "B1-L1 有专章", "B1-L2": "B1-L2 只有总论",
-                     "B1": "B1（未分）", "B2": "B2 无章节"}
+                     "B1": "B1（未分）", "B2": "B2 无章节", "not_counted": "不计入盲测率（已用于修复）"}
 
 
 def act_label(s: str) -> str:
@@ -1396,6 +1396,24 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
             return e(f"{v['rate']:.0%}") + f" <span class='muted'>({v.get('hit')}/{v.get('of')})</span>"
         return e(str(v))
 
+    not_counted = load_judged(batch).get("not_counted") or {}
+
+    def health(cid: str) -> str:
+        """Upstream health (decision 2026-11-11, after group B ran without its description): phenotypes present,
+        patient facts stated, diagnosis status from step 2. A zero (or no diagnosis) is shown in red."""
+        p = OUT / "step2" / f"{cid}.json"
+        if not p.exists():
+            return "<td colspan='3' class='muted'>—</td>"
+        s2 = json.loads(p.read_text())
+        n_ph = sum(1 for x in s2.get("phenotypes") or [] if x.get("status") == "present")
+        n_facts = sum(1 for f in (s2.get("patient_facts") or {}).values()
+                      if isinstance(f, dict) and f.get("quote"))
+        dx = (s2.get("primary") or {}).get("status") or ""
+
+        def cell(text, bad):
+            return f"<td class='fail'><b>{e(str(text))}</b></td>" if bad else f"<td>{e(str(text))}</td>"
+        return cell(n_ph, n_ph == 0) + cell(n_facts, n_facts == 0) + cell(dx or L("无", "none"), not dx)
+
     ov = []
     per_group: dict[str, dict] = {}
     for cid, m in (machine.get("cases") or {}).items():
@@ -1404,7 +1422,11 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
         n_wrong = sum(1 for j in mine if j["verdict"] == "wrong")
         n_missed = sum(1 for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed")
         g = groups.get(cid, "?")
-        t = per_group.setdefault(g, {"cases": 0, "ran": 0, "entries": 0, "machine": 0, "judged": 0, "wrong": 0,
+        if cid in not_counted:      # used for fixing during the freeze: shown, never counted in the blind rates
+            g_key = "not_counted"
+        else:
+            g_key = g
+        t = per_group.setdefault(g_key, {"cases": 0, "ran": 0, "entries": 0, "machine": 0, "judged": 0, "wrong": 0,
                                      "missed": 0})
         t["cases"] += 1
         if ran:
@@ -1415,12 +1437,17 @@ def blind_page(batch: str | None = None, live: bool = False) -> str:
             t["wrong"] += n_wrong
             t["missed"] += n_missed
         link_case = f"<a href='cases/{e(fn(cid))}#board'>{e(cid)}</a>" if ran else e(cid)
-        ov.append(f"<tr><td>{link_case}</td><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td>"
+        if cid in not_counted:
+            link_case += (f"<br><span class='warn' style='font-size:12px'>"
+                          f"{e(not_counted[cid].get('why') or L('不计入盲测率', 'not counted'))}</span>")
+        ov.append(f"<tr><td>{link_case}</td><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td>" + health(cid)
                   + (f"<td>{m.get('entries')}</td><td>{m.get('machine_wrong')}</td>"
                      f"<td>{n_wrong} <span class='muted'>({len(mine)}/{m.get('entries')} {L('已判', 'judged')})</span></td>"
                      f"<td>{n_missed}</td>" if ran else f"<td colspan='4' class='muted'>{L('未跑', 'not run')}</td>")
                   + "".join(f"<td>{recall_cell(cid, k)}</td>" for k in ("genereviews", "trials", "fda")) + "</tr>")
     overview = (f"<div class='wrap'><table><tr><th>{L('病例', 'Case')}</th><th>{L('组', 'Group')}</th>"
+                f"<th>{L('表型数', 'Phenotypes')}</th><th>{L('病人事实数', 'Patient facts')}</th>"
+                f"<th>{L('诊断状态', 'Diagnosis')}</th>"
                 f"<th>{L('写出条数', 'Entries')}</th><th>{L('机器写错', 'Machine wrong')}</th><th>{L('人工写错', 'Human wrong')}</th>"
                 f"<th>{L('漏写', 'Missed')}</th><th>{L('GeneReviews 覆盖率', 'GeneReviews coverage')}</th>"
                 f"<th>{L('试验召回率', 'Trial recall')}</th><th>{L('FDA 靶向召回率', 'FDA targeted recall')}</th></tr>"
@@ -1672,15 +1699,17 @@ def snapshots_index() -> None:
 # ----------------------------------------------------------------------- main
 
 def contexts() -> dict[str, str]:
-    """Clinical text per case: the case files, then any blind-test batch (data/cases/blind/<batch>.json), whose
-    cases carry their description as `clinical_description`."""
+    """Clinical text per case: the case files, then any blind-test batch (data/cases/blind/<batch>.json). Only
+    `clinical_context`, the field the pipeline reads."""
     from run_pipeline import CASE_FILES
     out = {}
     for f in list(CASE_FILES) + sorted(BLIND_CASES.glob("*.json")):
         if f.exists():
             for c in json.loads(f.read_text()):
                 pt = c.get("patient") or {}
-                out.setdefault(c["id"], pt.get("clinical_context") or pt.get("clinical_description") or "")
+                # the field the pipeline reads, and only that one: reading a second field here hid that group B
+                # ran without a description (2026-11-11)
+                out.setdefault(c["id"], pt.get("clinical_context") or "")
     return out
 
 

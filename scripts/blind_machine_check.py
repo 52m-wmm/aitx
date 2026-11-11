@@ -74,6 +74,26 @@ def id_kind(value: str) -> str | None:
     return None
 
 
+def configured_guideline_urls(path: Path | None = None) -> set[str]:
+    """URLs of the human-verified symptom guidelines (config/symptom_guidelines.json). A guideline has no accession,
+    so the pipeline cites it by this URL; the URL is the record (2026-11-11: the first L4 entry of the blind test,
+    IAP 2022 by its PDF URL, was flagged as unresolvable)."""
+    p = path or ROOT / "config" / "symptom_guidelines.json"
+    out: set[str] = set()
+
+    def walk(o):
+        if isinstance(o, dict):
+            if isinstance(o.get("url"), str):
+                out.add(o["url"])
+            for v in o.values():
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    walk(json.loads(p.read_text()) if p.exists() else {})
+    return out
+
+
 def check_quotes(led: dict) -> list[dict]:
     """Check 1: the ledger records, per evidence item, whether its quote was found verbatim."""
     out = []
@@ -137,10 +157,12 @@ def fact_resolves(value: str) -> tuple[bool, str]:
     return True, ""
 
 
-def check_records(led: dict, online: bool) -> list[dict]:
+def check_records(led: dict, online: bool, guideline_urls: set[str] | None = None) -> list[dict]:
     """Check 2: every cited id resolves - an external record by its shape (and with --online by fetching it),
-    an internal `pipeline_fact` pointer by walking it in the step output it names."""
+    an internal `pipeline_fact` pointer by walking it in the step output it names, a guideline by being one of the
+    configured guideline URLs (any other bare URL still fails)."""
     out, seen = [], set()
+    guideline_urls = configured_guideline_urls() if guideline_urls is None else guideline_urls
     for e in led.get("evidence", []):
         src = e.get("source") or {}
         if not src:
@@ -151,6 +173,8 @@ def check_records(led: dict, online: bool) -> list[dict]:
             if not ok:
                 out.append({"check": "record-resolvable", "evidence": e["id"], "section": e.get("section"),
                             "detail": why})
+            continue
+        if value in guideline_urls:
             continue
         kind = id_kind(value)
         if value and kind is None:

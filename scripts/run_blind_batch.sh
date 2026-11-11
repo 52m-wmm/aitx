@@ -1,7 +1,9 @@
 #!/bin/zsh
 # One blind-test batch: pipeline steps 1-3 for the named cases, then the machine check and the cost report.
 #
-#   scripts/run_blind_batch.sh [--at HH:MM] [--budget USD] BLIND-X BLIND-Y ...
+#   scripts/run_blind_batch.sh [--at HH:MM] [--budget USD | --batch-budget USD] [--from-step N] BLIND-X BLIND-Y ...
+#
+# --budget sets the day's cap; --batch-budget gives this batch its own amount on top of what the day has spent.
 #
 # --at waits until that US-Pacific clock time (today, or tomorrow if it has passed) before starting.
 # The whole script - the wait included - re-runs itself under `caffeinate -i`, so idle sleep cannot stall the wait
@@ -13,11 +15,13 @@ if [[ -z "${AITX_CAFFEINATED:-}" ]]; then
   AITX_CAFFEINATED=1 exec caffeinate -i "$0" "$@"
 fi
 cd "$(dirname "$0")/.."
-AT="" BUDGET="0.35" CASES=()
+AT="" BUDGET="0.35" PER_BATCH="" FROM=1 CASES=()
 while (( $# )); do
   case "$1" in
     --at) AT="$2"; shift 2;;
     --budget) BUDGET="$2"; shift 2;;
+    --batch-budget) PER_BATCH="$2"; shift 2;;   # this batch's own cap: the day's spend at start + this amount
+    --from-step) FROM="$2"; shift 2;;
     *) CASES+=(--case "$1"); shift;;
   esac
 done
@@ -36,9 +40,12 @@ print(int((t-now).total_seconds()))")
 fi
 export AITX_LLM_API_KEY="${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY not set}"
 export AITX_EXPECT_MODEL_PREFIX="deepseek-flash"
+if [[ -n "$PER_BATCH" ]]; then
+  BUDGET=$($P -c "import sys;sys.path.insert(0,'.');from aitx import budget;print(round(budget.spent_today()+$PER_BATCH,4))")
+fi
 export AITX_LLM_BUDGET_USD="$BUDGET"
-echo "=== blind batch start $(TZ=America/Los_Angeles date '+%a %H:%M')  $($P -c 'import sys;sys.path.insert(0,".");from aitx import budget;print(budget.left())')"
-$P scripts/run_pipeline.py "data/cases/blind/$BATCH.json" --from-step 1 --to-step 3 "${CASES[@]}" --offpeak-only
+echo "=== blind batch start $(TZ=America/Los_Angeles date '+%a %H:%M')  steps $FROM-3  $($P -c 'import sys;sys.path.insert(0,".");from aitx import budget;print(budget.left())')"
+$P scripts/run_pipeline.py "data/cases/blind/$BATCH.json" --from-step "$FROM" --to-step 3 "${CASES[@]}" --offpeak-only
 echo "PIPELINE EXIT $?"
 echo "=== machine check"
 $P scripts/blind_machine_check.py --batch "$BATCH"

@@ -18,6 +18,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 VALIDATION = ROOT / "data" / "cases" / "validation" / "phase1_hf_unseen_genes.json"
+# The field the pipeline reads (aitx/disease/pipeline.py, aitx/evidence/patient_facts.py) - the same one the official
+# and practice case files use. 2026-11-11: this script used to write "clinical_description", which the pipeline never
+# reads, so every group B case ran with an empty description (docs/blind_test_results.md).
+DESCRIPTION_FIELD = "clinical_context"
 
 CAVEATS = {
     "THRA": "HPO carries no frequency annotation for this disease, so the description fell back to HPO id order: "
@@ -72,14 +76,14 @@ def main() -> int:
                  "zygosity_rule": "from the GenCC mode of inheritance"}
         if case["group"] == "B1":
             text, where = chapter_phenotypes(case["chapters"][0])
-            patient["clinical_description"] = text
+            patient[DESCRIPTION_FIELD] = text
             blind.update(description_source="genereviews_verbatim", description_from=where,
                          chapters=case["chapters"])
             if not text:
                 notes.append(f"{cid}: no chapter text found ({where}); the case has no clinical description")
         else:
             ph = case["phenotypes"]
-            patient["clinical_description"] = ph["description"]
+            patient[DESCRIPTION_FIELD] = ph["description"]
             blind.update(description_source="synthetic_from_hpo", description_rule=ph["rule"],
                          phenotypes=[{k: p.get(k) for k in ("hpo_id", "label", "frequency_raw", "frequency_band",
                                                             "why", "counted_in")} for p in ph["chosen"]])
@@ -88,13 +92,17 @@ def main() -> int:
             notes.append(f"{cid}: {CAVEATS[g]}")
         cases.append({"id": cid, "patient": patient, "blind": blind})
 
+    empty = [c["id"] for c in cases if not str(c["patient"].get(DESCRIPTION_FIELD) or "").strip()]
+    if empty:                      # a case the pipeline would read as "no description" is never written
+        print(f"REFUSED: no {DESCRIPTION_FIELD} for {empty}")
+        return 2
     out = ROOT / "data" / "cases" / "blind" / f"{args.batch}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(cases, indent=1, ensure_ascii=False) + "\n")
     print(f"{len(cases)} cases -> {out.relative_to(ROOT)}")
     for c in cases:
         b = c["blind"]
-        desc = (c["patient"].get("clinical_description") or c["patient"].get("clinical_context") or "")
+        desc = c["patient"][DESCRIPTION_FIELD]
         print(f"  {b['group']} {c['id']:<16} {b['description_source']:<24} {desc[:84]}")
     if notes:
         print("\nnotes carried into the judging table:")
