@@ -1081,3 +1081,23 @@ def test_when_every_passage_is_limited_any_one_met_decides(monkeypatch):
     assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
     rec, _ = _status(monkeypatch, [NEWBORN, ADULT], None)
     assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+
+
+def test_a_label_decided_action_checks_only_its_first_passage(monkeypatch):
+    # 2026-11-12: checking the label passage as well gave a split subject answer and made lumasiran conditional
+    from aitx.evidence import context_check as CC
+    _cc(monkeypatch, limit_patient="no")
+    label_text = "B is indicated for the treatment of primary hyperoxaluria type 1 in patients 2 years and older."
+    monkeypatch.setattr(E, "context_passage", lambda spec: ("h", PASSAGE) if spec["src"]["type"] == "nbk"
+                        else ("label", label_text))
+    inner, seen = CC.X._cached_chat, []
+
+    def spy(messages, k, use_cache, prompt_version=None, call_params=None):
+        seen.append("label" if label_text in messages[-1]["content"] else "genereviews")
+        return inner(messages, k, use_cache, prompt_version, call_params)
+    monkeypatch.setattr(CC.X, "_cached_chat", spy)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _with_label(_found("existing_targeted_therapies")), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert set(seen) == {"genereviews"} and "other_passages" not in rec["context_check"]
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"

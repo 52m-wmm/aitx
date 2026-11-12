@@ -1202,6 +1202,12 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                     g[2].append(i)
                 else:
                     groups.append((h, psg, [i]))
+            if label_rules:
+                # the FDA label decides this drug's conditions (3a rule of 2026-11-04) and code has already matched its
+                # indication to the diagnosis: only the first passage is checked, as before per-passage checking
+                # (2026-11-12: checking the label passage too gave a split "is this about the disease?" and made
+                # lumasiran conditional for PH1); findings in the other passages would be notes only anyway
+                groups = groups[:1]
             ev_spec = {evs[i]["id"]: i for i in range(len(evs))}
             runs = []
             for gi, (header, passage, idx) in enumerate(groups):
