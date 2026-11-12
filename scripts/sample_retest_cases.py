@@ -47,6 +47,30 @@ FORM_END = re.compile(r"\b(Laboratory findings|MRI findings|Imaging findings|Neu
 DESCRIPTION_FIELD = "clinical_context"
 
 
+SHORT_FS = re.compile(r"^p\.\(?([A-Z][a-z]{2})(\d+)fs\)?$")
+
+
+def full_protein(v: dict) -> dict:
+    """ClinVar titles give a frameshift as "p.Leu438fs", which step 1 (like the official case files) does not take.
+    The full HGVS form is derived from the c. change on the same RefSeq transcript with the pipeline's own
+    translator, and accepted only when its first changed residue is the one ClinVar names (2026-11-12)."""
+    m = SHORT_FS.match(v.get("variant_protein") or "")
+    if not m:
+        return v
+    from aitx.variant.hgvs import parse_cdna
+    from aitx.variant.transcript import fetch_transcript
+    from aitx.variant.translate import retranslate
+    r = retranslate(fetch_transcript(v["transcript"]), parse_cdna(v["variant_cdna"]))
+    f = r.get("first_changed_aa") or {}
+    if r.get("status") != "computed" or not r.get("stop_position") or \
+            (f.get("reference"), str(f.get("position"))) != (m.group(1), m.group(2)):
+        raise SystemExit(f"cannot expand {v['variant_protein']} for {v['transcript']} {v['variant_cdna']}: {f}")
+    full = f"p.({f['reference']}{f['position']}{f['variant']}fsTer{r['stop_position'] - f['position'] + 1})"
+    return dict(v, variant_protein=full, variant_protein_clinvar=v["variant_protein"],
+                variant_protein_from="derived from the c. change on the RefSeq transcript (aitx.variant.translate); "
+                                     "first changed residue matches the ClinVar title")
+
+
 def earlier_blind_genes() -> dict[str, str]:
     out = {}
     for f in sorted((ROOT / "data" / "cases" / "blind").glob("*.json")):
@@ -110,6 +134,8 @@ def draw() -> list[dict]:
             if sub == "B2" and taken["B2"] == 1 and not b2_ad and rec["moi"] != AD:
                 continue                              # the second B2 case must be AD unless the first already is
             v = S.clinvar_variant(g)
+            if v is not None:
+                v = full_protein(v)
             if v is None:
                 skipped.append({"gene": g, "subgroup": sub, "why": "no Pathogenic coding variant with transcript and c."})
                 continue

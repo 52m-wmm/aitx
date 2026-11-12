@@ -69,7 +69,7 @@
      "gene": "CNNM4",
      "transcript": "NM_020184.4",
      "variant_cdna": "c.1312dup",
-     "variant_protein": "p.Leu438fs",
+     "variant_protein": "p.(Leu438ProfsTer9)",
      "zygosity": "homozygous"
     }
    ],
