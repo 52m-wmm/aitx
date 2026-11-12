@@ -1,6 +1,6 @@
 """Online acceptance for step 3.0 (evidence ledger skeleton; contract docs/step3_0_contract.md, section 9).
 
-  HARD  every case builds a ledger from the step 1/2 outputs on disk (STALE if they do not match) and all
+  HARD  every practice case builds a ledger from the step 1/2 outputs on disk (STALE if they do not match) and all
         ledger checks pass
   HARD  branches: at most 3, ambiguous practice cases keep several branches, umbrellas expanded or marked
   HARD  every background quote verified; every source link resolves (HTTP 200)
@@ -139,7 +139,9 @@ def main() -> int:
 
     print("== ledgers (HARD) ==")
     ledgers = {}
-    for case in load_cases(None, None):
+    # practice cases only (user decision 2026-11-12): rebuilding the blind group-A ledgers now runs the context check
+    # on them (about $0.11); their checker performance is measured by the blind machine check and the retest
+    for case in load_cases(ROOT / "data" / "cases" / "practice" / "official_examples.json", None):
         case = runmeta.version_of_output(1, case)   # the version it was run from (case file or blind batch)
         try:
             s1, h1 = runmeta.load_output(1, case)
