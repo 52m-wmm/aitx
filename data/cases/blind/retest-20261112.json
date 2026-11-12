@@ -1,0 +1,122 @@
+[
+ {
+  "id": "RETEST-EIF2B1",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "EIF2B1",
+     "transcript": "NM_001414.4",
+     "variant_cdna": "c.547G>T",
+     "variant_protein": "p.Val183Phe",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_context": "Childhood ataxia with central nervous system hypomyelination / vanishing white matter (CACH/VWM) should be suspected in individuals with the following clinical, laboratory, and imaging findings. Clinical findings Antenatal/early-infantile form: Oligohydramnios Intrauterine growth restriction Severe encephalopathy Microcephaly Contractures Cataract Pancreatitis Hepatosplenomegaly Renal hypoplasia Later-onset form: Initial motor and intellectual development is normal or mildly delayed. Neurologic deterioration has a chronic progressive or subacute course. Episodes of subacute deterioration may follow minor infection or minor head trauma and may lead to lethargy or coma. Truncal and appendicular ataxia Spasticity with increased tendon reflexes Peripheral nervous system is usually not involved. Optic atrophy may develop. Epilepsy may occur but is not the predominant sign of the disease"
+  },
+  "blind": {
+   "group": "B1-L1",
+   "gencc": {
+    "disease": "MONDO:0020507",
+    "disease_title": "leukoencephalopathy with vanishing white matter 1",
+    "moi": "Autosomal recessive",
+    "submitter": "ClinGen",
+    "omim": "OMIM:603896"
+   },
+   "clinvar": "VCV000217277",
+   "description_source": "genereviews_verbatim",
+   "description_from": "Diagnosis / Suggestive Findings",
+   "chapters": [
+    "NBK1258"
+   ]
+  }
+ },
+ {
+  "id": "RETEST-MERTK",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "MERTK",
+     "transcript": "NM_006343.3",
+     "variant_cdna": "c.1951C>T",
+     "variant_protein": "p.Arg651Ter",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_context": "Rod-cone dystrophy; Progressive visual loss; Nyctalopia; Constriction of peripheral visual field"
+  },
+  "blind": {
+   "group": "B1-L2",
+   "gencc": {
+    "disease": "MONDO:0013469",
+    "disease_title": "retinitis pigmentosa 38",
+    "moi": "Autosomal recessive",
+    "submitter": "G2P",
+    "omim": "OMIM:613862"
+   },
+   "clinvar": "VCV000005402",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "chapters": [
+    "NBK1417"
+   ]
+  }
+ },
+ {
+  "id": "RETEST-CNNM4",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "CNNM4",
+     "transcript": "NM_020184.4",
+     "variant_cdna": "c.1312dup",
+     "variant_protein": "p.Leu438fs",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_context": "Visual impairment; Yellow-brown discoloration of the teeth; Enamel agenesis; Photophobia"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0009007",
+    "disease_title": "Jalili syndrome",
+    "moi": "Autosomal recessive",
+    "submitter": "Ambry Genetics",
+    "omim": "OMIM:217080"
+   },
+   "clinvar": "VCV000002847",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "chapters": []
+  }
+ },
+ {
+  "id": "RETEST-TUBGCP6",
+  "patient": {
+   "genotype": [
+    {
+     "gene": "TUBGCP6",
+     "transcript": "NM_020461.4",
+     "variant_cdna": "c.4333_4334insT",
+     "variant_protein": "p.His1445fs",
+     "zygosity": "homozygous"
+    }
+   ],
+   "clinical_context": "Nystagmus; Seizure"
+  },
+  "blind": {
+   "group": "B2",
+   "gencc": {
+    "disease": "MONDO:0009624",
+    "disease_title": "microcephaly and chorioretinopathy 1",
+    "moi": "Autosomal recessive",
+    "submitter": "ClinGen",
+    "omim": "OMIM:251270"
+   },
+   "clinvar": "VCV000162402",
+   "description_source": "synthetic_from_hpo",
+   "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
+   "chapters": []
+  }
+ }
+]
