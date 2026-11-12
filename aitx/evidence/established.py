@@ -1186,51 +1186,98 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 led.note_missing(var, a["label"], r["text"][:120], "3a")
             lines.append(line)
         cc = None
-        main = next((i for i, sp in enumerate(a["specs"]) if sp["src"]["type"] in CONTEXT_SOURCES
-                     and evs[i]["status"] == "verified"), None)
-        if CC.ENABLED and main is not None:              # context check (fix plan, 2026-11-11): answers -> lines
-            header, passage = context_passage(a["specs"][main])
+        ctx = [i for i, sp in enumerate(a["specs"]) if sp["src"]["type"] in CONTEXT_SOURCES
+               and evs[i]["status"] == "verified"]
+        if CC.ENABLED and ctx:                           # context check (fix plan, 2026-11-11): answers -> lines
             br = by_id[branches[0]]
             patient = CC.patient_text(pf, br)
-            res = CC.ask(header, passage, patient,
-                         CC.questions_3a(section, a["label"], (br.get("diagnosis") or {}).get("label") or "", lines,
-                                         a["specs"][main]["quote"]),
-                         use_cache=use_cache)
-            # a drug whose FDA label decides its conditions (the 3a rule of 2026-11-04, above): what the check finds in
-            # another source's passage is kept as notes and changes nothing (fix 2026-11-12: a GeneReviews table row of
-            # another genotype had made ETI conditional for a F508del homozygous patient the label covers)
-            label_decides = label_rules and a["specs"][main]["src"]["type"] != "spl_setid"
-            followups = {}
+            disease = (br.get("diagnosis") or {}).get("label") or ""
+            # one check per passage (user decision 2026-11-12): an action merged from several passages (a newborn table
+            # and a table for all individuals) is checked on each; a limit belongs to its own passage only
+            groups: list[tuple[str, str, list[int]]] = []
+            for i in ctx:
+                h, psg = context_passage(a["specs"][i])
+                g = next((g for g in groups if g[1] == psg), None)
+                if g:
+                    g[2].append(i)
+                else:
+                    groups.append((h, psg, [i]))
+            ev_spec = {evs[i]["id"]: i for i in range(len(evs))}
+            runs = []
+            for gi, (header, passage, idx) in enumerate(groups):
+                # the first passage is asked about every condition (its questions, and their cached answers, are the
+                # ones of the one-passage check); each other passage about the conditions taken from it
+                own = lines if gi == 0 else [l for l in lines if ev_spec.get(l["requirement_evidence"]) in idx]
+                res = CC.ask(header, passage, patient,
+                             CC.questions_3a(section, a["label"], disease, own, a["specs"][idx[0]]["quote"]),
+                             use_cache=use_cache)
+                # a drug whose FDA label decides its conditions (the 3a rule of 2026-11-04): what the check finds in
+                # another source's passage is kept as notes and changes nothing (fix 2026-11-12: a GeneReviews table
+                # row of another genotype had made ETI conditional for a F508del homozygous patient the label covers)
+                decides = label_rules and a["specs"][idx[0]]["src"]["type"] != "spl_setid"
+                followups = {}
 
-            def followup(q):
-                r = CC.ask(header, passage, patient, CC.questions_limit(a["label"], q), use_cache=use_cache)
-                followups[q] = CC.summary(r)
-                return r["questions"][0]["final"]
-            checked, cc_notes = CC.decide_3a(res, lines, evs[main]["id"], passage, branches,
-                                             limit_followup=None if label_decides else followup)
-            cc = dict(CC.summary(res), notes=cc_notes, header=header, passage=passage)
-            if followups:
-                cc["limit_followup"] = followups
-            if label_decides:
-                cc["label_decides"] = True
-                cc["not_applied"] = [l["requirement"] for l in checked if l.get("context_check")]
-                cc["notes"] = cc_notes + ["not applied: the FDA label decides this drug's conditions"] if cc["not_applied"] \
-                    else cc_notes
+                def followup(q, header=header, passage=passage, followups=followups):
+                    r = CC.ask(header, passage, patient, CC.questions_limit(a["label"], q), use_cache=use_cache)
+                    followups[q] = CC.summary(r)
+                    return r["questions"][0]["final"]
+                checked, notes = CC.decide_3a(res, own, evs[idx[0]]["id"], passage, branches,
+                                              limit_followup=None if decides else followup)
+                part = dict(CC.summary(res), notes=notes, header=header, passage=passage)
+                if followups:
+                    part["limit_followup"] = followups
+                added = [l for l in checked if l.get("context_check") in ("scope", "limit")]
+                changed = {l["id"]: l for l in checked if l.get("context_check") in ("exemption", "degree")}
+                if decides:
+                    part["label_decides"] = True
+                    part["not_applied"] = [l["requirement"] for l in checked if l.get("context_check")]
+                    if part["not_applied"]:
+                        part["notes"] = notes + ["not applied: the FDA label decides this drug's conditions"]
+                runs.append({"part": part, "added": [] if decides else added, "changed": {} if decides else changed,
+                             "applied": not decides})
+            changed = {}
+            for r in runs:                       # an exemption / degree answer changes the line it was asked about
+                for lid, l in r["changed"].items():
+                    changed.setdefault(lid, l)
+            base = [dict(changed[l["id"]]) if l["id"] in changed else l for l in lines]
+            applied = [r for r in runs if r["applied"]]
+            if len(groups) == 1 or len(applied) <= 1:
+                decision = "one passage"
+                extra = [l for r in applied for l in r["added"]]
+            elif any(not r["added"] for r in applied):
+                decision = "a passage with no limit supports the action; other passages' limits kept as notes"
+                extra = []
+                for r in applied:
+                    if r["added"]:
+                        r["part"]["not_applied"] = [l["requirement"] for l in r["added"]]
+            elif any(l.get("alternative") for l in base):
+                decision = "every passage limited; table-row alternatives present, limits kept for all"
+                extra = [l for r in applied for l in r["added"]]
             else:
-                lines = checked
-                # an age-band limit is decided by code against the stated age (user decision 2026-11-12, ICH E11)
-                for l in lines:
-                    if l.get("context_check") != "limit":
-                        continue
-                    got = AB.limit_status(l["requirement"], pf, (br.get("diagnosis") or {}).get("label") or "")
-                    if got is None:
-                        continue
-                    st, fact, why = got
-                    l.update(patient_status=st, result=LG.requirement_result(l["kind"], st), patient_fact=fact,
-                             note=f"{l['note']} | {why}")
-                    cc_notes.append(why)
-                    if st == "unknown" and not fact.get("quote"):
-                        led.note_missing(variable_type("age"), a["label"], l["requirement"][:120], "3a")
+                decision = "every passage limited; each passage is an alternative (any one met decides)"
+                extra = [dict(l, alternative=f"passage {gi + 1}") for gi, r in enumerate(runs) if r["applied"]
+                         for l in r["added"]]
+            for j, l in enumerate(extra, len(base) + 1):
+                l["id"] = f"r{j}"
+            lines = base + extra
+            cc = dict(runs[0]["part"])
+            cc_notes = cc["notes"] = list(cc["notes"])
+            if len(groups) > 1:
+                cc["other_passages"] = [r["part"] for r in runs[1:]]
+                cc["passage_decision"] = decision
+            # an age-band limit is decided by code against the stated age (user decision 2026-11-12, ICH E11)
+            for l in lines:
+                if l.get("context_check") != "limit":
+                    continue
+                got = AB.limit_status(l["requirement"], pf, disease)
+                if got is None:
+                    continue
+                st, fact, why = got
+                l.update(patient_status=st, result=LG.requirement_result(l["kind"], st), patient_fact=fact,
+                         note=f"{l['note']} | {why}")
+                cc_notes.append(why)
+                if st == "unknown" and not fact.get("quote"):
+                    led.note_missing(variable_type("age"), a["label"], l["requirement"][:120], "3a")
             for l in lines:                # a degree the patient was not shown to reach is ordinary missing information
                 if l.get("context_check") == "degree":
                     var = variable_type((l.get("patient_fact") or {}).get("field") or "other")

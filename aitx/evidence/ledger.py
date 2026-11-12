@@ -368,8 +368,10 @@ class Ledger:
                     bad.append(f"{tag}: requirement {r['id']} unknown context-check kind {cc!r}")
                 if cc and not str(r.get("note") or "").count("context check:"):
                     bad.append(f"{tag}: requirement {r['id']} context-check line without its reason")
+                acc = a.get("context_check") or {}
+                passages = [acc.get("passage", "")] + [p.get("passage", "") for p in acc.get("other_passages") or []]
                 verbatim = quote_in(r["requirement"], str(ev.get("quote", ""))) or (
-                    cc == "limit" and quote_in(r["requirement"], str((a.get("context_check") or {}).get("passage", ""))))
+                    cc == "limit" and any(quote_in(r["requirement"], str(p)) for p in passages))
                 if ev.get("status") != "verified" or not (verbatim or cc == "scope"):
                     bad.append(f"{tag}: requirement {r['id']} not verbatim in verified evidence {r['requirement_evidence']}")
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
@@ -435,6 +437,8 @@ class Ledger:
                 for fu in (cc.get("limit_followup") or {}).values():
                     checks.extend(fu.get("call_ids") or [])
         add_check(a.get("context_check"))
+        for p in (a.get("context_check") or {}).get("other_passages") or []:
+            add_check(p)
         for p in (a.get("precedents") or []) + (a.get("supporting_precedents") or []):
             add_check(p.get("context_check"))
         return {"llm_calls": calls, "rules": sorted({e.get("retrieved_by") for e in evs if e.get("retrieved_by")}),

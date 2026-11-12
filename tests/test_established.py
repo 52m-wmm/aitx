@@ -1003,3 +1003,81 @@ def test_an_age_band_limit_is_decided_against_the_stated_age(monkeypatch, months
     assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
     if months is None:
         assert any(m["variable"] == "age" for m in led.missing_information)
+
+
+# --- merged actions are checked passage by passage (user decision 2026-11-12: CFTR airway clearance, laxatives, salt)
+
+NEWBORN = "Newborns: teach airway clearance to aid in mucus clearance."
+ALL = "Individuals with the disease: airway clearance to aid in mucus clearance."
+ADULT = "Adults: airway clearance to aid in mucus clearance."
+
+
+def _two_passages(monkeypatch, passages):
+    """One merged action whose specs come from the given passages; the check finds the age word that opens each
+    passage as its limit ('Individuals' passages have no limit)."""
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    by_quote = {}
+    specs = []
+    for n, psg in enumerate(passages):
+        src = {"type": "nbk", "id": "NBK1283", "url": "u", "section": f"Management / part {n}", "credit": "c"}
+        q = "airway clearance to aid in mucus clearance"
+        sp = E._spec(f"GeneReviews lists airway clearance ({n})", src, q, psg, 1)
+        sp["src"] = dict(src)
+        specs.append(sp)
+        by_quote[src["section"]] = psg
+    monkeypatch.setattr(E, "context_passage", lambda spec: (f"GeneReviews {spec['src']['section']}",
+                                                            by_quote[spec["src"]["section"]]))
+    asked = []
+
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        user = messages[-1]["content"]
+        psg = next(p for p in passages if p in user)
+        if "Is that the group, table row or genotype" in user:
+            return {"content": json.dumps({"answers": [{"q": 1, "answer": "not_stated", "quote": ""}]}), "served_model": "f"}
+        asked.append(psg)
+        word = psg.split(":")[0]
+        limit = ("no", "") if word.startswith("Individuals") else ("yes", word)
+        n = user.count(" Answers: ")
+        ans = [{"q": 1, "answer": "yes", "quote": ""}, {"q": 2, "answer": "this_disease_patients", "quote": ""},
+               {"q": 3, "answer": limit[0], "quote": limit[1]}] + [{"q": i, "answer": "yes", "quote": ""} for i in range(4, n + 1)]
+        return {"content": json.dumps({"answers": ans}), "served_model": "f"}
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+    return specs, asked
+
+
+def _status(monkeypatch, passages, months):
+    specs, asked = _two_passages(monkeypatch, passages)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("supportive_management", specs=specs, label="airway clearance",
+                           key="procedure:airway_clearance"),
+               dict(PF, age_months=months, age_quote="stated age"), [])
+    rec = next(x for x in led.actions if x["action_key"] == "procedure:airway_clearance")
+    assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
+    return rec, asked
+
+
+def test_a_general_passage_restores_the_action_a_newborn_passage_limited(monkeypatch):
+    rec, asked = _status(monkeypatch, [NEWBORN, ALL], 15 * 12)
+    assert set(asked) == {NEWBORN, ALL}                       # each passage checked
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert not [r for r in rec["requirements"] if r.get("context_check") == "limit"]
+    cc = rec["context_check"]
+    assert cc["passage_decision"].startswith("a passage with no limit") and cc["not_applied"] == ["Newborns"]
+    assert len(cc["other_passages"]) == 1 and cc["other_passages"][0]["call_ids"] is not None
+
+
+def test_reverse_a_newborn_only_action_stays_not_applicable(monkeypatch):
+    rec, asked = _status(monkeypatch, [NEWBORN], 15 * 12)
+    assert set(asked) == {NEWBORN} and rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+    assert "other_passages" not in rec["context_check"]
+
+
+def test_when_every_passage_is_limited_any_one_met_decides(monkeypatch):
+    rec, _ = _status(monkeypatch, [NEWBORN, ADULT], 40 * 12)
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert {r.get("alternative") for r in rec["requirements"] if r.get("context_check") == "limit"} == {"passage 1", "passage 2"}
+    rec, _ = _status(monkeypatch, [NEWBORN, ADULT], 7 * 12)
+    assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+    rec, _ = _status(monkeypatch, [NEWBORN, ADULT], None)
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
