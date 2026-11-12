@@ -22,6 +22,7 @@ from aitx.disease import datasets as D
 from aitx.disease import extract as X
 from aitx.disease.hpo import Ontology
 from aitx.evidence import actions as A
+from aitx.evidence import agebands as AB
 from aitx.evidence import context_check as CC
 from aitx.evidence import fallback as F
 from aitx.evidence import genereviews as GR
@@ -1217,6 +1218,19 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                     else cc_notes
             else:
                 lines = checked
+                # an age-band limit is decided by code against the stated age (user decision 2026-11-12, ICH E11)
+                for l in lines:
+                    if l.get("context_check") != "limit":
+                        continue
+                    got = AB.limit_status(l["requirement"], pf, (br.get("diagnosis") or {}).get("label") or "")
+                    if got is None:
+                        continue
+                    st, fact, why = got
+                    l.update(patient_status=st, result=LG.requirement_result(l["kind"], st), patient_fact=fact,
+                             note=f"{l['note']} | {why}")
+                    cc_notes.append(why)
+                    if st == "unknown" and not fact.get("quote"):
+                        led.note_missing(variable_type("age"), a["label"], l["requirement"][:120], "3a")
             for l in lines:                # a degree the patient was not shown to reach is ordinary missing information
                 if l.get("context_check") == "degree":
                     var = variable_type((l.get("patient_fact") or {}).get("field") or "other")

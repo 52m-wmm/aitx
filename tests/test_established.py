@@ -969,3 +969,37 @@ def test_reverse_an_unconfirmed_own_row_keeps_the_limit(monkeypatch, answer):
     E._records(led, _found("existing_targeted_therapies"), PF_FS, [])
     rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
     assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+
+
+# --- age-band limits (user decision 2026-11-12): unknown age -> conditional, inside -> applicable, outside -> not applicable
+
+def _cc_limit(monkeypatch, limit, passage):
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    monkeypatch.setattr(E, "context_passage", lambda spec: ("GeneReviews NBK1283", passage))
+
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        user = messages[-1]["content"]
+        if "Is that the group, table row or genotype" in user:
+            ans = [{"q": 1, "answer": "not_stated", "quote": ""}]
+        else:
+            n = user.count(" Answers: ")
+            ans = [{"q": 1, "answer": "yes", "quote": ""}, {"q": 2, "answer": "this_disease_patients", "quote": ""},
+                   {"q": 3, "answer": "yes", "quote": limit}] + [{"q": i, "answer": "yes", "quote": ""} for i in range(4, n + 1)]
+        return {"content": json.dumps({"answers": ans}), "served_model": "fake"}
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+
+
+@pytest.mark.parametrize("months,quote,want", [(None, None, "conditional"), (0.3, "a 9-day-old", "applicable"),
+                                               (84, "7-year-old", "not_applicable")])
+def test_an_age_band_limit_is_decided_against_the_stated_age(monkeypatch, months, quote, want):
+    _cc_limit(monkeypatch, "Newborns", "Newborns: pyridoxine (vitamin B6) for persons w/missense AGXT variants.")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("existing_targeted_therapies"), dict(PF, age_months=months, age_quote=quote), [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == want
+    (l,) = [r for r in rec["requirements"] if r.get("context_check") == "limit"]
+    assert "ICH E11" in l["note"] and "context check:" in l["note"]
+    assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
+    if months is None:
+        assert any(m["variable"] == "age" for m in led.missing_information)
