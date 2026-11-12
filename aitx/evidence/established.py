@@ -1072,7 +1072,15 @@ CONTEXT_SOURCES = ("nbk", "pmid", "spl_setid")      # L4 guidelines are human-ve
 
 def context_passage(spec: dict) -> tuple[str, str]:
     """(header, passage) the context check reads for one Tier 1 item: a GeneReviews table row with its table title,
-    or the paragraph, under the chapter title and section path; for an article or a label, the text around the quote."""
+    or the paragraph, under the chapter title and section path; for an article or a label, the text around the quote.
+    The first place the quote occurs; context_passages() gives every place."""
+    return context_passages(spec)[0]
+
+
+def context_passages(spec: dict) -> list[tuple[str, str]]:
+    """Every (header, passage) holding the item's quote, in section order (user decision 2026-11-12: the same row text
+    in a newborn table and in a table for all individuals - CFTR "Salt supplementationExtra salt & water ..." - is
+    two passages, each checked on its own; only the first had been read)."""
     src, quote = spec["src"], spec["quote"]
     if src["type"] == "nbk":
         nbk, path = src["id"], src.get("section") or ""
@@ -1082,18 +1090,21 @@ def context_passage(spec: dict) -> tuple[str, str]:
             except (OSError, KeyError, ValueError, RuntimeError):
                 _SHOWN[nbk] = {}
         lines = (_SHOWN[nbk].get(path) or "").splitlines()
+        found = []
         for i, ln in enumerate(lines):
             if LG.quote_in(quote, ln):
                 if ln.startswith("Row "):
                     title = next((lines[j] for j in range(i - 1, -1, -1) if not lines[j].startswith("Row ")), "")
                     ln = f"{title}\n{ln}" if title else ln
-                return f"GeneReviews {nbk} ({F.GR_title(nbk) or nbk}), section: {path}", ln
+                found.append((f"GeneReviews {nbk} ({F.GR_title(nbk) or nbk}), section: {path}", ln))
+        if found:
+            return found
     text = spec.get("source_text") or ""
     i = text.find(quote[:60]) if quote else -1
     lo, hi = (max(0, i - 1200), i + len(quote) + 1200) if i >= 0 else (0, 2400)
     head = text[:300] if lo > 300 else ""
     kind = {"pmid": "PubMed", "spl_setid": "FDA drug label", "nbk": "GeneReviews"}.get(src["type"], src["type"])
-    return f"{kind} {src.get('id')}", (head + "\n...\n" if head else "") + text[lo:hi]
+    return [(f"{kind} {src.get('id')}", (head + "\n...\n" if head else "") + text[lo:hi])]
 
 
 def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_cache: bool = True) -> None:
@@ -1196,12 +1207,12 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             # and a table for all individuals) is checked on each; a limit belongs to its own passage only
             groups: list[tuple[str, str, list[int]]] = []
             for i in ctx:
-                h, psg = context_passage(a["specs"][i])
-                g = next((g for g in groups if g[1] == psg), None)
-                if g:
-                    g[2].append(i)
-                else:
-                    groups.append((h, psg, [i]))
+                for h, psg in context_passages(a["specs"][i]):
+                    g = next((g for g in groups if g[1] == psg), None)
+                    if g:
+                        g[2].append(i)
+                    else:
+                        groups.append((h, psg, [i]))
             if label_rules:
                 # the FDA label decides this drug's conditions (3a rule of 2026-11-04) and code has already matched its
                 # indication to the diagnosis: only the first passage is checked, as before per-passage checking

@@ -894,6 +894,12 @@ def test_variant_class_fallback_refuses_negated_or_several_class_words(text):
 
 import json  # noqa: E402
 
+
+def _patch_passage(monkeypatch, fn):
+    """The passage(s) the context check reads: one per spec, given by fn."""
+    monkeypatch.setattr(E, "context_passage", fn)
+    monkeypatch.setattr(E, "context_passages", lambda spec: [fn(spec)])
+
 PASSAGE = "Pyridoxine (vitamin B6) for persons w/missense AGXT variants. Also given throughout pregnancy."
 
 
@@ -902,7 +908,7 @@ def _cc(monkeypatch, limit_patient=None):
     (asked only when given) answers limit_patient. Returns the list of follow-ups asked."""
     from aitx.evidence import context_check as CC
     monkeypatch.setattr(CC, "ENABLED", True)
-    monkeypatch.setattr(E, "context_passage", lambda spec: ("GeneReviews NBK1283", PASSAGE))
+    _patch_passage(monkeypatch, lambda spec: ("GeneReviews NBK1283", PASSAGE))
     asked = []
 
     def chat(messages, k, use_cache, prompt_version=None, call_params=None):
@@ -976,7 +982,7 @@ def test_reverse_an_unconfirmed_own_row_keeps_the_limit(monkeypatch, answer):
 def _cc_limit(monkeypatch, limit, passage):
     from aitx.evidence import context_check as CC
     monkeypatch.setattr(CC, "ENABLED", True)
-    monkeypatch.setattr(E, "context_passage", lambda spec: ("GeneReviews NBK1283", passage))
+    _patch_passage(monkeypatch, lambda spec: ("GeneReviews NBK1283", passage))
 
     def chat(messages, k, use_cache, prompt_version=None, call_params=None):
         user = messages[-1]["content"]
@@ -1026,7 +1032,7 @@ def _two_passages(monkeypatch, passages):
         sp["src"] = dict(src)
         specs.append(sp)
         by_quote[src["section"]] = psg
-    monkeypatch.setattr(E, "context_passage", lambda spec: (f"GeneReviews {spec['src']['section']}",
+    _patch_passage(monkeypatch, lambda spec: (f"GeneReviews {spec['src']['section']}",
                                                             by_quote[spec["src"]["section"]]))
     asked = []
 
@@ -1088,7 +1094,7 @@ def test_a_label_decided_action_checks_only_its_first_passage(monkeypatch):
     from aitx.evidence import context_check as CC
     _cc(monkeypatch, limit_patient="no")
     label_text = "B is indicated for the treatment of primary hyperoxaluria type 1 in patients 2 years and older."
-    monkeypatch.setattr(E, "context_passage", lambda spec: ("h", PASSAGE) if spec["src"]["type"] == "nbk"
+    _patch_passage(monkeypatch, lambda spec: ("h", PASSAGE) if spec["src"]["type"] == "nbk"
                         else ("label", label_text))
     inner, seen = CC.X._cached_chat, []
 
@@ -1101,3 +1107,49 @@ def test_a_label_decided_action_checks_only_its_first_passage(monkeypatch):
     rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
     assert set(seen) == {"genereviews"} and "other_passages" not in rec["context_check"]
     assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+
+
+
+# --- the same quote in several places is several passages (user decision 2026-11-12: CFTR salt supplementation)
+
+def test_every_place_a_row_text_occurs_is_a_passage(monkeypatch):
+    shown = ("Table 6a. Newborn with the disease: Treatment\n"
+             "Row 8: [Concern: Salt loss] [Treatment: Salt supplementation for salt loss]\n"
+             "Table 6b. Individuals with the disease: Treatment\n"
+             "Row 12: [Concern: Salt loss] [Treatment: Salt supplementation for salt loss]")
+    monkeypatch.setitem(E._SHOWN, "NBK9", {"Management / Supportive Care": shown})
+    monkeypatch.setattr(E.F, "GR_title", lambda nbk: "T")
+    spec = {"src": {"type": "nbk", "id": "NBK9", "section": "Management / Supportive Care"},
+            "quote": "Salt supplementation for salt loss"}
+    got = E.context_passages(spec)
+    assert [p.splitlines()[0] for _, p in got] == ["Table 6a. Newborn with the disease: Treatment",
+                                                  "Table 6b. Individuals with the disease: Treatment"]
+    assert E.context_passage(spec) == got[0]
+
+
+def test_reverse_a_quote_in_one_place_is_one_passage(monkeypatch):
+    shown = "Table 6a. Newborn: Treatment\nRow 2: [Treatment: Teach airway clearance]\nRow 3: [Treatment: Vaccinations]"
+    monkeypatch.setitem(E._SHOWN, "NBK9", {"Management / Supportive Care": shown})
+    monkeypatch.setattr(E.F, "GR_title", lambda nbk: "T")
+    spec = {"src": {"type": "nbk", "id": "NBK9", "section": "Management / Supportive Care"}, "quote": "Teach airway clearance"}
+    assert len(E.context_passages(spec)) == 1
+
+
+def test_one_quote_found_in_a_newborn_and_a_general_table_follows_the_general_one(monkeypatch):
+    specs, asked = _two_passages(monkeypatch, [NEWBORN, ALL])
+    monkeypatch.setattr(E, "context_passages", lambda spec: [("h6a", NEWBORN), ("h6b", ALL)])
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("supportive_management", specs=specs[:1], label="airway clearance",
+                           key="procedure:airway_clearance"), dict(PF, age_months=180, age_quote="15 y"), [])
+    rec = next(x for x in led.actions if x["action_key"] == "procedure:airway_clearance")
+    assert set(asked) == {NEWBORN, ALL} and rec["status_by_branch"]["b1"]["status"] == "applicable"
+
+
+def test_reverse_one_quote_only_in_a_newborn_table_stays_not_applicable(monkeypatch):
+    specs, asked = _two_passages(monkeypatch, [NEWBORN])
+    monkeypatch.setattr(E, "context_passages", lambda spec: [("h6a", NEWBORN)])
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("supportive_management", specs=specs, label="airway clearance",
+                           key="procedure:airway_clearance"), dict(PF, age_months=180, age_quote="15 y"), [])
+    rec = next(x for x in led.actions if x["action_key"] == "procedure:airway_clearance")
+    assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
