@@ -140,6 +140,7 @@ def main() -> int:
     print("== ledgers (HARD) ==")
     ledgers = {}
     for case in load_cases(None, None):
+        case = runmeta.version_of_output(1, case)   # the version it was run from (case file or blind batch)
         try:
             s1, h1 = runmeta.load_output(1, case)
             s2, _ = runmeta.load_output(2, case)

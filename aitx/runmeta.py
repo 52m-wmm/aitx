@@ -139,6 +139,20 @@ def case_versions(case_id: str, files=None) -> list[dict]:
     return out
 
 
+def version_of_output(step: int, case: dict, out: Path = OUT) -> dict:
+    """The version of `case` (same id, any case file or blind batch) whose fingerprint the step's output carries, or
+    `case` itself when none matches (load_output then reports it stale). For readers that score outputs whatever file
+    they were run from (fix 2026-11-12: the 3.0 acceptance checked the group-A blind cases against their validation-
+    file version although they had been run from the blind batch)."""
+    p = path(step, case["id"], out)
+    if p.exists():
+        have = (json.loads(p.read_text()).get("_meta") or {}).get("input_fingerprint")
+        for v in case_versions(case["id"]):
+            if fingerprint(v) == have:
+                return v
+    return case
+
+
 def find_case(case_id: str, files=CASE_FILES) -> dict | None:
     vs = case_versions(case_id, files)
     return vs[0] if vs else None

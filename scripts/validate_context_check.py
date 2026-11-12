@@ -56,6 +56,12 @@ EXPECT = {
     ("BLIND-MPZ", "PXT3003"): ("subject", "not_same"),
     ("BLIND-LRPPRC", "idebenone"): ("subject", "not_same"),
 }
+# limit follow-up cases (fix 2026-11-12): (case, section, label, limit words, expected answer) - the question alone is
+# scored, on a fresh practice ledger. CFTR F508del homozygous: the GeneReviews ETI row is another genotype's row.
+FOLLOWUP_EXPECT = [
+    ("PRAC-CFTR-F508del", "existing_targeted_therapies", "Elexacaftor/tezacaftor/ivacaftor",
+     "heterozygous for p.Phe508del & a minimal function variant 3 or other known responsive PV", "no"),
+]
 # judged wrong, but not what the context check is for - listed, not counted
 OUT_OF_SCOPE = {
     ("BLIND-SNRNP200", "UV-blocking sunglasses"): "the same action reworded in two sections (fix plan N3)",
@@ -137,7 +143,14 @@ def outcome(entry: dict, results: list[dict]) -> dict:
     if entry["section"] in S3A:
         c = results[0]
         a = c["action"]
-        lines, notes = CC.decide_3a(c["res"], a["requirements"], c["ev_id"], c["passage"], c["branches"])
+        c["followups"] = {}
+
+        def followup(q):                 # the limit follow-up the pipeline asks (fix 2026-11-12)
+            r = CC.ask(c["header"], c["passage"], c["patient"], CC.questions_limit(a["label"], q))
+            c["followups"][q] = CC.summary(r)["answers"]
+            return r["questions"][0]["final"]
+        lines, notes = CC.decide_3a(c["res"], a["requirements"], c["ev_id"], c["passage"], c["branches"],
+                                    limit_followup=followup)
         before = sorted({LG.status_of(a["requirements"], b)[0] for b in c["branches"]})
         after = sorted({LG.status_of(lines, b)[0] for b in c["branches"]})
         return {"status_before": before, "status_after": after, "notes": notes,
@@ -200,6 +213,19 @@ def main() -> int:
                      "answers": [CC.summary(c["res"])["answers"] for c in cs]})
         print(f"  {'CAUGHT' if hit and e['verdict'] == 'wrong' else 'missed' if e['verdict'] == 'wrong' else 'HARMED' if hit else 'ok'}"
               f"  {e['case']:15} {e['label'][:40]:40} {why}")
+    followup_rows = []
+    for case, section, label, limit, want in FOLLOWUP_EXPECT:
+        led, pf = ledger(case), facts(case)
+        a = action(led, section, label)
+        ev = {e["id"]: e for e in led["evidence"]}
+        main = next(ev[i] for i in a["evidence_ids"] if (ev[i].get("source") or {}).get("type") == "nbk")
+        header, passage = E.context_passage({"src": main["source"], "quote": main["quote"], "source_text": ""})
+        br = next(b for b in led["branches"] if b["id"] in a["applies_to"])
+        r = CC.ask(header, passage, CC.patient_text(pf, br), CC.questions_limit(label, limit))
+        got = r["questions"][0]
+        followup_rows.append({"case": case, "label": label, "limit": limit, "want": want, "final": got["final"],
+                              "answers": got["answers"], "hit": got["final"] == want})
+        print(f"  {'OK    ' if got['final'] == want else 'MISSED'}  follow-up {case} {label}: {got['answers']} (want {want})")
     wrong = [r for r in rows if r["verdict"] == "wrong"]
     corr = [r for r in rows if r["verdict"] == "correct"]
     caught, harmed = sum(r["hit"] for r in wrong), sum(r["hit"] for r in corr)
@@ -216,7 +242,7 @@ def main() -> int:
                                    "subjects": [p["subject"] for p in r["outcome"].get("precedents") or []]} for r in caveats],
            "harm_measure": "status changed or precedent dropped (decision 2026-11-11)",
            "cost": cost, "pass": bool(wrong and corr and caught / len(wrong) >= 0.8 and harmed / len(corr) <= 0.05),
-           "rows": rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
+           "rows": rows, "followup_cases": followup_rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False))
     print(f"\ncaught {caught}/{len(wrong)} ({res['caught_rate']}), harmed {harmed}/{len(corr)} ({res['harmed_rate']}), "
           f"caveats added to correct entries without a status change: {len(caveats)}")

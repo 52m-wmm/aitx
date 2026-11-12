@@ -888,3 +888,84 @@ def test_variant_class_fallback_refuses_negated_or_several_class_words(text):
     for cls in ("frameshift", "missense"):
         pf = dict(PF, variants=[dict(PF["variants"][0], **{"class": cls})])
         assert E.evaluate(req, pf, BR)[0] == "unknown"
+
+
+# --- context check and the label rule (fix 2026-11-12: CFTR ETI made conditional by another genotype's table row)
+
+import json  # noqa: E402
+
+PASSAGE = "Pyridoxine (vitamin B6) for persons w/missense AGXT variants. Also given throughout pregnancy."
+
+
+def _cc(monkeypatch, limit_patient=None):
+    """Context check on, passage fixed; the main check finds the limit 'missense AGXT variants'; the follow-up
+    (asked only when given) answers limit_patient. Returns the list of follow-ups asked."""
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    monkeypatch.setattr(E, "context_passage", lambda spec: ("GeneReviews NBK1283", PASSAGE))
+    asked = []
+
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        user = messages[-1]["content"]
+        if "Is that the group, table row or genotype" in user:
+            asked.append(user)
+            ans = [{"q": 1, "answer": limit_patient, "quote": ""}]
+        else:
+            n = user.count(" Answers: ")
+            ans = [{"q": 1, "answer": "yes", "quote": ""}, {"q": 2, "answer": "this_disease_patients", "quote": ""},
+                   {"q": 3, "answer": "yes", "quote": "missense AGXT variants"}] + \
+                  [{"q": i, "answer": "yes", "quote": ""} for i in range(4, n + 1)]
+        return {"content": json.dumps({"answers": ans}), "served_model": "fake"}
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+    return asked
+
+
+def _with_label(found):
+    a = found["drug:rxcui:684879"]
+    lsrc = {"type": "spl_setid", "id": "0b0e8c5a-1111-2222-3333-444455556666", "url": "u", "version": "3",
+            "effective_date": "20250101", "brand": "B"}
+    ltext = "B is indicated for the treatment of primary hyperoxaluria type 1 in patients 2 years and older."
+    a["specs"].append(dict(E._spec("B label indicated", lsrc, ltext, ltext, 1), label_section="existing_targeted_therapies"))
+    a["reqs"].append({"kind": "label_condition", "text": "2 years and older", "field": "age", "op": ">=", "value": 2,
+                      "unit": "year", "spec": E._spec("B label requirement", lsrc, "2 years and older", ltext, 1)})
+    return found
+
+
+def test_when_the_label_decides_a_limit_from_genereviews_is_a_note_only(monkeypatch):
+    asked = _cc(monkeypatch, limit_patient="no")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _with_label(_found("existing_targeted_therapies")), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable"
+    assert [r["requirement"] for r in rec["requirements"]] == ["2 years and older"]
+    assert rec["context_check"]["label_decides"] and rec["context_check"]["not_applied"] == ["missense AGXT variants"]
+    assert asked == []                                      # no follow-up needed: nothing would be applied
+
+
+def test_reverse_without_a_label_the_limit_still_makes_the_entry_conditional(monkeypatch):
+    asked = _cc(monkeypatch, limit_patient="no")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("existing_targeted_therapies"), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+    assert [r.get("context_check") for r in rec["requirements"]] == ["limit"]
+    assert len(asked) == 3 and "label_decides" not in rec["context_check"]
+
+
+def test_a_limit_that_is_the_patients_own_row_is_kept_as_a_note(monkeypatch):
+    _cc(monkeypatch, limit_patient="yes")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("existing_targeted_therapies"), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "applicable" and rec["requirements"] == []
+    assert any("patient's own row" in n for n in rec["context_check"]["notes"])
+    assert "missense AGXT variants" in rec["context_check"]["limit_followup"]
+
+
+@pytest.mark.parametrize("answer", ["not_stated", "no"])
+def test_reverse_an_unconfirmed_own_row_keeps_the_limit(monkeypatch, answer):
+    _cc(monkeypatch, limit_patient=answer)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("existing_targeted_therapies"), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"

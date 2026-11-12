@@ -1190,12 +1190,33 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
         if CC.ENABLED and main is not None:              # context check (fix plan, 2026-11-11): answers -> lines
             header, passage = context_passage(a["specs"][main])
             br = by_id[branches[0]]
-            res = CC.ask(header, passage, CC.patient_text(pf, br),
+            patient = CC.patient_text(pf, br)
+            res = CC.ask(header, passage, patient,
                          CC.questions_3a(section, a["label"], (br.get("diagnosis") or {}).get("label") or "", lines,
                                          a["specs"][main]["quote"]),
                          use_cache=use_cache)
-            lines, cc_notes = CC.decide_3a(res, lines, evs[main]["id"], passage, branches)
+            # a drug whose FDA label decides its conditions (the 3a rule of 2026-11-04, above): what the check finds in
+            # another source's passage is kept as notes and changes nothing (fix 2026-11-12: a GeneReviews table row of
+            # another genotype had made ETI conditional for a F508del homozygous patient the label covers)
+            label_decides = label_rules and a["specs"][main]["src"]["type"] != "spl_setid"
+            followups = {}
+
+            def followup(q):
+                r = CC.ask(header, passage, patient, CC.questions_limit(a["label"], q), use_cache=use_cache)
+                followups[q] = CC.summary(r)
+                return r["questions"][0]["final"]
+            checked, cc_notes = CC.decide_3a(res, lines, evs[main]["id"], passage, branches,
+                                             limit_followup=None if label_decides else followup)
             cc = dict(CC.summary(res), notes=cc_notes, header=header, passage=passage)
+            if followups:
+                cc["limit_followup"] = followups
+            if label_decides:
+                cc["label_decides"] = True
+                cc["not_applied"] = [l["requirement"] for l in checked if l.get("context_check")]
+                cc["notes"] = cc_notes + ["not applied: the FDA label decides this drug's conditions"] if cc["not_applied"] \
+                    else cc_notes
+            else:
+                lines = checked
             for l in lines:                # a degree the patient was not shown to reach is ordinary missing information
                 if l.get("context_check") == "degree":
                     var = variable_type((l.get("patient_fact") or {}).get("field") or "other")

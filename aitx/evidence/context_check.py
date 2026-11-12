@@ -168,9 +168,24 @@ def questions_3a(section: str, action: str, disease: str, lines: list[dict], quo
     return qs
 
 
-def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: list[str]) -> tuple[list[dict], list[str]]:
+def questions_limit(action: str, limit: str) -> list[dict]:
+    """Follow-up, asked only when the limit question found a limit (fix 2026-11-12, user decision): is the limit the
+    patient's own row / genotype? A separate call, so the questions of every other entry - and their cached answers -
+    stay as they were. (CFTR F508del homozygous: the GeneReviews ETI row "heterozygous for p.Phe508del & a minimal
+    function variant" is another genotype's row.)"""
+    return [{"id": "limit_patient", "allowed": YES_NO,
+             "text": f"The passage limits the advice about '{action}' to patients described by \"{limit}\". Is that the "
+                     f"group, table row or genotype this patient belongs to, as the patient information shows it (for "
+                     f"example the same variant and zygosity)? Answer no if the patient belongs to another row or "
+                     f"genotype, not_stated if the patient information does not say."}]
+
+
+def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: list[str],
+              limit_followup=None) -> tuple[list[dict], list[str]]:
     """New requirement lines from the answers, and the notes explaining them. Only ever moves an entry towards
-    "conditional" - except an unanimous exemption, which stops that condition deciding the avoidance (fix plan S3)."""
+    "conditional" - except an unanimous exemption, which stops that condition deciding the avoidance (fix plan S3).
+    `limit_followup(quote) -> final answer` asks questions_limit for a limit found: a unanimous "yes" (the limit is
+    the patient's own row or genotype, shown by the patient information) keeps it as a note instead of a line."""
     by = {q["id"]: q for q in res.get("questions", [])}
     out, notes = [dict(l) for l in lines], []
     n = len(out)
@@ -198,7 +213,10 @@ def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: 
     if lim.get("final") == "yes":                       # unanimous only: a 2-of-3 split had made "In the US" a limit
         q = next((x for x in lim.get("quotes") or [] if LG.quote_in(x, passage)), None)
         if q and not any(LG._norm(q) == LG._norm(l["requirement"]) for l in out):
-            add(q, "the passage limits this advice to some patients", "limit")
+            if limit_followup is not None and limit_followup(q) == "yes":
+                notes.append(f"limit '{q[:80]}' is the patient's own row or genotype: kept as a note")
+            else:
+                add(q, "the passage limits this advice to some patients", "limit")
     for qid, q in by.items():
         if qid.startswith("exemption:") and q["final"] == "yes":
             for l in out:

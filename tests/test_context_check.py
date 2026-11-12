@@ -275,3 +275,34 @@ def test_cache_entries_with_other_parameters_are_not_reused():
     assert not X._cache_usable({"call_params": X.CALL_PARAMS, "served_model": "m"}, {"expect_model_prefix": ""}, low)
     assert not X._cache_usable({"call_params": low, "served_model": "m"}, {"expect_model_prefix": ""})   # default callers
     assert X._cache_usable({"call_params": X.retry_params(low), "served_model": "m"}, {"expect_model_prefix": ""}, low)
+
+
+# --- limit follow-up (fix 2026-11-12): is the limit the patient's own row or genotype?
+
+def test_limit_followup_yes_keeps_the_limit_as_a_note():
+    passage = "Approved for persons heterozygous for variant A & a minimal function variant."
+    asked = []
+    out, notes = CC.decide_3a(_res(subject="yes", limit=("yes", "heterozygous for variant A")), [], "ev1", passage,
+                              ["B"], limit_followup=lambda q: asked.append(q) or "yes")
+    assert out == [] and asked == ["heterozygous for variant A"] and "own row" in notes[-1]
+
+
+@pytest.mark.parametrize("answer", ["no", "not_stated", "split"])
+def test_reverse_limit_followup_otherwise_adds_the_limit(answer):
+    passage = "Approved for persons heterozygous for variant A & a minimal function variant."
+    out, _ = CC.decide_3a(_res(subject="yes", limit=("yes", "heterozygous for variant A")), [], "ev1", passage, ["B"],
+                          limit_followup=lambda q: answer)
+    assert [l["context_check"] for l in out] == ["limit"]
+
+
+def test_limit_followup_is_not_asked_without_a_limit():
+    asked = []
+    CC.decide_3a(_res(subject="yes", limit=("no", "")), [], "ev1", "Some passage.", ["B"],
+                 limit_followup=lambda q: asked.append(q) or "yes")
+    assert asked == []
+
+
+def test_limit_followup_question_names_no_test_material():
+    text = CC.questions_limit("drug X", "limit words")[0]["text"].lower()
+    for word in ("phe508del", "cftr", "elexacaftor", "minimal function"):
+        assert word not in text
