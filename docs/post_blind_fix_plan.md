@@ -272,3 +272,18 @@
 
 
 **2026-11-12 同一引文多处出现（用户决定）**：`context_passages()` 返回引文出现的每一处（表格行连同表头，或段落）；按段落核查时每一处都是一个段落（第一处与原来相同、缓存可复用）。测试：同一行文本在新生儿表与通用表 → 两个段落、按通用表判定；只在新生儿表 → 仍不适用；只出现一处 → 一个段落。只读缓存演练：AGXT ×2、CFTR、DMD 共 96 次新调用（其余 8 例不变）。
+
+## 4 例复测（retest-20261112，2026-11-12 周四 07:28–07:56，非高峰，一次性例外）
+
+样本：EIF2B1（专章 L1，隐性纯合）、PFN1（总论 L2，ALS 总论 NBK1450，显性杂合）、CNNM4（无章节，隐性纯合）、THPO（无章节，显性杂合）；抽样规则与调整见 `out/blind/retest-20261112/sample.json` 和 `scripts/sample_retest_cases.py`。ClinVar 标题里的短写移码 `p.Leu438fs` 第一次试跑在 Step 1 报错（解析不支持），抽样工具改为由 c. 推出完整 HGVS `p.(Leu438ProfsTer9)` 并与 ClinVar 残基核对后重跑。
+费用：CNNM4 \$0.0029、EIF2B1 \$0.0567、THPO \$0.0018、PFN1 \$0.0916，合计 \$0.153；连同补盐修复 \$0.059，本次例外共 \$0.212（上限 \$0.60）。
+机器检查：113 条全部待人工判定，机器判写错 0（原报 4 条是检查工具把上下文核查的"限定"行当缺失信息，工具已修，见 `tests/test_blind_machine_check.py`）。THPO / PFN1 的 Step 2 标"失败"只因一条 warn（候选病缺 MONDO），无失败检查项。
+审阅表：`docs/retest_20261112_review.md`（由 `scripts/retest_report.py` 生成）。
+
+**我的初步观察（待用户判定，不算判定）**：
+- PFN1 支持治疗里 13 条"适用"的补充剂 / 抗氧化剂（维生素 E / C / B、硒、锌、辅酶 Q10、人参、银杏、Maharishi Amrit Kalesh、β-胡萝卜素、N-乙酰半胱氨酸、L-蛋氨酸、司来吉兰）来自原文"Individuals with ALS commonly supplement their diets with …"和 Cochrane 综述"significant differences … were not identified"——是描述常见用法和无效试验，不是推荐；核查器 3 票都答"针对本病、证据来自本病病人、无限定"，没有问"这是推荐吗"。疑似 Tier 1 写错，新类型（描述用法 / 报告无效 ≠ 推荐）。
+- PFN1 的利鲁唑、依达拉奉落在支持治疗（总论是"没有 Targeted Therapies 小节的旧章节"），利鲁唑状态"有条件（depends on: ALS）"。
+- PFN1 试验只有 2 条：检索名是"ALS type 18 / ALS18 / PFN1 ALS"，92 条返回结果中 90 条因条件栏没写 ALS18 或 PFN1 被排除——一般 ALS 试验全部未进入（召回问题）；主诊断"amyotrophic lateral sclerosis"无 OMIM、为 ambiguous。
+- EIF2B1 三条 L4 指南条目（学前教育、早期干预、多学科团队）凭"Global developmental delay"表型判适用，而描述是"normal or mildly delayed"。
+- CNNM4、THPO 支持治疗整节"检索无结果"（无章节病例，可能漏写）。
+- THPO 3b：没有试验因癌症规则被排除；621 条全部因条件栏未写"thrombocythemia 1 / THPO"被排除，其中 4 条是遗传性血小板**减少**症试验（方向相反，排除正确）。

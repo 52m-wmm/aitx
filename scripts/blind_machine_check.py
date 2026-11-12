@@ -277,7 +277,9 @@ def check_patient_facts(led: dict) -> list[dict]:
             if r.get("patient_status") in ("satisfies", "does_not_satisfy") and not fact.get("quote"):
                 out.append({"check": "patient-facts", "action": a.get("label"), "requirement": r.get("id"),
                             "detail": f"{r.get('patient_status')} without a quoted patient fact"})
-            if r.get("result") == "unknown" and fact.get("field") and fact["field"] not in missing:
+            # a limit of the source found by the context check is not a missing patient variable (ledger rule, 2026-11-11)
+            if r.get("result") == "unknown" and fact.get("field") and fact["field"] not in missing \
+                    and r.get("context_check") not in ("scope", "limit"):
                 out.append({"check": "patient-facts", "action": a.get("label"), "requirement": r.get("id"),
                             "detail": f"unknown {fact['field']!r} is not in missing_information"})
     return out

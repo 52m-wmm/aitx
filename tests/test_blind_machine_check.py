@@ -42,3 +42,19 @@ def test_upstream_health_warns_on_zero(tmp_path, monkeypatch):
                                                  "patient_facts": {"age": {"quote": "3 months"}},
                                                  "primary": {"status": "resolved"}}))
     assert M.upstream_health("Y")["warnings"] == []
+
+
+def _req(cc=None):
+    r = {"id": "r1", "result": "unknown", "patient_status": "unknown",
+         "patient_fact": {"field": "source scope", "value": None, "quote": None, "step": None}}
+    if cc:
+        r["context_check"] = cc
+    return {"actions": [{"label": "x", "requirements": [r]}], "missing_information": []}
+
+
+def test_a_context_check_scope_or_limit_line_is_not_a_missing_variable():
+    assert M.check_patient_facts(_req("scope")) == [] and M.check_patient_facts(_req("limit")) == []
+
+
+def test_reverse_an_ordinary_unknown_line_must_be_listed_as_missing():
+    assert M.check_patient_facts(_req()) and M.check_patient_facts(_req("degree"))

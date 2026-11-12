@@ -181,6 +181,7 @@ def main() -> int:
     d.mkdir(parents=True, exist_ok=True)
     (d / "sample.json").write_text(json.dumps({"schema": "retest-sample-v1", "batch": args.batch, "seed": RETEST_SEED,
                                                "drawn_at": int(time.time()), "code_commit": runmeta.code_commit(),
+                                               "code_fingerprint": runmeta.code_fingerprint(),
                                                "want": WANT, "rules": {
         "seed": RETEST_SEED, "L1": "first gene in seeded order with its own single-gene chapter; description verbatim "
         "from that chapter's Suggestive Findings, later-onset (classic childhood) form only when listed per form",
