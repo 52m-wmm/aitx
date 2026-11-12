@@ -638,6 +638,249 @@
     ],
     "context_quotes": []
    }
+  },
+  {
+   "identity": "52c06bdc099f25fb596da3df8ff09709eeb2a5ccc05aac3b0ca747f4985c2090",
+   "rule_id": "COL1A1-1",
+   "gene": "COL1A1",
+   "expected": "blocked",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "\"have been reported\" does not support \"points to\": the source says three arginine-to-cysteine changes have been reported in an EDS phenotype, which is a report, not a general association. The rule layer promotes an OMIM disease to a branch, and that step needs more than one reported observation. The support check said the same three times (conclusion partially supported 3:0)."
+   },
+   "collected_at": "2026-11-12",
+   "rule": {
+    "gene": "COL1A1",
+    "statement": "The COL1A1 arginine-to-cysteine change Arg134Cys has been reported in an EDS/OI overlap phenotype.",
+    "applies_when": {
+     "variant_class": [
+      "missense"
+     ],
+     "aa_substitution": {
+      "position": 134,
+      "from": "Arg",
+      "to": "Cys"
+     }
+    },
+    "effect": {
+     "type": "diagnosis",
+     "supports": [
+      "OMIM:619115"
+     ],
+     "argues_against": []
+    },
+    "sources": [
+     {
+      "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007]."
+     }
+    ]
+   },
+   "names": {
+    "OMIM:619115": {
+     "label": "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1",
+     "synonyms": [
+      "OIEDS Syndrome 1",
+      "OIEDS1",
+      "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1"
+     ]
+    }
+   }
+  },
+  {
+   "identity": "1f148235237ae6b90460b76553085ec559efd885ebc3a1d2b10dfe947bd57c74",
+   "rule_id": "COL1A1-2",
+   "gene": "COL1A1",
+   "expected": "blocked",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1. Here the scope item was judged not supported (\"The quote reports that changes have been reported, not a general association for such COL1A1 variants\")."
+   },
+   "collected_at": "2026-11-12",
+   "rule": {
+    "gene": "COL1A1",
+    "statement": "The COL1A1 arginine-to-cysteine change Arg915Cys has been reported in an EDS/OI overlap phenotype.",
+    "applies_when": {
+     "variant_class": [
+      "missense"
+     ],
+     "aa_substitution": {
+      "position": 915,
+      "from": "Arg",
+      "to": "Cys"
+     }
+    },
+    "effect": {
+     "type": "diagnosis",
+     "supports": [
+      "OMIM:619115"
+     ],
+     "argues_against": []
+    },
+    "sources": [
+     {
+      "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007]."
+     }
+    ]
+   },
+   "names": {
+    "OMIM:619115": {
+     "label": "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1",
+     "synonyms": [
+      "OIEDS Syndrome 1",
+      "OIEDS1",
+      "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1"
+     ]
+    }
+   }
+  },
+  {
+   "identity": "c7638061e8724cc07e44d1c58c8d23071d98a5fdedc8074157702dfd0ab04500",
+   "rule_id": "COL1A1-3",
+   "gene": "COL1A1",
+   "expected": "blocked",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1."
+   },
+   "collected_at": "2026-11-12",
+   "rule": {
+    "gene": "COL1A1",
+    "statement": "The COL1A1 arginine-to-cysteine change Arg396Cys has been reported in an EDS/OI overlap phenotype.",
+    "applies_when": {
+     "variant_class": [
+      "missense"
+     ],
+     "aa_substitution": {
+      "position": 396,
+      "from": "Arg",
+      "to": "Cys"
+     }
+    },
+    "effect": {
+     "type": "diagnosis",
+     "supports": [
+      "OMIM:619115"
+     ],
+     "argues_against": []
+    },
+    "sources": [
+     {
+      "quote": "EDS/OI overlap phenotypes (OMIM 619115) Three arginine-to-cysteine changes (Arg134Cys, Arg915Cys, & Arg396Cys) in COL1A1 have been reported in an EDS phenotype w/a propensity to arterial rupture in early adulthood [Malfait et al 2007]."
+     }
+    ]
+   },
+   "names": {
+    "OMIM:619115": {
+     "label": "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1",
+     "synonyms": [
+      "OIEDS Syndrome 1",
+      "OIEDS1",
+      "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1"
+     ]
+    }
+   }
+  },
+  {
+   "identity": "e6c0672d154532d40612b0262e212aa92e8730b8b91d90a0f2c12c1b5f7aaf1d",
+   "rule_id": "COL1A1-4",
+   "gene": "COL1A1",
+   "expected": "blocked",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "The source states that arthrochalasia EDS results from LOSS of exon 6, but deciding which variants cause that loss needs splice prediction, which step 1 does not do (decision 2026-11-05: splice prediction is not connected). The narrowed condition therefore stands in for the source rather than following it, and the support check marked the condition item down for exactly that (2:1). Also, the quote names arthrochalasia EDS without the type or the synonyms of OMIM 130060."
+   },
+   "collected_at": "2026-11-12",
+   "rule": {
+    "gene": "COL1A1",
+    "statement": "Loss of exon 6 of COL1A1 results in arthrochalasia EDS.",
+    "applies_when": {
+     "exon_loss": [
+      6,
+      6
+     ]
+    },
+    "effect": {
+     "type": "diagnosis",
+     "supports": [
+      "OMIM:130060"
+     ],
+     "argues_against": []
+    },
+    "sources": [
+     {
+      "quote": "Arthrochalasia EDS results from loss of exon 6 of either COL1A1 or COL1A2."
+     }
+    ]
+   },
+   "names": {
+    "OMIM:130060": {
+     "label": "Ehlers-Danlos syndrome arthrochalasia type 1",
+     "synonyms": [
+      "EDS VIIA",
+      "EDSARTH1",
+      "Ehlers-Danlos syndrome type 7A"
+     ]
+    }
+   }
+  },
+  {
+   "identity": "d600be116c65015ff052403f49c1b0c81efc24aa2a6f155e12212d364271a4dd",
+   "rule_id": "COL1A1-6",
+   "gene": "COL1A1",
+   "expected": "blocked",
+   "review": {
+    "decision": "vetoed",
+    "by": "Mengmeng Wu",
+    "at": "2026-11-06",
+    "reason": "As COL1A1-1 to -4: \"often lead to\" does not support \"points to\" a particular disease, and the rule also rests on splicing, which step 1 does not predict (decision 2026-11-05: splice prediction is not connected)."
+   },
+   "collected_at": "2026-11-12",
+   "rule": {
+    "gene": "COL1A1",
+    "statement": "Splice site mutations in COL1A1 are rarely lethal and often lead to frameshifts and the mild type I phenotype.",
+    "applies_when": {
+     "variant_class": [
+      "splice"
+     ]
+    },
+    "effect": {
+     "type": "diagnosis",
+     "supports": [
+      "OMIM:166200"
+     ],
+     "argues_against": []
+    },
+    "sources": [
+     {
+      "quote": "Splice site mutations in COL1A1 are rarely lethal; they often lead to frameshifts and the mild type I phenotype."
+     }
+    ]
+   },
+   "names": {
+    "OMIM:166200": {
+     "label": "osteogenesis imperfecta type 1",
+     "synonyms": [
+      "Adair-Dighton syndrome",
+      "COL1A1-related osteogenesis imperfecta",
+      "OI type 1",
+      "OI1",
+      "Van der Hoeve syndrome",
+      "classic non-deforming OI with blue sclerae",
+      "mild osteogenesis imperfecta",
+      "non-deforming osteogenesis imperfecta",
+      "osteogenesis imperfecta type 1",
+      "osteogenesis imperfecta type I"
+     ]
+    }
+   }
   }
  ]
 }
