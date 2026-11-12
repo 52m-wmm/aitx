@@ -190,5 +190,6 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 **同一试验逐行列出的基因选项**（DEEPTYPE："mutation in SLC16A2" / "mutation in THRA" / "abnormal fT3/fT4 ratio"）：只要有一条基因型标准写了病人的基因，其余"要求别的基因"的行视为备选项，记 not_assessed（`ALTERNATIVE_GENE_NOTE`），不决定状态、也不列入缺失信息。
 **起因**：盲测 MPZ 病人进了要求 PMP22 重复（CMT1A）的试验（判"有条件"）和 CMT4J 专用试验。
 **现有账本离线扫描（未重跑）**：会改为"不满足"的——MPZ 的 NCT07140614（PMP22 ×2）、ELP-02（FIG4，CMT4J）、EQUIVIB-CMT（"PMP22 gene duplication"，该试验只收 CMT1A）；THRA 的 DEEPTYPE 中 SLC16A2 行按备选项处理。扫描中发现并加了守卫的误判：NF1 的否定句和肿瘤突变句、SLC35A2 的"CDG or NGLY1 deficiency"。
-**D2 其余各点**：第 3 点（3c 先例病人的基因 / 亚型）由上下文核查完成；第 4 点（亚型专用试验）D1 修正诊断后由病名匹配自然排除，不另加规则；**第 2 点（多病种试验里挂在别的病种亚组下的标准）未做**——按架构原则 2（上下文核查完成后冻结新增的语义类代码规则），待定。
+**D2 其余各点**：第 3 点（3c 先例病人的基因 / 亚型）由上下文核查完成；第 4 点（亚型专用试验）D1 修正诊断后由病名匹配自然排除，不另加规则；**第 2 点（多病种试验里挂在别的病种亚组下的标准）未做**——按架构原则 2（上下文核查完成后冻结新增的语义类代码规则），**2026-11-11 用户决定：不写代码规则，作为 3b 上下文核查清单中的一个问题处理**（3b 接入上下文核查时一并加测试集条目）。
+**判定更正（2026-11-11）**：EQUIVIB-CMT 盲测时判"正确（一般性 CMT 试验）"，用户更正为写错——该试验只收 CMT1A。
 **测试**：`tests/test_criteria_genotype.py`。

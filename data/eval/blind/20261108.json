@@ -350,9 +350,10 @@
    "case": "BLIND-MPZ",
    "section": "clinical_trial_eligibility",
    "label": "EQUIVIB-CMT (NCT07726043)",
-   "verdict": "correct",
-   "note": "一般性 CMT 试验",
-   "at": 1794402565
+   "verdict": "wrong",
+   "note": "该试验只收 CMT1A（PMP22 gene duplication），对 MPZ 病人不适用；2026-11-11 用户更正，原判'一般性 CMT 试验'有误",
+   "at": 1794457881,
+   "corrected_from": "correct"
   },
   "c00509e6361a": {
    "case": "BLIND-MPZ",
