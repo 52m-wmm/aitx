@@ -11,7 +11,7 @@
      "zygosity": "homozygous"
     }
    ],
-   "clinical_context": "Childhood ataxia with central nervous system hypomyelination / vanishing white matter (CACH/VWM) should be suspected in individuals with the following clinical, laboratory, and imaging findings. Clinical findings Antenatal/early-infantile form: Oligohydramnios Intrauterine growth restriction Severe encephalopathy Microcephaly Contractures Cataract Pancreatitis Hepatosplenomegaly Renal hypoplasia Later-onset form: Initial motor and intellectual development is normal or mildly delayed. Neurologic deterioration has a chronic progressive or subacute course. Episodes of subacute deterioration may follow minor infection or minor head trauma and may lead to lethargy or coma. Truncal and appendicular ataxia Spasticity with increased tendon reflexes Peripheral nervous system is usually not involved. Optic atrophy may develop. Epilepsy may occur but is not the predominant sign of the disease"
+   "clinical_context": "Later-onset form: Initial motor and intellectual development is normal or mildly delayed. Neurologic deterioration has a chronic progressive or subacute course. Episodes of subacute deterioration may follow minor infection or minor head trauma and may lead to lethargy or coma. Truncal and appendicular ataxia Spasticity with increased tendon reflexes Peripheral nervous system is usually not involved. Optic atrophy may develop. Epilepsy may occur but is not the predominant sign of the disease except in an acute situation. In children, intellectual abilities may be affected but not to the same degree as motor functions. Alteration in intellectual abilities associated with behavioral changes can be the initial symptom in adult-onset forms. Ovarian failure may be present as primary or secondary amenorrhea [Hamilton et al 2018]."
   },
   "blind": {
    "group": "B1-L1",
@@ -31,33 +31,33 @@
   }
  },
  {
-  "id": "RETEST-MERTK",
+  "id": "RETEST-PFN1",
   "patient": {
    "genotype": [
     {
-     "gene": "MERTK",
-     "transcript": "NM_006343.3",
-     "variant_cdna": "c.1951C>T",
-     "variant_protein": "p.Arg651Ter",
-     "zygosity": "homozygous"
+     "gene": "PFN1",
+     "transcript": "NM_005022.4",
+     "variant_cdna": "c.211T>G",
+     "variant_protein": "p.Cys71Gly",
+     "zygosity": "heterozygous"
     }
    ],
-   "clinical_context": "Rod-cone dystrophy; Progressive visual loss; Nyctalopia; Constriction of peripheral visual field"
+   "clinical_context": "Spasticity; Dysarthria"
   },
   "blind": {
    "group": "B1-L2",
    "gencc": {
-    "disease": "MONDO:0013469",
-    "disease_title": "retinitis pigmentosa 38",
-    "moi": "Autosomal recessive",
-    "submitter": "G2P",
-    "omim": "OMIM:613862"
+    "disease": "MONDO:0013891",
+    "disease_title": "amyotrophic lateral sclerosis type 18",
+    "moi": "Autosomal dominant",
+    "submitter": "ClinGen",
+    "omim": "OMIM:614808"
    },
-   "clinvar": "VCV000005402",
+   "clinvar": "VCV000037034",
    "description_source": "synthetic_from_hpo",
    "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
    "chapters": [
-    "NBK1417"
+    "NBK1450"
    ]
   }
  },
@@ -91,29 +91,29 @@
   }
  },
  {
-  "id": "RETEST-TUBGCP6",
+  "id": "RETEST-THPO",
   "patient": {
    "genotype": [
     {
-     "gene": "TUBGCP6",
-     "transcript": "NM_020461.4",
-     "variant_cdna": "c.4333_4334insT",
-     "variant_protein": "p.His1445fs",
-     "zygosity": "homozygous"
+     "gene": "THPO",
+     "transcript": "NM_000460.4",
+     "variant_cdna": "c.112C>T",
+     "variant_protein": "p.Arg38Cys",
+     "zygosity": "heterozygous"
     }
    ],
-   "clinical_context": "Nystagmus; Seizure"
+   "clinical_context": "Thrombocytosis; Impaired ADP-induced platelet aggregation; Impaired epinephrine-induced platelet aggregation; Impaired collagen-induced platelet aggregation"
   },
   "blind": {
    "group": "B2",
    "gencc": {
-    "disease": "MONDO:0009624",
-    "disease_title": "microcephaly and chorioretinopathy 1",
-    "moi": "Autosomal recessive",
+    "disease": "MONDO:0008554",
+    "disease_title": "thrombocythemia 1",
+    "moi": "Autosomal dominant",
     "submitter": "ClinGen",
-    "omim": "OMIM:251270"
+    "omim": "OMIM:187950"
    },
-   "clinvar": "VCV000162402",
+   "clinvar": "VCV000520806",
    "description_source": "synthetic_from_hpo",
    "description_rule": "Obligate / Very frequent / Frequent only (terms, ratios and percentages on one scale), most frequent first, down the list only to reach 2, at most 4",
    "chapters": []

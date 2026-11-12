@@ -35,12 +35,23 @@ from aitx import runmeta  # noqa: E402
 
 RETEST_SEED = "retest-2026-11-12"
 WANT = {"B1-L1": 1, "B1-L2": 1, "B2": 2}
+# adjustments before any run (user, 2026-11-12; not tuning - nothing had been run):
+#  - the L1 description keeps only the later-onset (classic childhood) form when the findings are listed per form;
+#  - the L2 overview must not be one an earlier blind case used (MERTK's NBK1417 was SNRNP200's);
+#  - at least two of the four are autosomal dominant heterozygous, as three of the four evaluation cases are:
+#    the L2 case must be AD, and of the two B2 cases one is the first gene in seeded order (any inheritance) and
+#    the other the first AD gene in seeded order.
+AD = "Autosomal dominant"
+LATE_FORM = re.compile(r"(Later-onset|Late-onset|Classic[a-z ]*|Childhood[a-z -]*) form:", re.I)
+FORM_END = re.compile(r"\b(Laboratory findings|MRI findings|Imaging findings|Neuroimaging|[A-Z][a-z/ -]{2,30} form:)")
 DESCRIPTION_FIELD = "clinical_context"
 
 
 def earlier_blind_genes() -> dict[str, str]:
     out = {}
     for f in sorted((ROOT / "data" / "cases" / "blind").glob("*.json")):
+        if f.stem.startswith("retest-"):
+            continue
         for c in json.loads(f.read_text()):
             for v in c["patient"]["genotype"]:
                 out[v["gene"]] = f"used in blind batch {f.stem}"
@@ -53,6 +64,11 @@ def suggestive_findings(nbk: str) -> tuple[str, str]:
     titles = sorted((t for t in GR.sections(nbk) if "Suggestive Findings" in t), key=lambda t: (t.count("/"), len(t)))
     for t in titles:
         text = re.sub(r"\s+", " ", GR.section_text(nbk, t) or "").strip()
+        m = LATE_FORM.search(text)
+        if m:                                        # findings listed per form: the later-onset form only
+            rest = text[m.start():]
+            end = FORM_END.search(rest, len(m.group(0)))
+            text = rest[:end.start()].strip() if end else rest
         if len(text) > 60:
             if len(text) > 900:                      # cut at the last sentence end, never mid-word
                 cut = max(text.rfind(". ", 0, 900), text.rfind(" ", 0, 900))
@@ -61,12 +77,22 @@ def suggestive_findings(nbk: str) -> tuple[str, str]:
     return "", f"no Suggestive Findings text for {nbk}"
 
 
+def earlier_chapters() -> set[str]:
+    out = set()
+    for f in sorted((ROOT / "data" / "cases" / "blind").glob("*.json")):
+        if not f.stem.startswith("retest-"):
+            out |= {n for c in json.loads(f.read_text()) for n in (c.get("blind") or {}).get("chapters") or []}
+    return out
+
+
 def draw() -> list[dict]:
     p = S.pools()
     excluded = {**S.EXCLUDED, **earlier_blind_genes()}
     counts = S.index_gene_counts()
     names = S.hpo_names()
     taken = {k: 0 for k in WANT}
+    used_chapters = earlier_chapters()
+    b2_ad = False
     cases, skipped = [], []
     for group, pool in (("B1", p["b1"]), ("B2", p["b2"])):
         order = random.Random(RETEST_SEED).sample(pool, len(pool))
@@ -79,6 +105,10 @@ def draw() -> list[dict]:
             if taken[sub] >= WANT[sub]:
                 continue
             rec = next(r for r in p["definitive"][g] if r.get("omim"))
+            if sub == "B1-L2" and (rec["moi"] != AD or set(chapters) & used_chapters):
+                continue
+            if sub == "B2" and taken["B2"] == 1 and not b2_ad and rec["moi"] != AD:
+                continue                              # the second B2 case must be AD unless the first already is
             v = S.clinvar_variant(g)
             if v is None:
                 skipped.append({"gene": g, "subgroup": sub, "why": "no Pathogenic coding variant with transcript and c."})
@@ -97,6 +127,7 @@ def draw() -> list[dict]:
                 skipped.append({"gene": g, "subgroup": sub, "why": "no description could be built"})
                 continue
             taken[sub] += 1
+            b2_ad |= sub == "B2" and rec["moi"] == AD
             cases.append(case)
             if all(taken[k] >= WANT[k] for k in WANT if k.startswith(group)):
                 break
@@ -124,7 +155,16 @@ def main() -> int:
     d.mkdir(parents=True, exist_ok=True)
     (d / "sample.json").write_text(json.dumps({"schema": "retest-sample-v1", "batch": args.batch, "seed": RETEST_SEED,
                                                "drawn_at": int(time.time()), "code_commit": runmeta.code_commit(),
-                                               "want": WANT, "cases": cases, "skipped": skipped}, indent=1,
+                                               "want": WANT, "rules": {
+        "seed": RETEST_SEED, "L1": "first gene in seeded order with its own single-gene chapter; description verbatim "
+        "from that chapter's Suggestive Findings, later-onset (classic childhood) form only when listed per form",
+        "L2": "first autosomal dominant gene in seeded order covered only by an overview not used by an earlier blind "
+        "case; description synthesized from HPO", "B2": "the first gene in seeded order and the first autosomal dominant "
+        "gene in seeded order (one gene if the first is AD, then the next); descriptions synthesized from HPO",
+        "excluded": "evaluation, practice and validator genes, and every gene of an earlier blind batch",
+        "adjusted": "2026-11-12, before any run, by the user: EIF2B1 later-onset form only; MERTK replaced (overview "
+        "NBK1417 used by SNRNP200); at least two AD heterozygous cases (three of the four evaluation cases are)"},
+        "cases": cases, "skipped": skipped}, indent=1,
                                               ensure_ascii=False))
     out = []
     for c in cases:
