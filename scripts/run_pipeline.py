@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from aitx import runmeta  # noqa: E402
+from aitx import runmeta, session  # noqa: E402
 
 PLANNED = {4: "report synthesis", 5: "verification"}
 USES_LLM = {2}                        # steps that call the LLM (the viewer warns before rerunning them)
@@ -126,21 +126,28 @@ def run(cases: list[dict], start: int, stop: int, use_cache: bool = True) -> int
             failed = True
             continue
         for k in range(start, stop + 1):
+            t0 = session.step_started(case["id"], k)          # session log (1a): progress, calls, snapshot
             try:
                 result = STEPS[k](case, prior, ctx)
             except PeakHours as e:     # --offpeak-only: keep the cases already written, stop, exit code 3
                 print(f"[PEAK] {case['id']} step {k} not finished (nothing written for it): {e}")
+                session.step_finished(case["id"], k, t0, "stopped", error=f"peak: {e}")
                 return 3
             except OverBudget as e:    # daily cap: same handling - keep what is written, stop, exit code 4
                 print(f"[BUDGET] {case['id']} step {k} not finished (nothing written for it): {e}")
+                session.step_finished(case["id"], k, t0, "stopped", error=f"budget: {e}")
                 return 4
             except Exception as e:  # noqa: BLE001 - report and move to the next case
                 print(f"[ERROR] {case['id']} step {k}: {type(e).__name__}: {e}")
+                session.step_finished(case["id"], k, t0, "failed", error=f"{type(e).__name__}: {e}")
                 failed = True
                 break
             hashes[k] = runmeta.write_output(k, case, result, upstream={j: hashes[j] for j in range(1, k)})
             prior[k] = result
             ok = result.get("ok", all(v.get("ok", True) for v in result.get("variants", [])))
+            session.step_finished(case["id"], k, t0, "done" if ok else "failed", output=runmeta.path(k, case["id"]),
+                                  upstream={j: hashes[j] for j in range(1, k)}, case=case,
+                                  error=None if ok else "output written with failed checks")
             print(f"[{'OK  ' if ok else 'FAIL'}] {case['id']} step {k} -> {runmeta.path(k, case['id'])}")
             failed |= not ok
     return 1 if failed else 0
@@ -182,6 +189,9 @@ def main() -> int:
         return caseinput.EXIT_CODE
     if args.eval_cases:
         print(f"[EVAL] including the evaluation cases: {sorted(set(c['id'] for c in cases) & eval_ids())}")
+    from aitx import session
+    run_id = session.start(sys.argv, runmeta.code_fingerprint())
+    print(f"[SESSION] {run_id} -> {session.base() / run_id}")
     return run(cases, args.from_step, args.to_step, not args.no_cache)
 
 

@@ -29,7 +29,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from aitx import budget, llm, peak
+from aitx import budget, llm, peak, session
 from aitx.disease.hpo import Ontology
 
 N_SAMPLES = 3
@@ -181,11 +181,15 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
     base = call_params or CALL_PARAMS
     retry = retry_params(base)
     path = CACHE_DIR / f"{cache_key(messages, k, cfg, prompt_version)}.json"
+    call_id = path.stem                        # session log and ledger attribution (1a / 1b, 2026-11-12)
     if use_cache:
         entry = cache_lookup(messages, k, cfg, prompt_version, base)
         if entry is not None:
-            return entry
+            session.log_call(call_id=call_id, messages=messages, entry=entry, cache_hit=True, k=k,
+                             params=entry.get("call_params") or base)
+            return dict(entry, call_id=call_id)
     attempts, params = 5, base
+    t0 = time.time()
     for attempt in range(attempts):
         peak.check_before_call()               # --offpeak-only: never start a call inside a peak window
         budget.check_before_call()             # daily spend cap (2026-11-05): stop instead of overspending
@@ -222,7 +226,10 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
            "prompt_version": prompt_version or PROMPT_VERSION, "provider": cfg["base_url"]}
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
-    return out
+    session.log_call(call_id=call_id, messages=messages, entry=out, cache_hit=False, k=k, params=params,
+                     usage=resp.get("usage"), seconds=time.time() - t0,
+                     reasoning=choice["message"].get("reasoning_content"))
+    return dict(out, call_id=call_id)
 
 
 def _parse(r: dict) -> dict:

@@ -346,7 +346,7 @@ def _llm(user: str, use_cache: bool, what: str):
                        prompt_version=PROMPT_VERSION)
     if time.time() - t > 1:
         print(f"[3c] LLM {what}: {time.time() - t:.0f}s", flush=True)
-    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
+    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
                                    "prompt_version": PROMPT_VERSION}
 
 

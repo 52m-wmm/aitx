@@ -201,7 +201,7 @@ def draft_gene(gene: str, candidates: list[dict], nbks: list[str], *, use_cache:
         return out
     r = X._cached_chat(prompt(gene, candidates, sources), 0, use_cache, prompt_version=PROMPT_VERSION)
     parsed = X._parse(r)["parsed"]
-    out["llm"] = {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "prompt_version": PROMPT_VERSION}
+    out["llm"] = {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"), "prompt_version": PROMPT_VERSION}
     out["no_rule_reason"] = parsed.get("no_rule_reason") or ""
     for i, d in enumerate(parsed.get("rules") or [], 1):
         rule, why = check_draft(d, candidates, sources)

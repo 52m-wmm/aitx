@@ -22,3 +22,12 @@ def _context_check_off(monkeypatch):
     them. Tests of the context check itself switch it on (tests/test_context_check.py)."""
     from aitx.evidence import context_check as CC
     monkeypatch.setattr(CC, "ENABLED", False)
+
+
+@pytest.fixture(autouse=True)
+def _session_log_in_tmp(monkeypatch, tmp_path):
+    """The session log (aitx/session.py) of calls made by tests goes to a temporary directory, never to runs/."""
+    from aitx import session
+    monkeypatch.setenv("AITX_RUN_DIR", str(tmp_path / "runs"))
+    monkeypatch.setitem(session._state, "dir", None)
+    monkeypatch.setitem(session._state, "run_id", None)

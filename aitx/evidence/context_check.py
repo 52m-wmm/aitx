@@ -118,13 +118,14 @@ def ask(header: str, passage: str, patient: str, questions: list[dict], *, use_c
         out.append({**q, "final": combine(answers), "answers": answers, "quotes": list(dict.fromkeys(quotes)),
                     "reasons": [str(g.get("reason") or "") for g in given if g]})
     first = runs[0][0]
-    return {"questions": out, "n_checks": n_checks,
+    return {"questions": out, "n_checks": n_checks, "call_ids": [r.get("call_id") for r, _ in runs],
             "llm": {"served_model": first.get("served_model"), "prompt_version": PROMPT_VERSION}}
 
 
 def summary(res: dict) -> dict:
     """What the ledger keeps: each question's final answer, the unanimous quote if any, the model."""
     return {"prompt_version": PROMPT_VERSION, "n_checks": res.get("n_checks"), "llm": res.get("llm"),
+            "call_ids": res.get("call_ids") or [],
             "answers": {q["id"]: {"final": q["final"], "answers": q["answers"], "quote": (q["quotes"] or [None])[0]}
                         for q in res.get("questions", [])}}
 

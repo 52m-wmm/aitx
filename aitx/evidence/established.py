@@ -89,7 +89,7 @@ def _llm(system: str, user: str, use_cache: bool, what: str = "") -> tuple[dict,
                        prompt_version=PROMPT_VERSION)
     if time.time() - t > 1:                     # only real calls are logged (cache hits are instant)
         print(f"[3a] LLM {what or 'call'}: {time.time() - t:.0f}s, prompt {len(user)} chars", flush=True)
-    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
+    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
                                    "prompt_version": PROMPT_VERSION}
 
 

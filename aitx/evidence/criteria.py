@@ -58,7 +58,7 @@ def _llm(user: str, use_cache: bool, what: str) -> tuple[dict, dict]:
                        prompt_version=PROMPT_VERSION)
     if time.time() - t > 1:
         print(f"[3b] LLM criteria {what}: {time.time() - t:.0f}s, prompt {len(user)} chars", flush=True)
-    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
+    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
                                    "prompt_version": PROMPT_VERSION}
 
 

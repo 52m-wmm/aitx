@@ -331,6 +331,13 @@ class Ledger:
         chk("drug_keys_normalized",
             [f"{e['action']['key']} ({e['section']})" for s in SECTIONS for e in self.in_section(s)
              if e["action"].get("normalized") is False], "all drugs normalized to RxNorm / ChEMBL", level="warn")
+        # 1b (2026-11-12): evidence an LLM produced points at its call; a context check carries its vote calls
+        chk("llm_calls_attributed",
+            [e["id"] for e in self.evidence.values() if isinstance(e.get("produced_by"), dict)
+             and not e["produced_by"].get("call_id")]
+            + [a.get("action_key") or a["label"] for a in self.actions
+               if isinstance(a.get("context_check"), dict) and not a["context_check"].get("call_ids")],
+            "every LLM-produced item and context check names its call ids", level="warn")
         return out
 
     def _action_problems(self) -> list[str]:
@@ -413,13 +420,35 @@ class Ledger:
                                  + "; ".join(row["affects"][:12]) + (" …" if n > 12 else ""))
         return variable
 
+    def provenance(self, a: dict) -> dict:
+        """Where an action came from (1b, 2026-11-12): the LLM calls that produced its evidence (call ids = cache keys,
+        found in the session log), the code paths / rules that retrieved it, and the context-check vote calls."""
+        ids = set(a.get("evidence_ids") or []) | {l.get("evidence_id") for l in a.get("requirements") or []}
+        evs = [self.evidence[i] for i in ids if i in self.evidence]
+        pb = [e.get("produced_by") for e in evs]
+        calls = sorted({p.get("call_id") for p in pb if isinstance(p, dict) and p.get("call_id")})
+        checks = []
+
+        def add_check(cc):
+            if isinstance(cc, dict):
+                checks.extend(cc.get("call_ids") or [])
+                for fu in (cc.get("limit_followup") or {}).values():
+                    checks.extend(fu.get("call_ids") or [])
+        add_check(a.get("context_check"))
+        for p in (a.get("precedents") or []) + (a.get("supporting_precedents") or []):
+            add_check(p.get("context_check"))
+        return {"llm_calls": calls, "rules": sorted({e.get("retrieved_by") for e in evs if e.get("retrieved_by")}),
+                "code_only": all(not isinstance(p, dict) for p in pb), "check_calls": list(dict.fromkeys(checks))}
+
     def to_dict(self) -> dict:
         ev = sorted(self.evidence.values(), key=lambda e: (list(TIERS).index(e["section"]), e["id"]))
         return {"schema_version": SCHEMA_VERSION, "patient_id": self.patient_id, "branches": self.branches,
                 "branch_assessment": self.branch_assessment, "branch_order": self.branch_order,
                 "patient_context": self.patient_context, "missing_information": self.missing_information,
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
-                "sections_status": self.sections_status, "actions": self.actions, "trial_searches": self.trial_searches,
+                "sections_status": self.sections_status,
+                "actions": [dict(x, provenance=self.provenance(x)) for x in self.actions],
+                "trial_searches": self.trial_searches,
                 "dropped_conditions": self.dropped_conditions, "reextracted_rows": self.reextracted_rows,
                 "possible_duplicates": self.possible_duplicates,
                 "supportive_tiers": self.supportive_tiers, "offlabel_searches": self.offlabel_searches,

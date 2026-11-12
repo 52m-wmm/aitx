@@ -45,7 +45,7 @@ def _llm(text: str, use_cache: bool) -> tuple[dict, dict]:
                        0, use_cache, prompt_version=PROMPT_VERSION)
     if time.time() - t > 1:
         print(f"[3b] LLM patient facts: {time.time() - t:.0f}s", flush=True)
-    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
+    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
                                    "prompt_version": PROMPT_VERSION}
 
 

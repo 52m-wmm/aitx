@@ -395,7 +395,7 @@ def mechanism_of(gene: str, nbks: list[str], variant_class: str | None, *, use_c
                                use_cache, prompt_version=MECH_PROMPT_VERSION)
             got = X._parse(r)["parsed"]
             mech, quote = got.get("mechanism"), str(got.get("quote") or "")
-            llm = {"llm": X.llm.config()["model"], "served_model": r.get("served_model"),
+            llm = {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
                    "prompt_version": MECH_PROMPT_VERSION}
             if mech in LOF + TOXIC and quote and LG.quote_in(quote, text) and hedged(quote):
                 rejected.append({"nbk": nbk, "section": sec, "mechanism": mech, "quote": quote,

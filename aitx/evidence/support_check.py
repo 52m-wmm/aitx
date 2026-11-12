@@ -82,6 +82,7 @@ def check_support(claim: str, items: list[str], quotes: list[str], *, use_cache:
         reason = next((j["reason"] for j in js if j["verdict"] == v), js[0]["reason"])
         out_items.append({"item": t, "verdict": v, "reason": reason, "judgements": [j["verdict"] for j in js]})
     return {"overall": overall([x["verdict"] for x in out_items]), "items": out_items, "n_checks": n_checks,
+            "call_ids": [r.get("call_id") for r, _ in runs],
             "llm": {"llm": X.llm.config()["model"], "served_model": runs[0][0].get("served_model"),
                     "prompt_version": PROMPT_VERSION}}
 
