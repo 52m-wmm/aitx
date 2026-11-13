@@ -1343,7 +1343,16 @@ def entry_id(r: dict) -> str:
 
 def load_judged(batch: str) -> dict:
     p = BLIND_JUDGED / f"{batch}.json"
-    return json.loads(p.read_text()) if p.exists() else {"schema": "blind-judged-v1", "batch": batch, "judgements": {}}
+    d = json.loads(p.read_text()) if p.exists() else {"schema": "blind-judged-v1", "batch": batch, "judgements": {}}
+    if isinstance(d.get("judgements"), list):       # retest file (2026-11-12): one row per group of labels
+        rows = {}
+        for j in d["judgements"]:
+            for lab in j.get("labels") or []:
+                r = {"case": j.get("case"), "section": j.get("section"), "label": lab,
+                     "verdict": j.get("verdict"), "note": j.get("note", "")}
+                rows[entry_id(r)] = r
+        d = dict(d, judgements=rows)
+    return d
 
 
 VERDICT_LABEL = {"correct": ("正确", "Correct"), "wrong": ("写错", "Wrong"), "missed": ("漏写", "Missed"),

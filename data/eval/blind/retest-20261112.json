@@ -4,7 +4,9 @@
  "judged_at": "2026-11-12",
  "judged_by": "user",
  "not_counted": {
-  "RETEST-PFN1": "used for fixing (recommendation question, 3b parent-disease search) - not counted in the blind rates"
+  "RETEST-PFN1": {
+   "why": "used for fixing (recommendation question, 3b parent-disease search) - not counted in the blind rates"
+  }
  },
  "judgements": [
   {
