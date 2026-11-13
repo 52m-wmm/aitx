@@ -306,3 +306,26 @@ def test_limit_followup_question_names_no_test_material():
     text = CC.questions_limit("drug X", "limit words")[0]["text"].lower()
     for word in ("phe508del", "cftr", "elexacaftor", "minimal function"):
         assert word not in text
+
+
+# --- recommendation question (user decision 2026-11-12, reading rule R15)
+
+def _rec(*answers):
+    return {"questions": [{"id": "recommendation", "answers": list(answers), "final": CC.combine(list(answers))}]}
+
+
+def test_describing_use_or_reporting_no_benefit_is_not_a_recommendation():
+    assert CC.not_recommended(_rec("describes_use", "describes_use", "describes_use"))
+    assert CC.not_recommended(_rec("reports_ineffective", "describes_use", "reports_ineffective"))
+
+
+@pytest.mark.parametrize("answers", [("recommends",) * 3, ("describes_use", "recommends", "describes_use"),
+                                     ("describes_use", None, "describes_use"), ("not_stated",) * 3, ()])
+def test_reverse_anything_short_of_unanimous_non_recommendation_keeps_the_entry(answers):
+    assert not CC.not_recommended(_rec(*answers))
+
+
+def test_the_recommendation_question_names_no_test_material():
+    text = CC.questions_recommendation("drug X", "disease Y")[0]["text"].lower()
+    for word in ("als", "amyotrophic", "supplement", "vitamin", "cochrane", "antioxidant"):
+        assert word not in text.split() and word not in text

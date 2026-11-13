@@ -65,3 +65,10 @@ RRM2B 的禁忌条目标签是 "catabolism"，原文是 "Catabolism should be pr
 
 ## 年龄段不适用的条目（2026-11-12）
 上下文核查找到的年龄段限定由代码判为"不适用"的条目（`context_check == "limit"` 行、note 含 "age band"）留在账本、**不写进报告**，与孕期专属条目同样处理。
+
+## 总论无靶向小节时的疾病修饰药（2026-11-12，复测 PFN1）
+旧章节没有 Targeted Therapies 小节，利鲁唑、依达拉奉被放进支持治疗。用户判"存疑不计写错"。Step 4：在 Existing Targeted Therapies 节加交叉说明（"见支持治疗：riluzole / edaravone"），不重复列出。
+
+## 非推荐条目（2026-11-12，R15）
+带 `context_check == "recommendation"` 不满足行的条目（原文只描述用法或报告无效）留在账本、不写进报告。
+

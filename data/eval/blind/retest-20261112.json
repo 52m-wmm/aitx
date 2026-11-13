@@ -1,0 +1,96 @@
+{
+ "schema": "retest-judged-v1",
+ "batch": "retest-20261112",
+ "judged_at": "2026-11-12",
+ "judged_by": "user",
+ "not_counted": {
+  "RETEST-PFN1": "used for fixing (recommendation question, 3b parent-disease search) - not counted in the blind rates"
+ },
+ "judgements": [
+  {
+   "case": "RETEST-PFN1",
+   "section": "supportive_management",
+   "labels": [
+    "vitamin E",
+    "vitamin C",
+    "B vitamins",
+    "selenium",
+    "zinc",
+    "coenzyme Q10",
+    "ginseng",
+    "ginkgo biloba",
+    "Maharishi Amrit Kalesh",
+    "beta-carotene",
+    "N-acetylcysteine",
+    "L-methionine",
+    "selegiline"
+   ],
+   "verdict": "wrong",
+   "tier": 1,
+   "note": "原文是描述常见用法（commonly supplement）和 Cochrane 综述未见显著差异，不是推荐；根因：上下文核查缺'推荐 vs 描述用法/报告无效'一问"
+  },
+  {
+   "case": "RETEST-PFN1",
+   "section": "supportive_management",
+   "labels": [
+    "anticholinergic agents",
+    "tricyclic antidepressants",
+    "edaravone",
+    "eye movement-controlled on-screen keyboard"
+   ],
+   "verdict": "checker_caught",
+   "note": "核查器加的 4 处限定全部判抓住，0 误伤"
+  },
+  {
+   "case": "RETEST-PFN1",
+   "section": "supportive_management",
+   "labels": [
+    "riluzole",
+    "edaravone"
+   ],
+   "verdict": "uncertain_not_counted",
+   "note": "放在支持治疗存疑，不计写错；Step 4 待办：靶向节加交叉说明"
+  },
+  {
+   "case": "RETEST-PFN1",
+   "section": "clinical_trial_eligibility",
+   "labels": [
+    "(only 2 trials)"
+   ],
+   "verdict": "missed",
+   "severity": "serious",
+   "note": "按 ALS18 检索，一般 ALS 试验全部被排除；影响评测病例同类分支"
+  },
+  {
+   "case": "RETEST-EIF2B1",
+   "section": "supportive_management",
+   "labels": [
+    "preschool education services in the least restrictive environment",
+    "start early intervention as soon as the delay is recognized",
+    "multidisciplinary developmental intervention team (developmental paediatrics or paediatric neurology, clinical psychology, occupational therapy, physiotherapy, special education, speech therapy)"
+   ],
+   "verdict": "wrong",
+   "severity": "minor",
+   "note": "'normal or mildly delayed'被当成确定的发育迟缓"
+  },
+  {
+   "case": "RETEST-CNNM4",
+   "section": "supportive_management",
+   "labels": [
+    "None found"
+   ],
+   "verdict": "missed",
+   "note": "无章节病例支持治疗为空，已知局限，本轮不修"
+  },
+  {
+   "case": "RETEST-THPO",
+   "section": "supportive_management",
+   "labels": [
+    "None found"
+   ],
+   "verdict": "missed",
+   "note": "同上"
+  }
+ ],
+ "stop_criteria": "not met (Tier 1 wrongs > 0); per the fixed rule no new sampling round"
+}

@@ -319,6 +319,26 @@ def candidates_for(item: dict, ont: Ontology) -> tuple[str | None, list[dict], s
     return None, cands, "retrieved candidates"
 
 
+# "development is normal or mildly delayed": the feature is one of two possibilities, not a stated finding
+# (user decision 2026-11-12, RETEST-EIF2B1); deterministic, on the text around the verified quote
+_OR_BEFORE = re.compile(r"\b(normal|unaffected|typical|absent|none|no)\s+or\s+(?:\w+\s+){0,2}$", re.I)
+_OR_AFTER = re.compile(r"^(?:\s+\w+){0,2}\s+or\s+(normal|unaffected|typical|absent|none)\b", re.I)
+_OR_INSIDE = re.compile(r"\b(normal|unaffected|typical)\s+or\b|\bor\s+(normal|unaffected|typical)\b", re.I)
+
+
+def possible_phrase(context: str, quote: str) -> str | None:
+    """The words that make a quoted feature only one possibility ("normal or mildly delayed"), or None."""
+    i = (context or "").find(quote or "")
+    if not quote or i < 0:
+        return None
+    before, after = context[max(0, i - 40):i], context[i + len(quote):i + len(quote) + 40]
+    m = _OR_BEFORE.search(before) or _OR_INSIDE.search(quote)
+    if m:
+        return (before[m.start():] if m.re is _OR_BEFORE else "") + quote
+    m = _OR_AFTER.search(after)
+    return quote + after[:m.end()] if m else None
+
+
 def negation_check(it: dict, ont: Ontology) -> None:
     """A 'present' item whose quote contains a negation word is kept only when the mapped HPO term itself
     denotes an absence (its name or a synonym), or the same word is part of the term's name
@@ -603,6 +623,11 @@ def extract(context: str, ont: Ontology, *, use_cache: bool = True, n: int = N_S
     if conflicts:
         bad = {p["hpo_id"] for p in conflicts}
         kept = [p for p in kept if p["hpo_id"] not in bad]
+    for p in kept:                      # "normal or mildly delayed": possible, not present (2026-11-12)
+        if p["status"] == "present":
+            why = possible_phrase(context, p["quote"])
+            if why:
+                p["status"], p["possible_because"] = "possible", why
     rejected = [p for ps in per_sample for p in ps["phenotypes"] if not p["valid"]]
 
     facts, fact_notes = {}, []

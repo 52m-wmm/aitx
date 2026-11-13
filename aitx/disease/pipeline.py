@@ -79,7 +79,8 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     facts = ext["patient_facts"]
     sex = facts["sex"].get("value", "unknown")
     de_novo = facts["variant_origin"].get("value") == "de_novo"
-    present = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] == "present")
+    # a feature stated only as possible still counts for ranking the diagnosis; treatment steps treat it as unknown
+    present = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] in ("present", "possible"))
     excluded = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] == "excluded")
     onset = patient_onset(facts)
 

@@ -1153,3 +1153,68 @@ def test_reverse_one_quote_only_in_a_newborn_table_stays_not_applicable(monkeypa
                            key="procedure:airway_clearance"), dict(PF, age_months=180, age_quote="15 y"), [])
     rec = next(x for x in led.actions if x["action_key"] == "procedure:airway_clearance")
     assert rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+
+
+# --- not a recommendation (user decision 2026-11-12, R15: RETEST-PFN1 "commonly supplement their diets with ...")
+
+def _cc_rec(monkeypatch, rec_answer, passage=PASSAGE):
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    _patch_passage(monkeypatch, lambda spec: ("GeneReviews NBK1283", passage))
+    asked = []
+
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        user = messages[-1]["content"]
+        if "Does the passage recommend or advise" in user:
+            asked.append(k)
+            ans = [{"q": 1, "answer": rec_answer, "quote": ""}]
+        else:
+            n = user.count(" Answers: ")
+            ans = [{"q": 1, "answer": "yes", "quote": ""}, {"q": 2, "answer": "this_disease_patients", "quote": ""},
+                   {"q": 3, "answer": "no", "quote": ""}] + [{"q": i, "answer": "yes", "quote": ""} for i in range(4, n + 1)]
+        return {"content": json.dumps({"answers": ans}), "served_model": "fake", "call_id": f"c{k}"}
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+    return asked
+
+
+def test_an_entry_the_source_only_describes_is_not_applicable_and_kept(monkeypatch):
+    asked = _cc_rec(monkeypatch, "describes_use")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("supportive_management"), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert len(asked) == 3 and rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+    (l,) = [r for r in rec["requirements"] if r.get("context_check") == "recommendation"]
+    assert l["result"] == "fail" and "not a recommendation" in l["note"]
+    assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
+    assert len(rec["context_check"]["recommendation"]["call_ids"]) == 3
+
+
+@pytest.mark.parametrize("answer", ["recommends", "not_stated"])
+def test_reverse_a_recommended_entry_is_unchanged(monkeypatch, answer):
+    _cc_rec(monkeypatch, answer)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("supportive_management"), PF_FS, [])
+    rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
+    assert not [r for r in rec["requirements"] if r.get("context_check") == "recommendation"]
+
+
+def test_reverse_contraindications_and_label_decided_drugs_are_not_asked(monkeypatch):
+    asked = _cc_rec(monkeypatch, "describes_use")
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, _found("contraindications_precautions"), PF_FS, [])
+    E._records(LG.Ledger("P", [dict(BR, id="b1")]), _with_label(_found("existing_targeted_therapies")), PF_FS, [])
+    assert asked == []
+
+
+def test_a_finding_stated_only_as_possible_makes_its_entry_conditional(monkeypatch):
+    # "development is normal or mildly delayed": the supportive measure for it depends on that finding
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", False)
+    monkeypatch.setattr(E, "ontology", lambda: type("O", (), {"exact_lookup": lambda s, t: ["HP:1"],
+                                                               "search": lambda s, t, k: [], "ancestors": lambda s, i: []})())
+    x = {"hpo_id": "HP:1", "label": "Global developmental delay", "quote": "mildly delayed",
+         "possible_because": "normal or mildly delayed", "status": "possible"}
+    st, fact = E.manifestation_status("developmental delay", dict(PF, present=[], possible=[x]))
+    assert st == "unknown" and fact["quote"] == "normal or mildly delayed"
+    st, _ = E.manifestation_status("developmental delay", dict(PF, present=[dict(x, status="present")], possible=[]))
+    assert st == "satisfies"

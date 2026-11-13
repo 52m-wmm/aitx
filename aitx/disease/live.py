@@ -183,6 +183,18 @@ def mondo_ancestors(mondo_id: str, *, use_cache: bool = True) -> list[str]:
     return sorted({t["obo_id"] for t in terms if str(t.get("obo_id", "")).startswith("MONDO:")})
 
 
+def mondo_parents(mondo_id: str, *, use_cache: bool = True) -> list[tuple[str, str]]:
+    """Direct MONDO parents (id, label) of a term, via OLS4 (3b parent-disease search, 2026-11-12)."""
+    iri = urllib.parse.quote(urllib.parse.quote(
+        "http://purl.obolibrary.org/obo/" + mondo_id.replace(":", "_"), safe=""), safe="")
+    url = f"https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/{iri}/parents?size=200"
+    try:
+        terms = json.loads(http.get(url, use_cache=use_cache).text).get("_embedded", {}).get("terms", [])
+    except RuntimeError:
+        return []
+    return sorted((t["obo_id"], t.get("label") or "") for t in terms if str(t.get("obo_id", "")).startswith("MONDO:"))
+
+
 # ------------------------------------------------------------------------ HGNC
 
 def hgnc_gene(symbol: str, *, use_cache: bool = True) -> dict:

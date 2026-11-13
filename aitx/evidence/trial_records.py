@@ -9,6 +9,7 @@ negative evidence.
 """
 from __future__ import annotations
 
+from aitx.disease import live as L
 from aitx.evidence import actions as A
 from aitx.evidence import criteria as C
 from aitx.evidence import established as E
@@ -26,7 +27,12 @@ def add_trials(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_cach
     plans, studies, in_branch = {}, {}, {}
     for b in [b for b in led.branches if b.get("diagnosis")]:
         names = E.disease_names(b, step2)
+        # a subtype is also searched by its parent disease's name (user decision 2026-11-12: ALS18 -> ALS)
+        parents = T.parent_names((b.get("diagnosis") or {}).get("label") or "",
+                                 L.mondo_parents(b["id"], use_cache=use_cache)) if str(b["id"]).startswith("MONDO:") else []
+        names = names[:1] + [n for n in parents if n not in names] + names[1:]
         plans[b["id"]] = p = T.plan_branch(names, b.get("gene"), pf["age_months"], pf["sex"], use_cache=use_cache)
+        p["parent_names"] = parents
         when = min([s["queried_at"] for s in p["searches"]] or [0])
         for st, how in [(s, "analysed") for s in p["analysed"]] + [(s, "ineligible") for s in p["ineligible"]]:
             studies.setdefault(st["nct"], {**st, "_accessed_at": when})

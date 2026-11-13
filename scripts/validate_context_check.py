@@ -58,6 +58,12 @@ EXPECT = {
 }
 # limit follow-up cases (fix 2026-11-12): (case, section, label, limit words, expected answer) - the question alone is
 # scored, on a fresh practice ledger. CFTR F508del homozygous: the GeneReviews ETI row is another genotype's row.
+# recommendation question cases (R15, 2026-11-12), scored apart; RETEST-PFN1 is used for fixing (not a blind rate)
+RECOMMEND_EXPECT = [
+    ("RETEST-PFN1", "supportive_management", "vitamin E", "not_recommended"),
+    ("RETEST-PFN1", "supportive_management", "beta-carotene", "not_recommended"),
+    ("RETEST-PFN1", "supportive_management", "baclofen", "recommended"),
+]
 FOLLOWUP_EXPECT = [
     ("PRAC-CFTR-F508del", "existing_targeted_therapies", "Elexacaftor/tezacaftor/ivacaftor",
      "heterozygous for p.Phe508del & a minimal function variant 3 or other known responsive PV", "no"),
@@ -125,7 +131,7 @@ def checks_for(entry: dict) -> list[dict]:
         ev = {e["id"]: e for e in led["evidence"]}
         main = next(ev[i] for i in a["evidence_ids"] if (ev[i].get("source") or {}).get("type") in E.CONTEXT_SOURCES)
         header, passage = E.context_passage({"src": main["source"], "quote": main["quote"], "source_text": ""})
-        return [{"kind": "3a", "header": header, "passage": passage, "patient": patient, "ev_id": main["id"],
+        return [{"kind": "3a", "header": header, "passage": passage, "patient": patient, "ev_id": main["id"], "disease": disease,
                  "questions": CC.questions_3a(entry["section"], a["label"], disease, a["requirements"], main["quote"]),
                  "action": a, "branches": a["applies_to"]}]
     recs = O._fetch_records([p["pmid"] for p in a.get("precedents") or []])
@@ -151,6 +157,14 @@ def outcome(entry: dict, results: list[dict]) -> dict:
             return r["questions"][0]["final"]
         lines, notes = CC.decide_3a(c["res"], a["requirements"], c["ev_id"], c["passage"], c["branches"],
                                     limit_followup=followup)
+        if entry["section"] in CC.RECOMMEND_SECTIONS:     # the recommendation question (R15, 2026-11-12)
+            rq = CC.ask(c["header"], c["passage"], c["patient"],
+                        CC.questions_recommendation(a["label"], c.get("disease") or ""))
+            c["recommendation"] = CC.summary(rq)["answers"]
+            if CC.not_recommended(rq):
+                lines = lines + [{"id": "rec", "requirement": "the source recommends this measure", "result": "fail",
+                                  "applies_to": c["branches"], "context_check": "recommendation"}]
+                notes = notes + ["not a recommendation"]
         before = sorted({LG.status_of(a["requirements"], b)[0] for b in c["branches"]})
         after = sorted({LG.status_of(lines, b)[0] for b in c["branches"]})
         return {"status_before": before, "status_after": after, "notes": notes,
@@ -226,6 +240,16 @@ def main() -> int:
         followup_rows.append({"case": case, "label": label, "limit": limit, "want": want, "final": got["final"],
                               "answers": got["answers"], "hit": got["final"] == want})
         print(f"  {'OK    ' if got['final'] == want else 'MISSED'}  follow-up {case} {label}: {got['answers']} (want {want})")
+    recommend_rows = []
+    for case, section, label, want in RECOMMEND_EXPECT:
+        e = {"case": case, "section": section, "label": label}
+        c = checks_for(e)[0]
+        rq = CC.ask(c["header"], c["passage"], c["patient"], CC.questions_recommendation(label, c["disease"]))
+        got = "not_recommended" if CC.not_recommended(rq) else "recommended"
+        recommend_rows.append({"case": case, "label": label, "want": want, "got": got, "hit": got == want,
+                               "answers": rq["questions"][0]["answers"]})
+        print(f"  {'OK    ' if got == want else 'MISSED'}  recommendation {case} {label}: {rq['questions'][0]['answers']} "
+              f"(want {want})")
     wrong = [r for r in rows if r["verdict"] == "wrong"]
     corr = [r for r in rows if r["verdict"] == "correct"]
     caught, harmed = sum(r["hit"] for r in wrong), sum(r["hit"] for r in corr)
@@ -242,7 +266,7 @@ def main() -> int:
                                    "subjects": [p["subject"] for p in r["outcome"].get("precedents") or []]} for r in caveats],
            "harm_measure": "status changed or precedent dropped (decision 2026-11-11)",
            "cost": cost, "pass": bool(wrong and corr and caught / len(wrong) >= 0.8 and harmed / len(corr) <= 0.05),
-           "rows": rows, "followup_cases": followup_rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
+           "rows": rows, "followup_cases": followup_rows, "recommendation_cases": recommend_rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False))
     print(f"\ncaught {caught}/{len(wrong)} ({res['caught_rate']}), harmed {harmed}/{len(corr)} ({res['harmed_rate']}), "
           f"caveats added to correct entries without a status change: {len(caveats)}")

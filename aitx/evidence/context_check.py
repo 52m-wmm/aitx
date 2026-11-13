@@ -68,6 +68,9 @@ def patient_text(pf: dict, branch: dict) -> str:
     lines.append("Findings present: " + ("; ".join(present) if present else "none stated"))
     if excluded:
         lines.append("Findings stated as absent: " + "; ".join(excluded))
+    possible = [x.get("label") for x in pf.get("possible") or [] if x.get("label")]
+    if possible:                       # only when there are some, so every other patient text is unchanged
+        lines.append("Findings stated only as one possibility: " + "; ".join(possible))
     return "\n".join(lines)
 
 
@@ -179,6 +182,28 @@ def questions_limit(action: str, limit: str) -> list[dict]:
                      f"group, table row or genotype this patient belongs to, as the patient information shows it (for "
                      f"example the same variant and zygosity)? Answer no if the patient belongs to another row or "
                      f"genotype, not_stated if the patient information does not say."}]
+
+
+RECOMMEND_ANSWERS = ("recommends", "describes_use", "reports_ineffective", "not_stated")
+NOT_RECOMMENDED = ("describes_use", "reports_ineffective")
+RECOMMEND_SECTIONS = ("existing_targeted_therapies", "supportive_management")
+
+
+def questions_recommendation(action: str, disease: str) -> list[dict]:
+    """Asked once per passage for a Tier 1 treatment entry, in a call of its own so every other cached answer stays
+    (user decision 2026-11-12, reading rule R15: a passage that says people with the disease commonly take something,
+    or that trials of it found no effect, does not recommend it)."""
+    return [{"id": "recommendation", "allowed": RECOMMEND_ANSWERS,
+             "text": f"Does the passage recommend or advise '{action}' for people with {disease}? Answer recommends if "
+                     f"it advises it or presents it as a management option; describes_use if it only says that people "
+                     f"use or take it; reports_ineffective if it reports that it was tried and showed no benefit; "
+                     f"not_stated if the passage does not say. Quote the words."}]
+
+
+def not_recommended(res: dict) -> bool:
+    """Every judgement says the passage only describes use or reports no effect (unanimous, as every other change)."""
+    q = next((q for q in res.get("questions", []) if q["id"] == "recommendation"), None)
+    return bool(q) and len(q["answers"]) > 0 and all(a in NOT_RECOMMENDED for a in q["answers"])
 
 
 def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: list[str],

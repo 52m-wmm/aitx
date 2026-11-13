@@ -296,6 +296,25 @@ def unescape(s: str) -> str:
 
 # ------------------------------------------------------------------ one branch (contract steps 1-4)
 
+def _words(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", (text or "").lower())
+
+
+def parent_names(label: str, parents: list[tuple[str, str]]) -> list[str]:
+    """Names of the disease one level up, used as extra search names when the diagnosis is a numbered or named subtype
+    of it (user decision 2026-11-12: ALS18 -> amyotrophic lateral sclerosis; the subtype name alone missed every
+    general ALS trial). Only a parent whose name is the start of the subtype's name counts ("amyotrophic lateral
+    sclerosis" for "amyotrophic lateral sclerosis type 18"), so a broad grouping ("motor neuron disease") never does.
+    Trials limited to other genes are then ruled out by the genotype rule (criteria.other_gene_required)."""
+    child = _words(label)
+    out = []
+    for _, plabel in parents:
+        pw = _words(plabel)
+        if pw and len(pw) < len(child) and child[:len(pw)] == pw and plabel not in out:
+            out.append(plabel)
+    return out
+
+
 def plan_branch(names: list[str], gene: str | None, patient_age_months: float | None, patient_sex: str | None,
                 *, use_cache: bool = True) -> dict:
     """Search by disease names (at most 3) and by gene, then sort every returned study into exactly one of:

@@ -116,6 +116,7 @@ def facts(step1: dict, step2: dict) -> dict:
                           "zygosity": v["zygosity"], "quote": f"{v['gene']} {v['variant_cdna']} {v['variant_protein']} ({v['zygosity']})"}
                          for v in step1["variants"]],
             "present": [x for x in step2["phenotypes"] if x["status"] == "present"],
+            "possible": [x for x in step2["phenotypes"] if x["status"] == "possible"],
             "excluded": [x for x in step2["phenotypes"] if x["status"] == "excluded"]}
 
 
@@ -254,6 +255,9 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
     return "unknown", None, f"{field or 'requirement'} not stated in the case"
 
 
+POSSIBLE_FINDING = "finding stated only as possible"
+
+
 def manifestation_status(text: str, pf: dict) -> tuple[str, dict | None]:
     """Does the patient have the manifestation a supportive measure treats? HPO match by code."""
     ont = ontology()
@@ -264,6 +268,10 @@ def manifestation_status(text: str, pf: dict) -> tuple[str, dict | None]:
     for x in pf["excluded"]:
         if x["hpo_id"] in ids:
             return "does_not_satisfy", {"field": "manifestation", "value": f"NOT {x['label']}", "quote": x["quote"], "step": 2}
+    for x in pf.get("possible") or []:      # stated only as one possibility: unknown, and said why (2026-11-12)
+        if x["hpo_id"] in ids or ids & set(ont.ancestors(x["hpo_id"])):
+            return "unknown", {"field": POSSIBLE_FINDING, "value": x["label"], "quote": x.get("possible_because") or x["quote"],
+                               "step": 2}
     return "unknown", None
 
 
@@ -960,7 +968,9 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
                 rec["tier"] = "literature"
         rec["results_above"] = bool(above)
         texts = [r["text"] for a in above for r in a["reqs"] if r.get("field") == "manifestation"]
-        targets = pf["present"] if not above else F.uncovered_symptoms(pf["present"], texts, matches)
+        # findings stated only as possible get their entries too, each depending on that finding (2026-11-12)
+        stated = pf["present"] + (pf.get("possible") or [])
+        targets = stated if not above else F.uncovered_symptoms(stated, texts, matches)
         if above and rec.get("chapters"):     # a symptom the chapter's management sections name is covered (2026-11-05)
             mgmt = " ".join(t for nbk in rec["chapters"] for _, t in mgmt_sections(nbk))
             named = [x for x in targets if F.names_symptom(mgmt, list(ont.names(x["hpo_id"])))]
@@ -996,6 +1006,9 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
                         reqs = [{"kind": "other", "text": w, "field": "situation",
                                  "spec": _spec(f"{g.get('title')}: used only {w}", src, w, text, int(time.time()), "code",
                                                f"3a symptomatic {g.get('id')}")} for w in rec_.get("requires") or []]
+                        if x.get("status") == "possible":
+                            reqs.append({"kind": "other", "text": rec_["quote"], "field": "possible_manifestation",
+                                         "finding": x, "spec": spec})
                         put(key, "supportive_management", name, [b["id"]], spec, reqs, f"symptomatic: {x['label']}", source="symptomatic")
                         found[key["key"]]["for_symptom"] = {"hpo_id": x["hpo_id"], "label": x["label"], "quote": x["quote"]}
         if not rec.get("tier") and not above:
@@ -1177,10 +1190,17 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             if r.get("field") == "manifestation":
                 st, fact = manifestation_status(r["text"], pf)
                 note = ""
-                if st == "unknown":
+                if st == "unknown" and fact:       # stated only as possible: say so, as missing information
+                    note = f"the case states {fact['value']} only as one possibility"
+                elif st == "unknown":
                     fact = {"field": MISSING_MANIFESTATIONS, "value": None, "quote": None, "step": None}
                     if (a["label"], r["text"]) not in unreported:
                         unreported.append((a["label"], r["text"]))
+            elif r.get("field") == "possible_manifestation":   # the symptom it treats is stated only as possible
+                x = r["finding"]
+                st, note = "unknown", f"the case states {x['label']} only as one possibility"
+                fact = {"field": POSSIBLE_FINDING, "value": x["label"], "quote": x.get("possible_because") or x["quote"],
+                        "step": 2}
             elif r.get("field") == "situation":            # used only in that situation: conditional, not compared
                 st, fact, note = "unknown", {"field": "usage situation", "value": None, "quote": None, "step": None}, SITUATION_NOTE
             elif r.get("field") == "pregnancy":
@@ -1250,8 +1270,15 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                     part["not_applied"] = [l["requirement"] for l in checked if l.get("context_check")]
                     if part["not_applied"]:
                         part["notes"] = notes + ["not applied: the FDA label decides this drug's conditions"]
+                non_rec = False
+                if section in CC.RECOMMEND_SECTIONS and not decides:
+                    # is this passage recommending it at all? (user decision 2026-11-12, reading rule R15)
+                    rq = CC.ask(header, passage, patient, CC.questions_recommendation(a["label"], disease),
+                                use_cache=use_cache)
+                    part["recommendation"] = CC.summary(rq)
+                    non_rec = CC.not_recommended(rq)
                 runs.append({"part": part, "added": [] if decides else added, "changed": {} if decides else changed,
-                             "applied": not decides})
+                             "applied": not decides, "not_recommended": non_rec})
             changed = {}
             for r in runs:                       # an exemption / degree answer changes the line it was asked about
                 for lid, l in r["changed"].items():
@@ -1277,6 +1304,17 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             for j, l in enumerate(extra, len(base) + 1):
                 l["id"] = f"r{j}"
             lines = base + extra
+            asked = [r for r in applied if "recommendation" in r["part"]]
+            if asked and all(r["not_recommended"] for r in asked):
+                # no passage recommends it: kept in the ledger as not applicable, never reported as a measure
+                line = LG.requirement(f"r{len(lines) + 1}", "other", "the source recommends this measure",
+                                      evs[groups[0][2][0]]["id"],
+                                      {"field": "source scope", "value": None, "quote": None, "step": None},
+                                      "does_not_satisfy", branches,
+                                      "context check: the passage only describes use or reports no benefit; "
+                                      "not a recommendation")
+                line["context_check"] = "recommendation"
+                lines = lines + [line]
             cc = dict(runs[0]["part"])
             cc_notes = cc["notes"] = list(cc["notes"])
             if len(groups) > 1:

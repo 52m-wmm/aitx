@@ -136,6 +136,14 @@
 - 反例：只有新生儿段落依据的条目（"Postural drainage & percussion"，表 6a 第 2 行"Teach parent/caregiver airway clearance"）对 15 岁病人仍为不适用。
 - 测试：`tests/test_established.py`（通用段落恢复状态；只有新生儿段落仍不适用；各段落都有限定时任一满足即适用）。
 
+## R15 描述用法或报告无效不是推荐（2026-11-12）
+**规则**：原文说"病人常常使用 X"或"X 的试验没有显示效果"，是描述用法或报告无效，不是推荐；这样的 X 不能作为支持治疗或靶向疗法写进报告。只有原文建议使用、或把它列为管理选项时才算推荐。
+- **原文片段**（复测 PFN1，GeneReviews ALS 总论 NBK1450 "Symptom Management"）："Individuals with ALS commonly supplement their diets with vitamin E, vitamin C, B vitamins, selenium, zinc, coenzyme Q10 …"；"In a Cochrane Review … significant differences in longevity, muscle strength, or functional rating scales over time were not identified."
+- **正确读法**：这些补充剂与抗氧化剂不是推荐措施，条目判不适用、留在账本、不写进报告。
+- **错误读法**：13 种补充剂被列为"适用"的支持治疗（Tier 1 写错，用户 2026-11-12 判定）。
+- **反例**：同一章节"Medications such as baclofen and benzodiazepines can help relieve spasticity and muscle cramps"是推荐，保持原状态。
+- **测试**：`tests/test_context_check.py`（全票"描述用法 / 报告无效"才算非推荐；反向：分歧、推荐、未说明都不改）、`tests/test_established.py`（非推荐 → 不适用并留账本；反向：推荐不变、禁忌节与说明书决定的药不问）。
+
 ## 审查清单（逐条过）
 
 审查一份报告或账本时，对每个条目问：
@@ -153,6 +161,7 @@
 12. 试验标准是不是挂在别的病种亚组下？（R12）
 13. 诊断是病种群名吗？有没有更具体的、相容的证据？（R13）
 14. 这条行动的依据来自几个段落吗？限定是不是只属于其中一个段落？（R14）
+15. 原文是在推荐，还是只说病人常用、或者报告试验无效？（R15）
 
 ## 维护
 
@@ -163,3 +172,4 @@
 ## 变更记录
 - v1.0（2026-11-11）：由盲测批次 20261108 的写错提炼，13 条。
 - v1.1（2026-11-12）：新增 R14（合并行动按段落分别核查），起因 CFTR 气道廓清 / 通便药 / 补盐。
+- v1.2（2026-11-12）：新增 R15（描述用法或报告无效不是推荐），起因复测 PFN1 的 13 种补充剂。

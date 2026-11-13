@@ -35,7 +35,7 @@ ACTION_STATUSES = ("applicable", "not_applicable", "conditional", "searched_none
 REQ_KINDS = ("inclusion", "exclusion", "label_condition", "other")
 # lines the context check adds or changes: scope / limit of the source (not patient variables), an exemption from an
 # avoidance (decides nothing), a degree the patient's finding was not shown to reach (an ordinary unknown)
-CONTEXT_LINE_KINDS = ("scope", "limit", "exemption", "degree")
+CONTEXT_LINE_KINDS = ("scope", "limit", "exemption", "degree", "recommendation")
 PATIENT_STATUSES = ("satisfies", "does_not_satisfy", "unknown", "not_assessed")
 ALTERNATIVE_GENE_NOTE = ("another gene, listed beside a criterion that names the patient's gene: read as alternatives, "
                          "not compared")
@@ -372,7 +372,7 @@ class Ledger:
                 passages = [acc.get("passage", "")] + [p.get("passage", "") for p in acc.get("other_passages") or []]
                 verbatim = quote_in(r["requirement"], str(ev.get("quote", ""))) or (
                     cc == "limit" and any(quote_in(r["requirement"], str(p)) for p in passages))
-                if ev.get("status") != "verified" or not (verbatim or cc == "scope"):
+                if ev.get("status") != "verified" or not (verbatim or cc in ("scope", "recommendation")):
                     bad.append(f"{tag}: requirement {r['id']} not verbatim in verified evidence {r['requirement_evidence']}")
                 if r["result"] != requirement_result(r["kind"], r["patient_status"]):
                     bad.append(f"{tag}: requirement {r['id']} result inconsistent")
@@ -380,7 +380,7 @@ class Ledger:
                     if r["result"] != "not_assessed":
                         bad.append(f"{tag}: requirement {r['id']} an exemption decides nothing (not_assessed)")
                     continue
-                if cc in ("scope", "limit"):         # a limit of the source, not a missing patient variable
+                if cc in ("scope", "limit", "recommendation"):   # about the source, not a missing patient variable
                     continue
                 if r["result"] == "not_assessed":
                     if r["kind"] not in ("inclusion", "exclusion") or r.get("note") not in (NOT_ASSESSED_NOTE, UNMAPPED_NOTE, AGE_BY_REGISTRY_NOTE, ALTERNATIVE_GENE_NOTE) or r.get("patient_fact"):
@@ -437,8 +437,10 @@ class Ledger:
                 for fu in (cc.get("limit_followup") or {}).values():
                     checks.extend(fu.get("call_ids") or [])
         add_check(a.get("context_check"))
+        add_check((a.get("context_check") or {}).get("recommendation"))
         for p in (a.get("context_check") or {}).get("other_passages") or []:
             add_check(p)
+            add_check(p.get("recommendation"))
         for p in (a.get("precedents") or []) + (a.get("supporting_precedents") or []):
             add_check(p.get("context_check"))
         return {"llm_calls": calls, "rules": sorted({e.get("retrieved_by") for e in evs if e.get("retrieved_by")}),
