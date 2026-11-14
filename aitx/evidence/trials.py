@@ -309,9 +309,30 @@ def parent_names(label: str, parents: list[tuple[str, str]]) -> list[str]:
     child = _words(label)
     out = []
     for _, plabel in parents:
-        pw = _words(plabel)
+        pw = [w for w in _words(plabel) if w not in INHERITANCE_WORDS]
         if pw and len(pw) < len(child) and child[:len(pw)] == pw and plabel not in out:
             out.append(plabel)
+    return out
+
+
+# words that say how a disease is inherited, not which disease it is: MONDO puts "familial amyotrophic lateral
+# sclerosis" between ALS18 and ALS (2026-11-13), so they are ignored when matching a parent's name
+INHERITANCE_WORDS = {"familial", "hereditary", "inherited", "autosomal", "dominant", "recessive", "x", "linked"}
+ANCESTOR_LEVELS = 3
+
+
+def ancestors_up(mondo_id: str, parents_of, levels: int = ANCESTOR_LEVELS) -> list[tuple[str, str]]:
+    """MONDO ancestors (id, label), nearest first, up to `levels` steps: parents_of(id) -> [(id, label)]."""
+    out, frontier, seen = [], [mondo_id], {mondo_id}
+    for _ in range(levels):
+        nxt = []
+        for mid in frontier:
+            for pid, plabel in parents_of(mid):
+                if pid not in seen:
+                    seen.add(pid)
+                    out.append((pid, plabel))
+                    nxt.append(pid)
+        frontier = nxt
     return out
 
 

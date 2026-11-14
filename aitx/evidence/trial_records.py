@@ -29,7 +29,8 @@ def add_trials(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_cach
         names = E.disease_names(b, step2)
         # a subtype is also searched by its parent disease's name (user decision 2026-11-12: ALS18 -> ALS)
         parents = T.parent_names((b.get("diagnosis") or {}).get("label") or "",
-                                 L.mondo_parents(b["id"], use_cache=use_cache)) if str(b["id"]).startswith("MONDO:") else []
+                                 T.ancestors_up(b["id"], lambda m: L.mondo_parents(m, use_cache=use_cache))) \
+            if str(b["id"]).startswith("MONDO:") else []
         names = names[:1] + [n for n in parents if n not in names] + names[1:]
         plans[b["id"]] = p = T.plan_branch(names, b.get("gene"), pf["age_months"], pf["sex"], use_cache=use_cache)
         p["parent_names"] = parents

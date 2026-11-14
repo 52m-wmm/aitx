@@ -245,3 +245,13 @@ def test_thousands_separator_and_none_item():
     assert C.check_mapping({"id": "exc1", "quote": "platelet count ≤ 100,000/µL", "fact": "lab", "op": "<=", "value": 100000}, items) is None
     none = [{"id": "exc1", "kind": "exclusion", "text": "None", "level": 0, "parent": None}]
     assert C.lines_for({"nct": "NCT00000001"}, _mapped(none, []), PF, {"facts": []}, BR, []) == []
+
+
+def test_a_healthy_only_study_quotes_the_patients_variant():
+    # 2026-11-13: RETEST-PFN1 NCT04667013 (conditions: Healthy) failed the ledger check - no quoted patient fact
+    from aitx.evidence import criteria as CR
+    study = {"healthy_volunteers": True, "conditions": ["Healthy"], "min_age": None, "max_age": None, "sex": "ALL"}
+    pf = {"age_months": None, "age_quote": None, "sex": None, "sex_quote": None,
+          "variants": [{"gene": "PFN1", "quote": "PFN1 c.211T>G p.Cys71Gly (heterozygous)"}]}
+    (line,) = [l for l in CR.registry_lines(study, pf) if l["item"] == "registry:healthy_volunteers"]
+    assert line["patient_status"] == "does_not_satisfy" and line["patient_fact"]["quote"].startswith("PFN1")

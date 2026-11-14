@@ -402,3 +402,7 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 **起因**：盲测 B1 的描述取自 GeneReviews 总论首段，点名的是病种群（Leigh 综合征谱系、CMT），Step 2 因"文本点名优先"选了更宽的名字，压过了 ClinVar 指向的 LRPPRC 法裔加拿大型和 CMT1B，随后引入了亚型不符的试验（CMT4J）。已核对：OLS 中 MONDO:0009069（法裔加拿大型）的祖先含 MONDO:0009723（Leigh 综合征），MONDO:0007307（CMT1B）的祖先含 MONDO:0015626（CMT），反向不成立。
 **测试**：`tests/test_diagnosis_refine.py`（两个盲测例子；反向：无上下位关系、原文更具体、无 ClinVar 链接、无层级时都不变；多个被包含者取星级高的）。
 **验收**：Step 2 验收与 `acceptance_eval_cases.py --eval`（确认 4 个评测病例诊断不变）留到修复全部写完后的统一重跑。
+
+## "或"表述的表型为"可能存在"（2026-11-12 用户决定）
+引文前后是"normal / unaffected / typical / absent / none / no + or"一类的二选一表述（"development is normal or mildly delayed"）时，表型状态记为 `possible`（`possible_because` 记原文短语），由代码按原文判定。诊断排序仍按存在计；下游对应条目判"有条件"并列入缺失信息"finding stated only as possible"。测试 `tests/test_possible_findings.py`、`tests/test_established.py`。属放宽。
+

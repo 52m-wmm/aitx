@@ -413,6 +413,11 @@ def registry_lines(study: dict, pf: dict) -> list[dict]:
                 if c["field"] == "age" and pf["age_months"] is not None else
                 {"field": "sex", "value": pf["sex"], "quote": pf["sex_quote"], "step": 2}
                 if c["field"] == "sex" and pf["sex"] else
+                # a healthy-volunteers-only study: the patient is not a healthy volunteer - the reported variant says so
+                # (2026-11-13: the line had no quoted patient fact, which the ledger check rejects)
+                {"field": "healthy_volunteers", "value": "patient with a reported disease-causing variant",
+                 "quote": pf["variants"][0]["quote"], "step": 1}
+                if c["field"] == "healthy_volunteers" and pf.get("variants") else
                 {"field": c["field"], "value": None, "quote": None, "step": None})
         out.append({"kind": "inclusion", "text": text, "patient_status": st, "patient_fact": fact,
                     "note": "registry field", "details": {}, "item": f"registry:{c['field']}"})
