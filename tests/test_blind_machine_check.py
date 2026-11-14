@@ -58,3 +58,12 @@ def test_a_context_check_scope_or_limit_line_is_not_a_missing_variable():
 
 def test_reverse_an_ordinary_unknown_line_must_be_listed_as_missing():
     assert M.check_patient_facts(_req()) and M.check_patient_facts(_req("degree"))
+
+
+def test_a_not_recommended_line_needs_no_patient_quote():
+    led = {"actions": [{"label": "x", "requirements": [{"id": "r1", "result": "fail", "patient_status": "does_not_satisfy",
+                                                        "patient_fact": {"field": "source scope", "quote": None},
+                                                        "context_check": "recommendation"}]}], "missing_information": []}
+    assert M.check_patient_facts(led) == []
+    led["actions"][0]["requirements"][0].pop("context_check")
+    assert M.check_patient_facts(led)                      # reverse: an ordinary unmet line still needs its quote

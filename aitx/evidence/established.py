@@ -949,7 +949,8 @@ def supportive_fallback(led: LG.Ledger, found: dict, tier_rec: dict, pf: dict, s
 
     table = F.load_guidelines()
     ont = ontology()
-    present_ids = {x["hpo_id"] for x in pf["present"]}
+    # findings stated only as possible are symptoms too for the tier record (their entries depend on them, 2026-11-13)
+    present_ids = {x["hpo_id"] for x in pf["present"] + (pf.get("possible") or [])}
 
     def matches(text, symptom):
         """HPO up / down: the action treats the symptom, a broader term of it, or a narrower one (2026-11-05)."""

@@ -274,7 +274,9 @@ def check_patient_facts(led: dict) -> list[dict]:
     for a in led.get("actions", []):
         for r in a.get("requirements", []):
             fact = r.get("patient_fact") or {}
-            if r.get("patient_status") in ("satisfies", "does_not_satisfy") and not fact.get("quote"):
+            # a line about the source (context check: not a recommendation, age band, ...) carries no patient quote
+            if r.get("patient_status") in ("satisfies", "does_not_satisfy") and not fact.get("quote") \
+                    and r.get("context_check") not in ("recommendation", "scope", "limit"):
                 out.append({"check": "patient-facts", "action": a.get("label"), "requirement": r.get("id"),
                             "detail": f"{r.get('patient_status')} without a quoted patient fact"})
             # a limit of the source found by the context check is not a missing patient variable (ledger rule, 2026-11-11)

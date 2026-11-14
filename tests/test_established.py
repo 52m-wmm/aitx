@@ -1218,3 +1218,9 @@ def test_a_finding_stated_only_as_possible_makes_its_entry_conditional(monkeypat
     assert st == "unknown" and fact["quote"] == "normal or mildly delayed"
     st, _ = E.manifestation_status("developmental delay", dict(PF, present=[dict(x, status="present")], possible=[]))
     assert st == "satisfies"
+
+
+def test_a_possible_finding_counts_for_the_supportive_tier_record():
+    # 2026-11-13: EIF2B1's early-intervention entries for a finding stated as possible failed supportive_tiers_consistent
+    import inspect
+    assert 'pf["present"] + (pf.get("possible") or [])' in inspect.getsource(E)
