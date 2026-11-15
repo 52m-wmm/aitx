@@ -145,3 +145,6 @@
 ## 13. 是否推荐（2026-11-12，用户决定，阅读规则 R15）
 支持治疗与已有靶向疗法的条目，每个适用段落另问一次（单独调用、3 票，其他条目的缓存不受影响）："原文是在推荐这项措施，还是只描述常见用法或报告其无效？"（recommends / describes_use / reports_ineffective / not_stated）。所有被问的段落都全票答"描述用法"或"报告无效"时，加一条 `context_check = "recommendation"` 的不满足行，条目判不适用、留在账本、不写进报告；禁忌节和由说明书决定条件的药不问。投票调用 ID 记在 `context_check.recommendation.call_ids`（并计入 `provenance.check_calls`）。
 
+## 14. 非推荐理由分三档（2026-11-15，用户决定）
+账本理由：推荐（不加行）/ 描述用法（含结果不一致）/ 报告无效。"报告无效"只在 3 票都答"报告无效"、且段落没有"inconsistent / conflicting / mixed / variable results"类措辞时使用，否则记"描述用法"（`recommendation_reason`，`context_check.recommendation.reason`）。由代码判定，只改理由文字、不改状态。起因 EIF2B1 皮质类固醇（"used with inconsistent results in acute situations"）。测试 `tests/test_context_check.py`、`tests/test_established.py`。
+

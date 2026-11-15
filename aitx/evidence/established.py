@@ -1278,6 +1278,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                                 use_cache=use_cache)
                     part["recommendation"] = CC.summary(rq)
                     non_rec = CC.not_recommended(rq)
+                    if non_rec:
+                        part["recommendation"]["reason"] = CC.not_recommended_reason(rq, passage)
                 runs.append({"part": part, "added": [] if decides else added, "changed": {} if decides else changed,
                              "applied": not decides, "not_recommended": non_rec})
             changed = {}
@@ -1307,13 +1309,15 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             lines = base + extra
             asked = [r for r in applied if "recommendation" in r["part"]]
             if asked and all(r["not_recommended"] for r in asked):
+                # reported no benefit only when every passage says so; otherwise described use (2026-11-15)
+                reason = "reports_ineffective" if all(r["part"]["recommendation"].get("reason") == "reports_ineffective"
+                                                      for r in asked) else "describes_use"
                 # no passage recommends it: kept in the ledger as not applicable, never reported as a measure
                 line = LG.requirement(f"r{len(lines) + 1}", "other", "the source recommends this measure",
                                       evs[groups[0][2][0]]["id"],
                                       {"field": "source scope", "value": None, "quote": None, "step": None},
-                                      "does_not_satisfy", branches,
-                                      "context check: the passage only describes use or reports no benefit; "
-                                      "not a recommendation")
+                                      "does_not_satisfy", branches, f"context check: {CC.REASON_NOTE[reason]}")
+                line["recommendation_reason"] = reason
                 line["context_check"] = "recommendation"
                 lines = lines + [line]
             cc = dict(runs[0]["part"])

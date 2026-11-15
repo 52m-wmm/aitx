@@ -16,6 +16,8 @@ and the ledger computes the status from those as before.
 """
 from __future__ import annotations
 
+import re
+
 from concurrent.futures import ThreadPoolExecutor
 
 from aitx.disease import extract as X
@@ -204,6 +206,23 @@ def not_recommended(res: dict) -> bool:
     """Every judgement says the passage only describes use or reports no effect (unanimous, as every other change)."""
     q = next((q for q in res.get("questions", []) if q["id"] == "recommendation"), None)
     return bool(q) and len(q["answers"]) > 0 and all(a in NOT_RECOMMENDED for a in q["answers"])
+
+
+INCONSISTENT = re.compile(r"\b(inconsistent|conflicting|mixed|variable|equivocal)\s+(results?|findings|outcomes|evidence|effects?)\b",
+                          re.I)
+REASON_NOTE = {"describes_use": "the passage describes use (including inconsistent results); not a recommendation",
+               "reports_ineffective": "the passage reports no benefit; not a recommendation"}
+
+
+def not_recommended_reason(res: dict, passage: str) -> str:
+    """Which of the two non-recommendation reasons the ledger records (user decision 2026-11-15, decided by code from
+    the answers and the passage wording): "reports_ineffective" only when every judgement says so and the passage does
+    not call the results inconsistent; otherwise "describes_use" (which includes inconsistent results)."""
+    q = next((q for q in res.get("questions", []) if q["id"] == "recommendation"), None)
+    answers = (q or {}).get("answers") or []
+    if answers and all(a == "reports_ineffective" for a in answers) and not INCONSISTENT.search(passage or ""):
+        return "reports_ineffective"
+    return "describes_use"
 
 
 def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: list[str],

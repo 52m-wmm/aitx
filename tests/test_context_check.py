@@ -329,3 +329,19 @@ def test_the_recommendation_question_names_no_test_material():
     text = CC.questions_recommendation("drug X", "disease Y")[0]["text"].lower()
     for word in ("als", "amyotrophic", "supplement", "vitamin", "cochrane", "antioxidant"):
         assert word not in text.split() and word not in text
+
+
+# --- three-tier reason (user decision 2026-11-15: EIF2B1 corticosteroids "used with inconsistent results")
+
+def test_unanimous_no_benefit_without_inconsistency_wording_is_reports_ineffective():
+    r = _rec("reports_ineffective", "reports_ineffective", "reports_ineffective")
+    assert CC.not_recommended_reason(r, "Antioxidants showed no significant differences.") == "reports_ineffective"
+
+
+@pytest.mark.parametrize("answers,passage", [
+    (("reports_ineffective",) * 3, "Corticosteroids have been used with inconsistent results in acute situations."),
+    (("describes_use", "reports_ineffective", "reports_ineffective"), "People commonly take X."),
+    (("describes_use",) * 3, "People commonly take X."),
+])
+def test_otherwise_the_reason_is_described_use(answers, passage):
+    assert CC.not_recommended_reason(_rec(*answers), passage) == "describes_use"

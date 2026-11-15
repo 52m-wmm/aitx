@@ -1185,6 +1185,7 @@ def test_an_entry_the_source_only_describes_is_not_applicable_and_kept(monkeypat
     assert len(asked) == 3 and rec["status_by_branch"]["b1"]["status"] == "not_applicable"
     (l,) = [r for r in rec["requirements"] if r.get("context_check") == "recommendation"]
     assert l["result"] == "fail" and "not a recommendation" in l["note"]
+    assert l["recommendation_reason"] == "describes_use" and "describes use" in l["note"]
     assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
     assert len(rec["context_check"]["recommendation"]["call_ids"]) == 3
 
