@@ -20,6 +20,17 @@ from aitx.evidence import trials as T
 SECTION = "clinical_trial_eligibility"
 
 
+def confirmed(branch: dict, step1: dict, step2: dict) -> bool:
+    """Step 2 resolved this branch as the diagnosis, the branch gene carries the patient's variant, and a ClinVar
+    record of exactly that variant used for ranking is pathogenic or likely pathogenic (user decision 2026-11-15)."""
+    p = step2.get("primary") or {}
+    genes = {v.get("gene") for v in (step1 or {}).get("variants") or []}
+    path = any(rec.get("used_for_ranking") and "athogenic" in str(rec.get("clinical_significance") or "")
+               and "onflicting" not in str(rec.get("clinical_significance") or "")
+               for cv in step2.get("clinvar") or [] for rec in cv.get("records") or [])
+    return p.get("status") == "resolved" and p.get("id") == branch.get("id") and branch.get("gene") in genes and path
+
+
 def add_trials(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_cache: bool = True) -> None:
     pf = E.facts(step1, step2)
     extra = led.patient_context.get("extra_facts") or PFX.extract(case, use_cache=use_cache)
@@ -40,7 +51,8 @@ def add_trials(led: LG.Ledger, case: dict, step1: dict, step2: dict, *, use_cach
             in_branch.setdefault(st["nct"], {})[b["id"]] = how
     mapped = {nct: C.map_study(studies[nct], use_cache=use_cache) for nct, bs in in_branch.items()
               if "analysed" in bs.values()}
-    by_id = {b["id"]: b for b in led.branches}
+    by_id = {b["id"]: dict(b, confirmed=confirmed(b, step1, step2), parent_names=(plans.get(b["id"]) or {}).get("parent_names") or [])
+             for b in led.branches}
     for nct, bs in sorted(in_branch.items()):
         _record(led, studies[nct], bs, mapped.get(nct), pf, extra, by_id, step2)
     led.mark_searched(SECTION)

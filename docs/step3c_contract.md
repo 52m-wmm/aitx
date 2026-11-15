@@ -185,3 +185,7 @@
 ## 跨分支同一药物合并（2026-11-11，盲测后修复 N4）
 
 同一药物（同一行动键）在多个诊断分支各生成了 3c 行动时：各分支的先例**一致**（同样的文章、同样的方向和对象判定）→ 合并为一条行动（`applies_to`、`status_by_branch` 合并，要求行重新编号，记 `merged_branches`）；**不一致** → 保持分开，互相标 `same_action_other_branches`，并记入账本 `possible_duplicates`（kind `cross_branch`），由 Step 4 决定呈现。起因：SFTPC 的甲泼尼龙在两个分支各写了一条（同一篇 PMID 33179299）。不一致的例子：GRIN2B 的美金刚，两个分支的病名不同，上下文核查对同一篇文章给了不同方向（not_reported / mixed）。测试：`tests/test_duplicates.py`。
+
+## 先例病人的年龄、性别是先例描述，不是条件（2026-11-15 用户决定）
+LLM 抽出的先例条件里 `field` 为 age / sex 的（"17-month-old infant"、"37-year-old man"）不再作为本病人的条件行，改记在先例的 `demographics`。测试 `tests/test_offlabel.py`。
+

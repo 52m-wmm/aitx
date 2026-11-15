@@ -197,3 +197,6 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 ## 子型同时用上一级疾病名检索（2026-11-12 用户决定，2026-11-13 补正）
 诊断是某病的具体亚型时，沿 MONDO 往上最多 3 级（OLS4 `parents`），名字去掉遗传方式词（familial / hereditary / inherited / autosomal / dominant / recessive / X-linked）后恰好是子型名开头的上级，加入检索名（`trial_searches.<分支>.parent_names`）；"运动神经元病"这类宽泛分组不会加入。只收其他基因的试验由基因型规则判不满足。属放宽。测试 `tests/test_trial_parent_names.py`。只收健康志愿者的试验：以病人报告的致病变异为"不满足"的依据（`tests/test_criteria.py`）。
 
+## 诊断已确定时的诊断类与基因确诊类标准（2026-11-15 用户批准）
+Step 2 主诊断已确定（resolved）、该分支基因带病人的变异、病人自己那条变异的 ClinVar 记录为致病 / 可能致病（`trial_records.confirmed`）时：入组条件点名本病（含其缩写）或其上一级疾病（"definitive diagnosis of Primary Hyperoxaluria"、"Documentation of PH1"）判满足；"基因确诊"类条件（没有点名其他基因）判满足；排除条件点名上一级疾病的其他亚型（"primary hyperoxaluria type 2 or type 3"）判不满足（不排除）。测试 `tests/test_criteria.py`。
+

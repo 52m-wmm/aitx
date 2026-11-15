@@ -203,6 +203,17 @@ _ANY_SEX = re.compile(r"\b(?:all|both|any)\s+(?:genders?|sexes)\b|\bmales?\s*(?:
                       r"\bfemales?\s*(?:and|or|/|&)\s*males?\b|\bregardless\s+of\s+(?:gender|sex)\b", re.I)
 
 
+def other_subtype(quote: str, diagnosis: str) -> bool:
+    """The criterion names subtype numbers of the parent disease and none is the patient's ("type 2 or type 3" for
+    "primary hyperoxaluria type 1")."""
+    own = re.search(r"(?:type\s*)?(\d+[A-Za-z]?)\s*$", diagnosis or "")
+    m = re.search(r"\btypes?\s*\d", quote, re.I)
+    if not own or not m:
+        return False
+    nums = {n.upper() for n in re.findall(r"\d+[A-Za-z]?", quote[m.start():m.start() + 40])}
+    return bool(nums) and own.group(1).upper() not in nums
+
+
 def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kind: str = "inclusion"
              ) -> tuple[str, dict | None, str, dict]:
     """(patient_status, patient_fact, note, details) for one verified mapping; kind = inclusion / exclusion."""
@@ -230,6 +241,25 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kin
         if st == "unknown" and not (fct or {}).get("field"):
             fct = {"field": fact, "value": None, "quote": None, "step": None}     # the variable that is missing
         return st, fct, note, {}
+    if fact == "diagnosis" and branch.get("confirmed"):
+        # the diagnosis is confirmed (step 2 resolved, gene and pathogenic variant match - user decision 2026-11-15):
+        # a criterion naming it or its parent disease is met; an exclusion naming another subtype of the parent is not
+        dx = (branch.get("diagnosis") or {}).get("label") or ""
+        vq = next((v["quote"] for v in pf["variants"] if v["gene"] == branch.get("gene")), None)
+        fct = {"field": "diagnosis", "value": dx, "quote": vq, "step": 2}
+        # the branch's own names, abbreviations included: the trial already passed relevance and the diagnosis is confirmed
+        own = next((n for n in names if n and re.search(rf"(?<![A-Za-z0-9]){re.escape(n)}(?![A-Za-z0-9])", quote, re.I)),
+                   None)
+        parent = next((p for p in branch.get("parent_names") or [] if E.name_in(p, quote) is not None), None)
+        if kind == "exclusion" and parent and not own and other_subtype(quote, dx):
+            return "does_not_satisfy", fct, f"the confirmed diagnosis is {dx}, not the subtype the exclusion names", {}
+        if kind == "inclusion" and (own or parent):
+            return "satisfies", fct, f"confirmed diagnosis {dx} (step 2, pathogenic {branch.get('gene')} variant)", {}
+    if fact == "genetic_confirmation" and branch.get("confirmed") and kind == "inclusion":
+        vs = [v for v in pf["variants"] if v["gene"] == branch.get("gene")]
+        if vs:                     # other_gene_required (above) already ruled out a criterion naming only other genes
+            return "satisfies", {"field": "variant", "value": vs[0]["protein"], "quote": vs[0]["quote"], "step": 1}, \
+                f"pathogenic {branch.get('gene')} variant reported; diagnosis confirmed", {}
     if fact == "diagnosis":
         hit = next((n for n in E.label_names(names) if E.name_in(n, quote) is not None), None)
         if hit and kind == "exclusion":       # the branch disease named in an exclusion is context ("not related to CF",

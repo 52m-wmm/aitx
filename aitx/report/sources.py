@@ -51,3 +51,39 @@ def date_of(src: dict, evidence: dict | None = None) -> str | None:
     if t == "url":
         return src.get("version")
     return None
+
+
+MEASURE = None
+
+
+def trial_primary_outcomes(nct: str) -> list[str]:
+    """The trial's registered primary outcome measures, verbatim (with their time frame)."""
+    from aitx import http
+    try:
+        d = json.loads(http.get(f"https://clinicaltrials.gov/api/v2/studies/{nct}?fields=OutcomesModule").text)
+    except (RuntimeError, ValueError):
+        return []
+    po = ((d.get("protocolSection") or {}).get("outcomesModule") or {}).get("primaryOutcomes") or []
+    return [p["measure"] + (f" ({p['timeFrame']})" if p.get("timeFrame") else "") for p in po if p.get("measure")]
+
+
+def genereviews_surveillance(nbk: str) -> list[str]:
+    """Sentences of the chapter's Surveillance section that name something measured (code filter, verbatim)."""
+    import re
+    from aitx.evidence import genereviews as GR
+    global MEASURE
+    MEASURE = MEASURE or re.compile(r"\b(serum|plasma|urine|urinary|blood|monitor\w*|ultrasound|imaging|MRI|eGFR|GFR|"
+                                    r"creatinine|cystatin|level|levels|concentration|examination|assessment|evaluation|"
+                                    r"test|testing|measure\w*)\b", re.I)
+    try:
+        sec = next((v for k, v in GR.sections_for_llm(nbk).items() if k.endswith("Surveillance")), "")
+    except (OSError, KeyError, ValueError, RuntimeError):
+        return []
+    out = []
+    for line in sec.splitlines():
+        body = line.split("]: ", 1)[-1] if "]: " in line else line.split(": ", 1)[-1]
+        for s in re.split(r"(?<=[.!?])\s+", body):
+            heading = s.rstrip().endswith(":") or re.match(r"^\W*(CKD\s+)?stages?\b", s, re.I)
+            if MEASURE.search(s) and len(s) > 15 and not heading and s not in out:
+                out.append(s.strip())
+    return out

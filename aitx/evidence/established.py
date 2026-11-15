@@ -1217,7 +1217,7 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 line["patient_fact"] = dict(fact or {"value": None, "quote": None, "step": None}, field=var)
                 led.note_missing(var, a["label"], r["text"][:120], "3a")
             lines.append(line)
-        cc = None
+        cc, cautions = None, []
         ctx = [i for i, sp in enumerate(a["specs"]) if sp["src"]["type"] in CONTEXT_SOURCES
                and evs[i]["status"] == "verified"]
         if CC.ENABLED and ctx:                           # context check (fix plan, 2026-11-11): answers -> lines
@@ -1320,6 +1320,31 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 line["recommendation_reason"] = reason
                 line["context_check"] = "recommendation"
                 lines = lines + [line]
+            # the entry's own words are a limitation, the recommending words are elsewhere in the paragraph (user
+            # decision 2026-11-15, shockwave lithotripsy: "... the hardest stones, ... resistant to SWL" next to
+            # "Although a reasonable option"): cite the recommending sentence, keep the entry's sentence as a caution
+            cautions = []
+            r0 = runs[0]
+            rec_q = ((r0["part"].get("recommendation") or {}).get("answers") or {}).get("recommendation") or {}
+            spec0 = a["specs"][groups[0][2][0]]
+            if r0["applied"] and not r0["not_recommended"] and rec_q.get("final") == "recommends" \
+                    and str(groups[0][1]).startswith("Paragraph") and rec_q.get("quote") \
+                    and LG.quote_in(rec_q["quote"], groups[0][1]) and not LG.quote_in(rec_q["quote"], spec0["quote"]):
+                body = groups[0][1].split("]: ", 1)[-1] if "]: " in groups[0][1] else groups[0][1].split(": ", 1)[-1]
+                sent = next((s for s in re.split(r"(?<=[.!?])\s+", body) if LG.quote_in(rec_q["quote"], s)), None)
+                if sent and LG.quote_in(sent, spec0.get("source_text") or ""):
+                    new = make(dict(spec0, claim=f"{spec0['claim']} (recommending sentence)", quote=sent))
+                    if new["status"] == "verified":
+                        evs.insert(0, new)
+                        cautions.append(spec0["quote"])
+                        for l in lines:        # a condition read from the limitation sentence becomes part of the caution
+                            # the line read from the limitation sentence (its own evidence item may differ)
+                            if (l.get("patient_fact") or {}).get("field") == MISSING_MANIFESTATIONS \
+                                    and LG.quote_in(l["requirement"], spec0["quote"]) \
+                                    and not LG.quote_in(l["requirement"], sent):
+                                l.update(requirement=sent, requirement_evidence=new["id"],
+                                         note=(l.get("note") or "") + " | the situation it is used in, as the "
+                                                                     "recommending sentence states it")
             cc = dict(runs[0]["part"])
             cc_notes = cc["notes"] = list(cc["notes"])
             if len(groups) > 1:
@@ -1355,6 +1380,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                                reasons)
         if cc is not None:
             rec["context_check"] = cc
+            if cautions:
+                rec["cautions"] = cautions
         if section == "supportive_management":
             rec["tier_source"] = F.best_tier(a["specs"])
             if a.get("for_symptom"):

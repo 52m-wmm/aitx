@@ -528,3 +528,15 @@ def test_family_counts_only_as_the_patients_condition():
 def test_direction_claim_reads_naturally(measure, want, unwanted):
     c = O.direction_claim("positive", "Coenzyme Q10", "GEMIN5 disorder", measure)
     assert want in c and (unwanted is None or unwanted not in c)
+
+
+def test_a_precedent_patients_age_and_sex_describe_the_precedent_not_this_patient(monkeypatch):
+    # user decision 2026-11-15 (PRAC-AGXT-c33dup: "17-month-old infant" had become a condition on a 7-year-old);
+    # the stub paper text holds only the L-serine sentence, so its words stand in for an age phrase here
+    item = dict(LSER, conditions=[{"text": "GRIN2B patients", "field": "variant_function"},
+                                  {"text": "treated with L-serine", "field": "age"}])
+    led = _run(monkeypatch, [item], supplement={"name": "L-serine", "dsld": ["254751"]})
+    a = next(x for x in led.actions if x["section"] == O.SECTION and x.get("action_key"))
+    reqs = [r["requirement"] for r in a["requirements"]]
+    assert "treated with L-serine" not in reqs and a["precedents"][0]["demographics"] == ["treated with L-serine"]
+    assert "GRIN2B patients" in reqs                                           # reverse: other conditions stay

@@ -205,3 +205,68 @@ def test_an_old_article_is_flagged_without_the_product_wording():
     led = ledger([act("drug:1", "existing_targeted_therapies", "drug X", "applicable")])
     md, _ = A.assemble(led, CASE, lambda s, e=None: "2019", today=dt.date(2026, 11, 15))
     assert "more than 5 years old: may be out of date)" in md and "still available" not in md
+
+
+# --- review of the first AGXT report (user, 2026-11-15)
+
+def test_the_summary_opens_with_priority_actions():
+    md, _ = build(ledger([act("drug:1", "existing_targeted_therapies", "drug L", "applicable"),
+                          act("drug:2", "existing_targeted_therapies", "drug N", "conditional", [unk("eGFR >= 30")])]))
+    s = md[:md.index("## Tier 1")]
+    assert s.index("**Priority actions**") < s.index("**Diagnosis**")
+    assert "drug L (existing targeted therapy; applicable)" in s and "If eGFR >= 30: drug N" in s
+
+
+def test_an_entry_waiting_on_an_unreported_manifestation_ranks_after_the_others():
+    led = ledger([act("drug:5", "off_label_expanded_access", "eye drug", "conditional",
+                      [unk("choroidal neovascularization", field="manifestation")],
+                      efficacy_direction="reported_improvement"),
+                  act("trial:1", "clinical_trial_eligibility", "Trial T", "conditional", [unk("a"), unk("b")],
+                      study_type="interventional")])
+    md, _ = build(led)
+    r = md[md.index("**Ranking**"):]
+    assert r.index("Trial T") < r.index("eye drug") and "ranked after the others" in r
+
+
+def test_outcome_measures_come_from_trial_primary_outcomes_and_surveillance():
+    led = ledger([act("trial:1", "clinical_trial_eligibility", "Trial T", "conditional", [unk("a")],
+                      study_type="interventional", nct="NCT00000001", url="https://clinicaltrials.gov/study/NCT00000001"),
+                  act("drug:1", "existing_targeted_therapies", "drug L", "applicable")])
+    md, _ = A.assemble(led, CASE, lambda s, e=None: "2024-08-15", today=dt.date(2026, 11, 15),
+                       outcomes_of=lambda nct: ["Percent change in urinary oxalate (6 months)"],
+                       surveillance_of=lambda nbk: ["Serum creatinine for eGFR at least annually."])
+    om = md[md.index("**Outcome measures**"):md.index("**Ranking**")]
+    assert "Percent change in urinary oxalate (6 months) [NCT00000001 primary outcome]" in om
+    assert '"Serum creatinine for eGFR at least annually." [GeneReviews NBK1, Management / Surveillance; updated 2024-08-15]' in om
+
+
+def test_a_caution_kept_from_the_same_source_is_shown_under_the_entry():
+    md, _ = build(ledger([act("procedure:1", "supportive_management", "lithotripsy", "conditional", [unk("stones")],
+                              cautions=["Hard stones are resistant to lithotripsy."])]))
+    assert 'Caution (same source): "Hard stones are resistant to lithotripsy."' in md
+
+
+def test_no_contraindication_is_one_sentence_without_the_label_fragments():
+    md, _ = build(ledger([]), safety={"contraindications": [{"drug": "drug A", "none": True, "quote": "4 CONTRAINDICATIONS None. ( 4 )",
+                                                             "set_id": "s1", "effective_date": "20250101", "url": "u"}]})
+    assert "drug A: the label lists no contraindications [FDA label s1" in md and "( 4 )" not in md
+
+
+def test_only_efficacy_outcomes_of_interventional_trials_are_listed():
+    led = ledger([act("trial:1", "clinical_trial_eligibility", "Trial T", "conditional", [unk("a")],
+                      study_type="interventional", nct="NCT1", url="u"),
+                  act("trial:2", "clinical_trial_eligibility", "Registry R", "conditional", [unk("a")],
+                      study_type="observational", nct="NCT2", url="u")])
+    outs = {"NCT1": ["Incidence of treatment-emergent adverse events (6 months)", "Percent change in urinary oxalate"],
+            "NCT2": ["Number of samples stored in tissue bank"]}
+    md, _ = A.assemble(led, CASE, lambda s, e=None: None, today=dt.date(2026, 11, 15), outcomes_of=lambda n: outs[n])
+    om = md[md.index("**Outcome measures**"):md.index("**Ranking**")]
+    assert "urinary oxalate" in om and "adverse events" not in om and "samples" not in om
+
+
+def test_a_caution_sentence_is_not_also_cited_as_support():
+    led = ledger([act("procedure:1", "supportive_management", "lithotripsy", "conditional", [unk("stones")],
+                      evs=("e1", "e2"), cautions=["Hard stones resist it."])])
+    led["evidence"].append(ev("e2", quote="Hard stones resist it."))
+    md, _ = build(led)
+    assert md.count("Hard stones resist it.") == 1 and "Caution (same source)" in md

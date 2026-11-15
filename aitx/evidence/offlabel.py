@@ -821,6 +821,9 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
             t = str((c or {}).get("text") or "")
             if not t or not LG.quote_in(t, x["_text"]):
                 continue
+            if (c or {}).get("field") in ("age", "sex"):     # who the precedent patient was: description, not a
+                x.setdefault("demographics", []).append(t)      # condition on this patient (user decision 2026-11-15)
+                continue
             ev = led.add(LG.sourced(f"PMID {x['pmid']} condition: {t[:80]}", SECTION, [bid], src, t, x["_text"], led_time(),
                                     produced_by=x["_llm"], retrieved_by="3c pubmed", action=g["key"]))
             if c.get("field") == "variant_function":

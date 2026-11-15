@@ -60,9 +60,30 @@ def clean(text: str, n: int = 240) -> str:
     return text if len(text) <= n else text[:n].rsplit(" ", 1)[0] + " …"
 
 
+# outcome measures (user decision 2026-11-15): efficacy measures only - a disease marker or function, not safety counts,
+# samples or registries (code filter on the registered wording)
+EFFICACY = re.compile(r"\b(oxal\w*|glycol\w*|eGFR|GFR|creatinine|cystatin|urin\w*|plasma|serum|blood|level|levels|"
+                      r"concentration|excretion|function|score|scale|progression|frequency|survival|change)\b", re.I)
+NOT_EFFICACY = re.compile(r"\b(adverse events?|TEAEs?|safety|tolerability|samples?|registr\w*|biobank|enrol\w*|"
+                          r"recruit\w*|pharmacokinetic\w*)\b", re.I)
+
+
+UNREPORTED = ("manifestations not reported", "whether the patient has the manifestation it treats", "manifestation")
+
+
+def depends_on_unreported(a: dict) -> bool:
+    """The entry waits on a complication or manifestation the case does not report (user decision 2026-11-15: such
+    entries rank after every other entry)."""
+    return any(r.get("target_symptom") or (r.get("patient_fact") or {}).get("field") in UNREPORTED
+               for r in unknown_lines(a))
+
+
 class Report:
-    def __init__(self, led: dict, case: dict, date_of, safety: dict | None = None, today: dt.date | None = None):
+    def __init__(self, led: dict, case: dict, date_of, safety: dict | None = None, today: dt.date | None = None,
+                 outcomes_of=None, surveillance_of=None):
         self.led, self.case, self.date_of, self.safety = led, case, date_of, safety or {}
+        self.outcomes_of = outcomes_of or (lambda nct: [])
+        self.surveillance_of = surveillance_of or (lambda nbk: [])
         self.today = today or dt.date.today()
         self.ev = {e["id"]: e for e in led.get("evidence") or []}
         self.branches = {b["id"]: b for b in led.get("branches") or [] if b.get("diagnosis")}
@@ -98,10 +119,14 @@ class Report:
             e = next((self.ev[i] for i in a.get("evidence_ids") or [] if i in self.ev), None)
             return [f"  - {self.cite(e)}"] if e else []
         lines = []
-        for i in (a.get("evidence_ids") or [])[:k]:
+        shown = 0
+        for i in a.get("evidence_ids") or []:
             e = self.ev.get(i)
-            if not e or e.get("kind") != "sourced":
-                continue
+            if not e or e.get("kind") != "sourced" or e.get("quote") in (a.get("cautions") or []):
+                continue                                   # a caution sentence is shown as a caution, not as support
+            if shown >= k:
+                break
+            shown += 1
             lines.append(f"  - \"{clean(e.get('quote'))}\" {self.cite(e, product)}")
         return lines
 
@@ -127,7 +152,10 @@ class Report:
             head += f" {clean(a['conclusion'], 300)}"
         self.trace.append({"section": section, "label": a["label"], "action_key": a.get("action_key"),
                            "evidence_ids": a.get("evidence_ids") or []})
-        return [head] + self.sources(a)
+        lines = [head] + self.sources(a)
+        for c in a.get("cautions") or []:
+            lines.append(f"  - Caution (same source): \"{clean(c)}\"")
+        return lines
 
     def negative(self, section: str) -> list[str]:
         """Searched and found nothing (contract section 10): database, query, date, counts."""
@@ -247,29 +275,78 @@ class Report:
         """Fixed order, no weights (contract Q5): human precedent with improvement > enrollable trial > molecular
         feasibility > mechanism only; then fewer unknowns; then access route. One reason sentence each."""
         cands = []
+        later = " (depends on a manifestation the case does not report, so ranked after the others)"
         for a in self.actions("off_label_expanded_access"):
             if written(a) and a.get("efficacy_direction") in ("reported_improvement", "partial_improvement"):
-                cands.append((0, len(unknown_lines(a)), a["label"],
-                              "human precedent with reported improvement (off-label)"))
+                u = depends_on_unreported(a)
+                cands.append((u, 0, len(unknown_lines(a)), a["label"],
+                              "human precedent with reported improvement (off-label)" + (later if u else "")))
         for a in self.actions("clinical_trial_eligibility"):
             if written(a) and a.get("study_type") == "interventional":
-                cands.append((1, len(unknown_lines(a)), a["label"], "open interventional trial the patient may enter"))
+                u = depends_on_unreported(a)
+                cands.append((u, 1, len(unknown_lines(a)), a["label"],
+                              "open interventional trial the patient may enter" + (later if u else "")))
         for a in self.actions("bespoke_therapies"):
             if a.get("classification") in ("theoretically_possible", "eligible", "likely_eligible", "possibly_eligible"):
-                cands.append((2, 0 if a.get("premises_complete") else 1, a["label"],
+                cands.append((False, 2, 0 if a.get("premises_complete") else 1, a["label"],
                               "molecularly feasible for this variant; no product for it"
                               + ("" if a.get("premises_complete") else " (some premises could not be checked)")))
         for a in self.actions("drug_repurposing"):
             if a.get("hypothesis"):
-                cands.append((3, 0, a["label"], "mechanism-based hypothesis only"))
+                cands.append((False, 3, 0, a["label"], "mechanism-based hypothesis only"))
+        out = ["**Outcome measures** (verbatim from the trials' registered primary outcomes and the GeneReviews "
+               "surveillance section):"] + self.outcome_measures() + ["", "**Ranking**:"]
         if not cands:
-            return ["- No Tier 2 or Tier 3 option qualified for ranking; see the sections above."]
-        cands.sort(key=lambda c: (c[0], c[1], c[2]))
-        return [f"{i}. **{lab}** — {why}" + (f"; {n} unknown condition(s)" if n and tier < 2 else "") + "."
-                for i, (tier, n, lab, why) in enumerate(cands[:10], 1)]
+            return out + ["- No Tier 2 or Tier 3 option qualified for ranking; see the sections above."]
+        cands.sort(key=lambda c: (c[0], c[1], c[2], c[3]))
+        return out + [f"{i}. **{lab}** — {why}" + (f"; {n} unknown condition(s)" if n and tier < 2 else "") + "."
+                      for i, (_, tier, n, lab, why) in enumerate(cands[:10], 1)]
+
+    def outcome_measures(self) -> list[str]:
+        """Code extraction, no LLM (user decision 2026-11-15): primary outcome measures of the trials the report lists,
+        and the measured items in the GeneReviews Surveillance section of the chapters it cites."""
+        out = []
+        trials = [a for a in self.actions("clinical_trial_eligibility") if written(a)]
+        trials.sort(key=lambda a: (len(unknown_lines(a)), a.get("study_type") != "interventional"))
+        for a in [a for a in trials if a.get("study_type") == "interventional"][:CAPS["clinical_trial_eligibility"]]:
+            for m in [m for m in self.outcomes_of(a.get("nct") or "") if EFFICACY.search(m) and not NOT_EFFICACY.search(m)][:2]:
+                out.append(f"- {clean(m, 200)} [{a.get('nct')} primary outcome]({a.get('url') or ''})")
+        nbks = []
+        for a in self.led["actions"]:
+            if a["section"] in ("existing_targeted_therapies", "supportive_management") and written(a):
+                for i in a.get("evidence_ids") or []:
+                    src = (self.ev.get(i) or {}).get("source") or {}
+                    if src.get("type") == "nbk" and src.get("id") not in nbks:
+                        nbks.append(src["id"])
+        for nbk in nbks:
+            date = self.date_of({"type": "nbk", "id": nbk}, None)
+            for s in self.surveillance_of(nbk)[:8]:
+                out.append(f"- \"{clean(s, 220)}\" [GeneReviews {nbk}, Management / Surveillance"
+                           f"{'; updated ' + date if date else ''}](https://www.ncbi.nlm.nih.gov/books/{nbk}/)")
+        self.trace.append({"section": "outcome_measures", "label": "outcome measures", "action_key": None,
+                           "evidence_ids": []})
+        return out or ["- No outcome measure is recorded for the entries above."]
+
+    def priority(self) -> list[str]:
+        """Highest-value actions first (user decision 2026-11-15): applicable Tier 1 targeted therapies, then the
+        targeted therapies that hinge on one condition ("If <condition>: <drug>"), then applicable supportive measures
+        that depend on nothing unreported."""
+        out = []
+        tt = [a for a in self.actions("existing_targeted_therapies") if written(a)]
+        for a in [a for a in tt if status_of(a) == "applicable"]:
+            out.append(f"  - {a['label']} (existing targeted therapy; applicable).")
+        for a in [a for a in tt if status_of(a) == "conditional"]:
+            unk = unknown_lines(a)
+            if unk:
+                out.append(f"  - If {clean(unk[0]['requirement'], 120)}: {a['label']} (existing targeted therapy)"
+                           + (f"; also depends on {len(unk) - 1} more condition(s)" if len(unk) > 1 else "") + ".")
+        sup = [a for a in self.actions("supportive_management") if written(a) and status_of(a) == "applicable"]
+        for a in sup[:3]:
+            out.append(f"  - {a['label']} (supportive management; applicable).")
+        return ["- **Priority actions**:"] + out if out else []
 
     def summary(self) -> list[str]:
-        out = []
+        out = self.priority()
         dx = [b["diagnosis"]["label"] for b in self.branches.values()]
         out.append(f"- **Diagnosis**: {'; '.join(dx) if dx else 'not established'}"
                    + (f" ({len(dx)} possible diagnoses; entries say which they apply to)" if len(dx) > 1 else "") + ".")
@@ -292,9 +369,12 @@ class Report:
                 out.append(f"  - {f['drug']} with {f['other']}: \"{clean(f['quote'])}\" "
                            f"[FDA label {f['set_id']}; effective {f.get('effective_date')}]({f['url']})")
             for f in s.get("contraindications") or []:
-                what = "the label lists no contraindications" if f.get("none") else "label contraindication"
-                out.append(f"  - {f['drug']}: {what}: \"{clean(f['quote'])}\" "
-                           f"[FDA label {f['set_id']}; effective {f.get('effective_date')}]({f['url']})")
+                if f.get("none"):                       # one conclusion, no fragment text (user decision 2026-11-15)
+                    out.append(f"  - {f['drug']}: the label lists no contraindications "
+                               f"[FDA label {f['set_id']}; effective {f.get('effective_date')}]({f['url']}).")
+                else:
+                    out.append(f"  - {f['drug']}: label contraindication: \"{clean(f['quote'])}\" "
+                               f"[FDA label {f['set_id']}; effective {f.get('effective_date')}]({f['url']})")
             if s.get("not_checked"):
                 out.append(f"  - No FDA label in the evidence ledger for {', '.join(s['not_checked'])}: "
                            f"interactions not checked.")
@@ -331,8 +411,9 @@ class Report:
         return "\n".join(out).rstrip() + "\n"
 
 
-def assemble(led: dict, case: dict, date_of, safety: dict | None = None, today: dt.date | None = None) -> tuple[str, list[dict]]:
-    r = Report(led, case, date_of, safety, today)
+def assemble(led: dict, case: dict, date_of, safety: dict | None = None, today: dt.date | None = None,
+             outcomes_of=None, surveillance_of=None) -> tuple[str, list[dict]]:
+    r = Report(led, case, date_of, safety, today, outcomes_of, surveillance_of)
     md = r.build()
     return md, r.trace
 

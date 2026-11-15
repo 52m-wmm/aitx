@@ -30,7 +30,8 @@ def main() -> int:
         case = runmeta.find_case(cid)
         led = json.loads((ROOT / "out" / "step3" / f"{cid}.json").read_text())
         safety = S.check(A.drugs_for_safety(led))
-        md, trace = A.assemble(led, case, SRC.date_of, safety)
+        md, trace = A.assemble(led, case, SRC.date_of, safety, outcomes_of=SRC.trial_primary_outcomes,
+                               surveillance_of=SRC.genereviews_surveillance)
         (out / f"{cid}.md").write_text(md)
         (out / f"{cid}.trace.json").write_text(json.dumps({"trace": trace, "safety": safety}, indent=1, ensure_ascii=False))
         sub.append({"id": cid, "report_markdown": md})

@@ -1225,3 +1225,53 @@ def test_a_possible_finding_counts_for_the_supportive_tier_record():
     # 2026-11-13: EIF2B1's early-intervention entries for a finding stated as possible failed supportive_tiers_consistent
     import inspect
     assert 'pf["present"] + (pf.get("possible") or [])' in inspect.getsource(E)
+
+
+# --- the recommending sentence is cited, a limitation sentence becomes a caution (user decision 2026-11-15, SWL)
+
+SWL = ("Paragraph 3 [context: Lithotripsy.]: Lithotripsy. Although a reasonable option, lithotripsy has a lower "
+       "success rate. Hard stones are resistant to lithotripsy.")
+
+
+def _swl(monkeypatch, entry_quote, rec_quote):
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    _patch_passage(monkeypatch, lambda spec: ("GeneReviews NBK1283", SWL))
+
+    def chat(messages, k, use_cache, prompt_version=None, call_params=None):
+        user = messages[-1]["content"]
+        if "Does the passage recommend or advise" in user:
+            ans = [{"q": 1, "answer": "recommends", "quote": rec_quote}]
+        else:
+            n = user.count(" Answers: ")
+            ans = [{"q": 1, "answer": "yes", "quote": ""}, {"q": 2, "answer": "this_disease_patients", "quote": ""},
+                   {"q": 3, "answer": "no", "quote": ""}] + [{"q": i, "answer": "yes", "quote": ""} for i in range(4, n + 1)]
+        return {"content": json.dumps({"answers": ans}), "served_model": "fake", "call_id": f"c{k}"}
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+    text = SWL.split("]: ", 1)[1]
+    src = {"type": "nbk", "id": "NBK1283", "url": "u", "section": "Management / Supportive Care", "credit": "c"}
+    spec = E._spec("GeneReviews lists lithotripsy", src, entry_quote, text, 1)
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    found = _found("supportive_management", specs=[spec], label="lithotripsy", key="procedure:lithotripsy")
+    if "Hard stones" in entry_quote:      # the condition the extraction read from the limitation sentence
+        own = E._spec("GeneReviews: lithotripsy for Hard stones", src, "Hard stones", text, 1)   # its own item
+        found["procedure:lithotripsy"]["reqs"] = [{"kind": "other", "text": "Hard stones", "field": "manifestation",
+                                                   "spec": own}]
+    E._records(led, found, PF_FS, [])
+    return led, next(x for x in led.actions if x["action_key"] == "procedure:lithotripsy")
+
+
+def test_a_limitation_quote_gives_way_to_the_recommending_sentence(monkeypatch):
+    led, rec = _swl(monkeypatch, "Hard stones are resistant to lithotripsy.", "Although a reasonable option")
+    first = next(e for e in led.evidence.values() if e["id"] == rec["evidence_ids"][0])
+    assert first["quote"].startswith("Although a reasonable option") and first["status"] == "verified"
+    assert rec["cautions"] == ["Hard stones are resistant to lithotripsy."]
+    (l,) = [r for r in rec["requirements"] if r.get("patient_fact", {}).get("field") == "manifestations not reported"]
+    assert l["requirement"].startswith("Although a reasonable option")     # no longer "Hard stones"
+    assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
+
+
+def test_reverse_an_entry_quoting_the_recommending_sentence_is_unchanged(monkeypatch):
+    led, rec = _swl(monkeypatch, "Although a reasonable option, lithotripsy has a lower success rate.",
+                    "Although a reasonable option")
+    assert "cautions" not in rec

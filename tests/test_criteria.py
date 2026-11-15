@@ -255,3 +255,56 @@ def test_a_healthy_only_study_quotes_the_patients_variant():
           "variants": [{"gene": "PFN1", "quote": "PFN1 c.211T>G p.Cys71Gly (heterozygous)"}]}
     (line,) = [l for l in CR.registry_lines(study, pf) if l["item"] == "registry:healthy_volunteers"]
     assert line["patient_status"] == "does_not_satisfy" and line["patient_fact"]["quote"].startswith("PFN1")
+
+
+# --- confirmed diagnosis (user decision 2026-11-15, PRAC-AGXT-c33dup)
+
+def _conf_branch(confirmed=True):
+    return {"id": "MONDO:0009823", "gene": "AGXT", "confirmed": confirmed, "parent_names": ["primary hyperoxaluria"],
+            "diagnosis": {"label": "primary hyperoxaluria type 1"}}
+
+
+_PF = {"age_months": 84, "sex": None, "variants": [{"gene": "AGXT", "protein": "p.Lys12fs", "class": "frameshift",
+                                                    "zygosity": "homozygous", "quote": "AGXT c.33dup (homozygous)"}]}
+
+
+def _ev(fact, quote, kind="inclusion", confirmed=True):
+    from aitx.evidence import criteria as CR
+    return CR.evaluate({"fact": fact, "quote": quote}, _PF, {}, _conf_branch(confirmed),
+                       ["primary hyperoxaluria type 1", "PH1"], kind)[0]
+
+
+def test_a_confirmed_diagnosis_meets_a_criterion_naming_it_or_its_parent():
+    assert _ev("diagnosis", "definitive diagnosis of Primary Hyperoxaluria, Dent Disease or Cystinuria") == "satisfies"
+    assert _ev("diagnosis", "Documentation of PH1") == "satisfies"
+    assert _ev("genetic_confirmation", "Diagnosis confirmed through genetic testing") == "satisfies"
+
+
+def test_an_exclusion_for_another_subtype_is_not_met_by_a_confirmed_diagnosis():
+    assert _ev("diagnosis", "Confirmed diagnosis of primary hyperoxaluria type 2 or type 3", "exclusion") == "does_not_satisfy"
+
+
+def test_reverse_without_confirmation_the_old_rules_apply():
+    assert _ev("diagnosis", "definitive diagnosis of Primary Hyperoxaluria", confirmed=False) == "unknown"
+    assert _ev("genetic_confirmation", "Diagnosis confirmed through genetic testing", confirmed=False) == "unknown"
+    assert _ev("diagnosis", "Confirmed diagnosis of primary hyperoxaluria type 2 or type 3", "exclusion",
+               confirmed=False) == "unknown"
+
+
+def test_reverse_an_exclusion_naming_the_patients_own_subtype_is_not_ruled_out():
+    from aitx.evidence import criteria as CR
+    assert not CR.other_subtype("primary hyperoxaluria type 1 or type 2", "primary hyperoxaluria type 1")
+    assert CR.other_subtype("primary hyperoxaluria type 2 or 3", "primary hyperoxaluria type 1")
+
+
+def test_confirmed_requires_resolved_primary_gene_and_a_pathogenic_record():
+    from aitx.evidence import trial_records as TR
+    s1 = {"variants": [{"gene": "AGXT"}]}
+    s2 = {"primary": {"status": "resolved", "id": "MONDO:0009823"},
+          "clinvar": [{"records": [{"used_for_ranking": True, "clinical_significance": "Pathogenic"}]}]}
+    b = {"id": "MONDO:0009823", "gene": "AGXT"}
+    assert TR.confirmed(b, s1, s2)
+    assert not TR.confirmed(b, s1, dict(s2, primary={"status": "ambiguous", "id": "MONDO:0009823"}))
+    assert not TR.confirmed(dict(b, gene="GRHPR"), s1, s2)
+    assert not TR.confirmed(b, s1, dict(s2, clinvar=[{"records": [{"used_for_ranking": True,
+                                                                    "clinical_significance": "Uncertain significance"}]}]))

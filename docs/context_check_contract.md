@@ -148,3 +148,6 @@
 ## 14. 非推荐理由分三档（2026-11-15，用户决定）
 账本理由：推荐（不加行）/ 描述用法（含结果不一致）/ 报告无效。"报告无效"只在 3 票都答"报告无效"、且段落没有"inconsistent / conflicting / mixed / variable results"类措辞时使用，否则记"描述用法"（`recommendation_reason`，`context_check.recommendation.reason`）。由代码判定，只改理由文字、不改状态。起因 EIF2B1 皮质类固醇（"used with inconsistent results in acute situations"）。测试 `tests/test_context_check.py`、`tests/test_established.py`。
 
+## 15. 推荐句与局限句（2026-11-15 用户决定，冲击波碎石）
+段落里"是否推荐"3 票答推荐、但推荐的原话不在条目自己的引文里时：引用含推荐原话的那一句作为主证据，条目原来的句子记为 `cautions`（报告里写成 "Caution (same source)"）；从那句局限句读出的表现条件改为推荐句（仍为有条件）。只对段落文本做，表格行不做。测试 `tests/test_established.py`。
+
