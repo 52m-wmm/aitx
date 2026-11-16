@@ -151,3 +151,10 @@
 ## 15. 推荐句与局限句（2026-11-15 用户决定，冲击波碎石）
 段落里"是否推荐"3 票答推荐、但推荐的原话不在条目自己的引文里时：引用含推荐原话的那一句作为主证据，条目原来的句子记为 `cautions`（报告里写成 "Caution (same source)"）；从那句局限句读出的表现条件改为推荐句（仍为有条件）。只对段落文本做，表格行不做。测试 `tests/test_established.py`。
 
+## 16. 表现条件：目的、严格 HPO 映射、情境状语（2026-11-15 用户批准，第 5 项）
+- **目的**：条件文字紧跟在预防性词（Prevent / Prevention of / Reduce / Decrease / Inhibit / Minimize / Lower / Limit）之后，或就在 Objective 栏的预防句里，且只看条目自己那一行 / 那一段；Treat / Manage / Control 或"Manifestation/Concern"栏里的表现仍是条件。目的记在 `purposes`，不作条件。
+- **去掉目的只去掉目的本身**：同一行的"表现 / 问题"栏（如"[Manifestation/Concern: Bone health]"）补为条件；小标题、年龄、使用情境照旧保留。
+- **严格 HPO 映射**：先精确名称 / 同义词；否则只有检索到的词条名称包含条件的每个实词才算映射上；依据记在 `patient_fact.match` 与行 note；映射不上保持有条件并注明。EIF2B1 物理治疗因此回退为有条件，记为严格映射的召回代价（用户接受）。
+- **情境状语**：治疗栏（表格）整格、或段落里条目自己的列表项内的 during / when / whenever / while / in periods of / in case of 短语，按"使用情境"条件抽取（不论有没有目的从句）；"when possible / if appropriate"等不算；不跨逗号 / 分号列表项。
+- 测试：`tests/test_established.py`。
+

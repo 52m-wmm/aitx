@@ -1275,3 +1275,156 @@ def test_reverse_an_entry_quoting_the_recommending_sentence_is_unchanged(monkeyp
     led, rec = _swl(monkeypatch, "Although a reasonable option, lithotripsy has a lower success rate.",
                     "Although a reasonable option")
     assert "cautions" not in rec
+
+
+# --- manifestation conditions (user decision 2026-11-15, PRAC-AGXT-c33dup)
+
+@pytest.mark.parametrize("text,passage", [
+    ("crystal injury to kidneys", "Row 1: [Objective: Prevent crystal injury to kidneys by ↓ crystal formation] [Treatment: x]"),
+    ("calcium oxalate crystallization in the urine",
+     "Paragraph 6 [context: Reduce calcium oxalate crystallization in the urine.]: Inhibition of crystallization."),
+    ("Prevent fractures", "anything"),
+])
+def test_what_a_measure_prevents_is_its_purpose(text, passage):
+    assert E.is_purpose(text, passage)
+
+
+@pytest.mark.parametrize("text,passage", [
+    ("seizures", "Paragraph 2: Treat seizures with standard anti-seizure medication."),
+    ("seizures", "Row 3: [Manifestation/Concern: Seizures] [Treatment: Standard ASM]"),
+    ("spasticity", "Paragraph 1: Manage spasticity with baclofen; control pain."),
+    ("systemic oxalosis", "Row 2: [Manifestation/Concern: Systemic oxalosis] [Treatment: Initiate dialysis]"),
+])
+def test_reverse_a_treated_manifestation_stays_a_condition(text, passage):
+    assert not E.is_purpose(text, passage)
+
+
+class _Ont:
+    terms = {"HP:1": "Kidney stone", "HP:2": "Acute kidney injury", "HP:3": "Nephrolithiasis (child of stone)"}
+
+    def exact_lookup(self, t):
+        return ["HP:1"] if t.lower() == "kidney stone" else []
+
+    def search(self, t, k):
+        return [{"hpo_id": "HP:2"}, {"hpo_id": "HP:1"}]
+
+    def names(self, i):
+        return {"HP:1": ["Kidney stone", "Kidney stones", "Renal stone"], "HP:2": ["Acute kidney injury"]}.get(i, [])
+
+    def ancestors(self, i):
+        return {"HP:3": ["HP:1"]}.get(i, [])
+
+
+def test_strict_mapping_needs_every_word_and_records_the_basis(monkeypatch):
+    monkeypatch.setattr(E, "ontology", lambda: _Ont())
+    ids, basis = E.hpo_targets("kidney stone")
+    assert ids == {"HP:1"} and basis == "exact HPO name or synonym"
+    ids, basis = E.hpo_targets("renal stones")
+    assert ids == {"HP:1"} and "every word" in basis
+    ids, basis = E.hpo_targets("crystal injury to kidneys")             # the old top hit was acute kidney injury
+    assert ids == set() and basis.startswith("no HPO term")
+    pf = {"present": [{"hpo_id": "HP:3", "label": "Nephrolithiasis", "quote": "stones"}], "excluded": []}
+    st, fact, _ = E.manifestation_match("kidney stone", pf)
+    assert st == "satisfies" and fact["match"]["relation"] == "more specific than HP:1"
+    assert E.manifestation_match("crystal injury to kidneys", pf)[0] == "unknown"   # reverse: unmapped stays unknown
+
+
+def test_a_preventive_word_right_before_the_condition_counts_wherever_it_occurs():
+    p = ("Paragraph 1: Early diagnosis of PH1 with initiation of supportive care aims to prevent crystal injury to "
+         "kidneys, reduce stones.")
+    assert E.is_purpose("crystal injury to kidneys", [p])
+    assert not E.is_purpose("crystal injury to kidneys",
+                            [p, "Row 4: [Manifestation/Concern: crystal injury to kidneys] [Treatment: x]"])   # reverse
+
+
+# --- removing a purpose removes only the purpose (user decision 2026-11-15: dialysis, bisphosphonates)
+
+DIALYSIS_ROW = ("Table 10. Supportive Care\nRow 5: [Objective: Prevent systemic oxalosis] [Treatment: Monitor plasma "
+                "oxalate concentration during transient or permanent periods of low GFR.Initiate dialysis promptly to "
+                "lower oxalate concentration.] [Consideration/Other: x]")
+BONE_ROW = ("Table 7. Supportive Care\nRow 14: [Manifestation/Concern: Bone health] [Treatment: Bisphosphonates to "
+            "prevent fractures] [Considerations/Other: High risk of fractures]")
+
+
+def _row_entry(monkeypatch, row, quote, cond, label):
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", False)
+    source_text = row.replace("[", " ").replace("]", " ")
+    _patch_passage(monkeypatch, lambda spec: ("GeneReviews NBK1", row))
+    src = {"type": "nbk", "id": "NBK1", "url": "u", "section": "Management / Supportive Care", "credit": "c"}
+    spec = E._spec(f"GeneReviews lists {label}", src, quote, source_text, 1)
+    own = E._spec(f"{label} for {cond}", src, cond, source_text, 1)
+    found = _found("supportive_management", specs=[spec], label=label, key=f"procedure:{label}")
+    found[f"procedure:{label}"]["reqs"] = [{"kind": "other", "text": cond, "field": "manifestation", "spec": own}]
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, found, PF_FS, [])
+    return led, next(x for x in led.actions if x["action_key"] == f"procedure:{label}")
+
+
+def test_a_situational_qualifier_in_the_treatment_cell_is_a_condition(monkeypatch):
+    led, rec = _row_entry(monkeypatch, DIALYSIS_ROW, "Initiate dialysis promptly to lower oxalate concentration.",
+                          "systemic oxalosis", "dialysis")
+    reqs = [r["requirement"] for r in rec["requirements"]]
+    assert "during transient or permanent periods of low GFR" in reqs and "systemic oxalosis" not in reqs
+    assert rec["purposes"] == ["systemic oxalosis"] and rec["status_by_branch"]["b1"]["status"] == "conditional"
+    assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
+
+
+def test_the_row_concern_column_stays_when_the_purpose_goes(monkeypatch):
+    led, rec = _row_entry(monkeypatch, BONE_ROW, "Bisphosphonates to prevent fractures", "fractures", "bisphosphonates")
+    reqs = [r["requirement"] for r in rec["requirements"]]
+    assert "Bone health" in reqs and "fractures" not in reqs
+    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
+
+
+def test_reverse_a_qualifier_in_another_sentence_of_a_paragraph_is_not_taken():
+    spec = {"src": {"type": "nbk", "id": "NBK1"}, "quote": "Give drug X daily."}
+    p = "Paragraph 1: Monitor levels during illness. Give drug X daily."
+    import aitx.evidence.established as EE
+    orig = EE.context_passages
+    try:
+        EE.context_passages = lambda s: [("h", p)]
+        assert E.situational_phrases(spec) == []
+        spec2 = {"src": {"type": "nbk", "id": "NBK1"}, "quote": "Give drug X daily"}
+        EE.context_passages = lambda s: [("h", "Paragraph 1: Give drug X daily during illness. Rest when tired.")]
+        assert E.situational_phrases(spec2) == ["during illness"]     # the quote's own sentence only
+    finally:
+        EE.context_passages = orig
+
+
+def test_reverse_a_qualifier_of_another_list_item_or_a_hedge_is_not_taken():
+    import aitx.evidence.established as EE
+    orig = EE.context_passages
+    try:
+        EE.context_passages = lambda s: [("h", "Paragraph 2: After infancy - pancreatic enzyme replacement; vitamins; "
+                                               "liver transplant when indicated; salt supplementation.")]
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": "pancreatic enzyme replacement"}) == []
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": "liver transplant"}) == ["when indicated"]
+        EE.context_passages = lambda s: [("h", "Paragraph 1: Prevent fever when possible through vaccinations.")]
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": "vaccinations"}) == []
+    finally:
+        EE.context_passages = orig
+
+
+def test_reverse_a_comma_list_neighbours_qualifier_is_not_taken():
+    import aitx.evidence.established as EE
+    orig = EE.context_passages
+    try:
+        EE.context_passages = lambda s: [("h", "Paragraph 2: Prevention of fever through the use of vaccinations, "
+                                               "maintenance antibiotics during winter, and antipyretics.")]
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": "the use of vaccinations"}) == []
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": "maintenance antibiotics"}) == ["during winter"]
+    finally:
+        EE.context_passages = orig
+
+
+def test_reverse_a_long_list_quote_takes_only_the_entrys_own_item():
+    import aitx.evidence.established as EE
+    orig = EE.context_passages
+    q = "prevent fever (e.g., through vaccinations); maintenance antibiotics during winter, antipyretics for fever"
+    try:
+        EE.context_passages = lambda s: [("h", f"Paragraph 1: It is important to {q}.")]
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": q}, "vaccinations") == []
+        assert E.situational_phrases({"src": {"type": "nbk"}, "quote": q}, "maintenance antibiotics") == ["during winter"]
+    finally:
+        EE.context_passages = orig

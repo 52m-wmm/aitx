@@ -258,21 +258,145 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
 POSSIBLE_FINDING = "finding stated only as possible"
 
 
-def manifestation_status(text: str, pf: dict) -> tuple[str, dict | None]:
-    """Does the patient have the manifestation a supportive measure treats? HPO match by code."""
+_MSTOP = {"the", "and", "with", "of", "in", "to", "for", "or", "a", "an", "by", "due", "from", "on", "at", "as", "its",
+          "their", "patients", "individuals", "persons", "signs", "symptoms", "management", "related", "associated"}
+
+
+def _stem(w: str) -> str:
+    w = w.lower()
+    for suf, rep in (("ies", "y"), ("es", ""), ("s", "")):
+        if len(w) > 4 and w.endswith(suf):
+            return w[:-len(suf)] + rep
+    return w
+
+
+def _covered(word: str, names: set[str]) -> bool:
+    s = _stem(word)
+    return any(s == n or (len(s) >= 5 and len(n) >= 5 and (s.startswith(n) or n.startswith(s))) for n in names)
+
+
+def hpo_targets(text: str) -> tuple[set[str], str]:
+    """The HPO terms a manifestation condition names, and the basis (user decision 2026-11-15): an exact HPO name or
+    synonym; otherwise a retrieved term whose names contain every content word of the condition; otherwise none
+    (the old rule took the top lexical hit, which made "crystal injury to kidneys" acute kidney injury)."""
     ont = ontology()
-    ids = set(ont.exact_lookup(text)) or {c["hpo_id"] for c in ont.search(text, 1)}
+    ex = set(ont.exact_lookup(text))
+    if ex:
+        return ex, "exact HPO name or synonym"
+    words = [w for w in re.findall(r"[A-Za-z][A-Za-z0-9-]+", text or "") if w.lower() not in _MSTOP]
+    if words:
+        for c in ont.search(text, 5):
+            names = {_stem(w) for n in ont.names(c["hpo_id"]) for w in re.findall(r"[A-Za-z][A-Za-z0-9-]+", n)}
+            if all(_covered(w, names) for w in words):
+                return {c["hpo_id"]}, f"every word of the condition is in an HPO name of {c['hpo_id']}"
+    return set(), "no HPO term covers every word of the condition"
+
+
+# preventive wording (user decision 2026-11-15): a condition that is what the measure prevents or reduces is its
+# purpose, not something the patient must have; "Treat / Manage / Control X" keeps X as a condition
+PREVENTIVE = re.compile(r"^\W*(?:context:\s*|Objective:\s*)?(prevent|prevention of|reduce|decrease|inhibit|minimi[sz]e|"
+                        r"lower|limit)\b", re.I)
+
+
+PREVENTIVE_BEFORE = re.compile(r"\b(prevent|prevention of|reduce|reduction of|decrease|inhibit|inhibition of|"
+                               r"minimi[sz]e|lower|limit)\s+(?:the\s+)?$", re.I)
+
+
+ROW_CONCERN = re.compile(r"\[(?:Manifestation|Concern|Problem)[^:\]]*:\s*([^\]]+)\]", re.I)
+SITUATION = re.compile(r"\b(?:during|when|whenever|while|in periods of|in case of|in the event of)\b[^.;:,\]\[]{3,90}",
+                       re.I)
+HEDGE = re.compile(r"^(?:when|if)\s+(?:possible|appropriate|feasible|available|practical|tolerated)\b", re.I)
+
+
+def situational_phrases(spec: dict, label: str | None = None) -> list[str]:
+    """"during / when / in periods of ..." phrases in the treatment cell (table row) or the sentence (paragraph) that
+    holds the entry's quote - deterministic, verbatim."""
+    out = []
+    for _, p in context_passages(spec):
+        if not LG.quote_in(spec["quote"], p):
+            continue
+        cell = None
+        for m in re.finditer(r"\[(?:Treatment|Intervention|Management)[^:\]]*:\s*([^\]]+)\]", p, re.I):
+            if LG.quote_in(spec["quote"], m.group(1)):
+                cell = m.group(1)
+        if cell is None:          # a paragraph: the clause (between semicolons) of the quote's own sentence
+            body = p.split("]: ", 1)[-1] if "]: " in p else p.split(": ", 1)[-1]
+            sent = next((s for s in re.split(r"(?<=[.!?])\s+", body) if LG.quote_in(spec["quote"][:60], s)), "")
+            clause = sent if ";" in spec["quote"] else \
+                next((c for c in sent.split(";") if LG.quote_in(spec["quote"][:40], c)), "")
+            # only the entry's own list item: the item holding its name (or the quote), up to the next comma
+            i = clause.lower().find(spec["quote"][:40].lower())
+            j = clause.lower().find((label or "").lower(), max(i, 0)) if label else -1
+            if i < 0:
+                cell = ""
+            elif j >= 0:
+                start = max(clause.rfind(c, 0, j) for c in ",;(") + 1
+                nxt = re.search(r"[,;)]", clause[j + len(label):])
+                cell = clause[start:j + len(label) + (nxt.start() if nxt else len(clause))]
+            else:
+                end = i + len(spec["quote"])
+                nxt = re.search(r"[,;]", clause[end:])
+                cell = clause[i:end + (nxt.start() if nxt else len(clause) - end)]
+        for m in SITUATION.finditer(cell or ""):
+            ph = m.group(0).strip()
+            if HEDGE.search(ph) or LG.quote_in(spec["quote"], ph):
+                continue                  # "when possible" is not a situation; the quote itself is not its own condition
+            if ph not in out:
+                out.append(ph)
+    return out
+
+
+def is_purpose(text: str, passage) -> bool:
+    """The condition text sits right after a preventive word in its passage(s) ("Objective: Prevent crystal injury to
+    kidneys", "aims to prevent crystal injury to kidneys", "[context: Reduce calcium oxalate crystallization ...]") or
+    is a preventive phrase itself - and no passage presents it as a manifestation that is treated
+    ("Manifestation/Concern: X", "Treat X")."""
+    if PREVENTIVE.search(text or ""):
+        return True
+    passages = [passage] if isinstance(passage, str) else list(passage or [])
+    low = (text or "").lower()
+    preventive = treated = False
+    for p in passages:
+        i = (p or "").lower().find(low)
+        while i >= 0:
+            before = p[max(0, i - 80):i]
+            seg = re.split(r"[\[\]]|(?<=[.;])\s", before)[-1]
+            if re.search(r"Manifestation|Concern|\b(treat|manage|control)\w*\s+(?:the\s+)?$", seg, re.I):
+                treated = True
+            elif PREVENTIVE_BEFORE.search(before) or PREVENTIVE.search(seg.strip()):
+                preventive = True
+            i = p.lower().find(low, i + 1)
+    return preventive and not treated
+
+
+def manifestation_match(text: str, pf: dict) -> tuple[str, dict | None, str]:
+    """(status, patient fact, basis) for a manifestation condition; basis says how the HPO match was made."""
+    ont = ontology()
+    ids, basis = hpo_targets(text)
     for x in pf["present"]:
-        if x["hpo_id"] in ids or ids & set(ont.ancestors(x["hpo_id"])):
-            return "satisfies", {"field": "manifestation", "value": x["label"], "quote": x["quote"], "step": 2}
+        if x["hpo_id"] in ids:
+            return "satisfies", {"field": "manifestation", "value": x["label"], "quote": x["quote"], "step": 2,
+                                 "match": {"hpo": x["hpo_id"], "relation": "same term", "basis": basis}}, basis
+        hit = ids & set(ont.ancestors(x["hpo_id"]))
+        if hit:
+            return "satisfies", {"field": "manifestation", "value": x["label"], "quote": x["quote"], "step": 2,
+                                 "match": {"hpo": x["hpo_id"], "relation": f"more specific than {sorted(hit)[0]}",
+                                           "basis": basis}}, basis
     for x in pf["excluded"]:
         if x["hpo_id"] in ids:
-            return "does_not_satisfy", {"field": "manifestation", "value": f"NOT {x['label']}", "quote": x["quote"], "step": 2}
+            return "does_not_satisfy", {"field": "manifestation", "value": f"NOT {x['label']}", "quote": x["quote"],
+                                        "step": 2}, basis
     for x in pf.get("possible") or []:      # stated only as one possibility: unknown, and said why (2026-11-12)
         if x["hpo_id"] in ids or ids & set(ont.ancestors(x["hpo_id"])):
             return "unknown", {"field": POSSIBLE_FINDING, "value": x["label"], "quote": x.get("possible_because") or x["quote"],
-                               "step": 2}
-    return "unknown", None
+                               "step": 2}, basis
+    return "unknown", None, basis
+
+
+def manifestation_status(text: str, pf: dict) -> tuple[str, dict | None]:
+    """Does the patient have the manifestation a supportive measure treats? HPO match by code."""
+    st, fact, _ = manifestation_match(text, pf)
+    return st, fact
 
 
 # ------------------------------------------------------------------ branches -> chapters
@@ -1168,7 +1292,44 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             sp = next(sp for sp in a["specs"] if sp.get("label_section") == "supportive_management") if any(
                 sp.get("label_section") == "supportive_management" for sp in a["specs"]) else a["specs"][0]
             use.append({"kind": "other", "text": sp["quote"], "field": "manifestation", "spec": sp})
-        precautions = []
+        precautions, purposes = [], []
+        kept = []
+        for r in use:                # what the measure prevents is its purpose, not a condition (2026-11-15)
+            if r.get("field") == "manifestation" and r.get("spec") and r["spec"]["src"]["type"] == "nbk" \
+                    and is_purpose(r["text"], [p for _, p in context_passages(r["spec"])
+                                               if any(LG.quote_in(sp["quote"], p) for sp in a["specs"])
+                                               or len(context_passages(r["spec"])) == 1]):
+                purposes.append(r["text"])
+                # removing the purpose removes only the purpose: a table row's manifestation / problem column stays a
+                # condition (user decision 2026-11-15: "[Manifestation/Concern: Bone health] [Treatment: Bisphosphonates
+                # ... to prevent fractures]")
+                for p in context_passages(r["spec"]):
+                    m = ROW_CONCERN.search(p[1])
+                    if m and any(LG.quote_in(sp["quote"], p[1]) for sp in a["specs"]):
+                        col = m.group(1).strip()
+                        if col and LG.quote_in(col, r["spec"].get("source_text") or "") and \
+                                not any(LG._norm(col) == LG._norm(x["text"]) for x in use + kept):
+                            kept.append({"kind": "other", "text": col, "field": "manifestation",
+                                         "spec": dict(r["spec"], claim=f"{a['label']}: row concern", quote=col)})
+                        break
+            else:
+                kept.append(r)
+        use = kept
+        # situational qualifiers next to the treatment are usage-situation conditions (user decision 2026-11-15,
+        # dialysis: "Monitor plasma oxalate concentration during transient or permanent periods of low GFR.
+        # Initiate dialysis promptly ...") - in the same table cell, or the same sentence of a paragraph
+        if section in ("existing_targeted_therapies", "supportive_management"):
+            have = [LG._norm(x["text"]) for x in use]
+            for sp in a["specs"]:
+                if sp["src"]["type"] != "nbk" or a.get("pregnancy_only"):
+                    continue
+                for phrase in situational_phrases(sp, a["label"]):
+                    n = LG._norm(phrase)
+                    if any(n in h or h in n for h in have) or not LG.quote_in(phrase, sp.get("source_text") or ""):
+                        continue
+                    have.append(n)
+                    use.append({"kind": "other", "text": phrase, "field": "situation",
+                                "spec": dict(sp, claim=f"{a['label']}: used {phrase[:60]}", quote=phrase)})
         for r in use:
             sig = (r.get("field"), r.get("op"), json.dumps(r.get("value"), sort_keys=True), LG._norm(r["text"]),
                    r.get("alternative"))
@@ -1189,8 +1350,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 continue
             ev = make(r["spec"])
             if r.get("field") == "manifestation":
-                st, fact = manifestation_status(r["text"], pf)
-                note = ""
+                st, fact, basis = manifestation_match(r["text"], pf)
+                note = f"HPO match: {basis}"
                 if st == "unknown" and fact:       # stated only as possible: say so, as missing information
                     note = f"the case states {fact['value']} only as one possibility"
                 elif st == "unknown":
@@ -1382,6 +1543,8 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             rec["context_check"] = cc
             if cautions:
                 rec["cautions"] = cautions
+        if purposes:
+            rec["purposes"] = sorted(set(purposes))
         if section == "supportive_management":
             rec["tier_source"] = F.best_tier(a["specs"])
             if a.get("for_symptom"):
