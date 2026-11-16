@@ -161,3 +161,48 @@
 ## 17. 人群小标题（2026-11-15 用户批准）
 点名人群的上级小标题由代码补为要求行，再送入既有核查；性别 / 年龄 / 明写的合子状态依病人事实比较，未知不视为满足。标题范围和原因见 `docs/step3a_contract.md` 文末。COL1A1 交替体位的婴儿限定仍只交给上下文核查，不新增专门代码规则。
 
+## 18. 第 5 项与人群小标题重跑（2026-11-16）
+
+- 实现提交 `34d69d2`，推送前 `.venv/bin/python -m pytest -q` **1104/1104 通过**。
+- 02:05:05 PST 起运行；先 PRAC-AGXT-c33dup 账本完整、无 fail，再其他病例。12 个练习病例 + 原复测 4 例的 Step 3 账本均已重新写出、新鲜、无 fail。评测病例 Step 3 / 4 没有产物。
+- **最终验收全部通过**：Step 1 / 2、3.0 全部硬项；3a **30/30**、3b **8/8**、3c **7/7**、3d **8/8**、3e **5/5**（过期未计分 0）；评测病例 `acceptance_eval_cases.py --eval` 的 Step 1 / 2 硬检查通过。AGXT 报告已由 `build_report.py` 重新生成至 `out/step4/`，格式检查 PASS。
+- 3.0 另有量化结果：122 条背景引文、64 个不同来源链接通过；支持度核查回归 17 条，假通过 0、假拦 3（DMD-1、CLAIM-GEMIN5-COQ10、CLAIM-RRM2B-VALPROATE-CORRECT），准确率 0.824。其硬门槛是假通过为 0，不把这项写成 17/17。
+
+### 状态变化（同一条目的多个诊断分支合并列出，共 18 条分支判定）
+
+| 病例 | 条目 | 变化 | 依据 |
+| --- | --- | --- | --- |
+| PRAC-AGXT-c33dup、PRAC-AGXT-c508GA | high oral fluid intake | 有条件 → 适用（各 1 分支） | “crystal injury to kidneys”是预防目的，移到 purposes |
+| PRAC-DMD-del | manual & power wheelchairs | 适用 → 有条件（Duchenne、Becker 两分支） | 小标题 Affected Males；病例性别未知 |
+| PRAC-DMD-del | walkers | 适用 → 有条件（同上两分支） | 同上 |
+| PRAC-COL1A1 | physiotherapist | 有条件 → 适用（经典型 EDS、复合 OI / EDS 1 两分支） | “contractures and head and spinal deformity”是预防目的 |
+| PRAC-OTC | nitrogen-scavenging drugs | 有条件 → 适用（1 分支） | “hyperammonemic episodes”是预防目的 |
+| RETEST-EIF2B1 | anti-flu vaccination | 有条件 → 适用（3 分支） | “infections and fever”是预防目的 |
+| RETEST-EIF2B1 | vaccinations | 有条件 → 适用（3 分支） | 同上 |
+| RETEST-EIF2B1 | physical therapy and rehabilitation | 适用 → 有条件（3 分支） | “motor dysfunction (mainly spasticity and ataxia)”没有通过严格 HPO 映射，条件回退未知（已批准的召回代价） |
+
+其余状态不变；没有新增“不适用”。DMD 双膦酸盐仍是有条件，但要求行已保留 Affected Males（性别未知）、Bone health（严格 HPO 映射未覆盖）；fractures 仅作为目的。
+
+### COL1A1 交替体位
+
+**核查没有补上婴儿限定**：limit 三票均为 no。subject 为 no / yes / yes，新增来源范围未知行，所以条目仍为有条件；原来的 skull and limb deformities 已移到 purposes。未加代码规则。
+
+### GRIN2B / NF1 为什么需要新调用
+
+逐字比较旧缓存和新请求（本地记录 `runs/population-20261116/cache_prompt_diffs.json`）：
+
+- GRIN2B：developmental delay / intellectual disability 没有通过严格 HPO 映射，原“满足”改为“未知”。early intervention、feeding therapy、occupational therapy、developmental preschool、physical therapy、speech therapy 六项各删除一题“病人是否达到原文程度”，共 **18 次，$0.008709**。
+- NF1：Malignant peripheral nerve sheath tumors (MPNST) 同样回退未知，complete surgical excision、radiotherapy 两项各删除上述程度核查题，共 **6 次，$0.002112**。
+- 缓存键包含完整问题正文，删题也会换键。两例的行动最终状态都没有变化，内部条件变化仍触发新核查。原新调用名单漏掉了这条 HPO → 核查题 → 缓存键的影响链，合计漏列 **24 次、$0.010821**。
+
+### 费用与原 $0.10 估价的差异
+
+- 本轮共 241 次实际请求，高峰 0 次。240 次有 usage，可核算费用 **$0.138655332（四舍五入 $0.1387）**。
+- DMD 共 87 次、$0.063346。对照旧提示词，其中 **17 组三票（51 次、$0.039362）仅因本次新增的人群小标题条件而改变**，其余条件和问题不变。这是本次新增范围中可单独定位的成本；扣除这部分，已知费用约 $0.0993（算术对照，没有另做一轮运行）。超出原 $0.10 的主要可定位增量来自新增标题规则，GRIN2B / NF1 名单遗漏另如上列。
+- **费用缺口**：CFTR 有一次响应的 usage 为 null（02:19:30 PST，`runs/llm_calls.jsonl` 时间戳 1794824370）。现有费用工具按 0 计入，我在运行中未及时发现并停止，因而不能把 $0.1387 写成完全核实的实付总额。该次确切费用未知；按当时请求的 16384 输出上限及保守输入上界，最多预留 $0.0107479，整次保守上界 **$0.1495**，低于后来批准的总上限 **$0.17**。原始记录保留，没有补造用量。
+- 首段在可计费记录 $0.1094 时因下一次请求的最大费用预留而停止；用户随后批准总上限由 $0.12 提到 $0.17。TLS 错误通过临时 curl 传输和网络重试处理，保留 TLS 校验、原缓存策略及真实 HTTP 错误；恢复阶段只用 LLM 缓存。明细 `runs/population-20261116/cost_reconciliation.json`。
+
+### 另发现、未改规则
+
+AGXT 肝移植新增了“when a liver with normal AGT enzyme activity replaces the liver with deficient AGT enzyme acti”使用情境行，来自吡哆醇段落对移植机制的括号说明。该行不应被理解成病人未知的使用条件，但删除可能把未知改为确定，因此本轮只记录、未擅自修规则或手改报告。条目总状态仍为有条件（GFR 未知）。
+
