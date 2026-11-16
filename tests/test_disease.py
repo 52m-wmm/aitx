@@ -361,7 +361,8 @@ def test_cache_entry_from_other_served_model_not_reused(tmp_path, monkeypatch):
         json.dumps({"served_model": "deepseek-v4-flash-0423", "content": "{}", "call_params": X.CALL_PARAMS}))
     calls = []
     monkeypatch.setattr(X.llm, "chat", lambda m, **kw: calls.append(1) or {
-        "model": "deepseek-v4.1-flash-1017", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]})
+        "model": "deepseek-v4.1-flash-1017", "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+        "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]})
     out = X._cached_chat(MSG, 0, True)
     assert calls and out["served_model"] == "deepseek-v4.1-flash-1017"
     assert X._cached_chat(MSG, 0, True)["served_model"] == "deepseek-v4.1-flash-1017" and len(calls) == 1
@@ -748,7 +749,8 @@ def test_llm_requests_capped_by_semaphore(tmp_path, monkeypatch):
         _t.sleep(0.05)
         with lock:
             active[0] -= 1
-        return {"model": "fake", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+        return {"model": "fake", "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
     monkeypatch.setattr(X.llm, "chat", slow_chat)
     monkeypatch.setattr(X.llm, "config", lambda: CFG)
     ts = [threading.Thread(target=X._cached_chat, args=([{"role": "user", "content": str(i)}], 0, False)) for i in range(6)]
@@ -814,7 +816,8 @@ def _chat_seq(finishes, calls):
     def chat(m, **kw):
         calls.append(kw["max_tokens"])
         fr = finishes[len(calls) - 1]
-        return {"model": "deepseek-flash", "choices": [{"message": {"content": "{}" if fr == "stop" else '{"a'},
+        return {"model": "deepseek-flash", "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                "choices": [{"message": {"content": "{}" if fr == "stop" else '{"a'},
                                                          "finish_reason": fr}]}
     return chat
 
@@ -850,7 +853,8 @@ def test_socket_read_timeout_is_retried(tmp_path, monkeypatch):
         calls.append(1)
         if len(calls) == 1:
             raise socket.timeout("The read operation timed out")
-        return {"model": "deepseek-flash", "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+        return {"model": "deepseek-flash", "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
     monkeypatch.setattr(X.llm, "chat", chat)
     assert X._cached_chat(MSG, 0, True)["content"] == "{}" and len(calls) == 2
 
@@ -913,7 +917,8 @@ def test_a_response_without_a_model_name_is_retried_then_fails(monkeypatch, tmp_
         model = "" if calls["n"] < 3 else "deepseek-flash"
         if not model:
             raise X.llm.NoServedModel("no model name")
-        return {"model": model, "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
+        return {"model": model, "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+                "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}]}
 
     monkeypatch.setattr(X.llm, "chat", flaky)
     out = X._cached_chat([{"role": "user", "content": "hi"}], 0, False, prompt_version="t")

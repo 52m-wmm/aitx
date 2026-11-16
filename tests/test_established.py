@@ -1420,6 +1420,31 @@ BONE_ROW = ("Table 7. Supportive Care\nRow 14: [Manifestation/Concern: Bone heal
             "prevent fractures] [Considerations/Other: High risk of fractures]")
 
 
+def test_review_situation_stays_in_its_treatment_row_not_a_name_reference(monkeypatch):
+    row = "Row 4: [Treatment: Liver transplant] [Therapy Candidates: GFR below 30]"
+    other = ("Paragraph 12: Continue pyridoxine until liver transplant "
+             "when the patient has recurrent vomiting.")
+    monkeypatch.setattr(E, "context_passages", lambda s: [("h", row), ("h", other)])
+    assert E.situational_phrases({"quote": "Liver transplant"}, "Liver transplant") == []
+
+
+@pytest.mark.parametrize("phrase,want", [
+    ("when a normal organ replaces a deficient organ", []),
+    ("when kidney replacement therapy is needed", ["when kidney replacement therapy is needed"]),
+    ("during vomiting", ["during vomiting"]),
+])
+def test_review_situation_is_a_patient_state_or_time_not_a_mechanism(monkeypatch, phrase, want):
+    text = f"Paragraph 1: Give treatment X {phrase}."
+    monkeypatch.setattr(E, "context_passages", lambda s: [("h", text)])
+    assert E.situational_phrases({"quote": "Give treatment X"}, "treatment X") == want
+
+
+def test_review_situation_does_not_cut_a_long_phrase_mid_word(monkeypatch):
+    phrase = "during " + "prolonged " * 10 + "vomiting"
+    monkeypatch.setattr(E, "context_passages", lambda s: [("h", f"Paragraph 1: Give treatment X {phrase}.")])
+    assert E.situational_phrases({"quote": "Give treatment X"}, "treatment X") == [phrase]
+
+
 def _row_entry(monkeypatch, row, quote, cond, label):
     from aitx.evidence import context_check as CC
     monkeypatch.setattr(CC, "ENABLED", False)

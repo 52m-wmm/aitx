@@ -10,6 +10,9 @@ stays and is marked not expandable. Branches are never deleted by rules; rules o
 """
 from __future__ import annotations
 
+import re
+from aitx.disease import live
+
 MAX_BRANCHES = 3
 
 
@@ -88,12 +91,30 @@ MISSING_WHY = {
 }
 
 
+def sex_fact(step1: dict, step2: dict) -> dict:
+    """Original text wins; otherwise X-chromosomal hemizygosity permits the approved male inference."""
+    stated = step2["patient_facts"]["sex"]
+    out = dict(stated, step=2, inferred=False)
+    if stated["value"] in ("male", "female"):
+        return out
+    for i, v in enumerate(step1["variants"]):
+        if v["zygosity"] != "hemizygous":
+            continue
+        gene = live.hgnc_gene(v["gene"])
+        if not gene["found"] or not gene["location"] or not re.match(r"X(?:[pq]|$)", gene["location"], re.I):
+            continue
+        claim = f"Sex inferred as male: {v['gene']} is on chromosome X ({gene['location']}) and {v['variant_cdna']} is hemizygous."
+        return dict(value="male", quote=claim, step=3, inferred=True, variant_index=i, gene_location=gene)
+    return out
+
+
 def patient_context(step1: dict, step2: dict) -> tuple[dict, list[dict]]:
     """Copied from step 1 / step 2 with their quotes; no new extraction. Returns (context, missing info)."""
     f = step2["patient_facts"]
+    sex = sex_fact(step1, step2)
     ctx = {
         "age_months": f["age"].get("months"), "age_quote": f["age"].get("quote"),
-        "sex": f["sex"].get("value"), "sex_quote": f["sex"].get("quote"),
+        "sex": sex["value"], "sex_quote": sex["quote"],
         "onset": step2.get("patient_onset") or None,
         "variant_origin": f["variant_origin"].get("value"),
         "family_history": f["family_history"].get("statement"),
@@ -105,6 +126,8 @@ def patient_context(step1: dict, step2: dict) -> tuple[dict, list[dict]]:
                         "exons_total": (v.get("exon") or {}).get("total")}
                      for v in step1["variants"]],
     }
+    if sex["inferred"]:
+        ctx["sex_inference"] = sex
     missing = []
     if ctx["age_months"] is None:
         missing.append({"variable": "age", "why_it_matters": MISSING_WHY["age"], "affects": [], "asked_by": "3.0"})

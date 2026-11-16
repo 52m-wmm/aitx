@@ -49,7 +49,7 @@ def day_start(now: dt.datetime | None = None) -> float:
 
 
 def spent_today(now: dt.datetime | None = None, log: Path | None = None) -> float:
-    """Today's spend in USD, priced by scripts/llm_cost.py (the single pricing table)."""
+    """Today's budget accounting: known usage plus the request reservation for missing usage."""
     import sys
     root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(root / "scripts"))

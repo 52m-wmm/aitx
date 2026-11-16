@@ -21,12 +21,30 @@ from aitx.evidence.rules import apply_rules, load_rules
 
 
 def _fact(led: LG.Ledger, case_id: str, step: int, text: str, created: int, path: str, value, claim: str,
-          applies: list[str], url: str | None = None, upstream: dict | None = None) -> None:
+          applies: list[str], url: str | None = None, upstream: dict | None = None) -> dict:
     src = {"type": "pipeline_fact", "id": f"step{step}:{case_id}:{path}", "url": url}
     if upstream:
         src["upstream"] = upstream
-    led.add(LG.sourced(claim, "background", applies, src, json.dumps(value, ensure_ascii=False), text, created,
-                       retrieved_by=f"3.0 from out/step{step}"))
+    return led.add(LG.sourced(claim, "background", applies, src, json.dumps(value, ensure_ascii=False), text, created,
+                              retrieved_by=f"3.0 from out/step{step}"))
+
+
+def record_sex_inference(led: LG.Ledger, cid: str, step1: dict, text1: str) -> None:
+    if "sex_inference" not in led.patient_context:
+        return
+    fact = led.patient_context["sex_inference"]
+    i, gene = fact["variant_index"], fact["gene_location"]
+    variant = step1["variants"][i]
+    branches = [b["id"] for b in led.branches]
+    zyg = _fact(led, cid, 1, text1, step1["_meta"]["created_at"],
+                f"variants[{i}].zygosity", variant["zygosity"],
+                f"{variant['gene']} {variant['variant_cdna']} is hemizygous.", branches)
+    location = led.add(LG.sourced(f"HGNC places {variant['gene']} at {gene['location']}.", "background", branches,
+                                  {"type": "url", "id": gene["api_url"], "url": gene["api_url"]},
+                                  gene["location"], json.dumps(gene), gene["accessed_at"], retrieved_by="HGNC gene location"))
+    derived = led.add(LG.reasoning(fact["quote"], "background", branches, [zyg["id"], location["id"]],
+                                  retrieved_by="sex inference: chromosome X and hemizygous; original text takes precedence"))
+    fact["evidence_id"] = derived["id"]
 
 
 def background(led: LG.Ledger, case_id: str, step1: dict, step2: dict, text1: str, text2: str) -> None:
@@ -111,6 +129,7 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     text2 = runmeta.path(2, cid).read_text() if runmeta.path(2, cid).exists() else json.dumps(step2, indent=2, ensure_ascii=False)
     apply_rules(led, load_rules(), step1, step2)       # may promote a step 2 candidate to a branch
     background(led, cid, step1, step2, text1, text2)
+    record_sex_inference(led, cid, step1, text1)
     add_established(led, step1, step2)                 # 3a: Tier 1 sections
     add_trials(led, case, step1, step2)                # 3b: Clinical Trial Eligibility
     add_offlabel(led, case, step1, step2)              # 3c: Off-label / Expanded Access

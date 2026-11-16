@@ -62,6 +62,19 @@ def test_an_answer_outside_the_allowed_list_counts_as_missing(monkeypatch):
     assert res["questions"][0]["final"] == "split"
 
 
+@pytest.mark.parametrize("answer,hit", [("yes", True), ("no", False)])
+def test_review_col1a1_missed_infant_qualifier_is_scored_without_a_code_rule(monkeypatch, answer, hit):
+    from scripts import validate_context_check as V
+    data = json.loads(V.LIMIT_SET.read_text())
+    c = next(c for c in data["cases"] if c["case"] == "PRAC-COL1A1")
+    assert c["expected_limit"] == "yes" and c["limiting_words"] == "infant"
+    assert c["recorded_answers"] == ["no"] * 3 and "infant" in c["passage"]
+    assert c["case"] not in CC.SYSTEM and c["quote"] not in CC.SYSTEM
+    fake_llm(monkeypatch, answers(**{"1": ("yes", ""), "2": ("not_stated", ""),
+                                    "3": (answer, "infant" if answer == "yes" else "")}))
+    assert next(r for r in V.limitation_regressions() if r["case"] == c["case"])["hit"] is hit
+
+
 # --- 3a decisions
 
 def _res(**finals):

@@ -36,6 +36,7 @@ from aitx.evidence import offlabel as O  # noqa: E402
 BATCH = "20261108"
 JUDGED = ROOT / "data" / "eval" / "blind" / f"{BATCH}.json"
 OUT = ROOT / "out" / "context_check_validation.json"
+LIMIT_SET = ROOT / "data" / "eval" / "context_check_limits.json"
 SEED = "cc-validate-2026-11-11"
 S3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 S3C = "off_label_expanded_access"
@@ -84,6 +85,18 @@ def facts(case: str) -> dict:
     s1 = json.loads((ROOT / "out" / "step1" / f"{case}.json").read_text())
     s2 = json.loads((ROOT / "out" / "step2" / f"{case}.json").read_text())
     return E.facts(s1, s2)
+
+
+def limitation_regressions() -> list[dict]:
+    """Reviewed missed limitations, replayed with their original context; not part of the blind-test rate."""
+    rows = []
+    for c in json.loads(LIMIT_SET.read_text())["cases"]:
+        qs = CC.questions_3a(c["section"], c["label"], c["disease"], c["conditions"], c["quote"])
+        res = CC.ask(c["header"], c["passage"], c["patient"], qs)
+        q = next(q for q in res["questions"] if q["id"] == "limit")
+        rows.append({"case": c["case"], "label": c["label"], "want": c["expected_limit"], "got": q["final"],
+                     "answers": q["answers"], "hit": q["final"] == c["expected_limit"]})
+    return rows
 
 
 def action(led: dict, section: str, label: str) -> dict:
@@ -211,6 +224,8 @@ def main() -> int:
         print(f"  {e['verdict']:7} {e['case']:15} {e['section'][:12]:12} {e['label'][:40]:40} checks {len(cs)}"
               + (f"  expect {e['expect']}" if e.get("expect") else ""))
     print("not counted (out of scope): " + "; ".join(f"{k[1]} - {v}" for k, v in OUT_OF_SCOPE.items()))
+    print(f"reviewed limitation regressions, scored separately: "
+          f"{len(json.loads(LIMIT_SET.read_text())['cases'])} checks x {CC.N_CHECKS}")
     if args.list:
         return 0
     if args.offpeak_only:
@@ -250,6 +265,10 @@ def main() -> int:
                                "answers": rq["questions"][0]["answers"]})
         print(f"  {'OK    ' if got == want else 'MISSED'}  recommendation {case} {label}: {rq['questions'][0]['answers']} "
               f"(want {want})")
+    limit_rows = limitation_regressions()
+    for r in limit_rows:
+        print(f"  {'OK    ' if r['hit'] else 'MISSED'}  limitation {r['case']} {r['label']}: "
+              f"{r['answers']} (want {r['want']})")
     wrong = [r for r in rows if r["verdict"] == "wrong"]
     corr = [r for r in rows if r["verdict"] == "correct"]
     caught, harmed = sum(r["hit"] for r in wrong), sum(r["hit"] for r in corr)
@@ -266,7 +285,8 @@ def main() -> int:
                                    "subjects": [p["subject"] for p in r["outcome"].get("precedents") or []]} for r in caveats],
            "harm_measure": "status changed or precedent dropped (decision 2026-11-11)",
            "cost": cost, "pass": bool(wrong and corr and caught / len(wrong) >= 0.8 and harmed / len(corr) <= 0.05),
-           "rows": rows, "followup_cases": followup_rows, "recommendation_cases": recommend_rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
+           "rows": rows, "followup_cases": followup_rows, "recommendation_cases": recommend_rows,
+           "limitation_cases": limit_rows, "out_of_scope": [{"case": k[0], "label": k[1], "why": v} for k, v in OUT_OF_SCOPE.items()]}
     OUT.write_text(json.dumps(res, indent=1, ensure_ascii=False))
     print(f"\ncaught {caught}/{len(wrong)} ({res['caught_rate']}), harmed {harmed}/{len(corr)} ({res['harmed_rate']}), "
           f"caveats added to correct entries without a status change: {len(caveats)}")

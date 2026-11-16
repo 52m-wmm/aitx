@@ -54,5 +54,5 @@ def check(drugs: list[dict], fetch=fetch_label) -> dict:
                 none = re.fullmatch(r"(?:\d+\s+)?CONTRAINDICATIONS\s+None\.?(?:\s*\(\s*\d+\s*\))?(?:\s*None\.?)?(?:\s*\(\s*\d+\s*\))?",
                                     text, re.I) is not None
                 quote = next((s for s in _sentences(text) if len(s) > 12), text)
-                out["contraindications"].append({**meta, "quote": quote if not none else text[:60], "none": none})
+                out["contraindications"].append({**meta, "quote": quote if not none else text, "none": none})
     return out

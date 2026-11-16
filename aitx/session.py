@@ -60,30 +60,36 @@ def _append(name: str, rec: dict) -> None:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
 
-def cost(usage: dict | None, ts: float) -> float:
+def cost(usage: dict | None, ts: float, reserved_usd: float | None = None) -> float:
     """USD for one live call, priced by scripts/llm_cost.py (the single pricing table)."""
     if not usage:
-        return 0.0
+        if reserved_usd is None:
+            raise ValueError("missing LLM usage and request reservation; cost is unknown")
+        return reserved_usd
     import sys
     sys.path.insert(0, str(ROOT / "scripts"))
     import llm_cost
     hit = usage.get("prompt_cache_hit_tokens", 0)
-    miss = usage.get("prompt_cache_miss_tokens", usage.get("prompt_tokens", 0) - hit)
+    miss = (usage["prompt_cache_miss_tokens"] if "prompt_cache_miss_tokens" in usage
+            else usage["prompt_tokens"] - hit)
     i = 1 if llm_cost.peak(ts) else 0
     p = llm_cost.PRICE
-    return (hit * p["cache_hit"][i] + miss * p["cache_miss"][i] + usage.get("completion_tokens", 0) * p["output"][i]) / 1e6
+    return (hit * p["cache_hit"][i] + miss * p["cache_miss"][i] + usage["completion_tokens"] * p["output"][i]) / 1e6
 
 
 def log_call(*, call_id: str, messages: list[dict], entry: dict, cache_hit: bool, k: int, params: dict,
-             usage: dict | None = None, seconds: float = 0.0, reasoning: str | None = None) -> None:
+             usage: dict | None = None, seconds: float = 0.0, reasoning: str | None = None,
+             reserved_usd: float | None = None) -> None:
     ts = time.time()
-    usd = 0.0 if cache_hit else cost(usage, ts)
+    usd = 0.0 if cache_hit else cost(usage, ts, reserved_usd)
     rec = {"call_id": call_id, "at": ts, **current(), "prompt_version": entry.get("prompt_version"), "sample": k,
            "requested_model": entry.get("requested_model"), "served_model": entry.get("served_model"),
            "provider": entry.get("provider"), "cache_hit": cache_hit, "call_params": params, "messages": messages,
            "content": entry.get("content"), "usage": usage, "usd": round(usd, 6), "seconds": round(seconds, 2)}
     if reasoning:
         rec["reasoning_content"] = reasoning
+    if not cache_hit and not usage:
+        rec.update(cost_status="reserved; actual cost unknown", reserved_usd=reserved_usd)
     with _lock:
         _step_calls["n"] += 1
         _step_calls["live"] += 0 if cache_hit else 1

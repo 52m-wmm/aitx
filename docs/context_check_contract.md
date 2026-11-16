@@ -206,3 +206,11 @@
 
 AGXT 肝移植新增了“when a liver with normal AGT enzyme activity replaces the liver with deficient AGT enzyme acti”使用情境行，来自吡哆醇段落对移植机制的括号说明。该行不应被理解成病人未知的使用条件，但删除可能把未知改为确定，因此本轮只记录、未擅自修规则或手改报告。条目总状态仍为有条件（GFR 未知）。
 
+## 19. 重跑后审阅修正（2026-11-16）
+
+用户批准：AGXT 肝移植删除机制误抽的使用情境；X 染色体基因的半合子在原文性别未知时推断男性，证据记入账本。实现规则与正反测试分别见 3a / 3.0 契约；没有修改核查提示词。
+
+COL1A1 交替体位的婴儿限定记为**上下文核查漏判**，加入 `data/eval/context_check_limits.json`。固定完整上下文、原始病人信息和当时空条件，验证脚本单独重放，不混入旧盲测率；缓存仍答 no / no / no，未补婴儿限定。`tests/test_context_check.py` 覆盖正确发现 / 继续漏判的计分，无专用临床代码规则。
+
+费用日志现在每个请求记 `reserved_usd`。usage 缺失时实际费用仍为未知，预算按请求上限记账并单独列出，禁止按 0；缺上限或部分必需用量字段则报错。预算比较不先四舍五入。有完整用量的调用按实际词元核算；缓存读取本次费用为 0。历史 CFTR 的唯一 usage=null 记录补记已重建的 $0.0107479 预留和依据，保留 null；修改前原日志备份在 `runs/review-20261116/llm_calls.before-reservation.jsonl`，不补造实际用量。
+

@@ -441,7 +441,7 @@ def registry_lines(study: dict, pf: dict) -> list[dict]:
         text = registry_text(study, c["field"])
         fact = ({"field": "age", "value": f"{pf['age_months'] / 12:g} years", "quote": pf["age_quote"], "step": 2}
                 if c["field"] == "age" and pf["age_months"] is not None else
-                {"field": "sex", "value": pf["sex"], "quote": pf["sex_quote"], "step": 2}
+                E.sex_evidence(pf)
                 if c["field"] == "sex" and pf["sex"] else
                 # a healthy-volunteers-only study: the patient is not a healthy volunteer - the reported variant says so
                 # (2026-11-13: the line had no quoted patient fact, which the ledger check rejects)

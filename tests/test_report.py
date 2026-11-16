@@ -38,6 +38,12 @@ def build(led, safety=None):
     return A.assemble(led, CASE, lambda src, e=None: "2024-08-15", safety, today=dt.date(2026, 11, 15))
 
 
+@pytest.mark.parametrize("text", ["enzymeactivity" * 10, "during " + "enzymeactivity" * 10])
+def test_review_report_clips_quotes_and_conditions_only_between_words(text):
+    clipped = A.clean(text, 20)
+    assert all(word in text.split() for word in clipped.split() if word != "…")
+
+
 def test_the_report_has_every_template_section_in_order():
     md, _ = build(ledger([act("drug:1", "existing_targeted_therapies", "drug X", "applicable")]))
     assert V.check_markdown(md) == []

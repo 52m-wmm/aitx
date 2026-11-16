@@ -30,6 +30,7 @@ from aitx.evidence import labels as LB
 from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
+from aitx.evidence.branches import sex_fact
 
 PROMPT_VERSION = "3a-v5"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
@@ -110,8 +111,9 @@ def ontology() -> Ontology:
 
 def facts(step1: dict, step2: dict) -> dict:
     f = step2["patient_facts"]
+    sex = sex_fact(step1, step2)
     return {"age_months": f["age"].get("months"), "age_quote": f["age"].get("quote"),
-            "sex": f["sex"].get("value"), "sex_quote": f["sex"].get("quote"),
+            "sex": sex["value"], "sex_quote": sex["quote"], "sex_inferred": sex["inferred"],
             "variants": [{"gene": v["gene"], "protein": v["variant_protein"], "class": v["variant_class"],
                           "zygosity": v["zygosity"], "quote": f"{v['gene']} {v['variant_cdna']} {v['variant_protein']} ({v['zygosity']})"}
                          for v in step1["variants"]],
@@ -249,7 +251,7 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
     if field == "sex" and pf["sex"] in ("male", "female"):
         want = str(value).lower()
         return ("satisfies" if want.startswith(pf["sex"][0]) else "does_not_satisfy"), \
-            {"field": "sex", "value": pf["sex"], "quote": pf["sex_quote"], "step": 2}, ""
+            sex_evidence(pf), "sex inferred from X-chromosomal hemizygosity" if pf.get("sex_inferred") else ""
     if field == "diagnosis":
         d = branch.get("diagnosis") or {}
         names = [d.get("label", "")] + list(branch.get("synonyms") or [])
@@ -307,20 +309,26 @@ PREVENTIVE_BEFORE = re.compile(r"\b(prevent|prevention of|reduce|reduction of|de
 
 
 ROW_CONCERN = re.compile(r"\[(?:Manifestation|Concern|Problem)[^:\]]*:\s*([^\]]+)\]", re.I)
-SITUATION = re.compile(r"\b(?:during|when|whenever|while|in periods of|in case of|in the event of)\b[^.;:,\]\[]{3,90}",
+SITUATION = re.compile(r"\b(?:during|when|whenever|while|in periods of|in case of|in the event of)\b[^.;:,\]\[]{3,}",
                        re.I)
 HEDGE = re.compile(r"^(?:when|if)\s+(?:possible|appropriate|feasible|available|practical|tolerated)\b", re.I)
+MECHANISM_WHEN = re.compile(r"^when\b.*\breplaces?\b", re.I)
+TREATMENT_CELL = re.compile(r"\[(?:Treatment|Intervention|Management)[^:\]]*:\s*([^\]]+)\]", re.I)
 
 
 def situational_phrases(spec: dict, label: str | None = None) -> list[str]:
     """"during / when / in periods of ..." phrases in the treatment cell (table row) or the sentence (paragraph) that
     holds the entry's quote - deterministic, verbatim."""
     out = []
-    for _, p in context_passages(spec):
+    passages = context_passages(spec)
+    # A treatment-cell quote identifies its row; prose that merely names the action is not its source paragraph.
+    rows = [(h, p) for h, p in passages if any(LG.quote_in(spec["quote"], m.group(1))
+                                             for m in TREATMENT_CELL.finditer(p))]
+    for _, p in rows or passages:
         if not LG.quote_in(spec["quote"], p):
             continue
         cell = None
-        for m in re.finditer(r"\[(?:Treatment|Intervention|Management)[^:\]]*:\s*([^\]]+)\]", p, re.I):
+        for m in TREATMENT_CELL.finditer(p):
             if LG.quote_in(spec["quote"], m.group(1)):
                 cell = m.group(1)
         if cell is None:          # a paragraph: the clause (between semicolons) of the quote's own sentence
@@ -343,7 +351,7 @@ def situational_phrases(spec: dict, label: str | None = None) -> list[str]:
                 cell = clause[i:end + (nxt.start() if nxt else len(clause) - end)]
         for m in SITUATION.finditer(cell or ""):
             ph = m.group(0).strip()
-            if HEDGE.search(ph) or LG.quote_in(spec["quote"], ph):
+            if HEDGE.search(ph) or MECHANISM_WHEN.search(ph) or LG.quote_in(spec["quote"], ph):
                 continue                  # "when possible" is not a situation; the quote itself is not its own condition
             if ph not in out:
                 out.append(ph)
@@ -1239,12 +1247,17 @@ def _literature(led, b, rec, put, step2, use_cache) -> None:
             put(key, "supportive_management", name, [b["id"]], spec, reqs, f"literature PMID {p['pmid']}", source="literature")
 
 
+def sex_evidence(pf: dict) -> dict:
+    return {"field": "sex", "value": pf["sex"], "quote": pf["sex_quote"],
+            "step": 3 if pf.get("sex_inferred") else 2, **({"inferred": True} if pf.get("sex_inferred") else {})}
+
+
 def pregnancy_status(pf: dict) -> tuple[str, dict | None]:
     """Pregnancy-specific management (decision 2026-11-03): male or under 12 -> not applicable;
     female 12 or older, or sex unknown and older than 12 -> conditional (pregnancy status unknown)."""
     age = pf["age_months"] / 12 if pf["age_months"] is not None else None
     if pf["sex"] == "male":
-        return "does_not_satisfy", {"field": "sex", "value": "male", "quote": pf["sex_quote"], "step": 2}
+        return "does_not_satisfy", sex_evidence(pf)
     if age is not None and age < CHILD_YEARS:
         return "does_not_satisfy", {"field": "age", "value": f"{age:g} years", "quote": pf["age_quote"], "step": 2}
     return "unknown", {"field": "pregnancy status", "value": None, "quote": None, "step": None}

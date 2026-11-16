@@ -1,0 +1,29 @@
+{
+ "description": "Reviewed missed patient limitations. Scored separately from the frozen blind-test set; never used as prompt examples.",
+ "cases": [
+  {
+   "case": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "label": "alternating positions",
+   "disease": "combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1",
+   "quote": "Alternating positions (supine, prone, side-lying) can minimize skull and limb deformities.",
+   "header": "GeneReviews NBK1295 (COL1A1- and COL1A2-Related Osteogenesis Imperfecta), section: Management / Treatment of Manifestations",
+   "passage": "Paragraph 5 [context: Physical medicine treatment.]: Alternating positions (supine, prone, side-lying) can minimize skull and limb deformities. It is important to initiate upright sitting only once the infant has adequate head and trunk control.",
+   "patient": "Diagnosis: combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1\nVariant: COL1A1 c.1678G>A p.(Gly560Ser) (heterozygous)\nAge: not stated\nSex: unknown\nFindings present: Hyperextensible skin; Bruising susceptibility; Joint hypermobility",
+   "conditions": [],
+   "expected_limit": "yes",
+   "limiting_words": "infant",
+   "review": "2026-11-16 user review: missed infant qualifier; evaluator case only, no code rule.",
+   "recorded_answers": [
+    "no",
+    "no",
+    "no"
+   ],
+   "call_ids": [
+    "0e0ea4a23556dc86e12fb027c26034f154bbc9065bdd923e6675008ef7a5f14d",
+    "da4e8ba2af6057d2c37b54ccff31ef00dba708cc39ad1a217cd57ee8eb0ab566",
+    "6c8e9c6fc958b7caf298bcb832d512528d34fc285e17095c43cb2b8eb1578d45"
+   ]
+  }
+ ]
+}

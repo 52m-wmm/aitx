@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import textwrap
 from collections import OrderedDict
 
 from aitx.report.validate import HEADINGS
@@ -57,7 +58,7 @@ def variable_of(r: dict) -> str:
 def clean(text: str, n: int = 240) -> str:
     import html
     text = re.sub(r"\s+", " ", html.unescape(str(text or ""))).strip()
-    return text if len(text) <= n else text[:n].rsplit(" ", 1)[0] + " …"
+    return textwrap.shorten(text, width=n, placeholder=" …", break_long_words=False, break_on_hyphens=False)
 
 
 # outcome measures (user decision 2026-11-15): efficacy measures only - a disease marker or function, not safety counts,

@@ -100,6 +100,8 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
         headers={"Authorization": f"Bearer {cfg['api_key']}", "Content-Type": "application/json"},
     )
     t0 = time.time()
+    from scripts.llm_cost import request_reservation
+    reserved = request_reservation(messages, max_tokens, t0, tools)
     with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
         resp = _read_stream(r) if body.get("stream") else json.loads(r.read().decode())
     served = resp.get("model", "")
@@ -107,7 +109,7 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
     LOG.parent.mkdir(parents=True, exist_ok=True)
     with LOG.open("a") as f:
         f.write(json.dumps({"ts": int(t0), "requested": cfg["model"], "served": served,
-                            "base_url": cfg["base_url"], "usage": resp.get("usage"),
+                            "base_url": cfg["base_url"], "usage": resp.get("usage"), "reserved_usd": reserved,
                             "seconds": round(time.time() - t0, 2)}) + "\n")
     if cfg["expect_model_prefix"] and not served:
         # no chunk of the stream carried a model name: we cannot confirm who answered, but this is a stream
@@ -116,4 +118,4 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
                             f"without confirming the model")
     if cfg["expect_model_prefix"] and not served.startswith(cfg["expect_model_prefix"]):
         raise ModelMismatch(f"requested {cfg['model']} but server reports {served!r}")
-    return resp
+    return dict(resp, reserved_usd=reserved)

@@ -67,6 +67,14 @@ def test_reverse_calls_outside_a_run_go_to_an_adhoc_session(monkeypatch, tmp_pat
     assert next((tmp_path / "runs" / "sessions").glob("adhoc-*")).is_dir()
 
 
+def test_review_session_missing_usage_is_reserved_and_explicitly_unknown(tmp_path):
+    session.log_call(call_id="unknown-usage", messages=MSG, entry={"content": "{}"}, cache_hit=False,
+                     k=0, params={"max_tokens": 16384}, usage=None, reserved_usd=0.012)
+    (rec,) = _calls(tmp_path)
+    assert rec["usage"] is None and rec["usd"] == 0.012 and rec["reserved_usd"] == 0.012
+    assert "unknown" in rec["cost_status"]
+
+
 # --- 1b: ledger attribution
 
 def _ledger():

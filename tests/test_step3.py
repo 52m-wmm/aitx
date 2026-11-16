@@ -9,6 +9,51 @@ from aitx.evidence import rules as RU
 from aitx.evidence.branches import build_branches, patient_context
 
 
+@pytest.mark.parametrize("location,zygosity,stated,want", [
+    ("Xp21.2-p21.1", "hemizygous", "unknown", "male"),
+    ("2q37.3", "hemizygous", "unknown", "unknown"),
+    ("Xp21.2-p21.1", "heterozygous", "unknown", "unknown"),
+    ("Xp21.2-p21.1", "hemizygous", "female", "female"),
+])
+def test_review_sex_inference_needs_x_and_hemizygosity_and_yields_to_the_text(monkeypatch, location, zygosity, stated, want):
+    from aitx.disease import live
+    from aitx.evidence.branches import sex_fact
+    monkeypatch.setattr(live, "hgnc_gene", lambda gene: {"found": True, "location": location, "symbol": gene,
+        "api_url": "https://rest.genenames.org/fetch/symbol/DMD", "accessed_at": 1})
+    s1 = {"variants": [{"gene": "DMD" if location.startswith("X") else "AGXT", "zygosity": zygosity,
+                        "variant_cdna": "c.1del"}]}
+    s2 = {"patient_facts": {"sex": {"value": stated, "quote": "female" if stated == "female" else None}}}
+    result = sex_fact(s1, s2)
+    assert result["value"] == want
+    if stated == "female":
+        assert result["quote"] == "female" and not result["inferred"]
+    elif want == "male":
+        assert result["inferred"] and result["step"] == 3 and "hemizygous" in result["quote"]
+
+
+def test_review_inferred_sex_has_verified_reasoning_premises_and_is_not_missing(monkeypatch):
+    from aitx.disease import live
+    from aitx.evidence.pipeline import record_sex_inference
+    from aitx.evidence import established as E
+    monkeypatch.setattr(live, "hgnc_gene", lambda gene: {"found": True, "location": "Xp21.2-p21.1", "symbol": gene,
+        "api_url": "https://rest.genenames.org/fetch/symbol/DMD", "accessed_at": 1})
+    s1 = {"_meta": {"created_at": 1}, "variants": [{"gene": "DMD", "zygosity": "hemizygous", "variant_cdna": "c.1del",
+                        "variant_protein": "p.Met1fs", "variant_class": "frameshift"}]}
+    s2 = {"patient_facts": {"sex": {"value": "unknown", "quote": None}, "age": {"months": None, "quote": None},
+                           "variant_origin": {"value": "unknown"}, "family_history": {"statement": "unknown"}},
+          "phenotypes": []}
+    ctx, missing = patient_context(s1, s2)
+    assert ctx["sex"] == "male" and not any(m["variable"] == "sex" for m in missing)
+    led = LG.Ledger("P", [{"id": "B"}]); led.patient_context = ctx
+    record_sex_inference(led, "P", s1, json.dumps(s1))
+    derived = led.evidence[ctx["sex_inference"]["evidence_id"]]
+    assert derived["kind"] == "reasoning" and derived["status"] == "verified" and len(derived["premises"]) == 2
+    assert all(led.evidence[e]["status"] == "verified" for e in derived["premises"])
+    st, fact, note = E.evaluate({"field": "sex", "value": "male"}, E.facts(s1, s2), {})
+    assert st == "satisfies" and fact["step"] == 3 and fact["inferred"] and "inferred" in note
+    assert s2["patient_facts"]["sex"]["value"] == "unknown"  # upstream text stays untouched
+
+
 def cand(key, label, omim=(), score=1.0, narrower=None, specific=True, excluded=False):
     return {"key": key, "label": label, "omim": [{"id": o} for o in omim], "specific": specific, "excluded": excluded,
             "phenotype": {"score": score}, "merge": {"narrower_competing": narrower} if narrower else {},
@@ -56,7 +101,7 @@ def test_unresolved_gets_gene_level_branch():
 
 
 def test_patient_context_registers_missing_age_and_sex():
-    s2 = {"patient_facts": {"age": {"months": None}, "sex": {"value": "unknown"}, "variant_origin": {"value": "unknown"},
+    s2 = {"patient_facts": {"age": {"months": None}, "sex": {"value": "unknown", "quote": None}, "variant_origin": {"value": "unknown"},
                             "family_history": {"statement": "unknown"}}, "phenotypes": [], "patient_onset": None}
     ctx, missing = patient_context({"variants": []}, s2)
     assert [m["variable"] for m in missing] == ["age", "sex"]

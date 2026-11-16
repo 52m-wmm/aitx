@@ -358,3 +358,9 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 ## 跨章节可能重复的标记（2026-11-11，盲测后修复 N3）
 
 账本新增 `possible_duplicates`：在 3a 三节与 3c 之间，**同一行动键**出现在两节，或**同一来源**里两条标签的实词一条包含另一条、且中心词相同（"UV-blocking sunglasses" / "UV-A and UV-B blocking sunglasses"），记为可能重复（kind `cross_section`）。**只标记，不删除**，由 Step 4 只写一次并交叉引用。现有账本离线扫描：SNRNP200 墨镜（真重复）；NF1 "radiotherapy" 两节同名、OTC "glycerol phenylbutyrate" / "phenylbutyrate"（不同产品，误标）——由 Step 4 审阅。测试：`tests/test_duplicates.py`。
+
+## 半合子性别推断（2026-11-16，用户批准）
+
+病例原文明写性别时以原文为准。仅在原文性别未知、HGNC 明确基因位置在 X 染色体、Step 1 合子状态为 hemizygous 时推断男性。常染色体基因、其他合子状态或染色体位置未知均不推断。原始 Step 2 事实保持原文提取结果；Step 3 把合子状态和 HGNC 位置作为已验证前提，另记 reasoning 证据，病人上下文和条件引用标记为推断，不能冒充原文。
+
+支持核查“假拦 3/17”不是本轮新增：`out/archive/step3-fix-accepted-20261115/acc_acceptance_step3_0.log` 已有同样结果。三条为 DMD-1（读码框的结论 / 范围被过严判定）、CLAIM-GEMIN5-COQ10（未把上下文中的病人身份连到改善结论）、CLAIM-RRM2B-VALPROATE-CORRECT（未把“限于例外”与病种 / 一般避免的上下文连接）。本轮不改其提示词或决策方法。

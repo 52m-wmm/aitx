@@ -228,6 +228,7 @@ def _cached_chat(messages: list[dict], k: int, use_cache: bool, prompt_version: 
     path.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     session.log_call(call_id=call_id, messages=messages, entry=out, cache_hit=False, k=k, params=params,
                      usage=resp.get("usage"), seconds=time.time() - t0,
+                     reserved_usd=resp.get("reserved_usd"),
                      reasoning=choice["message"].get("reasoning_content"))
     return dict(out, call_id=call_id)
 

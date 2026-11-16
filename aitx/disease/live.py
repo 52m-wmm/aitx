@@ -206,6 +206,7 @@ def hgnc_gene(symbol: str, *, use_cache: bool = True) -> dict:
     d = docs[0]
     return {"symbol": d.get("symbol", symbol), "found": True, "hgnc_id": d.get("hgnc_id"),
             "name": d.get("name"), "aliases": d.get("alias_symbol", []), "previous_symbols": d.get("prev_symbol", []),
+            "location": d.get("location"),
             "ncbi_gene_id": d.get("entrez_id"), "omim_gene_ids": d.get("omim_id", []),
             "url": f"https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/{d.get('hgnc_id')}",
             "api_url": url, "accessed_at": f.accessed_at}
