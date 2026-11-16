@@ -171,6 +171,8 @@ def _years(value, unit) -> float | None:
 def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
     """(patient_status, patient_fact, note) for one requirement; code only."""
     field, op, value = req.get("field"), req.get("op"), req.get("value")
+    if field == "age_band":
+        return AB.limit_status(value, pf)
     if field == "age":
         need = _years(value, req.get("unit") or "year")
         if pf["age_months"] is None or need is None or op not in (">=", ">", "<=", "<"):
@@ -229,6 +231,8 @@ def evaluate(req: dict, pf: dict, branch: dict) -> tuple[str, dict | None, str]:
             return "satisfies", fact, f"named as {hit}{where}, {have}"
         want = [str(x).lower() for x in (value if isinstance(value, list) else [value]) if x]
         have = v["class"] if field == "variant_class" else v["zygosity"]
+        if field == "zygosity" and (not have or have == "unknown"):
+            return "unknown", fact, "patient's zygosity not stated"
         known = VARIANT_CLASS_WORDS if field == "variant_class" else ZYGOSITY_WORDS
         if field == "zygosity" and zyg and not all(any(k in w for k in known) for w in want):
             want = zyg                       # the value held something else (a variant name): use the requirement's words
@@ -736,6 +740,43 @@ def _repaired_item(it: dict, name: str, path: str, text: str, use_cache: bool, n
             "quote_repaired": {"llm_quote": it.get("quote"), "check": why}, "_llm": llm}
 
 
+def population_requirements(headings: list[str], spec: dict) -> list[dict]:
+    """Named populations in a heading condition every item below it (user approval 2026-11-15).
+    Compare only explicit sex / age / zygosity; any remaining population qualifier stays unknown."""
+    out = []
+    sex_word = re.compile(r"\b(males?|females?|men|women|boys?|girls?)\b", re.I)
+    for heading in headings:
+        sexes = list(sex_word.finditer(heading))
+        bands = AB.bands_in(heading)
+        if not sexes and not bands:
+            continue
+        # Compound alternatives and negated / relative populations need semantic reading by the context check.
+        if re.search(r"\b(or|not|except|after|before|older|younger|than|under|over|onset)\b", heading, re.I):
+            continue
+        rows = []
+        wants = {"female" if m.group().lower().startswith(("f", "w", "g")) else "male" for m in sexes}
+        if len(wants) == 1:
+            rows.append({"field": "sex", "value": next(iter(wants))})
+        if bands:
+            # Use the existing conservative age-band boundaries; preserve the complete heading as the evidence.
+            rows.append({"field": "age_band", "value": " and ".join(bands)})
+        zyg = zygosity_words(heading)
+        if len(zyg) == 1:
+            rows.append({"field": "zygosity", "value": zyg})
+        rest = sex_word.sub(" ", heading)
+        for pat, _, _ in AB.BANDS.values():
+            rest = re.sub(r"\b(?:" + pat + r")\b", " ", rest, flags=re.I)
+        rest = re.sub(r"\b(?:affected|patients?|individuals?|persons?|people|all|only|and|in|for|management|"
+                      r"homozygous|heterozygous|hemizygous|compound)\b", " ", rest, flags=re.I)
+        if re.search(r"[A-Za-z0-9]", rest) or len(wants) > 1:
+            rows.append({"field": "population", "value": ""})
+        src = dict(spec, quote=heading, source_text=spec["src"]["section"] + "\n" + spec["source_text"],
+                   claim=f"{spec['claim']} Population heading: {heading}", produced_by="code",
+                   retrieved_by=spec["retrieved_by"] + "; population heading")
+        out += [dict(r, kind="other", text=heading, spec=src) for r in rows]
+    return out
+
+
 def place(found: dict, key: dict, section: str, label: str, branch_ids: list[str], spec: dict, reqs: list[dict],
           why: str, pregnancy: bool = False, source: str = "gr_new") -> None:
     """Add one finding to its action. source: "gr_new" (a GeneReviews chapter with a Targeted Therapies section),
@@ -879,6 +920,11 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                             if w and x["text"] == r["text"]:
                                 x["_broadening"] = w
                 reqs = drop_broadening(reqs, dropped_conditions, ctx)
+                headings = GR.heading_context(path, shown[path], it["quote"])
+                population = population_requirements(headings, spec)
+                reqs = [r for r in reqs if not any(r["field"] == ("age" if p["field"] == "age_band" else p["field"])
+                                                 and LG.quote_in(r["text"], p["text"])
+                                                 for p in population)] + population
                 if section == "supportive_management" and it.get("manifestation") and LG.quote_in(it["manifestation"], text):
                     reqs.append({"kind": "other", "text": it["manifestation"], "field": "manifestation",
                                  "spec": _spec(claim, src, it["manifestation"], text, acc_book, llm, f"3a genereviews {nbk}")})

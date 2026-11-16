@@ -691,25 +691,99 @@ def test_therapy_vocabulary(name, want):
     assert A.therapy_type(name) == want
 
 
-def _gr_item(monkeypatch, items):
+def _gr_item(monkeypatch, items, *, path="Management / Treatment of Manifestations", text=None, shown=None, pf=None):
     """Run the GeneReviews part of add_established on one fake section with the given LLM items."""
-    text = ("Ages 0-3 years. Referral to an early intervention program is recommended. "
+    text = text if text is not None else ("Ages 0-3 years. Referral to an early intervention program is recommended. "
             "Referral to a developmental pediatrician for evaluation is recommended. Chest physical therapy daily.")
     monkeypatch.setattr(E, "chapters_for", lambda led, s2, uc: {"b1": ["NBK1"]})
-    monkeypatch.setattr(E, "mgmt_sections", lambda nbk: [("Management / Treatment of Manifestations", text)])
-    monkeypatch.setattr(E.GR, "sections_for_llm", lambda nbk: {})
+    monkeypatch.setattr(E, "mgmt_sections", lambda nbk: [(path, text)])
+    monkeypatch.setattr(E.GR, "sections_for_llm", lambda nbk: {path: text if shown is None else shown})
+    monkeypatch.setitem(E._SHOWN, "NBK1", {path: text if shown is None else shown})
     monkeypatch.setattr(E.D, "ensure", lambda name: type("S", (), {"downloaded_at": 1})())
-    monkeypatch.setattr(E, "_llm", lambda system, user, uc, what="": ({"items": items}, {"m": 1}) if "management actions" in system
+    monkeypatch.setattr(E, "_llm", lambda system, user, uc, what="": ({"items": items}, {"served_model": "fake", "prompt_version": "fake"}) if "management actions" in system
                         else ({"same": [], "broader": []}, {}))
     monkeypatch.setattr(E.LB, "search", lambda *a, **k: ([], {"database": "openfda", "endpoint": "e", "query": "q",
                                                               "queried_at": 1, "n_results": 0, "returned": 0}))
     monkeypatch.setattr(E, "disease_names", lambda b, s2: ["dystonia 28"])
-    monkeypatch.setattr(E, "facts", lambda s1, s2: dict(PF, age_months=None, age_quote=None))
+    monkeypatch.setattr(E, "facts", lambda s1, s2: pf if pf is not None else dict(PF, age_months=None, age_quote=None))
     monkeypatch.setattr(E, "ontology", lambda: type("O", (), {"exact_lookup": lambda self, t: [], "search": lambda self, t, k: [],
                                                          "ancestors": lambda self, h: []})())
     led = LG.Ledger("P", [dict(BR, id="b1")])
     E.add_established(led, {}, {}, use_cache=True)
     return led
+
+
+@pytest.mark.parametrize("heading,sex,months,want", [
+    ("Affected Males", "male", 84, "applicable"),
+    ("Affected Males", "female", 84, "not_applicable"),
+    ("Affected Males", "unknown", 84, "conditional"),
+    ("Adults", "male", 30 * 12, "applicable"),
+    ("Adults", "male", 7 * 12, "not_applicable"),
+    ("Adults", "male", None, "conditional"),
+    ("Children", "male", 7 * 12, "applicable"),
+    ("Children", "male", 30 * 12, "not_applicable"),
+    ("Children", "male", 15 * 12, "conditional"),  # existing disputed age-band boundary stays unknown
+    ("Infants", "male", 6, "applicable"),
+    ("Infants", "male", 84, "not_applicable"),
+    ("Infants", "male", None, "conditional"),
+    ("Female carriers", "male", 84, "not_applicable"),
+    ("Female carriers", "female", 84, "conditional"),  # sex alone does not establish carrier status
+    ("Heterozygous Females", "female", 84, "not_applicable"),  # PF is explicitly homozygous
+])
+def test_population_section_heading_conditions_every_item_even_when_llm_omits_it(monkeypatch, heading, sex, months, want):
+    monkeypatch.setattr(E.CC, "ENABLED", False)
+    text = "Chest physical therapy daily. Stretching daily."
+    items = [{"name": name, "kind": "procedure", "quote": quote} for name, quote in
+             [("Chest physical therapy", "Chest physical therapy daily."), ("stretching", "Stretching daily.")]]
+    pf = dict(PF, sex=sex, sex_quote=None if sex == "unknown" else sex,
+              age_months=months, age_quote=None if months is None else "stated age")
+    led = _gr_item(monkeypatch, items, path=f"Management / Treatment of Manifestations / {heading}", text=text, pf=pf)
+    actions = [a for a in led.actions if a["action_key"]]
+    assert len(actions) == 2
+    for a in actions:
+        assert a["status_by_branch"]["b1"]["status"] == want
+        assert heading in [r["requirement"] for r in a["requirements"]]
+    assert not [c for c in led.checks() if c["status"] == "fail"]
+    if sex == "unknown" or months is None:
+        assert {m["variable"] for m in led.missing_information} & {"sex", "age"}
+
+
+def test_dmd_bisphosphonates_keep_affected_males_and_bone_health_after_removing_purpose(monkeypatch):
+    monkeypatch.setattr(E.CC, "ENABLED", False)
+    text = "Bone health Bisphosphonates to prevent fractures"
+    item = {"name": "Bisphosphonates", "kind": "procedure", "quote": "Bisphosphonates to prevent fractures",
+            "manifestation": "fractures"}
+    led = _gr_item(monkeypatch, [item], path="Management / Supportive Care / Affected Males", text=text,
+                   shown=BONE_ROW, pf=dict(PF, sex="unknown", sex_quote=None))
+    a = next(a for a in led.actions if a["action_key"])
+    assert {r["requirement"] for r in a["requirements"]} == {"Affected Males", "Bone health"}
+    assert a["purposes"] == ["fractures"] and a["status_by_branch"]["b1"]["status"] == "conditional"
+
+
+def test_population_subheading_applies_to_list_and_table_but_not_next_heading(monkeypatch):
+    from aitx.evidence import genereviews as GR
+    shown = ("Subheading: Infants\nParagraph 1 [context: Infants]: Stretching daily.\n"
+             "Table 1. Care\nRow 1: [Treatment: Chest physical therapy daily.]\n"
+             "Subheading: General care\nParagraph 2 [context: General care]: Regular exercise.")
+    path = "Management / Supportive Care"
+    for quote in ["Stretching daily.", "Chest physical therapy daily."]:
+        assert "Infants" in GR.heading_context(path, shown, quote)
+    assert "Infants" not in GR.heading_context(path, shown, "Regular exercise.")
+    assert "Infants" not in GR.heading_context(path + " / Adults", "Paragraph 1: Regular exercise.", "Regular exercise.")
+    monkeypatch.setattr(E.CC, "ENABLED", False)
+    items = [{"name": "stretching", "kind": "procedure", "quote": "Stretching daily."},
+             {"name": "exercise", "kind": "procedure", "quote": "Regular exercise."}]
+    led = _gr_item(monkeypatch, items, path=path, text="Infants Stretching daily. General care Regular exercise.",
+                   shown=shown.replace("Table 1. Care\nRow 1: [Treatment: Chest physical therapy daily.]\n", ""), pf=PF)
+    states = {a["label"]: a["status_by_branch"]["b1"]["status"] for a in led.actions if a["action_key"]}
+    assert states == {"stretching": "not_applicable", "exercise": "applicable"}
+
+
+def test_unknown_zygosity_in_population_heading_does_not_satisfy():
+    req = {"field": "zygosity", "text": "Heterozygous Females", "value": ["heterozygous"]}
+    for zyg in (None, "", "unknown"):
+        pf = dict(PF, variants=[dict(PF["variants"][0], zygosity=zyg)])
+        assert E.evaluate(req, pf, BR)[0] == "unknown"
 
 
 def test_therapy_referral_kept_evaluation_referral_dropped(monkeypatch):

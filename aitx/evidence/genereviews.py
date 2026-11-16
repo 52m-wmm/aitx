@@ -152,6 +152,21 @@ def paragraph_scope(shown: str, quote: str) -> str | None:
     return None
 
 
+def heading_context(path: str, shown: str, quote: str) -> list[str]:
+    """Section ancestors and the item's own subheading / paragraph context, never a sibling's heading."""
+    from aitx.evidence.ledger import quote_in
+    headings = path.split(" / ")
+    sub = None
+    for line in shown.splitlines():
+        if line.startswith("Subheading: "):
+            sub = line.split(": ", 1)[1]
+        elif quote_in(quote, line):
+            ctx = re.search(r"^Paragraph \d+ \[context: (.*?)\]:", line)
+            headings += ctx.group(1).split("; ") if ctx else ([sub] if sub else [])
+            break
+    return list(dict.fromkeys(headings))
+
+
 def sections_for_llm(nbk: str) -> dict[str, str]:
     """{section path: text with tables rendered row by row with their headers} - the same sections as sections();
     quotes are still checked against sections(), where every cell text appears verbatim."""

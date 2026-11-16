@@ -158,3 +158,6 @@
 - **情境状语**：治疗栏（表格）整格、或段落里条目自己的列表项内的 during / when / whenever / while / in periods of / in case of 短语，按"使用情境"条件抽取（不论有没有目的从句）；"when possible / if appropriate"等不算；不跨逗号 / 分号列表项。
 - 测试：`tests/test_established.py`。
 
+## 17. 人群小标题（2026-11-15 用户批准）
+点名人群的上级小标题由代码补为要求行，再送入既有核查；性别 / 年龄 / 明写的合子状态依病人事实比较，未知不视为满足。标题范围和原因见 `docs/step3a_contract.md` 文末。COL1A1 交替体位的婴儿限定仍只交给上下文核查，不新增专门代码规则。
+
