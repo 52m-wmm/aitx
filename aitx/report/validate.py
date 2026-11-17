@@ -144,9 +144,9 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
         if not quantities:
             continue
         ids = [a for a, _ in REF.findall(line) if a in evidence]
-        quotes = [re.sub(r"\s+", " ", html.unescape(evidence[i].get("quote", ""))).casefold() for i in ids]
+        quotes = [re.sub(r"\s+", " ", html.unescape(evidence[i].get("quote", ""))) for i in ids]
         for quantity in quantities:
-            normalized = re.sub(r"\s+", " ", quantity).casefold()
+            normalized = re.sub(r"\s+", " ", quantity)
             if not any(normalized in q for q in quotes):
                 bad.append(f"dose/target absent from cited verbatim passage: {quantity}")
     return bad

@@ -211,6 +211,14 @@ def test_a_condition_references_its_own_evidence_in_addition_to_the_action_quote
     assert '[E:cond]' in line
 
 
+def test_dose_units_must_keep_the_sources_case():
+    led=ledger([act('drug:L','existing_targeted_therapies','drug L','applicable')])
+    led['evidence'][0]['quote']='The administered volume was 0.5 mL.'
+    md,_=build(led)
+    assert not V.check_report(md,led,'P')
+    assert V.check_report(md.replace('0.5 mL','0.5 ML'),led,'P')
+
+
 def test_a_measure_without_its_evidence_reference_is_rejected():
     led=ledger([]);led['report_context']={'outcomes':[{'kind':'efficacy','label':'Trial T','evidence_id':'e1'}]}
     md,_=build(led)
