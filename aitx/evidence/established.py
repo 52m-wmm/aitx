@@ -890,6 +890,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
+                spec["presentation_quotes"] = management_quotes(shown.get(path, ""), name, it["quote"])
                 spec["tier_source"] = tier
                 if tier == "overview":            # a row of an overview table that is for another disorder
                     other_row = row_for_other_disorder(shown.get(path, ""), it["quote"], own_genes, branch_names)
@@ -1304,6 +1305,23 @@ def context_passages(spec: dict) -> list[tuple[str, str]]:
     return [(f"{kind} {src.get('id')}", (head + "\n...\n" if head else "") + text[lo:hi])]
 
 
+def management_quotes(shown: str, label: str, quote: str) -> list[str]:
+    """Presentation only: a named quantitative paragraph and a transplant's own table comment.
+
+    These spans supplement the citation after adjudication; they never become conditions or LLM inputs.
+    The caller supplies only the item's source section, so no neighbouring section can supply a qualifier.
+    """
+    out = []
+    for line in shown.splitlines():
+        if line.startswith("Paragraph "):
+            body = line.split("]: ", 1)[-1] if "]: " in line else line.split(": ", 1)[1]
+            if body.casefold().startswith(label.casefold() + ".") and re.search(r"\d", body):
+                out.append(body)
+        elif line.startswith("Row ") and "transplant" in label.casefold() and LG.quote_in(quote, line):
+            out += [m.group(2) for m in _CELL.finditer(line) if m.group(1) == "Comment"]
+    return list(dict.fromkeys(out))
+
+
 def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_cache: bool = True) -> None:
     by_id = {b["id"]: b for b in led.branches}
     placed: dict[str, set[str]] = {s: set() for s in SECTIONS_3A}
@@ -1590,6 +1608,15 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                           else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        presentation = []
+        for sp in a["specs"]:
+            for q in sp.get("presentation_quotes", []):
+                extra = make(dict(sp, quote=q, claim=f"{a['label']}: full source management passage",
+                                  produced_by="code", retrieved_by="3a verbatim presentation context"))
+                presentation.append(extra["id"])
+        if presentation:
+            rec["presentation_evidence_ids"] = list(dict.fromkeys(presentation))
+            rec["evidence_ids"] += [i for i in rec["presentation_evidence_ids"] if i not in rec["evidence_ids"]]
         if cc is not None:
             rec["context_check"] = cc
             if cautions:

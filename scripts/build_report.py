@@ -15,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from aitx import runmeta  # noqa: E402
-from aitx.report import assemble as A, safety as S, sources as SRC, validate as V  # noqa: E402
+from aitx.report import assemble as A, sources as SRC, validate as V  # noqa: E402
+from scripts.validate_report import validate_case  # noqa: E402
 
 
 def main() -> int:
@@ -29,17 +30,18 @@ def main() -> int:
     for cid in args.case:
         case = runmeta.find_case(cid)
         led = json.loads((ROOT / "out" / "step3" / f"{cid}.json").read_text())
-        safety = S.check(A.drugs_for_safety(led))
-        md, trace = A.assemble(led, case, SRC.date_of, safety, outcomes_of=SRC.trial_primary_outcomes,
-                               surveillance_of=SRC.genereviews_surveillance)
+        safety = led["report_context"]["safety"]
+        md, trace = A.assemble(led, case, SRC.date_of, safety)
         (out / f"{cid}.md").write_text(md)
         (out / f"{cid}.trace.json").write_text(json.dumps({"trace": trace, "safety": safety}, indent=1, ensure_ascii=False))
         sub.append({"id": cid, "report_markdown": md})
         bad += [f"{cid}: {p}" for p in V.check_markdown(md)]
+        bad += [f"{cid}: {p}" for p in validate_case(cid)]
     text = json.dumps(sub, indent=1, ensure_ascii=False)
     (out / "submission.json").write_text(text)
     bad += V.check_submission(text)
     print("FORMAT CHECK: " + ("PASS" if not bad else "FAIL\n  " + "\n  ".join(bad)))
+    print("STEP 5 CHECK: " + ("FAIL" if bad else "PASS"))
     return 1 if bad else 0
 
 

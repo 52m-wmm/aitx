@@ -81,7 +81,7 @@ def check_upstream(result: dict, step: int, upstream_hashes: dict[int, str]) -> 
 
 # ------------------------------------------------------------------ freshness (acceptance, 2026-11-05)
 # An acceptance score counts only outputs made by the current code from the current upstream files and case input.
-CODE_PATHS = ("aitx", "config", "scripts/run_pipeline.py")
+CODE_PATHS = ("aitx", "config", "scripts/run_pipeline.py", "data/aitxchallenge_report_template.md")
 CASE_FILES = (ROOT / "data/cases/practice/official_examples.json", ROOT / "data/cases/aitx_final_patients.json",
               ROOT / "data/cases/validation/phase1_hf_unseen_genes.json")      # same list as scripts/run_pipeline.py
 

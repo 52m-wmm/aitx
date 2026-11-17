@@ -100,7 +100,15 @@ def background(led: LG.Ledger, case_id: str, step1: dict, step2: dict, text1: st
               all_b, ref, up)
         nmd = v.get("nmd") or {}
         _fact(led, case_id, 1, text1, t1, f"{p}.nmd.prediction", nmd.get("prediction"),
-              f"NMD prediction for {tag}: {nmd.get('prediction')} ({'; '.join(nmd.get('reasons') or [])}).", all_b, ref, up)
+              f"Computed NMD prediction for {tag} using Step 1 {nmd['rules']}: {nmd['prediction']} "
+              f"({'; '.join(nmd['reasons'])}). The junction rule uses a 50 nt threshold; last-exon, "
+              "start-proximal and long-exon exceptions are checked by Step 1.", all_b, ref, up)
+        if "transcript_layout" in v:
+            lo, hi = v["transcript_layout"]["cds"]
+            _fact(led, case_id, 1, text1, t1, f"{p}.transcript_layout.cds", [lo, hi],
+                  f"RefSeq {v['transcript']} CDS: mRNA positions {lo}-{hi} (1-based, inclusive, stop codon included). "
+                  f"The Step 3d coding length excludes the stop codon: 3 × {v['protein_length']} translated residues "
+                  f"= {3 * v['protein_length']} nt.", all_b, ref, up)
         ex = v.get("exon") or {}
         if ex.get("number"):
             _fact(led, case_id, 1, text1, t1, f"{p}.exon.number", ex["number"],
@@ -136,7 +144,10 @@ def run_case(case: dict, step1: dict, step2: dict) -> dict:
     led.possible_duplicates += LG.possible_duplicates(led.actions, led.evidence)    # N3: flagged, never deleted
     add_bespoke(led, case, step1, step2)               # 3d: Bespoke Therapies
     add_repurposing(led, case, step1, step2)           # 3e: Drug Repurposing
+    from aitx.report.sources import record_context
+    report_context = record_context(led)
     out = led.to_dict()
+    out["report_context"] = report_context
     out["branches_dropped"] = dropped
     out["ok"] = all(c["status"] != "fail" for c in out["checks"])
     return out

@@ -38,14 +38,32 @@ def build(led, safety=None):
     return A.assemble(led, CASE, lambda src, e=None: "2024-08-15", safety, today=dt.date(2026, 11, 15))
 
 
-def test_review3_interventional_trials_take_the_five_places_before_observational_studies():
+def variant_evidence():
+    return dict(ev("v1", '"frameshift"', {"type": "pipeline_fact", "id": "step1:P:variants[0].variant_class",
+        "url": "https://www.ncbi.nlm.nih.gov/nuccore/NM_000030.3", "upstream": {"type": "refseq", "id": "NM_000030.3"}}),
+        section="background")
+
+
+def safety_evidence(led, safety):
+    """Mock label findings with ledger evidence, as required by the user's additional review."""
+    for kind in ("interactions", "contraindications", "warnings"):
+        for row in safety.get(kind, []):
+            eid = f"s{len(led['evidence'])}"
+            led["evidence"].append(ev(eid, row["quote"], {"type": "spl_setid", "id": row["set_id"], "url": row["url"]}))
+            row["evidence_ids"] = [eid]
+    for row in safety.get("coverage", []):
+        row["evidence_ids"] = [led["evidence"][0]["id"]]
+    return led
+
+
+def test_all_interventional_trials_are_listed_before_the_observational_summary():
     obs = [act(f"trial:o{i}", "clinical_trial_eligibility", f"Registry {i}", "conditional", study_type="observational") for i in range(3)]
     trials = [act(f"trial:i{i}", "clinical_trial_eligibility", f"Intervention {i}", "conditional",
                   [unk(f"q{x}") for x in range(i+1)], study_type="interventional", nct=f"NCT0000000{i}") for i in range(6)]
     md, _ = build(ledger(obs + list(reversed(trials))))
     part = md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
     assert all(f"**Intervention {i}**" in part for i in range(5))
-    assert "**Intervention 5**" not in part and "**Registry" not in part
+    assert "**Intervention 5**" in part and "**Registry" not in part and "Observational studies (3)" in part
     assert part.index("Intervention 0") < part.index("Intervention 4")
 
 
@@ -57,7 +75,7 @@ def test_review3_observational_trials_follow_interventions_then_sort_by_unknowns
     assert part.index("**Intervention**") < part.index("Registry zero") < part.index("Registry one")
 
 
-def test_review3_bespoke_methods_show_their_ledger_reasons_and_limits():
+def test_code_only_bespoke_arguments_are_not_presented_as_source_backed_technical_facts():
     acts = [{"section":"bespoke_therapies", "modality":"gene_replacement", "label":"gene replacement (AAV)",
              "classification":"theoretically_possible", "conclusion":"AAV is theoretically possible.",
              "criteria_met":["coding sequence 1176 nt is within 4.7 kb"], "facts":{"target_organ":"liver"},
@@ -69,15 +87,18 @@ def test_review3_bespoke_methods_show_their_ledger_reasons_and_limits():
             {"section":"bespoke_therapies", "modality":"aso_exon_skipping", "label":"ASO exon skipping",
              "classification":"not_eligible", "conclusion":"Not eligible.","failed_criterion":"first coding exon removes the start codon",
              "applies_to":["B"],"evidence_ids":[]}]
-    md, _ = build(ledger(acts));part=md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
-    for reason in ("1176 nt", "4.7 kb", "liver", "promoter and polyA", "insertion cannot", "PAM", "first coding exon"):
-        assert reason in part
+    led=ledger(acts); led["evidence"].append(variant_evidence())
+    md, _ = build(led);part=md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
+    for reason in ("1176 nt", "4.7 kb", "Target tissue: liver", "promoter and polyA", "insertion cannot", "PAM", "first coding exon"):
+        assert reason not in part
+    assert part.count("Target tissue: unconfirmed") == 3 and "[E:v1]" in part
 
 
 def test_review3_a_missing_target_organ_is_unknown_not_inferred():
     a={"section":"bespoke_therapies","modality":"gene_replacement","label":"AAV", "classification":"theoretically_possible",
        "conclusion":"Theoretically possible.","facts":{},"applies_to":["B"],"evidence_ids":[]}
-    md,_=build(ledger([a])); assert "Target organ: not recorded" in md
+    led=ledger([a]); led["evidence"].append(variant_evidence())
+    md,_=build(led); assert "Target tissue: unconfirmed" in md
 
 
 def test_review3_met_alternative_hides_other_options_but_keeps_common_unknowns():
@@ -215,9 +236,10 @@ def test_caps_leave_the_rest_in_the_ledger_with_a_count():
     trials = [act(f"trial:{i}", "clinical_trial_eligibility", f"Trial {i}", "conditional", [unk(f"x{i}")] * (i % 3),
                   study_type="interventional") for i in range(8)]
     md, _ = build(ledger(trials))
-    assert md.count("- **Trial") == 5 and "3 further trials are recorded in the evidence ledger" in md
+    part=md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
+    assert part.count("| **Trial") == 8 and "further trials" not in part
     md, _ = build(ledger([act(f"drug:{i}", "existing_targeted_therapies", f"T{i}", "applicable") for i in range(12)]))
-    assert md.count("- **T") == 12                            # reverse: targeted therapies are not capped
+    assert md.split('### Existing Targeted Therapies')[1].split('### Supportive Management')[0].count("- **T") == 12
 
 
 def test_trials_with_fewer_unknowns_come_first():
@@ -245,11 +267,11 @@ def test_ineffective_only_drugs_close_the_offlabel_section_and_adverse_reports_g
     off_part = md[md.index("### Off-label"):md.index("## Tier 3")]
     assert off_part.index("drug Y") < off_part.index("**drug Z** — reported ineffective; not recommended.")
     pre = md[md.index("### Contraindications"):md.index("## Tier 2")]
-    assert "drug W" in pre and "worsened after W" in pre
+    assert "drug W" not in pre and "worsened after W" not in pre  # no evidence record for this passage
 
 
 def test_an_empty_section_says_what_was_searched():
-    neg = {"id": "n1", "kind": "negative", "claim": "c", "search": {"database": "open targets", "query": "target T",
+    neg = {"id": "n1", "kind": "negative", "status": "verified", "claim": "c", "search": {"database": "open targets", "query": "target T",
                                                                      "queried_at": 1794736156, "n_results": 0,
                                                                      "n_excluded": 0}}
     led = ledger([act(None, "drug_repurposing", "None found", "searched_none", evs=("n1",))])
@@ -285,7 +307,7 @@ def test_ranking_follows_the_fixed_order_with_a_reason():
                    "conclusion": "theoretically possible", "premises_complete": True, "applies_to": ["B"]}])
     md, _ = build(led)
     r = md[md.index("### Outcome"):]
-    assert r.index("drug Y") < r.index("Trial T") < r.index("gene replacement")
+    assert r.index("drug Y") < r.index("Trial T") and "**gene replacement**" not in r
     assert "human precedent with reported improvement" in r
 
 
@@ -298,7 +320,7 @@ def test_safety_check_quotes_label_interactions_between_written_drugs():
     assert out["interactions"][0]["quote"] == "Avoid use with drug B." and out["interactions"][0]["other"] == "drug B"
     assert out["contraindications"][0]["quote"] == "Hypersensitivity to drug A." and not out["contraindications"][0]["none"]
     assert out["not_checked"] == ["drug B"]
-    md, _ = build(ledger([]), safety=out)
+    md, _ = build(safety_evidence(ledger([]),out), safety=out)
     assert "Check before use" in md and "Avoid use with drug B." in md
 
 
@@ -313,7 +335,7 @@ def test_a_label_with_no_contraindications_is_one_line_not_fragments():
     labels = {"s1": {"set_id": "s1", "drug_interactions": [], "contraindications": ["4 CONTRAINDICATIONS None. None. ( 4 )"]}}
     out = S.check([{"label": "drug A", "names": ["drug A"], "set_ids": ["s1"]}], fetch=labels.get)
     assert len(out["contraindications"]) == 1 and out["contraindications"][0]["none"]
-    md, _ = build(ledger([]), safety=out)
+    md, _ = build(safety_evidence(ledger([]),out), safety=out)
     assert "drug A: the label lists no contraindications" in md and '"( 4 )"' not in md
 
 
@@ -323,7 +345,7 @@ def test_the_supplement_notice_only_for_supplements_and_access_route_is_shown():
     md, _ = build(ledger([act("drug:1", "off_label_expanded_access", "approved drug", "conditional",
                               regulatory=reg_drug, access_route_label="FDA-approved drug (off-label use for this disease)"),
                           act("drug:2", "off_label_expanded_access", "herb", "conditional", regulatory=reg_supp)]))
-    assert "approved drug: not an FDA-approved drug" not in md and "herb: not an FDA-approved drug" in md
+    assert "not an FDA-approved drug" not in md  # no source-backed evidence for the regulatory notice
     assert "Access: FDA-approved drug (off-label use for this disease)." in md
 
 
@@ -339,8 +361,8 @@ def test_the_summary_opens_with_priority_actions():
     md, _ = build(ledger([act("drug:1", "existing_targeted_therapies", "drug L", "applicable"),
                           act("drug:2", "existing_targeted_therapies", "drug N", "conditional", [unk("eGFR >= 30")])]))
     s = md[:md.index("## Tier 1")]
-    assert s.index("**Priority actions**") < s.index("**Diagnosis**")
-    assert "drug L (existing targeted therapy; applicable)" in s and "If eGFR >= 30: drug N" in s
+    assert s.index("**Priority actions**") < s.index("**Tier 1:**")
+    assert "drug L (applicable)" in s and "If eGFR >= 30: drug N" in s
 
 
 def test_an_entry_waiting_on_an_unreported_manifestation_ranks_after_the_others():
@@ -355,39 +377,40 @@ def test_an_entry_waiting_on_an_unreported_manifestation_ranks_after_the_others(
 
 
 def test_outcome_measures_come_from_trial_primary_outcomes_and_surveillance():
-    led = ledger([act("trial:1", "clinical_trial_eligibility", "Trial T", "conditional", [unk("a")],
-                      study_type="interventional", nct="NCT00000001", url="https://clinicaltrials.gov/study/NCT00000001"),
-                  act("drug:1", "existing_targeted_therapies", "drug L", "applicable")])
-    md, _ = A.assemble(led, CASE, lambda s, e=None: "2024-08-15", today=dt.date(2026, 11, 15),
-                       outcomes_of=lambda nct: ["Percent change in urinary oxalate (6 months)"],
-                       surveillance_of=lambda nbk: ["Serum creatinine for eGFR at least annually."])
-    om = md[md.index("**Outcome measures**"):md.index("**Ranking**")]
-    assert "Percent change in urinary oxalate (6 months) [NCT00000001 primary outcome]" in om
-    assert '"Serum creatinine for eGFR at least annually." [GeneReviews NBK1, Management / Surveillance; updated 2024-08-15]' in om
+    led=ledger([])
+    led["evidence"] += [ev("out1","Percent change in urinary oxalate (6 months)"), ev("out2","Serum creatinine for eGFR at least annually.")]
+    led["report_context"]={"outcomes":[{"kind":"efficacy","label":"NCT00000001 primary outcome","evidence_id":"out1"},
+                                     {"kind":"efficacy","label":"GeneReviews NBK1 surveillance","evidence_id":"out2"}]}
+    md,_=build(led); om=md.split("**Efficacy measures**:")[1].split("**Ranking**:")[0]
+    assert "Percent change in urinary oxalate (6 months)" in om and "[E:out1]" in om
+    assert '"Serum creatinine for eGFR at least annually."' in om and "[E:out2]" in om
 
 
 def test_a_caution_kept_from_the_same_source_is_shown_under_the_entry():
-    md, _ = build(ledger([act("procedure:1", "supportive_management", "lithotripsy", "conditional", [unk("stones")],
-                              cautions=["Hard stones are resistant to lithotripsy."])]))
+    led=ledger([act("procedure:1","supportive_management","lithotripsy","conditional",[unk("stones")],
+                   cautions=["Hard stones are resistant to lithotripsy."])])
+    led["evidence"][0]["quote"]="Hard stones are resistant to lithotripsy."
+    md,_=build(led)
     assert 'Caution (same source): "Hard stones are resistant to lithotripsy."' in md
 
 
 def test_no_contraindication_is_one_sentence_without_the_label_fragments():
-    md, _ = build(ledger([]), safety={"contraindications": [{"drug": "drug A", "none": True, "quote": "4 CONTRAINDICATIONS None. ( 4 )",
-                                                             "set_id": "s1", "effective_date": "20250101", "url": "u"}]})
-    assert "drug A: the label lists no contraindications [FDA label s1" in md and "( 4 )" not in md
+    safety={"contraindications":[{"drug":"drug A","none":True,"quote":"4 CONTRAINDICATIONS None. ( 4 )",
+                                  "set_id":"s1","effective_date":"20250101","url":"u"}]}
+    md,_=build(safety_evidence(ledger([]),safety), safety=safety)
+    summary=md.split("## Tier 1")[0]
+    assert "drug A: the label lists no contraindications [FDA label s1" in summary and "( 4 )" not in summary
 
 
-def test_only_efficacy_outcomes_of_interventional_trials_are_listed():
-    led = ledger([act("trial:1", "clinical_trial_eligibility", "Trial T", "conditional", [unk("a")],
-                      study_type="interventional", nct="NCT1", url="u"),
-                  act("trial:2", "clinical_trial_eligibility", "Registry R", "conditional", [unk("a")],
-                      study_type="observational", nct="NCT2", url="u")])
-    outs = {"NCT1": ["Incidence of treatment-emergent adverse events (6 months)", "Percent change in urinary oxalate"],
-            "NCT2": ["Number of samples stored in tissue bank"]}
-    md, _ = A.assemble(led, CASE, lambda s, e=None: None, today=dt.date(2026, 11, 15), outcomes_of=lambda n: outs[n])
-    om = md[md.index("**Outcome measures**"):md.index("**Ranking**")]
-    assert "urinary oxalate" in om and "adverse events" not in om and "samples" not in om
+def test_safety_outcomes_and_efficacy_outcomes_are_separate():
+    led=ledger([])
+    led["evidence"] += [ev("out1","Incidence of treatment-emergent adverse events (6 months)"), ev("out2","Percent change in urinary oxalate")]
+    led["report_context"]={"outcomes":[{"kind":"safety","label":"NCT1 primary outcome","evidence_id":"out1"},
+                                     {"kind":"efficacy","label":"NCT1 primary outcome","evidence_id":"out2"}]}
+    md,_=build(led)
+    safety=md.split("**Safety**:")[1].split("**Efficacy measures**:")[0]
+    efficacy=md.split("**Efficacy measures**:")[1].split("**Ranking**:")[0]
+    assert "urinary oxalate" in efficacy and "adverse events" not in efficacy and "adverse events" in safety
 
 
 def test_a_caution_sentence_is_not_also_cited_as_support():
