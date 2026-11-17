@@ -124,6 +124,7 @@ class Report:
 
     def variant_ids(self) -> list[str]:
         return [i for i, e in self.ev.items() if e.get("section") == "background"
+                and e["status"] == "verified"
                 and (e.get("source", {}).get("upstream") or {}).get("type") == "refseq"]
 
     def count(self, items: list) -> list[str]:
@@ -387,7 +388,7 @@ class Report:
                 if self.ev[i].get("premise") == "preclinical_validation":
                     out.append(f"  - \"{clean(self.ev[i]['quote'], None)}\" {self.refs([i])}")
             for i in bases:
-                if self.ev[i]["source"]["id"].endswith(".transcript_layout.cds"):
+                if self.ev[i]["source"]["id"].endswith(".protein_length"):
                     out.append(f"  - Recorded calculation to verify: {self.ev[i]['claim']} {self.refs([i])}")
         if not bases:
             out.append("- Source-backed preclinical prerequisites are not recorded; unconfirmed (未确认).")
@@ -480,7 +481,7 @@ class Report:
                 continue
             up = src.get("upstream", {})
             if up.get("type") == "clinvar_vcv" or (up.get("type") == "refseq" and
-                    src["id"].endswith((".variant_class", ".nmd.prediction", ".transcript_layout.cds"))):
+                    src["id"].endswith((".variant_class", ".nmd.prediction", ".protein_length"))):
                 out.append(f"- {clean(e['claim'], None)} {self.cite(e)} {self.refs([i])}")
         return out
 

@@ -130,7 +130,8 @@ def test_label_warnings_are_verbatim_and_missing_warnings_remain_unknown():
     assert not any(w["drug"] == "N" for w in out["warnings"])
 
 
-def test_background_sources_name_transcript_clinvar_and_computation_basis():
+@pytest.mark.parametrize('indent',[None,2])
+def test_background_sources_name_transcript_clinvar_and_computation_basis(indent):
     from tests.test_step3 import cand
     v = {"gene": "AGXT", "transcript": "NM_000030.3", "variant_cdna": "c.33dup", "variant_protein": "p.Lys12fs",
          "variant_class": "frameshift", "zygosity": "homozygous", "protein_length": 392,
@@ -142,7 +143,7 @@ def test_background_sources_name_transcript_clinvar_and_computation_basis():
           "clinvar": [{"records": [{"vcv": "VCV000140583", "title": "c.33dup", "clinical_significance": "Pathogenic",
             "review_status": "reviewed", "stars": 2, "url": "https://www.ncbi.nlm.nih.gov/clinvar/variation/140583/"}]}]}
     led = LG.Ledger("P", [{"id": "B", "gene": "AGXT", "diagnosis": {"label": "D", "omim": []}}])
-    P.background(led, "P", s1, s2, json.dumps(s1), json.dumps(s2))
+    P.background(led, "P", s1, s2, json.dumps(s1,indent=indent), json.dumps(s2,indent=indent))
     data = ledger([]) | {"evidence": list(led.evidence.values()), "patient_context": {"variants": [v | {"nmd": "likely_triggers"}]}}
     md, _ = build(data)
     for text in ("RefSeq NM_000030.3", "VCV000140583", "nmd-v1", "574 nt", "1176", "43", "1221"):

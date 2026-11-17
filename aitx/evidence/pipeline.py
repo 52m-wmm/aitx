@@ -105,7 +105,7 @@ def background(led: LG.Ledger, case_id: str, step1: dict, step2: dict, text1: st
               "start-proximal and long-exon exceptions are checked by Step 1.", all_b, ref, up)
         if "transcript_layout" in v:
             lo, hi = v["transcript_layout"]["cds"]
-            _fact(led, case_id, 1, text1, t1, f"{p}.transcript_layout.cds", [lo, hi],
+            _fact(led, case_id, 1, text1, t1, f"{p}.protein_length", v["protein_length"],
                   f"RefSeq {v['transcript']} CDS: mRNA positions {lo}-{hi} (1-based, inclusive, stop codon included). "
                   f"The Step 3d coding length excludes the stop codon: 3 × {v['protein_length']} translated residues "
                   f"= {3 * v['protein_length']} nt.", all_b, ref, up)
