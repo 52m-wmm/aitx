@@ -120,7 +120,9 @@ class Report:
         return " ".join(f"[E:{eid}](#evidence-{eid})" for eid in ids)
 
     def action_ids(self, a: dict) -> list[str]:
-        return [eid for eid in a.get("evidence_ids", []) if self.ev[eid]["status"] == "verified"]
+        ids = a.get("evidence_ids", []) + [r["requirement_evidence"] for r in a.get("requirements", [])
+                                          if "requirement_evidence" in r]
+        return [eid for eid in dict.fromkeys(ids) if self.ev[eid]["status"] == "verified"]
 
     def variant_ids(self) -> list[str]:
         return [i for i, e in self.ev.items() if e.get("section") == "background"
@@ -163,7 +165,7 @@ class Report:
             return [f"  - {self.cite(e)} {self.refs([e['id']])}"] if e else []
         lines = []
         shown = 0
-        ids = list(dict.fromkeys(a.get("presentation_evidence_ids", []) + self.action_ids(a)))
+        ids = list(dict.fromkeys(a.get("presentation_evidence_ids", []) + a.get("evidence_ids", [])))
         outcomes = {p["outcome_quote"] for p in a.get("precedents") or []
                     if p.get("direction") == "negative" and p.get("outcome_quote")}
         if a["section"] == "existing_targeted_therapies":
@@ -355,7 +357,14 @@ class Report:
                 continue
             ids = list(dict.fromkeys(self.action_ids(a) + bases))
             out.append(f"- **{a['label']}** — technical feasibility: unconfirmed." + self.applies(a) + " " + self.refs(ids))
-            out.append("  - Patient variant and calculations: see the source-labelled facts in Summary.")
+            for i in bases:
+                path = self.ev[i]["source"]["id"]
+                if path.endswith(".variant_class") or (a.get("modality") == "gene_replacement" and path.endswith(".protein_length")):
+                    out.append(f"  - Patient premise: {clean(self.ev[i]['claim'], None)} {self.refs([i])}")
+            if a.get("modality") == "base_or_prime_editing":
+                out.append("  - PAM / editing window: unconfirmed (未确认).")
+            if a.get("modality") == "gene_replacement":
+                out.append("  - Full vector size / capacity comparison: unconfirmed (未确认).")
             # Only a premise with its own verified source may be stated as a fact. Code-only modality grades,
             # capacity thresholds and editing arguments do not supply a published technical source.
             for field, name in (("target_tissue", "Target tissue"), ("delivery", "Delivery method"),

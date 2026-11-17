@@ -201,6 +201,16 @@ def test_validator_checks_standalone_doses_and_compound_targets(quantity):
     assert V.check_report(md.replace('drug L** — applicable.',f'drug L** — applicable. Dose {quantity}.'),led,'P')
 
 
+def test_a_condition_references_its_own_evidence_in_addition_to_the_action_quote():
+    r=unk('GFR <25-30 mL/min/1.73 m2');r['requirement_evidence']='cond'
+    led=ledger([act('procedure:T','existing_targeted_therapies','transplant','conditional',[r])])
+    led['evidence'] += [ev('cond','Persons with GFR <25-30 mL/min/1.73 m2')]
+    md,_=build(led)
+    assert not V.check_report(md,led,'P')
+    line=next(l for l in md.splitlines() if l.startswith('- **transplant**'))
+    assert '[E:cond]' in line
+
+
 def test_a_measure_without_its_evidence_reference_is_rejected():
     led=ledger([]);led['report_context']={'outcomes':[{'kind':'efficacy','label':'Trial T','evidence_id':'e1'}]}
     md,_=build(led)

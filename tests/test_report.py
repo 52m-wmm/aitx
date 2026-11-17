@@ -89,7 +89,7 @@ def test_code_only_bespoke_arguments_are_not_presented_as_source_backed_technica
              "applies_to":["B"],"evidence_ids":[]}]
     led=ledger(acts); led["evidence"].append(variant_evidence())
     md, _ = build(led);part=md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
-    for reason in ("1176 nt", "4.7 kb", "Target tissue: liver", "promoter and polyA", "insertion cannot", "PAM", "first coding exon"):
+    for reason in ("1176 nt", "4.7 kb", "Target tissue: liver", "promoter and polyA", "insertion cannot", "PAM and editing window not assessed", "first coding exon"):
         assert reason not in part
     assert part.count("Target tissue: unconfirmed") == 3 and "[E:v1]" in part
 
