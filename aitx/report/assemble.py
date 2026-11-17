@@ -448,16 +448,20 @@ class Report:
 
     def summary_action(self, a: dict) -> str:
         unk = unknown_lines(a)
+        sources = a["evidence_ids"]
+        labels = [i for i in sources if self.ev[i].get("source", {}).get("type") == "spl_setid"]
+        ids = (labels or sources)[:1]
         if a["section"] == "clinical_trial_eligibility":
             text = f"{a['label']} ({status_of(a)}; registry {a.get('overall_status') or 'unknown'}; "
             text += "screening conditions in Clinical Trial Eligibility)"
         elif status_of(a) == "conditional" and unk:
+            ids += [r["requirement_evidence"] for r in unk if "requirement_evidence" in r]
             text = f"If {clean(unk[0]['requirement'], None)}: {a['label']}"
             if len(unk) > 1:
                 text += "; remaining conditions: " + "; ".join(clean(r["requirement"], None) for r in unk[1:])
         else:
             text = a["label"] + f" ({status_of(a)})"
-        return text + ". " + self.refs(self.action_ids(a))
+        return text + ". " + self.refs(ids)
 
     def priority(self) -> list[str]:
         out = ["- **Priority actions**:", "- **Tier 1:**"]
@@ -474,7 +478,7 @@ class Report:
         bases = self.variant_ids()
         research = [a for a in self.actions("bespoke_therapies") if a.get("classification") == "theoretically_possible"]
         for a in research[:3]:
-            ids = self.action_ids(a) + bases
+            ids = self.action_ids(a)[:1] + [i for i in bases if self.ev[i]["source"]["id"].endswith(".variant_class")]
             if ids:
                 out.append(f"  - Review source-backed premises for {a['label']}; technical feasibility, target tissue, "
                            f"delivery and human precedent unconfirmed (未确认); see Bespoke Therapies. {self.refs(ids)}")
