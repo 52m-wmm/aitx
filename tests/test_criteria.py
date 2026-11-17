@@ -322,6 +322,45 @@ def test_review_unrelated_diagnosis_options_cannot_be_satisfied_by_the_confirmed
     assert len(lines) == 1 and lines[0]["patient_status"] == "unknown"
 
 
+@pytest.mark.parametrize("confirmed,want", [(True,"satisfies"),(False,"unknown")])
+def test_review3_subtype_option_compared_in_its_full_diagnosis_context(confirmed,want):
+    text="Inclusion Criteria:\n* Diagnosed with primary hyperoxaluria and subtype (type 1, 2 or 3) confirmed by genetic testing\n"
+    its=T.split_criteria(text);ms=[{"id":"inc1","fact":"diagnosis","quote":"subtype (type 1, 2 or 3)"}]
+    lines=C.lines_for({"criteria":text},_mapped(its,ms),_PF,{},_conf_branch(confirmed),["primary hyperoxaluria type 1","PH1"])
+    assert lines[0]['patient_status']==want
+
+
+def test_review3_a_subtype_not_listed_is_not_assumed_to_be_satisfied():
+    text="Inclusion Criteria:\n* Primary hyperoxaluria subtype (type 2 or 3) confirmed by genetic testing\n"
+    its=T.split_criteria(text)
+    ms=[{"id":"inc1","fact":"diagnosis","quote":"subtype (type 2 or 3)"}]
+    lines=C.lines_for({"criteria":text},_mapped(its,ms),_PF,{},_conf_branch(),["primary hyperoxaluria type 1","PH1"])
+    assert lines[0]['patient_status']=='unknown'
+
+
+@pytest.mark.parametrize("confirmed,want", [(True,"satisfies"),(False,"unknown")])
+def test_review3_nested_diagnosis_cohorts_do_not_require_the_other_cohorts(confirmed,want):
+    text=("Inclusion Criteria:\n* Diagnosis of primary hyperoxaluria meeting one of the following:\n"
+          "  * Confirmed by genetic testing\n* Diagnosis of Dent disease meeting one of the following:\n"
+          "  * Abnormal kidney test\n")
+    its=T.split_criteria(text);ms=[{"id":"inc1","fact":"diagnosis","quote":its[0]['text']},
+        {"id":"inc2","fact":"genetic_confirmation","quote":its[1]['text'],"group":"inc1"},
+        {"id":"inc3","fact":"diagnosis","quote":its[2]['text']},
+        {"id":"inc4","fact":"other","quote":its[3]['text'],"group":"inc3"}]
+    lines=C.lines_for({"criteria":text},_mapped(its,ms),_PF,{},_conf_branch(confirmed),["primary hyperoxaluria type 1","PH1"])
+    assert len(lines)==1 and lines[0]['patient_status']==want and len(lines[0]['any_of'])==2
+    assert LG.quote_in(lines[0]['text'],text)
+
+
+def test_review3_unassessed_checks_without_a_diagnosis_mapping_do_not_prove_a_cohort():
+    text=("Inclusion Criteria:\n* Diagnosis of disease A meeting one of the following:\n"
+          "  * Consent\n* Diagnosis of disease B meeting one of the following:\n  * Assent\n")
+    its=T.split_criteria(text);ms=[{"id":it['id'],"quote":it['text'],"fact":"header" if it['parent'] is None else "administrative",
+                                 **({"group":it['parent']} if it['parent'] else {})} for it in its]
+    lines=C.lines_for({"criteria":text},_mapped(its,ms),_PF,{},_conf_branch(),["primary hyperoxaluria type 1"])
+    assert len(lines)==2 and all(l['patient_status']=='not_assessed' for l in lines)
+
+
 def test_an_exclusion_for_another_subtype_is_not_met_by_a_confirmed_diagnosis():
     assert _ev("diagnosis", "Confirmed diagnosis of primary hyperoxaluria type 2 or type 3", "exclusion") == "does_not_satisfy"
 

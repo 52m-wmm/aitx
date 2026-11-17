@@ -189,3 +189,8 @@
 ## 先例病人的年龄、性别是先例描述，不是条件（2026-11-15 用户决定）
 LLM 抽出的先例条件里 `field` 为 age / sex 的（"17-month-old infant"、"37-year-old man"）不再作为本病人的条件行，改记在先例的 `demographics`。测试 `tests/test_offlabel.py`。
 
+## 先例变异描述与阴性结果引文（2026-11-16 用户决定）
+
+- 先例条件中 `variant` / `variant_class` 同样只描述先例病人，改记为 `precedents.patient_description`，不限制当前病人，也不列缺失信息；功能机制限制 `variant_function` 照旧保留。实际例子：STS 的 AGXT c.823_824dup 不是本病人的必需变异；针对的并发症仍是条件。
+- 聚合为 reported_ineffective 的药物，为负向先例另记逐字核实的 `outcome_quote` 证据，给药证据仍保留。报告优先完整引用结果句，而不是只引给药句。没有改疗效方向或 LLM 提示词；正反测试 `tests/test_offlabel.py`、`tests/test_report.py`。
+

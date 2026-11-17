@@ -540,3 +540,23 @@ def test_a_precedent_patients_age_and_sex_describe_the_precedent_not_this_patien
     reqs = [r["requirement"] for r in a["requirements"]]
     assert "treated with L-serine" not in reqs and a["precedents"][0]["demographics"] == ["treated with L-serine"]
     assert "GRIN2B patients" in reqs                                           # reverse: other conditions stay
+
+
+@pytest.mark.parametrize("field", ["variant", "variant_class"])
+def test_review3_precedent_variant_is_description_but_function_stays_a_condition(monkeypatch, field):
+    item=dict(LSER,conditions=[{"text":"GRIN2B patients","field":"variant_function"},
+                              {"text":"treated with L-serine","field":field}])
+    led=_run(monkeypatch,[item]);a=next(x for x in led.actions if x['section']==O.SECTION and x.get('action_key'))
+    assert "treated with L-serine" not in [r['requirement'] for r in a['requirements']]
+    assert a['precedents'][0]['patient_description']==[{"field":field,"quote":"treated with L-serine"}]
+    assert "GRIN2B patients" in [r['requirement'] for r in a['requirements']]
+
+
+def test_review3_negative_outcome_is_separate_verified_evidence_in_the_ledger(monkeypatch):
+    text=O.paper_text
+    outcome="There was no clinical improvement."
+    monkeypatch.setattr(O,"paper_text",lambda p:text(p)+" "+outcome)
+    led=_run(monkeypatch,[dict(LSER,direction="negative",outcome_quote=outcome)])
+    a=next(x for x in led.actions if x['section']==O.SECTION and x.get('action_key'))
+    assert a['efficacy_direction']=='reported_ineffective'
+    assert any(led.evidence[i]['quote']==outcome and led.evidence[i]['status']=='verified' for i in a['evidence_ids'])

@@ -38,6 +38,89 @@ def build(led, safety=None):
     return A.assemble(led, CASE, lambda src, e=None: "2024-08-15", safety, today=dt.date(2026, 11, 15))
 
 
+def test_review3_interventional_trials_take_the_five_places_before_observational_studies():
+    obs = [act(f"trial:o{i}", "clinical_trial_eligibility", f"Registry {i}", "conditional", study_type="observational") for i in range(3)]
+    trials = [act(f"trial:i{i}", "clinical_trial_eligibility", f"Intervention {i}", "conditional",
+                  [unk(f"q{x}") for x in range(i+1)], study_type="interventional", nct=f"NCT0000000{i}") for i in range(6)]
+    md, _ = build(ledger(obs + list(reversed(trials))))
+    part = md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
+    assert all(f"**Intervention {i}**" in part for i in range(5))
+    assert "**Intervention 5**" not in part and "**Registry" not in part
+    assert part.index("Intervention 0") < part.index("Intervention 4")
+
+
+def test_review3_observational_trials_follow_interventions_then_sort_by_unknowns():
+    acts = [act("trial:o1", "clinical_trial_eligibility", "Registry one", "conditional", [unk("x")], study_type="observational"),
+            act("trial:i", "clinical_trial_eligibility", "Intervention", "conditional", [unk("x")]*4, study_type="interventional"),
+            act("trial:o0", "clinical_trial_eligibility", "Registry zero", "applicable", study_type="observational")]
+    md, _ = build(ledger(acts)); part=md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
+    assert part.index("**Intervention**") < part.index("Registry zero") < part.index("Registry one")
+
+
+def test_review3_bespoke_methods_show_their_ledger_reasons_and_limits():
+    acts = [{"section":"bespoke_therapies", "modality":"gene_replacement", "label":"gene replacement (AAV)",
+             "classification":"theoretically_possible", "conclusion":"AAV is theoretically possible.",
+             "criteria_met":["coding sequence 1176 nt is within 4.7 kb"], "facts":{"target_organ":"liver"},
+             "note":"promoter and polyA are not sized", "applies_to":["B"],"evidence_ids":[]},
+            {"section":"bespoke_therapies", "modality":"base_or_prime_editing", "label":"base or prime editing",
+             "classification":"theoretically_possible", "conclusion":"Prime editing is theoretically possible.",
+             "facts":{"reason":"an insertion cannot be corrected by base editors"},
+             "unassessable_reason":["PAM and editing window not assessed"],"applies_to":["B"],"evidence_ids":[]},
+            {"section":"bespoke_therapies", "modality":"aso_exon_skipping", "label":"ASO exon skipping",
+             "classification":"not_eligible", "conclusion":"Not eligible.","failed_criterion":"first coding exon removes the start codon",
+             "applies_to":["B"],"evidence_ids":[]}]
+    md, _ = build(ledger(acts));part=md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
+    for reason in ("1176 nt", "4.7 kb", "liver", "promoter and polyA", "insertion cannot", "PAM", "first coding exon"):
+        assert reason in part
+
+
+def test_review3_a_missing_target_organ_is_unknown_not_inferred():
+    a={"section":"bespoke_therapies","modality":"gene_replacement","label":"AAV", "classification":"theoretically_possible",
+       "conclusion":"Theoretically possible.","facts":{},"applies_to":["B"],"evidence_ids":[]}
+    md,_=build(ledger([a])); assert "Target organ: not recorded" in md
+
+
+def test_review3_met_alternative_hides_other_options_but_keeps_common_unknowns():
+    rs=[dict(unk("met option"), result="pass",patient_status="satisfies",alternative="A"),
+        dict(unk("unused option"),alternative="B"),unk("current medication",field="current medication")]
+    a=act("drug:x","existing_targeted_therapies","drug X","conditional",rs)
+    assert [r["requirement"] for r in A.unknown_lines(a)]==["current medication"]
+    a["requirements"][0].update(result="unknown",patient_status="unknown")
+    assert {r["requirement"] for r in A.unknown_lines(a)}=={"met option","unused option","current medication"}
+
+
+def test_review3_a_met_option_for_one_branch_does_not_hide_another_branchs_unknowns():
+    a=act("drug:x","existing_targeted_therapies","drug X","conditional",
+          [dict(unk("met B"),result="pass",alternative="A"),
+           dict(unk("unknown C"),applies_to=["C"],alternative="Z")],branches=("B","C"))
+    assert [r["requirement"] for r in A.unknown_lines(a)]==["unknown C"]
+
+
+def test_review3_ineffective_drug_cites_the_result_sentence_in_full():
+    outcome="After drug X, "+"a long verified clinical observation "*10+"there was no decrease in plasma oxalate."
+    a=act("drug:x","off_label_expanded_access","drug X","conditional",evs=("use","out"),efficacy_direction="reported_ineffective",
+          precedents=[{"pmid":"1","direction":"negative","outcome_quote":outcome}])
+    led=ledger([a]);led["evidence"]=[ev("use","Drug X was administered."),ev("out",outcome)]
+    md,_=build(led);part=md.split("### Off-label")[1].split("### Bespoke")[0]
+    assert outcome in part and "there was no decrease" in part
+
+
+def test_review3_repurposing_uses_negative_evidence_even_without_an_action_row():
+    led=ledger([]);led["evidence"]=[{"id":"n1","kind":"negative","section":"drug_repurposing","status":"verified",
+       "claim":"No candidate for AGXT: 0 drugs returned.","search":{"database":"Open Targets","query":"AGXT",
+       "endpoint":"https://example.org/graphql","queried_at":1794736156,"n_results":0,"n_excluded":0}}]
+    md,_=build(led);part=md.split("### Drug Repurposing")[1].split("### Outcome")[0]
+    assert "Open Targets" in part and "0 results" in part and "AGXT" in part and "No entry" not in part
+
+
+def test_review3_summary_merges_kidney_function_and_egfr_with_unique_affected_entries():
+    missing=[{"variable":"kidney function","affects":["A","B"]},{"variable":"eGFR","affects":["B","C"]},
+             {"variable":"age","affects":["A"]}]
+    led=ledger([],missing=missing);md,_=build(led);summary=md.split("## Tier 1")[0]
+    assert "kidney function: 3 entries" in summary and "  - eGFR:" not in summary
+    assert len(led["missing_information"])==3 and missing[0]["affects"]==["A","B"]
+
+
 def test_review_summary_ranks_concrete_patient_variables_after_excluding_generic_categories():
     missing = [{"variable": v, "affects": [f"action {i}" for i in range(n)]} for v, n in
                [("other", 20), ("diagnosis", 19), ("source scope", 18), ("lab", 17),

@@ -253,6 +253,12 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kin
         own = next((n for n in names if n and re.search(rf"(?<![A-Za-z0-9]){re.escape(n)}(?![A-Za-z0-9])", quote, re.I)),
                    None)
         parent = next((p for p in branch.get("parent_names") or [] if E.name_in(p, quote) is not None), None)
+        context = m.get("criterion_text") or quote
+        subtype = re.search(r"(\d+[A-Za-z]?)\s*$", dx)
+        if kind == "inclusion" and subtype and re.search(r"\bsubtype\b.*\bor\b", quote, re.I) \
+                and subtype.group(1) in re.findall(r"\b\d+[A-Za-z]?\b", quote) \
+                and any(E.name_in(p, context) is not None for p in branch.get("parent_names") or []):
+            return "satisfies", fct, f"confirmed subtype {dx} is one of the listed options", {}
         if kind == "exclusion" and parent and not own and other_subtype(quote, dx):
             return "does_not_satisfy", fct, f"the confirmed diagnosis is {dx}, not the subtype the exclusion names", {}
         if kind == "exclusion" and (own or parent) and re.search(r"\bdo(?:es)? not have\b", quote, re.I):
@@ -405,7 +411,7 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
                         "patient_fact": None, "note": LG.UNMAPPED_NOTE, "details": {}, "item": it["id"]})
             continue
         for m in ms:
-            st, fct, note, det = evaluate(m, pf, extra, branch, names, it["kind"])
+            st, fct, note, det = evaluate(dict(m, criterion_text=T.unescape(it["text"])), pf, extra, branch, names, it["kind"])
             line = {"kind": it["kind"], "text": m["quote"], "patient_status": st,
                     "patient_fact": None if st == "not_assessed" else fct, "note": note, "details": det,
                     "item": it["id"], "fact": m["fact"]}
@@ -449,6 +455,36 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
                     "note": LG.UNMAPPED_NOTE if st == "not_assessed" else f"one of {len(opts)} options",
                     "details": {}, "item": g,
                     "any_of": [{"requirement": o["text"], "patient_status": o["patient_status"], "note": o["note"]} for o in opts]})
+    # Diagnosis headings with their own one-of confirmation criteria are alternative cohorts.
+    roots = [it for it in mapped["items"] if it["kind"] == "inclusion"
+             and _DIAGNOSIS_OPTION.search(T.unescape(it["text"])) and _ANY_OF.search(T.unescape(it["text"]))
+             and it["parent"] is None
+             and any(l["item"] == it["id"] and l.get("fact") == "diagnosis" for l in out)
+             and any(child["parent"] == it["id"] for child in mapped["items"])]
+    if len(roots) > 1:
+        options, consumed, chosen = [], set(), []
+        for root in roots:
+            ids = {root["id"]}
+            for it in mapped["items"]:
+                if it["parent"] in ids:
+                    ids.add(it["id"])
+            cohort = [l for l in out if l["item"] in ids]
+            status = LG.status_from([LG.requirement_result(l["kind"], l["patient_status"]) for l in cohort])
+            st = {"applicable": "satisfies", "conditional": "unknown", "not_applicable": "does_not_satisfy"}[status]
+            options.append({"requirement": T.unescape(root["text"]), "patient_status": st,
+                            "note": "all conditions for this diagnosis option", "all_of": cohort})
+            consumed.update(ids)
+            chosen.extend(cohort)
+        st = combine([o["patient_status"] for o in options])
+        fact = next(l["patient_fact"] for l in chosen if l["patient_status"] == st)
+        raw = T.unescape(study["criteria"])
+        last = next(it for it in reversed(mapped["items"]) if it["id"] in consumed)
+        start = raw.index(T.unescape(roots[0]["text"]))
+        end = raw.index(T.unescape(last["text"]), start) + len(T.unescape(last["text"]))
+        out = [l for l in out if l["item"] not in consumed]
+        out.append({"kind": "inclusion", "text": raw[start:end], "patient_status": st, "patient_fact": fact,
+                    "note": f"one of {len(options)} diagnosis cohorts", "details": {},
+                    "item": f"diagnoses:{roots[0]['id']}", "any_of": options})
     return out
 
 

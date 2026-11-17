@@ -817,12 +817,19 @@ def _drug(led, b, g, names, gene, pf, step1, supplements, earlier, trial_acts, m
         claim = f"PMID {x['pmid']}: patients with {b['diagnosis']['label']} received {drug} ({x['design'] or 'design not stated'})."
         evs.append(led.add(LG.sourced(claim, SECTION, [bid], src, x["use_quote"], x["_text"], led_time(),
                                       produced_by=x["_llm"], retrieved_by="3c pubmed", action=g["key"])))
+        if agg == "reported_ineffective" and x["direction"] == "negative":
+            evs.append(led.add(LG.sourced(f"PMID {x['pmid']}: outcome after {drug}.", SECTION, [bid], src,
+                                          x["outcome_quote"], x["_text"], led_time(), produced_by=x["_llm"],
+                                          retrieved_by="3c pubmed outcome", action=g["key"])))
         for c in x["_conditions"]:
             t = str((c or {}).get("text") or "")
             if not t or not LG.quote_in(t, x["_text"]):
                 continue
             if (c or {}).get("field") in ("age", "sex"):     # who the precedent patient was: description, not a
                 x.setdefault("demographics", []).append(t)      # condition on this patient (user decision 2026-11-15)
+                continue
+            if c["field"] in ("variant", "variant_class"):
+                x.setdefault("patient_description", []).append({"field": c["field"], "quote": t})
                 continue
             ev = led.add(LG.sourced(f"PMID {x['pmid']} condition: {t[:80]}", SECTION, [bid], src, t, x["_text"], led_time(),
                                     produced_by=x["_llm"], retrieved_by="3c pubmed", action=g["key"]))

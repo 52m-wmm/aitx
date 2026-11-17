@@ -11,6 +11,7 @@ import re
 import textwrap
 from collections import OrderedDict
 
+from aitx.evidence import ledger as LG
 from aitx.report.validate import HEADINGS
 
 CAPS = {"clinical_trial_eligibility": 5, "off_label_expanded_access": 5, "drug_repurposing": 3,
@@ -47,8 +48,23 @@ def written(a: dict) -> bool:
 
 
 def unknown_lines(a: dict, branch: str | None = None) -> list[dict]:
-    return [r for r in a.get("requirements") or [] if r.get("result") == "unknown"
-            and (branch is None or branch in r.get("applies_to", []))]
+    lines = a.get("requirements") or []
+    resolved = set()
+    for b in ([branch] if branch is not None else a["applies_to"]):
+        options = {}
+        for r in lines:
+            if b in r["applies_to"] and r.get("alternative"):
+                options.setdefault(r["alternative"], []).append(r["result"])
+        if any(LG.status_from(results) == "applicable" for results in options.values()):
+            resolved.add(b)
+    return [r for r in lines if r["result"] == "unknown" and any(
+        (branch is None or b == branch) and (not r.get("alternative") or b not in resolved)
+        for b in r["applies_to"])]
+
+
+def trial_rank(a: dict) -> tuple:
+    return ({"interventional": 0, "observational": 1}.get(a.get("study_type"), 2), len(unknown_lines(a)),
+            -max([int(re.sub(r"\D", "", p) or 0) for p in a.get("phases") or []] or [0]))
 
 
 def variable_of(r: dict) -> str:
@@ -125,8 +141,12 @@ class Report:
         lines = []
         shown = 0
         ids = a.get("evidence_ids") or []
+        outcomes = {p["outcome_quote"] for p in a.get("precedents") or []
+                    if p.get("direction") == "negative" and p.get("outcome_quote")}
         if a["section"] == "existing_targeted_therapies":
             ids = sorted(ids, key=lambda i: (self.ev[i].get("source") or {}).get("type") != "spl_setid")
+        elif a.get("efficacy_direction") == "reported_ineffective":
+            ids = sorted(ids, key=lambda i: self.ev[i]["quote"] not in outcomes)
         for i in ids:
             e = self.ev.get(i)
             if not e or e.get("kind") != "sourced" or e.get("quote") in (a.get("cautions") or []):
@@ -134,8 +154,9 @@ class Report:
             if shown >= k:
                 break
             shown += 1
-            full_label = a["section"] == "existing_targeted_therapies" and e["source"]["type"] == "spl_setid"
-            lines.append(f"  - \"{clean(e.get('quote'), None if full_label else 240)}\" {self.cite(e, product)}")
+            full = (a["section"] == "existing_targeted_therapies" and e["source"]["type"] == "spl_setid") \
+                or (a.get("efficacy_direction") == "reported_ineffective" and e["quote"] in outcomes)
+            lines.append(f"  - \"{clean(e.get('quote'), None if full else 240)}\" {self.cite(e, product)}")
         return lines
 
     def applies(self, a: dict) -> str:
@@ -161,6 +182,10 @@ class Report:
         self.trace.append({"section": section, "label": a["label"], "action_key": a.get("action_key"),
                            "evidence_ids": a.get("evidence_ids") or []})
         lines = [head] + self.sources(a)
+        if section == "off_label_expanded_access":
+            for p in a.get("precedents") or []:
+                for d in p.get("patient_description") or []:
+                    lines.append(f"  - Precedent patient description (PMID {p['pmid']}): {clean(d['quote'])}.")
         for c in a.get("cautions") or []:
             lines.append(f"  - Caution (same source): \"{clean(c)}\"")
         return lines
@@ -168,25 +193,30 @@ class Report:
     def negative(self, section: str) -> list[str]:
         """Searched and found nothing (contract section 10): database, query, date, counts."""
         out = []
-        for a in self.led["actions"]:
-            if a["section"] != section or status_of(a) != "searched_none":
-                continue
-            for i in a.get("evidence_ids") or []:
-                e = self.ev.get(i) or {}
-                s = e.get("search") or {}
-                if s:
-                    day = dt.datetime.utcfromtimestamp(s.get("queried_at") or 0).date().isoformat()
-                    out.append(f"- Searched {s.get('database')} (query: {clean(s.get('query'), 160)}; {day}; "
-                               f"{s.get('n_results', 0)} results, {s.get('n_excluded', 0)} excluded with reasons): "
-                               f"nothing qualified.")
-                elif e.get("claim"):
-                    out.append(f"- {clean(e['claim'], 300)}")
+        acts = [a for a in self.led["actions"] if a["section"] == section and status_of(a) == "searched_none"]
+        ids = list(dict.fromkeys(i for a in acts for i in a["evidence_ids"]))
+        ids += [i for i, e in self.ev.items() if i not in ids and e.get("section") == section
+                and e["kind"] == "negative" and e["status"] == "verified"]
+        for i in ids:
+            e = self.ev[i]
+            s = e.get("search") or {}
+            if s:
+                day = dt.datetime.utcfromtimestamp(s["queried_at"]).date().isoformat()
+                out.append(f"- Searched {s['database']} (query: {clean(s['query'], 160)}; {day}; "
+                           f"{s['n_results']} results, {s['n_excluded']} excluded with reasons): "
+                           f"nothing qualified. {clean(e['claim'], 300)}")
+            elif e.get("claim"):
+                out.append(f"- {clean(e['claim'], 300)}")
+        for a in acts:
             if not a.get("evidence_ids"):
                 reason = next(iter(a["status_by_branch"].values())).get("reason", "")
                 out.append(f"- Searched; nothing found ({clean(reason, 200)}).")
             self.trace.append({"section": section, "label": "searched_none", "action_key": None,
                                "evidence_ids": a.get("evidence_ids") or []})
-        return list(dict.fromkeys(out)) or ["- No entry for this section in the evidence ledger."]
+        if ids:
+            self.trace.append({"section": section, "label": "negative searches", "action_key": None, "evidence_ids": ids})
+        return list(dict.fromkeys(out)) or (["- Search result not recorded; unable to assess."] if section == "drug_repurposing"
+                                            else ["- No entry for this section in the evidence ledger."])
 
     # -------------------------------------------------------------- sections
     def actions(self, section: str) -> list[dict]:
@@ -236,8 +266,7 @@ class Report:
 
     def trials(self) -> list[str]:
         items = [a for a in self.actions("clinical_trial_eligibility") if written(a)]
-        items.sort(key=lambda a: (len(unknown_lines(a)), a.get("study_type") != "interventional",
-                                  -max([int(re.sub(r"\D", "", p) or 0) for p in a.get("phases") or []] or [0])))
+        items.sort(key=trial_rank)
         return self.section("clinical_trial_eligibility", items, CAPS["clinical_trial_eligibility"], "trials")
 
     def offlabel(self) -> list[str]:
@@ -261,17 +290,26 @@ class Report:
             return self.negative("bespoke_therapies")
         good = [a for a in acts if a.get("classification") in ("theoretically_possible", "eligible", "likely_eligible",
                                                                  "possibly_eligible")]
-        out = [f"- **{a['label']}** — {clean(a.get('conclusion'), 300)}" for a in good]
-        for a in good:
+        out = []
+        variants = (self.led.get("patient_context") or {}).get("variants") or []
+        for v in variants:
+            out.append(f"- Variant facts: {v['gene']} {v['variant_cdna']} ({v['variant_class']}, {v['zygosity']}); "
+                       f"NMD prediction: {v['nmd']}.")
+        for a in good + [a for a in acts if a not in good]:
+            conclusion = a["conclusion"]
+            out.append(f"- **{a['label']}** — {clean(conclusion, None)}" + self.applies(a))
+            facts = a.get("facts") or {}
+            reasons = list(a.get("criteria_met") or [])
+            reasons += [r for r in (a.get("failed_criterion"), facts.get("reason"), a.get("note")) if r]
+            reasons += a.get("unassessable_reason") or []
+            for reason in dict.fromkeys(reasons):
+                if reason not in conclusion:
+                    out.append(f"  - {clean(reason, None)}.")
+            if a.get("modality") == "gene_replacement":
+                out.append(f"  - Target organ: {facts.get('target_organ') or 'not recorded'}.")
+            out += self.sources(a)
             self.trace.append({"section": "bespoke_therapies", "label": a["label"], "action_key": None,
                                "evidence_ids": a.get("evidence_ids") or []})
-        rest = [a for a in acts if a not in good]
-        if rest:
-            groups = OrderedDict()
-            for a in rest:
-                groups.setdefault(a.get("classification") or "other", []).append(a["label"])
-            out.append("- Not suitable or not assessable on the available information: " +
-                       "; ".join(f"{k.replace('_', ' ')}: {', '.join(dict.fromkeys(v))}" for k, v in groups.items()) + ".")
         return out
 
     def repurposing(self) -> list[str]:
@@ -315,8 +353,8 @@ class Report:
         and the measured items in the GeneReviews Surveillance section of the chapters it cites."""
         out = []
         trials = [a for a in self.actions("clinical_trial_eligibility") if written(a)]
-        trials.sort(key=lambda a: (len(unknown_lines(a)), a.get("study_type") != "interventional"))
-        for a in [a for a in trials if a.get("study_type") == "interventional"][:CAPS["clinical_trial_eligibility"]]:
+        trials.sort(key=trial_rank)
+        for a in [a for a in trials[:CAPS["clinical_trial_eligibility"]] if a.get("study_type") == "interventional"]:
             for m in [m for m in self.outcomes_of(a.get("nct") or "") if EFFICACY.search(m) and not NOT_EFFICACY.search(m)][:2]:
                 out.append(f"- {clean(m, 200)} [{a.get('nct')} primary outcome]({a.get('url') or ''})")
         nbks = []
@@ -361,8 +399,13 @@ class Report:
         g = self.case["patient"]["genotype"]
         out.append("- **Variant**: " + "; ".join(f"{v['gene']} {v['variant_cdna']} {v.get('variant_protein', '')} "
                                                  f"({v.get('zygosity')})" for v in g) + ".")
-        miss = sorted(self.led.get("missing_information") or [], key=lambda m: -len(m.get("affects") or []))
-        miss = [m for m in miss if m.get("affects") and m["variable"] in SUMMARY_VARIABLES][:3]
+        variables = OrderedDict()
+        for m in self.led.get("missing_information") or []:
+            var = "kidney function" if m["variable"] == "eGFR" else m["variable"]
+            if var in SUMMARY_VARIABLES:
+                variables.setdefault(var, []).extend(m["affects"])
+        miss = [{"variable": v, "affects": list(dict.fromkeys(affects))} for v, affects in variables.items() if affects]
+        miss = sorted(miss, key=lambda m: -len(m["affects"]))[:3]
         if miss:
             out.append("- **Most important missing information**:")
             for m in miss:
