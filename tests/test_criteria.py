@@ -280,6 +280,48 @@ def test_a_confirmed_diagnosis_meets_a_criterion_naming_it_or_its_parent():
     assert _ev("genetic_confirmation", "Diagnosis confirmed through genetic testing") == "satisfies"
 
 
+@pytest.mark.parametrize("confirmed,want", [(True, "does_not_satisfy"), (False, "unknown")])
+def test_review_absence_of_every_listed_disease_is_not_met_when_one_is_confirmed(confirmed, want):
+    assert _ev("diagnosis", "Individuals who do not have Primary Hyperoxaluria, Dent Disease, Cystinuria or APRT Deficiency.",
+               "exclusion", confirmed) == want
+
+
+def _diagnosis_list_lines(text, confirmed=True):
+    items = T.split_criteria(text)
+    mappings = [{"id": it["id"], "quote": it["text"], "fact": "diagnosis", "group": ""}
+                for it in items if it["text"].startswith("Diagnosis of")]
+    return C.lines_for({"nct": "NCT00000001", "criteria": text}, _mapped(items, mappings), _PF, {},
+                       _conf_branch(confirmed), ["primary hyperoxaluria type 1", "PH1"])
+
+
+def test_review_flat_diagnosis_options_use_the_existing_any_of_decision_and_verbatim_block():
+    text = "Inclusion Criteria:\n1. Diagnosis of primary hyperoxaluria\n2. Diagnosis of Dent Disease\n3. Diagnosis of Cystinuria\n"
+    lines = _diagnosis_list_lines(text)
+    assert len(lines) == 1 and lines[0]["patient_status"] == "satisfies"
+    assert len(lines[0]["any_of"]) == 3 and LG.quote_in(lines[0]["text"], text)
+
+
+def test_review_flat_diagnosis_options_stay_unknown_without_confirmation():
+    text = "Inclusion Criteria:\n* Diagnosis of primary hyperoxaluria\n* Diagnosis of Dent Disease\n"
+    lines = _diagnosis_list_lines(text, confirmed=False)
+    assert len(lines) == 1 and lines[0]["patient_status"] == "unknown"
+
+
+def test_review_explicitly_required_concurrent_diagnoses_are_not_any_of_options():
+    text = ("Inclusion Criteria:\n* All of the following diagnoses are required:\n"
+            "  * Diagnosis of primary hyperoxaluria\n  * Diagnosis of Dent Disease\n")
+    lines = _diagnosis_list_lines(text)
+    diagnoses = [l for l in lines if l.get("fact") == "diagnosis"]
+    assert len(diagnoses) == 2 and not any(l.get("any_of") for l in lines)
+    assert any(l["patient_status"] == "unknown" for l in diagnoses)
+
+
+def test_review_unrelated_diagnosis_options_cannot_be_satisfied_by_the_confirmed_disease():
+    text = "Inclusion Criteria:\n* Diagnosis of Dent Disease\n* Diagnosis of Cystinuria\n"
+    lines = _diagnosis_list_lines(text)
+    assert len(lines) == 1 and lines[0]["patient_status"] == "unknown"
+
+
 def test_an_exclusion_for_another_subtype_is_not_met_by_a_confirmed_diagnosis():
     assert _ev("diagnosis", "Confirmed diagnosis of primary hyperoxaluria type 2 or type 3", "exclusion") == "does_not_satisfy"
 

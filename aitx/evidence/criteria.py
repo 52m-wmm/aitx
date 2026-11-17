@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import re
 import time
+from itertools import groupby
 
 from aitx.disease import extract as X
 from aitx.evidence import derived as DV
@@ -122,6 +123,7 @@ def check_mapping(m: dict, items: dict[str, dict]) -> str | None:
 
 
 _ANY_OF = re.compile(r"\b(?:one|any|either|at least one|1)\s+(?:or more\s+)?of\s+the\s+following\b|\beither\b", re.I)
+_DIAGNOSIS_OPTION = re.compile(r"^(?:confirmed\s+)?diagnosis\s+of\b", re.I)
 
 
 def map_study(study: dict, *, use_cache: bool = True) -> dict:
@@ -253,6 +255,8 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kin
         parent = next((p for p in branch.get("parent_names") or [] if E.name_in(p, quote) is not None), None)
         if kind == "exclusion" and parent and not own and other_subtype(quote, dx):
             return "does_not_satisfy", fct, f"the confirmed diagnosis is {dx}, not the subtype the exclusion names", {}
+        if kind == "exclusion" and (own or parent) and re.search(r"\bdo(?:es)? not have\b", quote, re.I):
+            return "does_not_satisfy", fct, f"confirmed diagnosis {dx}; absence of all listed diagnoses is not met", {}
         if kind == "inclusion" and (own or parent):
             return "satisfies", fct, f"confirmed diagnosis {dx} (step 2, pathogenic {branch.get('gene')} variant)", {}
     if fact == "genetic_confirmation" and branch.get("confirmed") and kind == "inclusion":
@@ -409,6 +413,22 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
                 groups.setdefault(m["group"], []).append(line)
             else:
                 out.append(line)
+    # A flat list of diagnosis choices is one disease-eligibility requirement, not every disease at once.
+    # Keep its full registry span as the quote, and use the existing any-of comparison below.
+    choices = {l["item"]: l for l in out if l["kind"] == "inclusion" and l.get("fact") == "diagnosis"
+               and items[l["item"]]["parent"] is None and len(by_item[l["item"]]) == 1
+               and _DIAGNOSIS_OPTION.search(l["text"]) and not re.search(r"\b(?:and|both)\b", l["text"], re.I)}
+    for eligible, block in groupby(mapped["items"], key=lambda it: it["id"] in choices):
+        opts = [choices[it["id"]] for it in block] if eligible else []
+        if len(opts) < 2:
+            continue
+        raw = T.unescape(study["criteria"])
+        start = raw.index(opts[0]["text"])
+        end = raw.index(opts[-1]["text"], start) + len(opts[-1]["text"])
+        g = f"diagnoses:{opts[0]['item']}"
+        items[g] = {"kind": "inclusion", "text": raw[start:end]}
+        groups[g] = opts
+        out = [l for l in out if l not in opts]
     # genotype criteria naming different genes, one of them the patient's: alternatives a registry lists one per line
     # (DEEPTYPE: "mutation in SLC16A2" / "mutation in THRA" / "abnormal fT3/fT4 ratio") - the other-gene lines decide
     # nothing for this patient (fix plan D2, 2026-11-11)

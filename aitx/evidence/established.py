@@ -1557,14 +1557,6 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                     if new["status"] == "verified":
                         evs.insert(0, new)
                         cautions.append(spec0["quote"])
-                        for l in lines:        # a condition read from the limitation sentence becomes part of the caution
-                            # the line read from the limitation sentence (its own evidence item may differ)
-                            if (l.get("patient_fact") or {}).get("field") == MISSING_MANIFESTATIONS \
-                                    and LG.quote_in(l["requirement"], spec0["quote"]) \
-                                    and not LG.quote_in(l["requirement"], sent):
-                                l.update(requirement=sent, requirement_evidence=new["id"],
-                                         note=(l.get("note") or "") + " | the situation it is used in, as the "
-                                                                     "recommending sentence states it")
             cc = dict(runs[0]["part"])
             cc_notes = cc["notes"] = list(cc["notes"])
             if len(groups) > 1:

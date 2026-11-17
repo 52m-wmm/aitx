@@ -1341,7 +1341,8 @@ def test_a_limitation_quote_gives_way_to_the_recommending_sentence(monkeypatch):
     assert first["quote"].startswith("Although a reasonable option") and first["status"] == "verified"
     assert rec["cautions"] == ["Hard stones are resistant to lithotripsy."]
     (l,) = [r for r in rec["requirements"] if r.get("patient_fact", {}).get("field") == "manifestations not reported"]
-    assert l["requirement"].startswith("Although a reasonable option")     # no longer "Hard stones"
+    assert l["requirement"] == "Hard stones"   # replacing the supporting quote must not replace the manifestation
+    assert led.evidence[l["requirement_evidence"]]["quote"] == "Hard stones"
     assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
 
 

@@ -20,6 +20,9 @@ PRODUCT = re.compile(r"\b(device|prosthes\w*|implant\w*|system|stimulator|pump)\
 DIRECTION_RANK = {"reported_improvement": 0, "partial_improvement": 1, "inconsistent": 2, "insufficient": 3,
                   "combined_unattributable": 4, "not_reported": 5, "reported_ineffective": 9}
 FURTHER = "{n} further {what} {verb} recorded in the evidence ledger and not listed here."
+SUMMARY_VARIABLES = {"age", "sex", "kidney function", "liver function", "eGFR", "creatinine", "bilirubin",
+                     "height", "weight", "gestational age", "current medication", "prior therapy",
+                     "participation in other trials", "pregnancy status", "family history"}
 
 
 # ------------------------------------------------------------------ small helpers
@@ -55,10 +58,10 @@ def variable_of(r: dict) -> str:
             "manifestations not reported": "whether the patient has the manifestation it treats"}.get(f, f)
 
 
-def clean(text: str, n: int = 240) -> str:
+def clean(text: str, n: int | None = 240) -> str:
     import html
     text = re.sub(r"\s+", " ", html.unescape(str(text or ""))).strip()
-    return textwrap.shorten(text, width=n, placeholder=" …", break_long_words=False, break_on_hyphens=False)
+    return text if n is None else textwrap.shorten(text, width=n, placeholder=" …", break_long_words=False, break_on_hyphens=False)
 
 
 # outcome measures (user decision 2026-11-15): efficacy measures only - a disease marker or function, not safety counts,
@@ -121,14 +124,18 @@ class Report:
             return [f"  - {self.cite(e)}"] if e else []
         lines = []
         shown = 0
-        for i in a.get("evidence_ids") or []:
+        ids = a.get("evidence_ids") or []
+        if a["section"] == "existing_targeted_therapies":
+            ids = sorted(ids, key=lambda i: (self.ev[i].get("source") or {}).get("type") != "spl_setid")
+        for i in ids:
             e = self.ev.get(i)
             if not e or e.get("kind") != "sourced" or e.get("quote") in (a.get("cautions") or []):
                 continue                                   # a caution sentence is shown as a caution, not as support
             if shown >= k:
                 break
             shown += 1
-            lines.append(f"  - \"{clean(e.get('quote'))}\" {self.cite(e, product)}")
+            full_label = a["section"] == "existing_targeted_therapies" and e["source"]["type"] == "spl_setid"
+            lines.append(f"  - \"{clean(e.get('quote'), None if full_label else 240)}\" {self.cite(e, product)}")
         return lines
 
     def applies(self, a: dict) -> str:
@@ -355,7 +362,7 @@ class Report:
         out.append("- **Variant**: " + "; ".join(f"{v['gene']} {v['variant_cdna']} {v.get('variant_protein', '')} "
                                                  f"({v.get('zygosity')})" for v in g) + ".")
         miss = sorted(self.led.get("missing_information") or [], key=lambda m: -len(m.get("affects") or []))
-        miss = [m for m in miss if m.get("affects")][:3]
+        miss = [m for m in miss if m.get("affects") and m["variable"] in SUMMARY_VARIABLES][:3]
         if miss:
             out.append("- **Most important missing information**:")
             for m in miss:

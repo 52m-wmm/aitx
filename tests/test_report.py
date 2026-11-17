@@ -38,6 +38,43 @@ def build(led, safety=None):
     return A.assemble(led, CASE, lambda src, e=None: "2024-08-15", safety, today=dt.date(2026, 11, 15))
 
 
+def test_review_summary_ranks_concrete_patient_variables_after_excluding_generic_categories():
+    missing = [{"variable": v, "affects": [f"action {i}" for i in range(n)]} for v, n in
+               [("other", 20), ("diagnosis", 19), ("source scope", 18), ("lab", 17),
+                ("kidney function", 4), ("age", 3), ("current medication", 2)]]
+    md, _ = build(ledger([], missing=missing))
+    summary = md.split("## Tier 1")[0]
+    for v in ("kidney function", "age", "current medication"):
+        assert f"  - {v}:" in summary
+    for v in ("other trial criteria", "diagnosis", "source scope", "lab"):
+        assert f"  - {v}:" not in summary
+
+
+def test_review_summary_does_not_invent_a_patient_variable_for_a_generic_bucket():
+    md, _ = build(ledger([], missing=[{"variable": "other", "affects": ["trial"]},
+                                     {"variable": "usage situation", "affects": ["procedure"]}]))
+    assert "Most important missing information" not in md
+
+
+def test_review_targeted_drug_cites_the_full_label_indication_before_genereviews():
+    indication = ("RIVFLOZA is indicated in children 2 years of age and older and adults with primary hyperoxaluria "
+                  "type 1. " + "Indication context. " * 10 + "Relatively preserved kidney function, eGFR ≥30 mL/min/1.73 m2.")
+    a = act("drug:1", "existing_targeted_therapies", "nedosiran", "conditional", evs=("g1", "g2", "g3", "f"))
+    led = ledger([a])
+    led["evidence"] = [ev("g1", "GeneReviews primary advice."), ev("g2", "GeneReviews dose table."),
+                       ev("g3", "GeneReviews other table."),
+                       ev("f", indication, {"type": "spl_setid", "id": "label1", "brand": "RIVFLOZA", "url": "https://example.org/label"})]
+    md, _ = build(led)
+    assert md.index(indication) < md.index('"GeneReviews primary advice."')
+    assert "eGFR ≥30 mL/min/1.73 m2" in md
+    assert '"GeneReviews dose table."' not in md
+
+
+def test_review_a_targeted_drug_without_a_label_keeps_its_original_citation():
+    md, _ = build(ledger([act("drug:1", "existing_targeted_therapies", "drug X", "applicable")]))
+    assert '"Drug X for persons with disease D."' in md and "[FDA label" not in md
+
+
 @pytest.mark.parametrize("text", ["enzymeactivity" * 10, "during " + "enzymeactivity" * 10])
 def test_review_report_clips_quotes_and_conditions_only_between_words(text):
     clipped = A.clean(text, 20)

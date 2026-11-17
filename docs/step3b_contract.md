@@ -200,3 +200,9 @@ ClinicalTrials.gov API v2（`https://clinicaltrials.gov/api/v2/studies`），经
 ## 诊断已确定时的诊断类与基因确诊类标准（2026-11-15 用户批准）
 Step 2 主诊断已确定（resolved）、该分支基因带病人的变异、病人自己那条变异的 ClinVar 记录为致病 / 可能致病（`trial_records.confirmed`）时：入组条件点名本病（含其缩写）或其上一级疾病（"definitive diagnosis of Primary Hyperoxaluria"、"Documentation of PH1"）判满足；"基因确诊"类条件（没有点名其他基因）判满足；排除条件点名上一级疾病的其他亚型（"primary hyperoxaluria type 2 or type 3"）判不满足（不排除）。测试 `tests/test_criteria.py`。
 
+## 多疾病诊断清单（2026-11-16，用户批准沿用诊断规则与满足其一分组）
+
+- 同级相邻、逐行“Diagnosis of …”的入组疾病选项，按一个诊断清单送入既有 `combine` / `any_of`：满足任一诊断选项即满足该清单，不要求病人同时得全部疾病。分组引文保留登记原文的完整连续片段，每个选项保留原文与判断。显式要求同时满足的嵌套条目、and / both 及其他类型条件不按此分组；其他条件照常判断。
+- 沿用已批准的确诊门槛；未确诊、或没有匹配到任何已知诊断时，不默认满足。RKSC 的“do not have A, B, C …”排除标准，在已确诊所列之一时不成立，而不是新增缺失诊断。
+- ProRKS 的诊断选项、RKSC 的正反向诊断判断可由现有映射缓存直接重算，提示词不变。测试覆盖命中、未知、不相关诊断、明确要求同时满足、排除标准的反向情形。
+
