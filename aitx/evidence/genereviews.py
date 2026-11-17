@@ -14,6 +14,8 @@ from __future__ import annotations
 import re
 import tarfile
 import xml.etree.ElementTree as ET
+from functools import lru_cache
+from itertools import groupby
 from pathlib import Path
 
 from aitx.disease import datasets as D
@@ -77,6 +79,55 @@ def extract_chapters(nbks: list[str]) -> dict[str, Path]:
 
 def _text(el: ET.Element) -> str:
     return re.sub(r"\s+", " ", "".join(el.itertext())).strip()
+
+
+@lru_cache(maxsize=64)
+def _footnote_views(nbk: str) -> tuple:
+    """Legacy text plus citation spans. Keep the extraction/LLM text unchanged."""
+    path=extract_chapters([nbk]).get(nbk)
+    if path is None:return ()
+    root=ET.parse(path).getroot();views=[]
+    for el in root.iter():
+        if el.tag not in ('p','td','th','caption') or el.find('.//sup') is None:continue
+        tokens=[]
+        def walk(node,reference=False):
+            if node.tag=='sup':
+                value=_text(node)
+                prefix=''.join(c for c,_ in tokens)
+                unit=bool(re.search(r'\b(?:m|cm|mm|km|µm|μm)$',prefix.rstrip())) and value in ('2','3')
+                reference=bool(re.fullmatch(r'(?:\d+(?:[,–-]\d+)*|[a-z])',value)) and not unit
+            tokens.extend((c,reference) for c in node.text or '')
+            for child in node:
+                walk(child,reference)
+                tokens.extend((c,reference) for c in child.tail or '')
+        walk(el);cleaned=[]
+        for char,ref in tokens:
+            if char.isspace():
+                if cleaned and cleaned[-1][0]!=' ':cleaned.append((' ',ref))
+            else:cleaned.append((char,ref))
+        if cleaned and cleaned[-1][0]==' ':cleaned.pop()
+        if any(ref for _,ref in cleaned):views.append((''.join(c for c,_ in cleaned),cleaned))
+    return tuple(views)
+
+
+def display_quote(nbk: str, quote: str) -> str:
+    """Only bracket XML superscript citations; the stored evidence quote and its ID stay intact."""
+    quote=re.sub(r'\s+',' ',quote).strip()
+    for original,tokens in _footnote_views(nbk):
+        start=original.lower().find(quote.lower())
+        if start<0:continue
+        selected=tokens[start:start+len(quote)]
+        out=''
+        for ref,part in groupby(enumerate(selected),key=lambda x:x[1][1]):
+            group=list(part);text=''.join(quote[i] for i,_ in group)
+            if ref:
+                if out and not out[-1].isspace() and out[-1] not in '([':out+=' '
+                out+='['+text.strip()+']'
+                next_index=group[-1][0]+1
+                if next_index<len(quote) and quote[next_index].isalnum():out+=' '
+            else:out+=text
+        return re.sub(r'\s+',' ',out).strip()
+    return quote
 
 
 def sections(nbk: str) -> dict[str, str]:

@@ -94,7 +94,7 @@ def test_bespoke_restores_stored_classification_reasons_exceptions_and_unassesse
               'exceptions':['nearby in-frame start codon exception'],'unassessable_reason':[], 'applies_to':['B'],'evidence_ids':[]}]
     led=ledger(methods);led['evidence'].append(variant_evidence());md,_=build(led)
     body=md.split('### Bespoke Therapies')[1].split('### Drug Repurposing')[0]
-    for text in ('theoretically_possible','not_eligible','first coding exon: skipping removes the start codon',
+    for text in ('theoretically possible','not eligible','first coding exon: skipping removes the start codon',
                  'nearby in-frame start codon exception','vector design not assessed'):
         assert text in body
     pre=md.split('**Preclinical validation**:')[1].split('**Safety**:')[0]

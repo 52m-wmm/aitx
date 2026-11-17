@@ -245,3 +245,11 @@
 - COL1A1 交替体位仍未补婴儿限定，保持历史上下文核查漏判记录与测试，不加代码特例。独立支持核查仍为假放 **0**、假拦 **3/17**（历史三条，本轮未新增）。
 - 所有尝试合计 **真实 DeepSeek 请求 0 次、费用 $0**，严格 cache-only、零预算、保留请求前非高峰保护，使用 `nohup` + `caffeinate`；缓存任务未传会在启动时拦缓存的 CLI `--offpeak-only`。CNNM4 曾因临时 curl 把 502 错误页与重试成功 JSON 拼接而停止；临时传输脚本改用常规临时输出文件保留最终响应，通过本地 502→200 回归，清除单条损坏 HTTP 缓存后续跑成功；未改临床代码或 LLM 缓存。运行记录完整保留该失败及恢复过程，未隐去失败尝试。
 - 交付：`out/step4/PRAC-AGXT-c33dup.md`、`out/step4/PRAC-ANO10.md`、`out/step4/PRAC-KMT2B.md`；`out/step4/submission.json` 为上述三例数组；最终汇总 `out/acceptance/agxt_review3b_20261117.json`。另两份练习报告选 ANO10 / KMT2B；CFTR / COL1A1 的大篇幅预览保留在运行目录，不作为交付。
+
+## 24. v2.0 显示实现与 C 回归修复（2026-11-17）
+
+- 已先按用户审核用升级脚本纳入 151 项 A/B/D/E；C、证据细节及其他未批准项不自动升级。所有后续缓存重生成都对这个 current 输出 diff，另与改前实际账本比较以区分新修复和历史待审差异。
+- Ranking 与 Tier 1 Summary 共用 targeted → supportive 的来源顺序，预防/禁忌不进 Ranking；试验、超说明书、个性化依次在后，理论不成立的方法不当成排名行动。GeneReviews 用原始章节和原文位置，其他来源缺位置时明确保留收集/账本顺序，不按状态或字母重排。试验表仍按自己的筛选顺序。
+- Summary 覆盖正文实际条目，Tier 2 同时考虑试验与超说明书；`validate_report.py` 检查层级正文有条目却缺 Summary 引用/误称 not recorded。缺失信息与安全覆盖仅统计实际显示的行动，不把被排除的账本药物放入 Summary。
+- 内部枚举显示为可读英文，同内容的 Note/Unassessed 不重复，重复 NCT 名称压成一个。3d 的原始字段保留在账本，不改变分级。
+- GeneReviews 脚注在显示解析中转为 `[n]`，保留原始提取文本、原始 evidence.quote 与 ID，避免格式变更触发重新抽取。数学单位指数保留。额外 display_quote 只能改变引用标记和空白，Step 5 拒绝借此改写事实；剂量和目标继续逐字比对原文。不上新来源，不调模型润色。

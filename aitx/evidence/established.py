@@ -823,8 +823,9 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         place(found, key, section, label, branch_ids, spec, reqs, why, pregnancy, source)
 
     # GeneReviews: one LLM call per section (a whole chapter at once is too long for the API), in parallel
-    for nbk in sorted({n for ns in ch_map.values() for n in ns}):
+    for book_index, nbk in enumerate(sorted({n for ns in ch_map.values() for n in ns})):
         secs = mgmt_sections(nbk)
+        section_positions = {path:i for i,(path,_) in enumerate(secs)}
         branch_ids = [b for b, ns in ch_map.items() if nbk in ns]
         tier = F.chapter_tier(nbk, step2)
         own_genes = {b.get("gene") for b in led.branches if b["id"] in branch_ids}
@@ -890,6 +891,8 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
+                position = LG._norm(text).find(LG._norm(name))
+                spec["source_order"] = [book_index,section_positions[path],position if position >= 0 else LG._norm(text).index(LG._norm(it['quote']))]
                 spec["presentation_quotes"] = management_quotes(shown.get(path, ""), name, it["quote"])
                 spec["tier_source"] = tier
                 if tier == "overview":            # a row of an overview table that is for another disorder
@@ -1326,7 +1329,20 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
     by_id = {b["id"]: b for b in led.branches}
     placed: dict[str, set[str]] = {s: set() for s in SECTIONS_3A}
     unreported: list[str] = []
+    collected_order = {k:i for i,k in enumerate(found)}
     for k, a in sorted(found.items()):
+        # Keep collection/synonym prompts unchanged. Pregnancy passages become notes only after collection;
+        # they cannot create an action, patient requirement, context-check question or missing variable.
+        pregnancy_specs = [sp for sp in a["specs"] if sp["src"]["type"] == "nbk" and
+                           "pregnancy management" in sp["src"]["section"].lower()]
+        clinical_specs = [sp for sp in a["specs"] if sp not in pregnancy_specs]
+        if a["pregnancy_only"] or not clinical_specs:
+            continue
+        why = a["why"]
+        if "pregnancy management" in why.lower():
+            first = clinical_specs[0]
+            why = first["src"]["section"] if first["src"]["type"] == "nbk" else first["claim"]
+        a = dict(a, specs=clinical_specs, reqs=[r for r in a["reqs"] if not r.get("pregnancy_passage")], why=why)
         section, branches = a["section"], sorted(a["branches"])
 
         def make(spec):                                # evidence in the action's final section
@@ -1343,10 +1359,7 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
         if not any(e["status"] == "verified" for e in evs):
             continue
         lines, reasons, dedupe = [], {}, set()
-        # conditions written for pregnancy decide only pregnancy-only actions; a drug that also has a general
-        # recommendation keeps them as notes (2026-11-04: "known to be pyridoxine responsive" from Pregnancy
-        # Management had made pyridoxine not applicable for a homozygous p.Gly170Arg patient)
-        preg_notes = [r["text"] for r in a["reqs"] if r.get("pregnancy_passage") and not a["pregnancy_only"]]
+        preg_notes = list(dict.fromkeys(sp["quote"] for sp in pregnancy_specs))
         # a targeted drug with an FDA label: the label's conditions decide; GeneReviews conditions are kept as notes
         # (decision 2026-11-04: the GeneReviews ETI row "heterozygous for p.Phe508del & a minimal function variant"
         # would otherwise have overruled the label's "at least one F508del" for a homozygous patient)
@@ -1550,11 +1563,13 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 # reported no benefit only when every passage says so; otherwise described use (2026-11-15)
                 reason = "reports_ineffective" if all(r["part"]["recommendation"].get("reason") == "reports_ineffective"
                                                       for r in asked) else "describes_use"
-                # no passage recommends it: kept in the ledger as not applicable, never reported as a measure
-                line = LG.requirement(f"r{len(lines) + 1}", "other", "the source recommends this measure",
+                # Source wording is not a patient mismatch. Preserve uncertainty rather than excluding.
+                wording = ("source describes use; no explicit recommendation" if reason == "describes_use" else
+                           "source reports no observed benefit; no explicit recommendation")
+                line = LG.requirement(f"r{len(lines) + 1}", "other", wording,
                                       evs[groups[0][2][0]]["id"],
                                       {"field": "source scope", "value": None, "quote": None, "step": None},
-                                      "does_not_satisfy", branches, f"context check: {CC.REASON_NOTE[reason]}")
+                                      "unknown", branches, "context check: " + wording)
                 line["recommendation_reason"] = reason
                 line["context_check"] = "recommendation"
                 lines = lines + [line]
@@ -1604,10 +1619,15 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             bad = [l["requirement"] for l in mine if l["result"] == "fail"]
             unk = [l["requirement"] for l in mine if l["result"] == "unknown"]
             met = [l["requirement"] for l in mine if l["result"] == "pass" and l.get("alternative")]
-            reasons[b] = (f"not met: {bad[0][:80]}" if bad else f"depends on: {unk[0][:80]}" if unk
+            split = any(l.get("check_votes_disagreed") for l in mine if l["result"] == "unknown")
+            reasons[b] = (f"not met: {bad[0][:80]}" if bad else "check votes disagreed; unknown" if split else f"depends on: {unk[0][:80]}" if unk
                           else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        positions = [sp['source_order'] for sp in a['specs'] if 'source_order' in sp]
+        rec['source_order'] = min(positions) if positions else [1000000,collected_order[k],0]
+        if not positions:
+            rec['source_order_note'] = 'source position not recorded; collection order retained'
         presentation = []
         for sp in a["specs"]:
             for q in sp.get("presentation_quotes", []):
@@ -1629,6 +1649,9 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                 rec["for_symptom"] = a["for_symptom"]
         if preg_notes:
             rec["pregnancy_notes"] = sorted(set(preg_notes))
+            note_evidence = [make(sp) for sp in pregnancy_specs]
+            rec["pregnancy_note_evidence_ids"] = [e["id"] for e in note_evidence if e["status"] == "verified"]
+            rec["evidence_ids"] = sorted(set(rec["evidence_ids"] + rec["pregnancy_note_evidence_ids"]))
         if gr_notes:
             rec["genereviews_notes"] = sorted(set(gr_notes))
         if precautions:

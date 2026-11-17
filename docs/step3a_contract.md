@@ -18,7 +18,7 @@
 
 | 来源 | 用途 | 访问方式 |
 | --- | --- | --- |
-| GeneReviews（本地存档，3.0 已下载） | Management 下各小节：Targeted Therapies、Treatment of Manifestations、Prevention of Primary Manifestations / Secondary Complications、**Agents/Circumstances to Avoid**、Pregnancy Management；**不用 Surveillance；不用 Therapies Under Investigation（留给 3b 临床试验 / 3c 超说明书）** | `aitx/evidence/genereviews.py`，逐字摘录，附版权声明和章节链接 |
+| GeneReviews（本地存档，3.0 已下载） | Management 下各小节：Targeted Therapies、Treatment of Manifestations、Prevention of Primary Manifestations / Secondary Complications、**Agents/Circumstances to Avoid**、Pregnancy Management（仅同名行动附注，不独立建行动或缺失信息）；**不用 Surveillance；不用 Therapies Under Investigation（留给 3b 临床试验 / 3c 超说明书）** | `aitx/evidence/genereviews.py`，逐字摘录，附版权声明和章节链接 |
 | FDA 药品说明书（openFDA drug label API） | 获批适应症、适用年龄、变异要求、禁忌、儿科用药、特殊人群 | `api.fda.gov/drug/label.json`；按适应症文本检索（分支疾病名）和按药名检索；链接给 DailyMed（SPL set id）。**每条说明书证据记录 SPL set ID、版本号（`version`）和生效日期（`effective_time`）**；报告引用说明书时注明版本日期（如 "Rivfloza label, version 4, effective 2025-03-03"） |
 | ClinPGx / PharmGKB（CPIC、DPWG 指南注释） | 与病人基因相关的药物基因组学注意事项 | 按基因查询；没有则记阴性证据 |
 

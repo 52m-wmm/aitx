@@ -267,7 +267,7 @@ def test_unreported_manifestations_merged_into_one_missing_line(monkeypatch):
     assert a["status_by_branch"]["b1"]["status"] == "conditional"
 
 
-def test_pregnancy_item_for_a_boy_kept_but_not_reported():
+def test_pregnancy_item_does_not_create_an_action_or_missing_information():
     req = {"kind": "other", "text": "Pregnancy Management", "field": "pregnancy"}
     led = LG.Ledger("P", [dict(BR, id="b1")])
     found = _found("supportive_management", pregnancy=True, key="procedure:iv_fluids", label="IV fluids")
@@ -275,8 +275,8 @@ def test_pregnancy_item_for_a_boy_kept_but_not_reported():
     found["procedure:iv_fluids"]["reqs"] = [dict(req, spec=E._spec("section", src, "Pregnancy Management",
                                                                   "Management / Pregnancy Management", 1))]
     E._records(led, found, PF_FS, [])                       # PF: 7-year-old boy
-    a = next(a for a in led.actions if a["action_key"] == "procedure:iv_fluids")
-    assert a["status_by_branch"]["b1"]["status"] == "not_applicable" and a["report"] is False
+    assert not [a for a in led.actions if a["action_key"] == "procedure:iv_fluids"]
+    assert not led.missing_information
 
 
 def test_pregnancy_passage_conditions_are_notes_for_a_drug_with_a_general_recommendation():
@@ -292,11 +292,14 @@ def test_pregnancy_passage_conditions_are_notes_for_a_drug_with_a_general_recomm
     text = "Pyridoxine (vitamin B6) for persons w/missense AGXT variants. Also given throughout pregnancy."
     found["drug:rxcui:684879"]["reqs"].append(dict(preg, spec=E._spec("GeneReviews lists pyridoxine (pregnancy)", src,
                                                                      "Also given throughout pregnancy.", text, 1)))
+    found["drug:rxcui:684879"]["specs"].append(E._spec("Pregnancy note",dict(src,section="Management / Pregnancy Management"),
+                                                         "Also given throughout pregnancy.",text,1))
     E._records(led, found, pf, [])
     a = next(a for a in led.actions if a["action_key"] == "drug:rxcui:684879")
     assert a["status_by_branch"]["b1"]["status"] == "applicable"
     assert [r["requirement"] for r in a["requirements"]] == ["missense AGXT variants"]
-    assert a["pregnancy_notes"] == ["given throughout pregnancy"]
+    assert a["pregnancy_notes"] == ["Also given throughout pregnancy."]
+    assert a['pregnancy_note_evidence_ids']
 
 
 def test_unrecognized_variant_class_value_is_unknown_not_unmet():
@@ -1251,17 +1254,35 @@ def _cc_rec(monkeypatch, rec_answer, passage=PASSAGE):
     return asked
 
 
-def test_an_entry_the_source_only_describes_is_not_applicable_and_kept(monkeypatch):
+def test_an_entry_the_source_only_describes_is_conditional_and_kept(monkeypatch):
     asked = _cc_rec(monkeypatch, "describes_use")
     led = LG.Ledger("P", [dict(BR, id="b1")])
     E._records(led, _found("supportive_management"), PF_FS, [])
     rec = next(x for x in led.actions if x["action_key"] == "drug:rxcui:684879")
-    assert len(asked) == 3 and rec["status_by_branch"]["b1"]["status"] == "not_applicable"
+    assert len(asked) == 3 and rec["status_by_branch"]["b1"]["status"] == "conditional"
     (l,) = [r for r in rec["requirements"] if r.get("context_check") == "recommendation"]
-    assert l["result"] == "fail" and "not a recommendation" in l["note"]
+    assert l["result"] == "unknown" and l['requirement']=="source describes use; no explicit recommendation"
     assert l["recommendation_reason"] == "describes_use" and "describes use" in l["note"]
     assert [p["name"] for p in led.checks() if p["status"] == "fail"] == []
     assert len(rec["context_check"]["recommendation"]["call_ids"]) == 3
+
+
+def test_source_wording_does_not_override_a_real_patient_mismatch(monkeypatch):
+    _cc_rec(monkeypatch,'describes_use')
+    req={'kind':'label_condition','field':'sex','op':'in','value':['female'],'text':'female patients'}
+    led=LG.Ledger('P',[dict(BR,id='b1')])
+    E._records(led,_found('supportive_management',reqs=[req]),dict(PF_FS,sex='male',sex_quote='boy'),[])
+    rec=next(a for a in led.actions if a['action_key']=='drug:rxcui:684879')
+    assert rec['status_by_branch']['b1']['status']=='not_applicable'
+    assert all(r['context_check']!='recommendation' for r in rec['requirements'] if r['result']=='fail' and 'context_check' in r)
+
+
+def test_negative_source_result_is_not_a_patient_exclusion(monkeypatch):
+    _cc_rec(monkeypatch,'reports_ineffective')
+    led=LG.Ledger('P',[dict(BR,id='b1')]);E._records(led,_found('supportive_management'),PF_FS,[])
+    rec=next(a for a in led.actions if a['action_key']=='drug:rxcui:684879')
+    assert rec['status_by_branch']['b1']['status']=='conditional'
+    assert not [r for r in rec['requirements'] if r['result']=='fail']
 
 
 @pytest.mark.parametrize("answer", ["recommends", "not_stated"])

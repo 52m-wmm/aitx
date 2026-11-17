@@ -98,7 +98,7 @@ def test_review3_a_missing_target_organ_is_unknown_not_inferred():
     a={"section":"bespoke_therapies","modality":"gene_replacement","label":"AAV", "classification":"theoretically_possible",
        "conclusion":"Theoretically possible.","facts":{},"applies_to":["B"],"evidence_ids":[]}
     led=ledger([a]); led["evidence"].append(variant_evidence())
-    md,_=build(led); assert "Target tissue: liver" not in md and "theoretically_possible" in md
+    md,_=build(led); assert "Target tissue: liver" not in md and "theoretically possible" in md
 
 
 def test_review3_met_alternative_hides_other_options_but_keeps_common_unknowns():
@@ -137,7 +137,7 @@ def test_review3_repurposing_uses_negative_evidence_even_without_an_action_row()
 def test_review3_summary_merges_kidney_function_and_egfr_with_unique_affected_entries():
     missing=[{"variable":"kidney function","affects":["A","B"]},{"variable":"eGFR","affects":["B","C"]},
              {"variable":"age","affects":["A"]}]
-    led=ledger([],missing=missing);md,_=build(led);summary=md.split("## Tier 1")[0]
+    led=ledger([act("drug:"+x,"supportive_management",x,"applicable") for x in ("A","B","C")],missing=missing);md,_=build(led);summary=md.split("## Tier 1")[0]
     assert "kidney function: 3 entries" in summary and "  - eGFR:" not in summary
     assert len(led["missing_information"])==3 and missing[0]["affects"]==["A","B"]
 
@@ -146,7 +146,7 @@ def test_review_summary_ranks_concrete_patient_variables_after_excluding_generic
     missing = [{"variable": v, "affects": [f"action {i}" for i in range(n)]} for v, n in
                [("other", 20), ("diagnosis", 19), ("source scope", 18), ("lab", 17),
                 ("kidney function", 4), ("age", 3), ("current medication", 2)]]
-    md, _ = build(ledger([], missing=missing))
+    md, _ = build(ledger([act(f"drug:{i}","supportive_management",f"action {i}","applicable") for i in range(4)], missing=missing))
     summary = md.split("## Tier 1")[0]
     for v in ("kidney function", "age", "current medication"):
         assert f"  - {v}:" in summary
@@ -218,6 +218,14 @@ def test_not_applicable_non_recommended_and_report_false_entries_are_left_out():
         assert lab not in md
 
 
+def test_described_use_with_uncertain_recommendation_is_reported_conditionally():
+    r=dict(unk('source describes use; no explicit recommendation'),context_check='recommendation',
+           patient_fact={'field':'source scope','value':None,'quote':None,'step':None})
+    md,_=build(ledger([act('procedure:dbs','supportive_management','GPi-DBS','conditional',[r])]))
+    assert '**GPi-DBS** — conditional' in md
+    assert 'source describes use; no explicit recommendation' in md
+
+
 def test_a_conditional_entry_names_what_it_depends_on_and_cites_the_source_with_its_date():
     md, _ = build(ledger([act("drug:1", "existing_targeted_therapies", "drug X", "conditional", [unk("eGFR >= 30")])]))
     assert "Depends on kidney function (eGFR >= 30)" in md
@@ -247,7 +255,8 @@ def test_trials_with_fewer_unknowns_come_first():
                               [unk("a"), unk("b"), unk("c")], study_type="interventional"),
                           act("trial:b", "clinical_trial_eligibility", "One unknown", "conditional", [unk("a")],
                               study_type="interventional")]))
-    assert md.index("One unknown") < md.index("Many unknowns")
+    table=md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
+    assert table.index("One unknown") < table.index("Many unknowns")
 
 
 def test_contraindications_not_applicable_are_counted_not_listed():
@@ -293,7 +302,7 @@ def test_shared_entries_name_the_diagnoses_they_apply_to():
 def test_the_summary_lists_the_most_important_missing_information():
     miss = [{"variable": "kidney function", "affects": ["a", "b", "c"]}, {"variable": "age", "affects": ["a"]},
             {"variable": "sex", "affects": []}]
-    md, _ = build(ledger([], missing=miss))
+    md, _ = build(ledger([act("drug:"+x,"supportive_management",x,"applicable") for x in ("a","b","c")], missing=miss))
     s = md[:md.index("## Tier 1")]
     assert s.index("kidney function: 3 entries") < s.index("age: 1 entry") and "sex" not in s
 
@@ -309,7 +318,7 @@ def test_ranking_follows_the_fixed_order_with_a_reason():
     r = md[md.index("### Outcome"):]
     rank=r.split("**Ranking**:")[1].split("**Evidence table**")[0]
     assert rank.index("Trial T") < rank.index("drug Y") < rank.index("gene replacement")
-    assert "reported_improvement" in r
+    assert "reported improvement" in r
 
 
 def test_safety_check_quotes_label_interactions_between_written_drugs():

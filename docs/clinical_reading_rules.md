@@ -136,13 +136,13 @@
 - 反例：只有新生儿段落依据的条目（"Postural drainage & percussion"，表 6a 第 2 行"Teach parent/caregiver airway clearance"）对 15 岁病人仍为不适用。
 - 测试：`tests/test_established.py`（通用段落恢复状态；只有新生儿段落仍不适用；各段落都有限定时任一满足即适用）。
 
-## R15 描述用法或报告无效不是推荐（2026-11-12）
-**规则**：原文说"病人常常使用 X"或"X 的试验没有显示效果"，是描述用法或报告无效，不是推荐；这样的 X 不能作为支持治疗或靶向疗法写进报告。只有原文建议使用、或把它列为管理选项时才算推荐。
-- **原文片段**（复测 PFN1，GeneReviews ALS 总论 NBK1450 "Symptom Management"）："Individuals with ALS commonly supplement their diets with vitamin E, vitamin C, B vitamins, selenium, zinc, coenzyme Q10 …"；"In a Cochrane Review … significant differences in longevity, muscle strength, or functional rating scales over time were not identified."
-- **正确读法**：这些补充剂与抗氧化剂不是推荐措施，条目判不适用、留在账本、不写进报告。
-- **错误读法**：13 种补充剂被列为"适用"的支持治疗（Tier 1 写错，用户 2026-11-12 判定）。
-- **反例**：同一章节"Medications such as baclofen and benzodiazepines can help relieve spasticity and muscle cramps"是推荐，保持原状态。
-- **测试**：`tests/test_context_check.py`（全票"描述用法 / 报告无效"才算非推荐；反向：分歧、推荐、未说明都不改）、`tests/test_established.py`（非推荐 → 不适用并留账本；反向：推荐不变、禁忌节与说明书决定的药不问）。
+## R15 来源措辞不等于病人不适用（2026-11-17 用户修正）
+**规则**：描述使用、结果不一致或报告无效，都不能单独推出病人 not_applicable。R15 来源措辞行只保留 unknown，使状态最多为 conditional；不改真实病人事实不符。描述使用显示 `source describes use; no explicit recommendation`，阴性结果如实注明，不能把它写成积极推荐。
+- 来源明确建议、或列为管理选项时不加这一未知行；禁忌节与 FDA 适应证决定条件的药仍沿用原边界。
+- 反例：KMT2B GPi-DBS / subthalamic DBS 只是“has been performed”，病人 dystonia 条件满足，不能因措辞判不适用；已补 3a 验收。
+- Pregnancy Management 原句只作已有同名行动附注，不独立生成行动或缺失信息。
+- 投票分歧仍是未知，显示 `check votes disagreed; unknown`，不得冒称病人程度不足。观察集记录 KMT2B 四药与 ANO10 两项混合病因分类的不稳定，不加病例代码规则。
+- 原 2026-11-12 “非推荐即不适用”的状态规则已废止；其缓存分类与原始投票继续保留供审计。
 
 ## 审查清单（逐条过）
 

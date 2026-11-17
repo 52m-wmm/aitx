@@ -273,10 +273,13 @@ def decide_3a(res: dict, lines: list[dict], ev_id: str, passage: str, branches: 
         if qid.startswith("meets:") and q["final"] != "yes":
             for l in out:
                 if l["id"] == q["line"]:
+                    why = ("check votes disagreed; unknown" if q["final"] == "split" else
+                           "the patient's finding was not shown to reach the stated degree")
                     l.update(patient_status="unknown", result="unknown", context_check="degree",
-                             note=(l.get("note") or "") + " | context check: the patient's finding was not shown to "
-                                                           "reach the stated degree")
-                    notes.append(f"'{l['requirement'][:60]}' not shown to the stated degree")
+                             note=(l.get("note") or "") + " | context check: " + why)
+                    if q["final"] == "split":
+                        l["check_votes_disagreed"] = True
+                    notes.append(why)
     return out, notes
 
 

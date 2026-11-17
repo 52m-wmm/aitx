@@ -153,6 +153,15 @@ def test_a_degree_the_patient_was_not_shown_to_reach_becomes_unknown():  # R6 / 
     assert LG.status_of(out, "B")[0] == "conditional"
 
 
+def test_split_votes_are_unknown_without_claiming_an_unmet_degree():
+    lines=[line('r1','dystonia','pass',step=2)]
+    out,notes=CC.decide_3a(_res(subject='yes',limit='no',**{'meets:r1':'split'}),lines,'ev1','dystonia treatment',['B'])
+    assert out[0]['result']=='unknown' and LG.status_of(out,'B')[0]=='conditional'
+    assert out[0]['check_votes_disagreed'] is True
+    assert 'check votes disagreed; unknown' in out[0]['note']
+    assert 'not shown' not in out[0]['note'] and notes==['check votes disagreed; unknown']
+
+
 def test_a_limit_is_kept_only_when_quoted_from_the_passage():          # R9 / S6: milder form
     passage = "Some patients with a milder form of ACDMPV may be candidates for lung transplantation."
     out, _ = CC.decide_3a(_res(subject="yes", limit=("yes", "a milder form of ACDMPV")), [], "ev1", passage, ["B"])

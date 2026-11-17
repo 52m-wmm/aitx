@@ -623,6 +623,52 @@
     "quote": "Early intervention should be initiated soon after the delay is recognized, instead of waiting for a formal diagnosis."
    },
    "added": "2026-11-05: replaces the provisional '<ex>-dd-disabled' expectation. The category was disabled while AAP 2013 was unverified; AAP 2013 turned out to be a clinical report with no recommendation sentence in its abstract and an unverifiable reaffirmation status, so IAP 2022 (level 3, reason in the config) was approved instead and the category enabled. Quote checked character for character against the publisher PDF."
+  },
+  {
+   "id": "kmt2b-gpi-dbs",
+   "case": "PRAC-KMT2B",
+   "branch": "KMT2B",
+   "section": "supportive_management",
+   "match": "GPi-DBS",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "source describes use; no explicit recommendation"
+    ]
+   },
+   "what": {
+    "zh": "KMT2B GPi-DBS：在支持治疗显示，来源仅描述使用时为有条件，不因措辞而不适用。",
+    "en": "KMT2B GPi-DBS: supportive conditional use, not a patient exclusion."
+   },
+   "source": {
+    "doc": "GeneReviews KMT2B-Related Disorders, Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK493766/",
+    "quote": "Bilateral globus pallidus pars interna deep brain stimulation (GPi-DBS) has been performed in ~80 individuals and subthalamic nucleus DBS in two individuals."
+   },
+   "added": "2026-11-17 user-approved R15 regression."
+  },
+  {
+   "id": "kmt2b-subthalamic-dbs",
+   "case": "PRAC-KMT2B",
+   "branch": "KMT2B",
+   "section": "supportive_management",
+   "match": "subthalamic nucleus DBS",
+   "expect": {
+    "status": "conditional",
+    "unknown": [
+     "source describes use; no explicit recommendation"
+    ]
+   },
+   "what": {
+    "zh": "KMT2B subthalamic DBS：在支持治疗显示，来源仅描述使用时为有条件，不因措辞而不适用。",
+    "en": "KMT2B subthalamic DBS: supportive conditional use, not a patient exclusion."
+   },
+   "source": {
+    "doc": "GeneReviews KMT2B-Related Disorders, Treatment of Manifestations",
+    "url": "https://www.ncbi.nlm.nih.gov/books/NBK493766/",
+    "quote": "Bilateral globus pallidus pars interna deep brain stimulation (GPi-DBS) has been performed in ~80 individuals and subthalamic nucleus DBS in two individuals."
+   },
+   "added": "2026-11-17 user-approved R15 regression."
   }
  ]
 }

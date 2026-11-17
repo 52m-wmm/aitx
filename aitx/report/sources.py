@@ -154,4 +154,8 @@ def record_context(led) -> dict:
             e = led.add(LG.sourced(f"{nbk}: recorded surveillance measure", "outcome_measures_ranking", original["applies_to"],
                                   source, quote, sec, original["accessed_at"], retrieved_by="existing GeneReviews surveillance section"))
             outcomes.append({"kind": "efficacy", "label": f"GeneReviews {nbk} surveillance", "evidence_id": e["id"]})
+    for e in led.evidence.values():
+        if e['kind']=='sourced' and e['source']['type']=='nbk':
+            rendered=GR.display_quote(e['source']['id'],e['quote'])
+            if rendered!=re.sub(r'\s+',' ',e['quote']).strip():e['display_quote']=rendered
     return {"safety": safety, "outcomes": outcomes}

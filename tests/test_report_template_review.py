@@ -183,7 +183,7 @@ def test_a_modalitys_unsourced_technical_argument_is_removed_and_premises_are_un
         "variant_class": "frameshift", "zygosity": "homozygous", "nmd": "likely_triggers"}]}
     md, _ = build(led); part = md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
     assert "fictional vector" not in md and "Prime editing is theoretically possible" in part
-    assert "theoretically_possible" in part and "[E:v1]" in part
+    assert "theoretically possible" in part and "[E:v1]" in part
 
 
 def test_safety_coverage_records_missing_sections_without_claiming_no_interactions():
@@ -207,7 +207,7 @@ def test_report_lists_unchecked_ledger_drugs_even_when_not_current_candidates(mo
     assert led['report_context']['safety']['coverage']==[]  # report presentation does not rewrite ledger checks
     md,_=build(led,safety=safety)
     summary=md.split('## Tier 1')[0]
-    assert 'pyridoxine: interactions — not checked' in summary and 'Stiripentol: interactions — not checked' in summary
+    assert 'pyridoxine: interactions — not checked' not in summary and 'Stiripentol: interactions — not checked' in summary
 
 
 @pytest.mark.parametrize('quantity', ['200 mg', '0.5 mL', '30%', '20-30 mg/kg/day', '2-3 L/m2/24 hours'])

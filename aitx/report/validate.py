@@ -128,6 +128,22 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
         for group in MAP_REF.findall(line):
             if group not in groups:bad.append(f'missing evidence mapping: {group}')
     records = ledger["evidence"]
+    def footnote_text(text):
+        return re.sub(r'\s+','',re.sub(r'\[(\d+(?:[,–-]\d+)*|[a-z])\]',r'\1',text))
+    for e in records:
+        if 'display_quote' in e and footnote_text(e['display_quote'])!=footnote_text(e['quote']):
+            bad.append(f"display quote changes source content: {e['id']}")
+    summary=md.split('## Summary\n',1)[1].split('## Tier 1:',1)[0] if '## Summary\n' in md else ''
+    for number in (1,2,3):
+        tier=next(h for h in HEADINGS if h.startswith(f'## Tier {number}:'))
+        body=md.split(tier+'\n',1)[1] if tier+'\n' in md else ''
+        body=re.split(r'^## Tier ',body,maxsplit=1,flags=re.M)[0].split('**Evidence table**',1)[0]
+        if not re.search(r'^- \*\*.+?\*\* —|^\| \*\*',body,re.M):continue
+        marker=f'- **Tier {number}:**'
+        block=summary.split(marker,1)[1] if marker in summary else ''
+        block=re.split(r'^- \*\*Tier [123]:\*\*|^- \*\*Diagnosis\*\*',block,maxsplit=1,flags=re.M)[0]
+        if not REF.search(block) or re.search(r'(?:priority action|technical premises) not recorded',block,re.I):
+            bad.append(f'Summary Tier {number} contradicts entries shown in the body')
     counts = Counter(e["id"] for e in records)
     bad += [f"duplicate ledger evidence ID: {i}" for i, n in counts.items() if n != 1]
     evidence = {e["id"]: e for e in records}
@@ -208,7 +224,8 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
             for i in ids:
                 e = evidence[i]
                 normalize = lambda s: re.sub(r'\s+',' ',html.unescape(s)).strip()
-                if e['kind']!='sourced' or normalize(text).casefold() not in normalize(e['quote']).casefold():continue
+                if e['kind']!='sourced' or not any(normalize(text).casefold() in normalize(q).casefold()
+                        for q in (e['quote'],e.get('display_quote',e['quote']))):continue
                 for sentence in sentences(text):
                     key=(scope,source_identity(e),normalize(sentence))
                     if key in seen:bad.append('duplicate sentence from the same source in a section')

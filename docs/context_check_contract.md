@@ -242,3 +242,11 @@ COL1A1 交替体位的婴儿限定记为**上下文核查漏判**，加入 `data
 - AGXT 两例及其余 13 例仅用 LLM 缓存，15 例账本新鲜、无 fail，行动总状态变化 **0**。Step 1 / 2、3a **30/30**、3b **8/8**、3c **7/7**、3e **5/5**、评测 Step 1 / 2 全过；3d **6/8**，DMD 两项过期不计分，3.0 按原决定延期。支持核查仍假通过 0、假拦 3/17，非新增。
 - 本次高峰时段只执行 cache-only 路径，真实请求前高峰保护保留；真实 LLM 请求 **0 次、费用 $0**。DMD 账本未改写，评测病例未跑 Step 3 及之后。报告 `out/step4/PRAC-AGXT-c33dup.md` 格式 PASS；结果 `out/acceptance/agxt_review3_20261116.json`，明细 `runs/agxt-review3-20261116/`。
 
+
+## C 修复与投票文字（2026-11-17，覆盖第 13 节旧 R15 排除行为）
+
+已按用户审核先升级 A/B/D/E 基线，再实施本项。上下文提问、模型参数及缓存键保持原样：R15 的 describes_use / reports_ineffective 只加 unknown 的来源措辞行，不再生成 fail；分别显示 `source describes use; no explicit recommendation` / `source reports no observed benefit; no explicit recommendation`。原有病人事实不符仍可不适用，不能用措辞强弱替代事实。
+
+Pregnancy Management 在收集与同名合并后、账本判定前转为附注：纯孕期行动不生成；已有普通行动仅保留孕期原句与独立证据 ID，不参与条件、上下文核查或缺失信息。这样不重写提取 / 同义合并提示词，复用缓存；COL1A1 physiotherapist 的 reason 指向普通治疗来源。
+
+`meets` 的 split 仍保留 unknown / conditional，文字改为 `check votes disagreed; unknown`；不能说患者未达到程度。未改 KMT2B 四药等级，未给 KMT2B 或 ANO10 添加病例规则。观察集 `data/eval/context_check_stability.json` 只记录原始缓存的六项分歧，ANO10 riluzole / 经颅磁刺激的范围分类保持原样，供后续稳定性观察。KMT2B GPi-DBS 与 subthalamic DBS 加入 3a 验收，期望支持治疗 conditional，不能因非推荐措辞排除。
