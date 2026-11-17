@@ -226,9 +226,11 @@ def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kin
     if fact == "sex" and _ANY_SEX.search(quote):
         return "satisfies", {"field": "sex", "value": pf["sex"] or "any", "quote": quote, "step": "3b"}, "any sex", {}
     if fact == "age":
-        # cohorts ("adolescents >= 12", "children 6 to 11", "children 2 to 5") make text age clauses alternatives the
-        # item tree does not show; age is decided by the registry minimumAge / maximumAge lines (decision 2026-11-04)
-        return "not_assessed", None, AGE_BY_REGISTRY, {}
+        if not nums or not op:
+            return _unk("age", "age threshold not comparable")
+        st, fct, note = E.evaluate({"field":"age", "op":op, "value":nums[0],
+                                  "unit":_age_unit(m.get("unit") or quote), "text":quote}, pf, branch)
+        return st, fct, note, {}
     if fact in GENOTYPE_FACTS:
         other = other_gene_required(quote, branch, pf)
         if other:
@@ -401,6 +403,14 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
             continue
         if re.fullmatch(r"\W*(?:none|n/?a|not applicable)\W*", T.unescape(it["text"]), re.I):
             continue                                             # "Exclusion Criteria: None" states no criterion
+        full = T.unescape(it["text"])
+        # A permission inside an exclusion is part of the whole logical clause. Flat cached mappings cannot
+        # establish its polarity, so preserve the original substring and leave the whole clause unknown.
+        if it["kind"] == "exclusion" and re.search(r"\bis eligible\b|\bwill be allowed\b", full, re.I):
+            st, fct, note, det = _unk("other", "complete exclusion with a permitted exception; assess the whole clause at screening")
+            out.append({"kind":"exclusion", "text":full, "patient_status":st, "patient_fact":fct,
+                        "note":note, "details":{"complete_criterion":True}, "item":it["id"], "fact":"other"})
+            continue
         ms = [m for m in by_item.get(it["id"], []) if m["fact"] != "header"]
         if not ms:
             has_children = any(x.get("parent") == it["id"] for x in mapped["items"])
@@ -412,13 +422,41 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
             continue
         for m in ms:
             st, fct, note, det = evaluate(dict(m, criterion_text=T.unescape(it["text"])), pf, extra, branch, names, it["kind"])
-            line = {"kind": it["kind"], "text": m["quote"], "patient_status": st,
+            text = full if m["fact"] in ("age", "prior_therapy", "current_medication", "pregnancy") else m["quote"]
+            line = {"kind": it["kind"], "text": text, "patient_status": st,
                     "patient_fact": None if st == "not_assessed" else fct, "note": note, "details": det,
                     "item": it["id"], "fact": m["fact"]}
             if m.get("group"):
                 groups.setdefault(m["group"], []).append(line)
             else:
                 out.append(line)
+    # An age-cohort list is OR across cohorts, AND across the lower/upper bounds within each cohort.
+    # The full group quote is one contiguous substring of the registry, not joined mapping fragments.
+    for parent in mapped["items"]:
+        if not re.search(r"\bage (?:groups?|cohorts?)\b", parent["text"], re.I):
+            continue
+        children = [it for it in mapped["items"] if it.get("parent") == parent["id"]]
+        cohort = [l for l in out if l["item"] in {it["id"] for it in children}]
+        if not cohort or any(l.get("fact") not in (None,"age") for l in cohort):
+            continue
+        opts = []
+        for child in children:
+            mine = [l for l in cohort if l["item"] == child["id"]]
+            results = [LG.requirement_result("inclusion", l["patient_status"]) for l in mine]
+            status = LG.status_from(results) if mine and all(r != "not_assessed" for r in results) else "conditional"
+            st = {"applicable":"satisfies", "conditional":"unknown", "not_applicable":"does_not_satisfy"}[status]
+            opts.append({"requirement":T.unescape(child["text"]), "patient_status":st, "note":"age cohort; all bounds", "all_of":mine})
+        st = combine([o["patient_status"] for o in opts])
+        fact = next((l["patient_fact"] for l in cohort if l["patient_status"] == st and l["patient_fact"]),
+                    {"field":"age","value":None,"quote":None,"step":None})
+        raw = T.unescape(study["criteria"])
+        start = raw.index(T.unescape(parent["text"]))
+        last = T.unescape(children[-1]["text"])
+        end = raw.index(last,start) + len(last)
+        out = [l for l in out if l not in cohort]
+        out.append({"kind":"inclusion", "text":raw[start:end], "patient_status":st, "patient_fact":fact,
+                    "note":"one of the age cohorts", "details":{}, "item":f"age-cohorts:{parent['id']}",
+                    "fact":"age", "any_of":opts})
     # A flat list of diagnosis choices is one disease-eligibility requirement, not every disease at once.
     # Keep its full registry span as the quote, and use the existing any-of comparison below.
     choices = {l["item"]: l for l in out if l["kind"] == "inclusion" and l.get("fact") == "diagnosis"
@@ -485,6 +523,19 @@ def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, na
         out.append({"kind": "inclusion", "text": raw[start:end], "patient_status": st, "patient_fact": fact,
                     "note": f"one of {len(options)} diagnosis cohorts", "details": {},
                     "item": f"diagnoses:{roots[0]['id']}", "any_of": options})
+    # Only minimumAge / maximumAge (registry_lines) may exclude on age. Textual cohort bounds can
+    # confirm inclusion only when every bound of that item is met; an unmatched cohort stays unknown.
+    age_items = {}
+    for line in out:
+        if line.get("fact") == "age":
+            age_items.setdefault(line["item"], []).append(line)
+    for lines in age_items.values():
+        if all(l["kind"] == "inclusion" and l["patient_status"] == "satisfies" for l in lines):
+            continue
+        for line in lines:
+            line.update(patient_status="unknown", note="cohort age not confirmed; only the registry total age range may exclude",
+                        patient_fact={"field":"age" if pf["age_months"] is None else "other trial criteria",
+                                      "value":None,"quote":None,"step":None})
     return out
 
 

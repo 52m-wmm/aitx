@@ -12,7 +12,7 @@ import textwrap
 from collections import OrderedDict
 
 from aitx.evidence import ledger as LG
-from aitx.report.validate import HEADINGS, TITLE
+from aitx.report.validate import HEADINGS, TITLE, sentences, source_identity
 
 CAPS = {"off_label_expanded_access": 5, "drug_repurposing": 3}
 STALE_YEARS, STALE_YEARS_PRODUCT = 5, 3                    # contract Q7
@@ -110,14 +110,41 @@ class Report:
         self.trace: list[dict] = []
         self.out: list[str] = []
         self.used_evidence: set[str] = set()
+        self.ref_groups = OrderedDict()
+        self.heading = "Summary"
+        self.seen_quotes = {}
 
-    def refs(self, ids) -> str:
+    def refs(self, ids, label: str | None = None, inline: bool = True) -> str:
         ids = list(dict.fromkeys(ids))
         for eid in ids:
             if self.ev[eid]["status"] != "verified":
                 raise ValueError(f"report evidence {eid} is not verified")
         self.used_evidence.update(ids)
-        return " ".join(f"[E:{eid}](#evidence-{eid})" for eid in ids)
+        mapping = ""
+        if len(ids) > 3 or not inline:
+            key = tuple(ids)
+            if key not in self.ref_groups:
+                name = label or self.heading
+                nct = re.search(r'\((NCT\d{8})\)$',name)
+                self.ref_groups[key] = (f"G{len(self.ref_groups)+1}", nct[1] if nct else name)
+            gid, _ = self.ref_groups[key]
+            mapping = f" [full mapping {gid}](#mapping-{gid})"
+        return (" ".join(f"[E:{eid}]" for eid in ids[:3]) + mapping) if inline else ""
+
+    def quote_lines(self, text: str, ids: list[str], prefix: str = "  - ", citation: str = "") -> list[str]:
+        """Keep the first full passage. If it overlaps an earlier quote, emit only new verbatim sentences."""
+        text = clean(text, None)
+        e = next(self.ev[i] for i in ids if LG.quote_in(text, clean(self.ev[i].get("quote", ""), None)))
+        source = source_identity(e)
+        seen = self.seen_quotes.setdefault(self.heading, set())
+        parts, new = sentences(text), []
+        for part in parts:
+            key = (source, part)
+            if key not in seen:
+                seen.add(key)
+                new.append(part)
+        passages = [text] if len(new) == len(parts) else new
+        return [f'{prefix}"{p}" {citation} {self.refs(ids, prefix)}'.rstrip() for p in passages]
 
     def action_ids(self, a: dict) -> list[str]:
         ids = a.get("evidence_ids", []) + [r["requirement_evidence"] for r in a.get("requirements", [])
@@ -158,6 +185,13 @@ class Report:
         url = src.get("url")
         return f"[{name}{when}]" + (f"({url})" if url else "") + stale
 
+    def short_cite(self, e: dict) -> str:
+        src=e['source']
+        if src.get('type')=='pipeline_fact' and src.get('upstream'):src=src['upstream']
+        return {'nbk':'GeneReviews '+src['id'],'spl_setid':'FDA label '+(src.get('brand') or src['id']),
+                'pmid':'PMID '+src['id'],'nct':src['id'],'refseq':'RefSeq '+src['id'],
+                'clinvar_vcv':'ClinVar '+src['id']}.get(src['type'],src['id'])
+
     def sources(self, a: dict, k: int = 2) -> list[str]:
         product = bool(PRODUCT.search(a.get("label") or ""))
         if a["section"] == "clinical_trial_eligibility":     # the criteria are quoted in the entry; cite the record
@@ -179,7 +213,7 @@ class Report:
             if shown >= k:
                 break
             shown += 1
-            lines.append(f"  - \"{clean(e['quote'], None)}\" {self.cite(e, product)} {self.refs([i])}")
+            lines += self.quote_lines(e['quote'], [i], citation=self.short_cite(e))
         return lines
 
     def applies(self, a: dict) -> str:
@@ -199,7 +233,7 @@ class Report:
             head += " Depends on " + "; ".join(f"{v} ({' / '.join(dict.fromkeys(t))})" for v, t in by.items()) + "."
         if a.get("access_route_label") and section == "off_label_expanded_access":
             head += f" Access: {a['access_route_label']}."
-        head += self.applies(a) + " " + self.refs(self.action_ids(a))
+        head += self.applies(a) + " " + self.refs(self.action_ids(a), a['label'])
         if a.get("conclusion") and section in ("off_label_expanded_access", "bespoke_therapies", "drug_repurposing"):
             head += f" {clean(a['conclusion'], 300)}"
         self.trace.append({"section": section, "label": a["label"], "action_key": a.get("action_key"),
@@ -210,11 +244,11 @@ class Report:
                 for d in p.get("patient_description") or []:
                     ids = [i for i in self.action_ids(a) if LG.quote_in(d["quote"], self.ev[i].get("quote", ""))]
                     if ids:
-                        lines.append(f"  - Precedent patient description (PMID {p['pmid']}): \"{clean(d['quote'], None)}\" {self.refs(ids)}")
+                        lines += self.quote_lines(d['quote'], ids, f"  - Precedent patient description (PMID {p['pmid']}): ")
         for c in a.get("cautions") or []:
             ids = [i for i in self.action_ids(a) if LG.quote_in(c, self.ev[i].get("quote", ""))]
             if ids:
-                lines.append(f"  - Caution (same source): \"{clean(c, None)}\" {self.refs(ids)}")
+                lines += self.quote_lines(c, ids, "  - Caution (same source): ")
         return lines
 
     def negative(self, section: str) -> list[str]:
@@ -294,36 +328,51 @@ class Report:
                        self.refs([i for a in acts if status_of(a) == "not_applicable" for i in self.action_ids(a)]))
         return out or self.negative("contraindications_precautions")
 
+
     def trials(self) -> list[str]:
         items = [a for a in self.actions("clinical_trial_eligibility") if a.get("action_key") and
                  a.get("report") is not False and self.action_ids(a)]
         trials = sorted([a for a in items if a.get("study_type") == "interventional"], key=trial_rank)
         out = self.count(trials)
         if trials:
-            out += ["| Trial | Already met | Unable to assess | Known exclusions | Recruitment status / verified |",
-                    "| --- | --- | --- | --- | --- |"]
+            out += ["| Trial | Inclusion met | Exclusion ruled out | Unable to assess | Known exclusions | Status & verified date |",
+                    "| --- | --- | --- | --- | --- | --- |"]
         def cell(text):
             return clean(text, None).replace("|", "\\|")
         def verified(a):
             times = [self.ev[i]["accessed_at"] for i in self.action_ids(a) if self.ev[i].get("accessed_at")]
             return dt.datetime.utcfromtimestamp(max(times)).date().isoformat() if times else "unknown"
         for a in trials:
-            rs = trial_lines(a)
-            groups = []
-            for results in (("pass",), ("unknown", "not_assessed"), ("fail",)):
-                group = [r for r in rs if r["result"] in results]
-                groups.append("<br>".join(f"{cell(r.get('kind', 'condition'))}: &quot;{cell(r['requirement'])}&quot;"
-                                          for r in group) or "None established from the recorded criteria")
-            out.append(f"| **{cell(a['label'])}** {self.refs(self.action_ids(a))} | " + " | ".join(groups) +
-                       f" | {a.get('overall_status') or 'unknown'}; verified {verified(a)} |")
-            self.trace.append({"section": "clinical_trial_eligibility", "label": a["label"], "action_key": a["action_key"],
-                               "evidence_ids": self.action_ids(a)})
-        obs = sorted([a for a in items if a.get("study_type") == "observational"], key=trial_rank)
+            grouped = OrderedDict()
+            for r in trial_lines(a):
+                text = r['requirement']
+                if r.get('fact') == 'age' and r['result'] == 'pass' and r.get('any_of'):
+                    text = next(o['requirement'] for o in r['any_of'] if o['patient_status'] == 'satisfies')
+                grouped.setdefault((r['kind'], text), []).append(r)
+            cells = [[], [], [], []]
+            passages = []
+            for (kind, text), rows in grouped.items():
+                results = [r['result'] for r in rows]
+                result = next((v for v in ('fail','unknown','not_assessed','pass') if v in results))
+                dest = 3 if result == 'fail' else 2 if result in ('unknown','not_assessed') else 1 if kind == 'exclusion' else 0
+                passages.append((kind,text,dest))
+            for kind,text,dest in passages:
+                if any(k==kind and d==dest and text!=t and text in t for k,t,d in passages):
+                    continue  # the complete original clause already contains this same-result fragment
+                cells[dest].append('"'+cell(text)+'"')
+            values = ['<br>'.join(g) or 'None established' for g in cells]
+            link = f" [registry]({a['url']})" if a.get('url') else ''
+            out.append(f"| **{cell(a['label'])}**{link} | " + ' | '.join(values) +
+                       f" | {a.get('overall_status') or 'unknown'}; verified {verified(a)} {self.refs(self.action_ids(a),a['label'])} |")
+            self.trace.append({'section':'clinical_trial_eligibility','label':a['label'],'action_key':a['action_key'],
+                               'evidence_ids':self.action_ids(a)})
+        obs = sorted([a for a in items if a.get('study_type') == 'observational'], key=trial_rank)
         if obs:
-            out.append(f"- **Observational studies ({len(obs)})**: " + "; ".join(
-                f"{a['label']} ({a.get('overall_status') or 'unknown'}; verified {verified(a)}) {self.refs(self.action_ids(a))}"
-                for a in obs) + ".")
-        return out if items else out + self.negative("clinical_trial_eligibility")
+            out.append(f"- **Observational studies ({len(obs)})**: " + '; '.join(
+                f"{a['label']}" + (f" [registry]({a['url']})" if a.get('url') else '') +
+                f" ({a.get('overall_status') or 'unknown'}; verified {verified(a)})" for a in obs) + '. ' +
+                self.refs([i for a in obs for i in self.action_ids(a)],'Observational studies'))
+        return out if items else out + self.negative('clinical_trial_eligibility')
 
     def offlabel(self) -> list[str]:
         acts = [a for a in self.actions("off_label_expanded_access") if a.get("action_key")]
@@ -335,7 +384,7 @@ class Report:
         for a in neg:                                       # contract Q4
             if not self.action_ids(a):
                 continue
-            out.append(f"- **{a['label']}** — reported ineffective; not recommended. {self.refs(self.action_ids(a))}")
+            out.append(f"- **{a['label']}** — reported outcome. {self.refs(self.action_ids(a),a['label'])}")
             out += self.sources(a, 1)
         if neg:
             shown = [a for a in items[:CAPS["off_label_expanded_access"]] if self.action_ids(a)] + neg
@@ -343,39 +392,39 @@ class Report:
             out = self.count(shown) + out
         return out or self.negative("off_label_expanded_access")
 
+
     def bespoke(self) -> list[str]:
-        acts = self.actions("bespoke_therapies")
+        acts = self.actions('bespoke_therapies')
         if not acts:
-            return self.negative("bespoke_therapies")
-        good = [a for a in acts if a.get("classification") in ("theoretically_possible", "eligible", "likely_eligible",
-                                                                 "possibly_eligible")]
+            return self.negative('bespoke_therapies')
         bases = self.variant_ids()
-        acts = [a for a in acts if self.action_ids(a) or bases]
+        order = {'theoretically_possible':0,'eligible':1,'likely_eligible':2,'possibly_eligible':3,
+                 'unlikely_eligible':4,'unable_to_assess':5,'not_eligible':6,'not_applicable':7,'not_graded':8}
+        acts = sorted(acts,key=lambda a:order[a['classification']])
         out = self.count(acts)
-        for a in good + [a for a in acts if a not in good]:
-            if a not in acts:
-                continue
-            ids = list(dict.fromkeys(self.action_ids(a) + bases))
-            out.append(f"- **{a['label']}** — technical feasibility: unconfirmed." + self.applies(a) + " " + self.refs(ids))
-            for i in bases:
-                path = self.ev[i]["source"]["id"]
-                if path.endswith(".variant_class") or (a.get("modality") == "gene_replacement" and path.endswith(".protein_length")):
-                    out.append(f"  - Patient premise: {clean(self.ev[i]['claim'], None)} {self.refs([i])}")
-            if a.get("modality") == "base_or_prime_editing":
-                out.append("  - PAM / editing window: unconfirmed (未确认).")
-            if a.get("modality") == "gene_replacement":
-                out.append("  - Full vector size / capacity comparison: unconfirmed (未确认).")
-            # Only a premise with its own verified source may be stated as a fact. Code-only modality grades,
-            # capacity thresholds and editing arguments do not supply a published technical source.
-            for field, name in (("target_tissue", "Target tissue"), ("delivery", "Delivery method"),
-                                ("human_precedent", "Human precedent"), ("technical_feasibility", "Technical feasibility")):
-                supported = [self.ev[i] for i in self.action_ids(a) if self.ev[i].get("premise") == field]
-                if supported:
-                    out += [f"  - {name}: \"{clean(e['quote'], None)}\" {self.refs([e['id']])}" for e in supported]
-                else:
-                    out.append(f"  - {name}: unconfirmed (未确认; no supporting evidence ID recorded).")
-            self.trace.append({"section": "bespoke_therapies", "label": a["label"], "action_key": None,
-                               "evidence_ids": ids})
+        group = None
+        for a in acts:
+            if a['classification'] != group:
+                group = a['classification']
+                out.append(f"**{group}**")
+            ids = self.action_ids(a) + bases
+            head = f"- **{a['label']}** — {a['classification']} (Step 3d code rule)."
+            if a.get('failed_criterion'):
+                head += ' Reason: '+a['failed_criterion']+'.'
+            if a['classification'] != 'theoretically_possible':
+                for field,name in (('exceptions','Exceptions'),('unassessable_reason','Unassessed')):
+                    if a.get(field):head += ' '+name+': '+'; '.join(a[field])+'.'
+                if a.get('note'):head += ' Note: '+a['note']
+                out.append(head+' '+self.refs(ids,a['label']))
+            else:
+                out.append(head+' '+self.refs(ids,a['label']))
+                out.append('  - '+a['conclusion'])
+                for field,name in (('criteria_met','Criteria met'),('exceptions','Exceptions'),('unassessable_reason','Unassessed')):
+                    for value in a.get(field,[]):out.append(f'  - {name}: {value}')
+                if (a.get('provenance') or {}).get('code_only') is True and (a.get('facts') or {}).get('reason'):
+                    out.append('  - Rule rationale: '+a['facts']['reason'])
+                if a.get('note'):out.append('  - Note: '+a['note'])
+            self.trace.append({'section':'bespoke_therapies','label':a['label'],'action_key':None,'evidence_ids':ids})
         return out
 
     def repurposing(self) -> list[str]:
@@ -383,68 +432,81 @@ class Report:
         return self.section("drug_repurposing", items, CAPS["drug_repurposing"], "candidates") if items \
             else self.negative("drug_repurposing")
 
+
     def ranking(self) -> list[str]:
-        out = ["**Outcome measures**:", "", "**Preclinical validation**:"]
+        out = ['**Outcome measures**:', '', '**Preclinical validation**:']
         bases = self.variant_ids()
-        for a in self.actions("bespoke_therapies"):
-            ids = self.action_ids(a) + bases
-            if not ids:
-                continue
-            out.append(f"- {a['label']}: verify the source-labelled patient facts in Summary before further assessment. "
-                       f"Target tissue, delivery, technical validation and modality-specific outcome measures: "
-                       f"unconfirmed (未确认). {self.refs(ids)}")
-            for i in self.action_ids(a):
-                if self.ev[i].get("premise") == "preclinical_validation":
-                    out.append(f"  - \"{clean(self.ev[i]['quote'], None)}\" {self.refs([i])}")
-            for i in bases:
-                if self.ev[i]["source"]["id"].endswith(".protein_length"):
-                    out.append(f"  - Recorded calculation to verify: {self.ev[i]['claim']} {self.refs([i])}")
-        if not bases:
-            out.append("- Source-backed preclinical prerequisites are not recorded; unconfirmed (未确认).")
-        out += ["", "**Safety**:"] + self.safety_measures()
-        out += ["", "**Efficacy measures**:"] + self.outcome_measures("efficacy")
-        out += ["", "**Ranking**:"]
-        # Cross-references only: a modality without sourced technical premises cannot be promoted into a treatment.
-        trials = sorted([a for a in self.actions("clinical_trial_eligibility") if written(a)
-                         and a.get("study_type") == "interventional" and self.action_ids(a)], key=trial_rank)
-        cands = [(depends_on_unreported(a), 0, len(unknown_lines(a)), a,
-                  "human precedent with reported improvement; see Off-label or Expanded-Access Therapies")
-                 for a in self.actions("off_label_expanded_access") if written(a) and self.action_ids(a)
-                 and a.get("efficacy_direction") in ("reported_improvement", "partial_improvement")]
-        cands += [(False, 1, i, a, "screening review; see Clinical Trial Eligibility for recruitment status, "
-                   "known exclusions, met diagnosis/age criteria and unknown criteria") for i, a in enumerate(trials)]
-        for n, (later, _, _, a, why) in enumerate(sorted(cands, key=lambda c: c[:3]), 1):
-            out.append(f"{n}. **{a['label']}** — {why}" +
-                       (" (depends on a manifestation the case does not report, so ranked after the others)" if later else "") +
-                       f". {self.refs(self.action_ids(a))}")
-        if not cands:
-            out.append("- No source-backed trial ranking is recorded; unable to assess.")
+        methods = [a for a in self.actions('bespoke_therapies') if a['classification']=='theoretically_possible']
+        for a in methods:
+            out.append(f"- {a['label']} — {a['classification']}; verify its recorded Step 3d prerequisites. " +
+                       self.refs(self.action_ids(a)+bases,a['label']))
+            for reason in a.get('unassessable_reason',[]):out.append('  - Unassessed: '+reason)
+            if a.get('note'):out.append('  - '+a['note'])
+            for eid in self.action_ids(a):
+                if self.ev[eid].get('premise')=='preclinical_validation':
+                    out += self.quote_lines(self.ev[eid]['quote'],[eid])
+        if not methods:out.append('- No theoretically_possible method is recorded in Step 3d.')
+        out += ['', '**Safety**:'] + self.safety_measures()
+        out += ['', '**Efficacy measures**:'] + self.outcome_measures('efficacy')
+        out += ['', '**Ranking**:']
+        candidates = []
+        for section in ('existing_targeted_therapies','supportive_management','contraindications_precautions'):
+            for a in self.actions(section):
+                if written(a) and self.action_ids(a):
+                    status = status_of(a)
+                    candidates.append(((0 if status=='applicable' else 1, len(unknown_lines(a)), a['label']),a,
+                        f"Tier 1 {status}; " + {'existing_targeted_therapies':'targeted record',
+                            'supportive_management':'supportive record','contraindications_precautions':'precaution record'}[section]))
+        for a in self.actions('clinical_trial_eligibility'):
+            if written(a) and self.action_ids(a):
+                candidates.append(((2,0 if a.get('study_type')=='interventional' else 1,trial_rank(a)),a,
+                    f"Tier 2 {a.get('study_type') or 'study'}; {a.get('overall_status') or 'unknown'}; {status_of(a)}"))
+        for a in self.actions('off_label_expanded_access'):
+            if written(a) and a.get('efficacy_direction')!='reported_ineffective' and self.action_ids(a):
+                candidates.append(((2,2,DIRECTION_RANK.get(a.get('efficacy_direction'),6),len(unknown_lines(a)),a['label']),a,
+                    f"Tier 2; human precedent direction {a.get('efficacy_direction') or 'not recorded'}; ledger status {status_of(a)}"))
+        for a in methods:
+            candidates.append(((3,len(a.get('unassessable_reason',[])),a['label']),a,
+                'Tier 3; Step 3d classification theoretically_possible; unresolved prerequisites remain as listed above'))
+        for n,(_,a,why) in enumerate(sorted(candidates,key=lambda c:c[0]),1):
+            ids = self.action_ids(a) or bases
+            self.refs(ids,a['label'],inline=False)
+            label=a.get("nct") or a["label"]
+            out.append(f"{n}. **{label}** — {why}. {self.refs(ids[:1])}")
+        if not candidates:out.append('- Action ranking cannot be assessed from the recorded entries.')
         return out
+
 
     def safety_measures(self) -> list[str]:
         out = []
-        for kind in ("warnings", "interactions", "contraindications"):
-            for row in self.safety.get(kind, []):
-                ids = row.get("evidence_ids", [])
-                if ids:
-                    out.append(f"- {row['drug']} ({kind}): \"{clean(row['quote'], None)}\" {self.refs(ids)}")
-        for search in self.led.get("offlabel_searches", {}).values():
-            for p in search.get("precaution_candidates", []):
-                ids = [i for i, e in self.ev.items() if e["status"] == "verified" and
-                       e.get("source", {}).get("id") == p["pmid"] and LG.quote_in(p["quote"], e.get("quote", ""))]
-                if ids:
-                    out.append(f"- Reported adverse event ({p['drug']}): \"{clean(p['quote'], None)}\" {self.refs(ids)}")
-        out += self.outcome_measures("safety", empty=False)
-        return out or ["- Source-backed safety measures are not recorded; unconfirmed (未确认)."]
+        for kind in ('warnings','interactions','contraindications'):
+            for row in self.safety.get(kind,[]):
+                ids = row.get('evidence_ids',[])
+                if not ids:continue
+                if kind=='contraindications' and row.get('none'):
+                    out.append(f"- {row['drug']}: the label lists no contraindications. {self.refs(ids)}")
+                    continue
+                text = clean(row['quote'],None)
+                # Selected complete sentences keep label warnings readable; the evidence table points to the full label.
+                passages = sentences(text)[:3] if kind=='warnings' else [text]
+                for passage in passages:
+                    out += self.quote_lines(passage,ids,f"- {row['drug']} ({kind}; label passage): ")
+        for search in self.led.get('offlabel_searches',{}).values():
+            for p in search.get('precaution_candidates',[]):
+                ids = [i for i,e in self.ev.items() if e['status']=='verified' and e.get('source',{}).get('id')==p['pmid']
+                       and LG.quote_in(p['quote'],e.get('quote',''))]
+                if ids:out += self.quote_lines(p['quote'],ids,f"- Reported adverse event ({p['drug']}): ")
+        out += self.outcome_measures('safety',empty=False)
+        return out or ['- Source-backed safety measures are not recorded; unconfirmed.']
 
-    def outcome_measures(self, kind: str = "efficacy", empty: bool = True) -> list[str]:
+
+    def outcome_measures(self, kind: str = 'efficacy', empty: bool = True) -> list[str]:
         out = []
-        for row in self.led.get("report_context", {}).get("outcomes", []):
-            if row["kind"] != kind:
-                continue
-            e = self.ev[row["evidence_id"]]
-            out.append(f"- {row['label']}: \"{clean(e['quote'], None)}\" {self.cite(e)} {self.refs([e['id']])}")
-        return out or (["- Source-backed measures are not recorded; unconfirmed (未确认)."] if empty else [])
+        for row in self.led.get('report_context',{}).get('outcomes',[]):
+            if row['kind']==kind:
+                e = self.ev[row['evidence_id']]
+                out += self.quote_lines(e['quote'],[e['id']],f"- {row['label']}: ",self.short_cite(e))
+        return out or (['- Source-backed measures are not recorded; unconfirmed.'] if empty else [])
 
     def summary_action(self, a: dict) -> str:
         unk = unknown_lines(a)
@@ -452,8 +514,7 @@ class Report:
         labels = [i for i in sources if self.ev[i].get("source", {}).get("type") == "spl_setid"]
         ids = (labels or sources)[:1]
         if a["section"] == "clinical_trial_eligibility":
-            text = f"{a['label']} ({status_of(a)}; registry {a.get('overall_status') or 'unknown'}; "
-            text += "screening conditions in Clinical Trial Eligibility)"
+            text = f"{a.get('nct') or a['label']} ({status_of(a)}; {a.get('overall_status') or 'unknown'}; see trial criteria)"
         elif status_of(a) == "conditional" and unk:
             ids += [r["requirement_evidence"] for r in unk if "requirement_evidence" in r]
             text = f"If {clean(unk[0]['requirement'], None)}: {a['label']}"
@@ -480,10 +541,10 @@ class Report:
         for a in research[:3]:
             ids = self.action_ids(a)[:1] + [i for i in bases if self.ev[i]["source"]["id"].endswith(".variant_class")]
             if ids:
-                out.append(f"  - Review source-backed premises for {a['label']}; technical feasibility, target tissue, "
-                           f"delivery and human precedent unconfirmed (未确认); see Bespoke Therapies. {self.refs(ids)}")
-        if not any(l.startswith("  - Review") for l in out):
-            out.append("  - Source-backed technical premises not recorded; unconfirmed (未确认).")
+                out.append(f"  - {a['label']}: {a['classification']} (Step 3d code rule); "
+                           f"unassessed items: {'; '.join(a.get('unassessable_reason',[])) or 'none recorded'}; see Bespoke Therapies. {self.refs(ids)}")
+        if not research:
+            out.append("  - Source-backed technical premises not recorded; unconfirmed.")
         return out
 
     def variant_provenance(self) -> list[str]:
@@ -495,7 +556,7 @@ class Report:
             up = src.get("upstream", {})
             if up.get("type") == "clinvar_vcv" or (up.get("type") == "refseq" and
                     src["id"].endswith((".variant_class", ".nmd.prediction", ".protein_length"))):
-                out.append(f"- {clean(e['claim'], None)} {self.cite(e)} {self.refs([i])}")
+                out.append(f"- {clean(e['claim'], None)} {self.short_cite(e)} {self.refs([i])}")
         return out
 
     def summary(self) -> list[str]:
@@ -517,23 +578,24 @@ class Report:
             for m in miss:
                 n = len(m["affects"])
                 var = variable_of({"patient_fact": {"field": m["variable"]}})
-                ids = [i for a in self.led["actions"] if a["label"] in m["affects"] for i in self.action_ids(a)]
+                ids = [r['requirement_evidence'] for a in self.led['actions'] if a['label'] in m['affects']
+                       for r in unknown_lines(a) if 'requirement_evidence' in r and
+                       ('kidney function' if (r.get('patient_fact') or {}).get('field')=='eGFR'
+                        else (r.get('patient_fact') or {}).get('field')) == m['variable']]
                 out.append(f"  - {var}: {n} entr{'y' if n == 1 else 'ies'} depend on it "
-                           f"({'<br>'.join(m['affects'])}). {self.refs(ids)}")
+                           f"({'<br>'.join(m['affects'])})."
+                           + self.refs(ids, 'Missing information: '+var, inline=False))
         s = self.safety
         if s.get("coverage"):
-            out.append("- **Check before use** (coverage of FDA label text, not a comprehensive interaction database):")
+            out.append("- **Check before use**: FDA interaction text was checked against the named drugs where recorded; "
+                       "empty findings do not establish absence of risk. Coverage:")
             for row in s["coverage"]:
                 if not row.get("evidence_ids"):
                     continue
                 out.append(f"  - {row['drug']}: interactions — " +
-                           ("label text checked against the named drugs" if row["interactions_checked"] else "未检查 (not checked)") +
-                           "; contraindications — " + ("label text checked" if row["contraindications_checked"] else "未检查 (not checked)") +
-                           ". Empty findings do not establish absence of risk. " + self.refs(row["evidence_ids"]))
-        for row in s.get("contraindications", []):
-            if row.get("none") and row.get("evidence_ids"):
-                e = self.ev[row["evidence_ids"][0]]
-                out.append(f"  - {row['drug']}: the label lists no contraindications {self.cite(e)} {self.refs(row['evidence_ids'])}")
+                           ("checked" if row["interactions_checked"] else "not checked") +
+                           "; contraindications — " + ("checked" if row["contraindications_checked"] else "not checked") +
+                           ". " + self.refs(row["evidence_ids"]))
         return out
 
     def build(self) -> str:
@@ -548,22 +610,37 @@ class Report:
                "Generated by code from the evidence ledger; every entry cites its source and the source's update date.",
                ""]
         for h in HEADINGS:
+            self.heading = h
             out.append(h)
             if h in body:
                 out += [""] + body[h]()
             out.append("")
-        # References can be reused; each evidence ID is defined once in the evidence table.
+        # Full relationships live here; the body exposes at most three IDs per line.
         pending = list(self.used_evidence)
         while pending:
-            for eid in self.ev[pending.pop()].get("premises", []):
-                if eid not in self.used_evidence:
-                    self.refs([eid])
-                    pending.append(eid)
-        out += ["#### Evidence table", ""]
+            eid = pending.pop()
+            parents = self.ev[eid].get('premises',[])
+            new = [p for p in parents if p not in self.used_evidence]
+            if parents:self.refs(parents,'Premises of E:'+eid,inline=False)
+            pending.extend(new)
+        out += ['**Evidence table**','']
+        for ids,(gid,label) in self.ref_groups.items():
+            out.append(f'- <a id="mapping-{gid}"></a>**{gid}**: {clean(label,None)}')
+            for start in range(0,len(ids),3):
+                out.append('  - '+' '.join(f'`E:{i}`' for i in ids[start:start+3]))
+        by_source = OrderedDict()
         for eid in sorted(self.used_evidence):
             e = self.ev[eid]
-            out += [f'<a id="evidence-{eid}"></a>',
-                    f"- **Evidence ID: `{eid}`** — " + (self.cite(e) if e["kind"] == "sourced" else e["claim"])]
+            key = source_identity(e) if e['kind']=='sourced' else (e['kind'],e['search']['database'],e['search']['endpoint']) if e['kind']=='negative' else (e['kind'],)
+            by_source.setdefault(key,[]).append(eid)
+        for key,ids in by_source.items():
+            e = self.ev[ids[0]]
+            if e['kind']=='sourced':label=self.cite(e)
+            elif e['kind']=='negative':label='Search record: '+e['search']['database']
+            else:label='Ledger reasoning; premise mappings are listed above.'
+            out.append('- '+label)
+            for start in range(0,len(ids),3):
+                out.append('  - '+'; '.join(f'**E:{i}**' for i in ids[start:start+3]))
         return "\n".join(out).rstrip() + "\n"
 
 

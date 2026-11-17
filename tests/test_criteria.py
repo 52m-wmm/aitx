@@ -217,11 +217,11 @@ def test_any_sex_wordings(quote, extra):
     assert C.evaluate({"quote": quote, "fact": "sex"}, BOY, extra, BR, [])[0] == "satisfies"
 
 
-def test_text_age_clauses_are_left_to_the_registry_fields(extra):
+def test_text_age_clause_is_compared_and_age_cohorts_are_grouped_separately(extra):
     # NCT04580420: cohorts ">= 12", "6 to 11", "2 to 5" had failed a 7-year-old one by one
     st, fact, note, _ = C.evaluate({"quote": "adults and adolescents (aged ≥ 12 years)", "fact": "age", "op": ">=", "value": 12},
                                    BOY, extra, BR, [])
-    assert st == "not_assessed" and fact is None and note == LG.AGE_BY_REGISTRY_NOTE
+    assert st == "does_not_satisfy" and fact["field"] == "age"
 
 
 def test_branch_disease_named_in_an_exclusion_is_context(extra):

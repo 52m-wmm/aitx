@@ -41,7 +41,7 @@ def test_summary_covers_all_three_tiers_and_limits_each_to_three_actions():
         part = summary.split(f"- **Tier {tier}:**")[1].split("\n- **")[0]
         assert 1 <= part.count("  - ") <= 3
     assert "If eGFR >= 30: drug N" in summary
-    assert "prime editing" in summary and "unconfirmed" in summary
+    assert "prime editing" in summary and "PAM not assessed" in summary
 
 
 def test_supportive_cap_does_not_hide_core_management_or_conditional_surgery():
@@ -66,7 +66,7 @@ def test_management_quotes_include_the_exact_quantitative_paragraph_and_own_tran
 
 
 def test_doses_and_targets_are_full_verbatim_quotes_not_shortened_or_rephrased():
-    quote = "High oral fluid intake. " + "Source context. " * 20 + "Drinking fluid (2-3 L/m2/24 hours) throughout day/night."
+    quote = "High oral fluid intake. " + " ".join(f"Source context {i}." for i in range(20)) + " " + "Drinking fluid (2-3 L/m2/24 hours) throughout day/night."
     md, _ = build(ledger([act("diet:H", "supportive_management", "hydration", "applicable")], missing=[])
                   | {"evidence": [ev("e1", quote)]})
     assert f'"{quote}"' in md and "2–3 L/m²" not in md
@@ -88,7 +88,7 @@ def test_trial_columns_separate_met_unknown_disqualifying_and_status_date():
     a = trial("T", rs=[met, unk("eGFR threshold"), fail]); a["status_by_branch"]["B"]["status"] = "not_applicable"
     led = ledger([a]); led["evidence"][0]["accessed_at"] = 1794824083
     md, _ = build(led); part = md.split("### Clinical Trial Eligibility")[1].split("### Off-label")[0]
-    for field in ("Already met", "Unable to assess", "Known exclusions", "Recruitment status / verified"):
+    for field in ("Inclusion met", "Exclusion ruled out", "Unable to assess", "Known exclusions", "Status & verified date"):
         assert field in part
     assert "diagnosis D" in part and "eGFR threshold" in part and "disallowed medicine" in part
     assert "RECRUITING" in part and "2026-11-16" in part
@@ -118,7 +118,7 @@ def test_three_outcome_blocks_use_only_recorded_premises_warnings_precedents_and
     md, _ = A.assemble(led, CASE, lambda *a: None, safety)
     part = md.split("### Outcome Measures & Ranking")[1].split("**Ranking**")[0]
     assert part.index("**Preclinical validation**") < part.index("**Safety**") < part.index("**Efficacy measures**")
-    for text in ("Check the promoter and polyA design.", "unconfirmed", "Monitor for hypersensitivity.", "Adverse event after W.", "Change in urinary oxalate"):
+    for text in ("Check the promoter and polyA design.", "PAM not assessed", "Monitor for hypersensitivity.", "Adverse event after W.", "Change in urinary oxalate"):
         assert text in part
     assert "animal model" not in part
 
@@ -154,7 +154,7 @@ def test_background_sources_name_transcript_clinvar_and_computation_basis(indent
 def test_report_evidence_references_exist_and_each_definition_is_unique():
     led = ledger([act("drug:L", "existing_targeted_therapies", "drug L", "applicable")])
     md, _ = build(led)
-    assert "[E:e1](#evidence-e1)" in md
+    assert "[E:e1]" in md
     assert not V.check_report(md, led, "P")
     assert V.check_report(md.replace("[E:e1]", "[E:missing]"), led, "P")
     assert V.check_report(md + '\n<a id="evidence-e1"></a>\n', led, "P")
@@ -182,8 +182,8 @@ def test_a_modalitys_unsourced_technical_argument_is_removed_and_premises_are_un
     led["patient_context"] = {"variants": [{"gene": "AGXT", "variant_cdna": "c.33dup", "transcript": "NM_000030.3",
         "variant_class": "frameshift", "zygosity": "homozygous", "nmd": "likely_triggers"}]}
     md, _ = build(led); part = md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
-    assert "fictional vector" not in md and "Prime editing is theoretically possible" not in part
-    assert "unconfirmed" in part and "[E:v1]" in part
+    assert "fictional vector" not in md and "Prime editing is theoretically possible" in part
+    assert "theoretically_possible" in part and "[E:v1]" in part
 
 
 def test_safety_coverage_records_missing_sections_without_claiming_no_interactions():
@@ -207,7 +207,7 @@ def test_report_lists_unchecked_ledger_drugs_even_when_not_current_candidates(mo
     assert led['report_context']['safety']['coverage']==[]  # report presentation does not rewrite ledger checks
     md,_=build(led,safety=safety)
     summary=md.split('## Tier 1')[0]
-    assert 'pyridoxine: interactions — 未检查' in summary and 'Stiripentol: interactions — 未检查' in summary
+    assert 'pyridoxine: interactions — not checked' in summary and 'Stiripentol: interactions — not checked' in summary
 
 
 @pytest.mark.parametrize('quantity', ['200 mg', '0.5 mL', '30%', '20-30 mg/kg/day', '2-3 L/m2/24 hours'])
@@ -244,7 +244,7 @@ def test_a_measure_without_its_evidence_reference_is_rejected():
 
 
 def REF_WITHOUT_ID(line):
-    return re.sub(r'\[E:[^\]]+\]\([^)]*\)', '',line)
+    return re.sub(r'\[E:[^\]]+\](?:\([^)]*\))?', '',line)
 
 
 def test_omitted_counts_match_the_ledger_and_evidence_definitions_are_not_duplicated():
@@ -252,7 +252,7 @@ def test_omitted_counts_match_the_ledger_and_evidence_definitions_are_not_duplic
     led=ledger(acts);md,_=build(led)
     assert '3 further drugs' in md and not V.check_report(md,led,'P')
     assert V.check_report(md.replace('3 further drugs','4 further drugs'),led,'P')
-    assert md.count('<a id="evidence-e1"></a>')==1 and md.count('[E:e1]')>1
+    assert md.count('**E:e1**')==1 and md.count('[E:e1]')>1
 
 
 def test_report_generation_automatically_fails_step5_for_an_unquoted_dose(tmp_path,monkeypatch):

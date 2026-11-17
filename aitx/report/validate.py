@@ -22,6 +22,9 @@ def check_markdown(md: str, case_id: str | None = None) -> list[str]:
     title_pattern = re.escape(TITLE).replace("AITX\\-XXXXX", re.escape(case_id) if case_id else r"[A-Za-z0-9-]+")
     if len(titles) != 1 or not re.fullmatch(title_pattern, titles[0]):
         bad.append("patient title differs from the official template or submission id")
+    actual = re.findall(r'^ {0,3}#{1,6} .+$',md,re.M)
+    if actual != (titles[:1] + HEADINGS):
+        bad.append('heading collection differs from the official template')
     pos = []
     for h in HEADINGS:
         idx = [i for i, l in enumerate(lines) if l.strip() == h]
@@ -66,10 +69,48 @@ def check_submission(text: str) -> list[str]:
     return bad
 
 
-REF = re.compile(r"\[E:([A-Za-z0-9_-]+)\]\(#evidence-([A-Za-z0-9_-]+)\)")
-DEFINITION = re.compile(r'^<a id="evidence-([A-Za-z0-9_-]+)"></a>$', re.M)
+REF = re.compile(r"\[E:([A-Za-z0-9_-]+)\](?:\(#(?:evidence-|E-)([A-Za-z0-9_-]+)\))?")
+DEFINITION = re.compile(r'\*\*E:([A-Za-z0-9_-]+)\*\*')
+LEGACY_DEFINITION = re.compile(r'<a id="(?:evidence-|E-)([A-Za-z0-9_-]+)"></a>')
+MAP_REF = re.compile(r'\(#mapping-(G\d+)\)')
+PLAIN_ID = re.compile(r'`E:([A-Za-z0-9_-]+)`')
+CJK = re.compile(r'[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\u3040-\u30ff\uac00-\ud7af\U00020000-\U0002fa1f]')
+
+
+def source_identity(e: dict) -> tuple:
+    src = e.get('source', {})
+    up = src.get('upstream') or src
+    return up.get('type'), up.get('id'), src.get('url')
+
+
+def sentences(text: str) -> list[str]:
+    return [s.strip() for s in re.split(r'(?<=[.!?])\s+', text)
+            if s.strip() and not re.fullmatch(r'\d+[.)]',s.strip())]
+
+
+def evidence_mappings(md: str) -> dict:
+    groups, current = {}, None
+    for line in md.splitlines():
+        match = re.search(r'<a id="mapping-(G\d+)"></a>', line)
+        if match:
+            current = match[1]
+            if current in groups:
+                raise ValueError(f'duplicate evidence mapping {current}')
+            groups[current] = []
+        elif line.startswith('  - ') and current:
+            groups[current] += PLAIN_ID.findall(line)
+        else:
+            current = None
+    return groups
+
+
+def line_evidence(line: str, groups: dict) -> list[str]:
+    ids = [a for a, _ in REF.findall(line)]
+    for group in MAP_REF.findall(line):
+        ids += groups[group]
+    return list(dict.fromkeys(ids))
 # Quantities with clinical units; transcript positions and lengths are not drug doses or treatment targets.
-QUANTITY = re.compile(r"(?:[<>≤≥]=?\s*)?\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?\s*"
+QUANTITY = re.compile(r"(?<![A-Za-z0-9_.])(?:[<>≤≥]=?\s*)?\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?\s*"
                       r"(?:µmol|μmol|mmol|mcg|µg|μg|mg|mL|kg|g|L|%|mmHg)"
                       r"(?:\s*/\s*(?:\d+(?:\.\d+)?\s*)?(?:kg|m\s*[²2]|min|hours?|hrs?|days?|d|h))*(?!\w)", re.I)
 
@@ -77,21 +118,31 @@ QUANTITY = re.compile(r"(?:[<>≤≥]=?\s*)?\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.
 def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
     """Step 5's requested deterministic checks; the ledger remains the clinical judgement layer."""
     bad = check_markdown(md, case_id)
+    if CJK.search(md):bad.append('CJK characters in English report')
+    if re.search(r'&(?:[A-Za-z][A-Za-z0-9]+|#\d+|#x[0-9a-fA-F]+);',md):
+        bad.append('HTML entity in report text')
+    groups = evidence_mappings(md)
+    for line in md.splitlines():
+        if len({a for a,_ in REF.findall(line)} | set(PLAIN_ID.findall(line)) | set(DEFINITION.findall(line))) > 3:
+            bad.append('more than three inline evidence IDs on a line')
+        for group in MAP_REF.findall(line):
+            if group not in groups:bad.append(f'missing evidence mapping: {group}')
     records = ledger["evidence"]
     counts = Counter(e["id"] for e in records)
     bad += [f"duplicate ledger evidence ID: {i}" for i, n in counts.items() if n != 1]
     evidence = {e["id"]: e for e in records}
-    definitions = DEFINITION.findall(md)
+    definitions = DEFINITION.findall(md) + LEGACY_DEFINITION.findall(md)
     bad += [f"duplicate report evidence definition: {i}" for i, n in Counter(definitions).items() if n != 1]
     references = REF.findall(md)
-    if any(a != b for a, b in references):
+    if any(b and a != b for a, b in references):
         bad.append("evidence reference and anchor differ")
-    for eid in set(definitions) | {a for a, _ in references}:
+    mapped = {i for ids in groups.values() for i in ids}
+    for eid in set(definitions) | {a for a, _ in references} | mapped:
         if eid not in evidence:
             bad.append(f"report evidence ID not found in ledger: {eid}")
         elif evidence[eid]["status"] != "verified":
             bad.append(f"report cites unverified evidence: {eid}")
-    for eid in {a for a, _ in references} - set(definitions):
+    for eid in ({a for a, _ in references} | mapped) - set(definitions):
         bad.append(f"evidence definition missing: {eid}")
     # Count the actual action rows, not trace metadata. An altered visible total must fail.
     from aitx.report.assemble import written, status_of
@@ -105,7 +156,7 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
         if heading not in md:
             continue
         body = md.split(heading + "\n", 1)[1]
-        body = re.split(r"^#{1,3} ", body, maxsplit=1, flags=re.M)[0].split("#### Evidence table", 1)[0]
+        body = re.split(r"^#{1,3} ", body, maxsplit=1, flags=re.M)[0].split("**Evidence table**", 1)[0]
         rows = [l for l in body.splitlines() if re.match(r"^- \*\*.+?\*\* —|^\| \*\*", l)]
         shown = re.findall(r"^Listed actions: \*\*(\d+)\*\*\.$", body, re.M)
         if shown and (len(shown) != 1 or int(shown[0]) != len(rows)):
@@ -139,14 +190,28 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
         if int(m[1]) != len(m[2].split("<br>")):
             bad.append("missing-information count differs from listed entries")
     # Compare rendered clinical quantities to the verbatim passage(s) cited on that same line.
-    for line in md.splitlines():
+    scope, seen = None, set()
+    for line in md.split('**Evidence table**',1)[0].splitlines():
+        if re.match(r'^#{1,3} ',line):scope=line
         quantities = QUANTITY.findall(html.unescape(line))
-        if not quantities:
-            continue
-        ids = [a for a, _ in REF.findall(line) if a in evidence]
+        ids = [a for a in line_evidence(line,groups) if a in evidence] if all(g in groups for g in MAP_REF.findall(line)) else []
         quotes = [re.sub(r"\s+", " ", html.unescape(evidence[i].get("quote", ""))) for i in ids]
         for quantity in quantities:
             normalized = re.sub(r"\s+", " ", quantity)
             if not any(normalized in q for q in quotes):
                 bad.append(f"dose/target absent from cited verbatim passage: {quantity}")
+        chunks = re.split(r'(?<!\\)\||<br>',line) if line.lstrip().startswith('|') else [line]
+        for chunk in chunks:
+            quoted = re.search(r'"(.*)"',chunk)
+            if not quoted:continue
+            text = quoted[1]
+            for i in ids:
+                e = evidence[i]
+                normalize = lambda s: re.sub(r'\s+',' ',html.unescape(s)).strip()
+                if e['kind']!='sourced' or normalize(text).casefold() not in normalize(e['quote']).casefold():continue
+                for sentence in sentences(text):
+                    key=(scope,source_identity(e),normalize(sentence))
+                    if key in seen:bad.append('duplicate sentence from the same source in a section')
+                    seen.add(key)
+                break
     return bad

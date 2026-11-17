@@ -24,7 +24,7 @@ def act(key, section, label, status, reqs=(), evs=("e1",), branches=("B",), **kw
 
 
 def unk(text, field="kidney function"):
-    return {"id": "r1", "requirement": text, "result": "unknown", "patient_status": "unknown", "applies_to": ["B"],
+    return {"id": "r1", "kind":"inclusion", "requirement": text, "result": "unknown", "patient_status": "unknown", "applies_to": ["B"],
             "patient_fact": {"field": field}}
 
 
@@ -75,30 +75,30 @@ def test_review3_observational_trials_follow_interventions_then_sort_by_unknowns
     assert part.index("**Intervention**") < part.index("Registry zero") < part.index("Registry one")
 
 
-def test_code_only_bespoke_arguments_are_not_presented_as_source_backed_technical_facts():
+def test_code_rule_verdicts_are_restored_as_code_outputs():
     acts = [{"section":"bespoke_therapies", "modality":"gene_replacement", "label":"gene replacement (AAV)",
              "classification":"theoretically_possible", "conclusion":"AAV is theoretically possible.",
              "criteria_met":["coding sequence 1176 nt is within 4.7 kb"], "facts":{"target_organ":"liver"},
              "note":"promoter and polyA are not sized", "applies_to":["B"],"evidence_ids":[]},
             {"section":"bespoke_therapies", "modality":"base_or_prime_editing", "label":"base or prime editing",
              "classification":"theoretically_possible", "conclusion":"Prime editing is theoretically possible.",
-             "facts":{"reason":"an insertion cannot be corrected by base editors"},
+             "facts":{"reason":"an insertion cannot be corrected by base editors"},"provenance":{"code_only":True},
              "unassessable_reason":["PAM and editing window not assessed"],"applies_to":["B"],"evidence_ids":[]},
             {"section":"bespoke_therapies", "modality":"aso_exon_skipping", "label":"ASO exon skipping",
              "classification":"not_eligible", "conclusion":"Not eligible.","failed_criterion":"first coding exon removes the start codon",
              "applies_to":["B"],"evidence_ids":[]}]
     led=ledger(acts); led["evidence"].append(variant_evidence())
     md, _ = build(led);part=md.split("### Bespoke Therapies")[1].split("### Drug Repurposing")[0]
-    for reason in ("1176 nt", "4.7 kb", "Target tissue: liver", "promoter and polyA", "insertion cannot", "PAM and editing window not assessed", "first coding exon"):
-        assert reason not in part
-    assert part.count("Target tissue: unconfirmed") == 3 and "[E:v1]" in part
+    for reason in ("1176 nt", "4.7 kb", "promoter and polyA", "insertion cannot", "PAM and editing window not assessed", "first coding exon"):
+        assert reason in part
+    assert "Target tissue: liver" not in part and "[E:v1]" in part
 
 
 def test_review3_a_missing_target_organ_is_unknown_not_inferred():
     a={"section":"bespoke_therapies","modality":"gene_replacement","label":"AAV", "classification":"theoretically_possible",
        "conclusion":"Theoretically possible.","facts":{},"applies_to":["B"],"evidence_ids":[]}
     led=ledger([a]); led["evidence"].append(variant_evidence())
-    md,_=build(led); assert "Target tissue: unconfirmed" in md
+    md,_=build(led); assert "Target tissue: liver" not in md and "theoretically_possible" in md
 
 
 def test_review3_met_alternative_hides_other_options_but_keeps_common_unknowns():
@@ -162,7 +162,7 @@ def test_review_summary_does_not_invent_a_patient_variable_for_a_generic_bucket(
 
 def test_review_targeted_drug_cites_the_full_label_indication_before_genereviews():
     indication = ("RIVFLOZA is indicated in children 2 years of age and older and adults with primary hyperoxaluria "
-                  "type 1. " + "Indication context. " * 10 + "Relatively preserved kidney function, eGFR ≥30 mL/min/1.73 m2.")
+                  "type 1. " + " ".join(f"Indication context {i}." for i in range(10)) + " " + "Relatively preserved kidney function, eGFR ≥30 mL/min/1.73 m2.")
     a = act("drug:1", "existing_targeted_therapies", "nedosiran", "conditional", evs=("g1", "g2", "g3", "f"))
     led = ledger([a])
     led["evidence"] = [ev("g1", "GeneReviews primary advice."), ev("g2", "GeneReviews dose table."),
@@ -265,13 +265,13 @@ def test_ineffective_only_drugs_close_the_offlabel_section_and_adverse_reports_g
                           act("drug:6", "off_label_expanded_access", "drug Z", "conditional",
                               efficacy_direction="reported_ineffective")], offlabel=off))
     off_part = md[md.index("### Off-label"):md.index("## Tier 3")]
-    assert off_part.index("drug Y") < off_part.index("**drug Z** — reported ineffective; not recommended.")
+    assert off_part.index("drug Y") < off_part.index("**drug Z** — reported outcome.")
     pre = md[md.index("### Contraindications"):md.index("## Tier 2")]
     assert "drug W" not in pre and "worsened after W" not in pre  # no evidence record for this passage
 
 
 def test_an_empty_section_says_what_was_searched():
-    neg = {"id": "n1", "kind": "negative", "status": "verified", "claim": "c", "search": {"database": "open targets", "query": "target T",
+    neg = {"id": "n1", "kind": "negative", "status": "verified", "claim": "c", "search": {"database": "open targets", "query": "target T", "endpoint":"https://example.org/graphql",
                                                                      "queried_at": 1794736156, "n_results": 0,
                                                                      "n_excluded": 0}}
     led = ledger([act(None, "drug_repurposing", "None found", "searched_none", evs=("n1",))])
@@ -307,8 +307,9 @@ def test_ranking_follows_the_fixed_order_with_a_reason():
                    "conclusion": "theoretically possible", "premises_complete": True, "applies_to": ["B"]}])
     md, _ = build(led)
     r = md[md.index("### Outcome"):]
-    assert r.index("drug Y") < r.index("Trial T") and "**gene replacement**" not in r
-    assert "human precedent with reported improvement" in r
+    rank=r.split("**Ranking**:")[1].split("**Evidence table**")[0]
+    assert rank.index("Trial T") < rank.index("drug Y") < rank.index("gene replacement")
+    assert "reported_improvement" in r
 
 
 def test_safety_check_quotes_label_interactions_between_written_drugs():
@@ -373,7 +374,7 @@ def test_an_entry_waiting_on_an_unreported_manifestation_ranks_after_the_others(
                       study_type="interventional")])
     md, _ = build(led)
     r = md[md.index("**Ranking**"):]
-    assert r.index("Trial T") < r.index("eye drug") and "ranked after the others" in r
+    assert r.index("Trial T") < r.index("eye drug") and "conditional" in r
 
 
 def test_outcome_measures_come_from_trial_primary_outcomes_and_surveillance():
@@ -398,8 +399,8 @@ def test_no_contraindication_is_one_sentence_without_the_label_fragments():
     safety={"contraindications":[{"drug":"drug A","none":True,"quote":"4 CONTRAINDICATIONS None. ( 4 )",
                                   "set_id":"s1","effective_date":"20250101","url":"u"}]}
     md,_=build(safety_evidence(ledger([]),safety), safety=safety)
-    summary=md.split("## Tier 1")[0]
-    assert "drug A: the label lists no contraindications [FDA label s1" in summary and "( 4 )" not in summary
+    safety_part=md.split("**Safety**:")[1].split("**Efficacy measures**:")[0]
+    assert "drug A: the label lists no contraindications" in safety_part and "( 4 )" not in safety_part
 
 
 def test_safety_outcomes_and_efficacy_outcomes_are_separate():

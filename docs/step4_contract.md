@@ -215,3 +215,12 @@
 - 所有尝试合计 **真实 DeepSeek 请求 0 次、新增费用 $0**，使用 `AITX_LLM_CACHE_ONLY=1`、零新增调用预算和真实请求前的非高峰保护，`nohup` + `caffeinate`。CLI `--offpeak-only` 启动门禁会拦缓存，故本轮缓存路径未传它；没有在高峰发真实请求。为全局代码指纹验收刷新其他 13 例只使用缓存；不新增临床来源。早期报告引文 / 条件引用错误均被拦下，修复与回归后才保留最终通过报告。
 - 报告：`out/step4/PRAC-AGXT-c33dup.md`；上传格式：`out/step4/submission.json`；验收汇总：`out/acceptance/agxt_template_review_20261117.json`；全过程及红测 / 最终检查：`runs/agxt-template-review-20261117/`。逐项核实见第 20 节；它明确区分原本未发生的问题与本轮新增展示要求。
 
+
+## 22. 第三轮报告审阅规则（2026-11-17，覆盖第 19–21 节中的旧呈现约定）
+
+1. Step 3d 的 classification、failed_criterion、exceptions、unassessable_reason 是代码输出，按账本原文呈现；不因缺文献性技术论证而删去。按 classification 分组，theoretically_possible 在前，其余逐项一行写失败理由。Summary Tier 3 与临床前验证只列 theoretically_possible，并显示未评估项；文献性技术论证仍不得无来源补写。
+2. 全英文，不出现 CJK 或 HTML 实体。试验列为 Inclusion met / Exclusion ruled out / Unable to assess / Known exclusions / Status & verified date，标题后只跟注册页链接；放行例外、年龄分组的账本修正见 3b 契约。完整条款优先于同结果的重复片段，不能为去重隐藏不同判定。
+3. 每行最多 3 个 Evidence ID，完整对应关系放在加粗的 Evidence table 内，正文通过 mapping 链接回查。证据定义唯一，来源 URL / 日期集中显示。Missing information 只列变量与受影响条目，不挂行内 ID；kidney function 与 eGFR 仍合并。
+4. 同一来源同一句在同一官方章节只出现一次；条目编号本身不当作句子。Stiripentol 只写已报告的结果事实，不给出 not recommended 建议。Ranking 用账本类别、适用状态、招募状态、先例方向及 3d classification 排序，覆盖 Tier 1 applicable、Tier 1 conditional、Tier 2、Tier 3 theoretically_possible，不由模型另造理由。
+5. 标题集合、文字、层级、顺序必须与 data/ 官方模板完全一致，Evidence table 只能用加粗文字。Step 5 增加 CJK / 实体、行内 ID 上限、完整 mapping 引用及同来源重复句检查，继续检查证据、计数、剂量与目标逐字对应。目标报告小于 60 KB。
+6. 本轮交付 AGXT-c33dup、ANO10、KMT2B 三份代码生成报告；缓存重跑 AGXT 两例及所选练习病例。为全局代码指纹验收，其他允许病例仅缓存刷新；DMD 延期与评测病例 Step 3 禁令不变。严格 cache-only、零新增预算，缺缓存即停，真实调用先报价。
