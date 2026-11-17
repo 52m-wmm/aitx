@@ -7,6 +7,7 @@ built in this run), and prints the format check. Evaluation cases are refused.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from pathlib import Path
@@ -17,6 +18,23 @@ sys.path.insert(0, str(ROOT))
 from aitx import runmeta  # noqa: E402
 from aitx.report import assemble as A, sources as SRC, validate as V  # noqa: E402
 from scripts.validate_report import validate_case  # noqa: E402
+
+
+def report_safety(led: dict) -> dict:
+    """Present every ledger drug, including drugs outside the recorded candidate-combination check.
+
+    Missing operational records mean 'no check recorded', never absence of a clinical interaction or risk.
+    No label is fetched and no clinical verdict or ledger check is rewritten here.
+    """
+    safety = copy.deepcopy(led["report_context"]["safety"])
+    coverage = safety["coverage"]
+    recorded = {r["drug"] for r in coverage}
+    for a in led["actions"]:
+        if str(a.get("action_key") or "").startswith("drug:") and a["label"] not in recorded:
+            coverage.append({"drug": a["label"], "interactions_checked": False, "contraindications_checked": False,
+                             "evidence_ids": a["evidence_ids"], "note": "No safety-check record in the ledger; outside the checked drug combination."})
+            recorded.add(a["label"])
+    return safety
 
 
 def main() -> int:
@@ -30,7 +48,7 @@ def main() -> int:
     for cid in args.case:
         case = runmeta.find_case(cid)
         led = json.loads((ROOT / "out" / "step3" / f"{cid}.json").read_text())
-        safety = led["report_context"]["safety"]
+        safety = report_safety(led)
         md, trace = A.assemble(led, case, SRC.date_of, safety)
         (out / f"{cid}.md").write_text(md)
         (out / f"{cid}.trace.json").write_text(json.dumps({"trace": trace, "safety": safety}, indent=1, ensure_ascii=False))

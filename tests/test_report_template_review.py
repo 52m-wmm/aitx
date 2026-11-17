@@ -194,6 +194,22 @@ def test_safety_coverage_records_missing_sections_without_claiming_no_interactio
     assert "no interactions" not in json.dumps(out).lower()
 
 
+def test_report_lists_unchecked_ledger_drugs_even_when_not_current_candidates(monkeypatch):
+    from scripts.build_report import report_safety
+    from aitx import http
+    monkeypatch.setattr(http,'get',lambda *a,**k:pytest.fail('presentation must not add a source lookup'))
+    a=act('drug:P','existing_targeted_therapies','pyridoxine','not_applicable')
+    n=act('drug:S','off_label_expanded_access','Stiripentol','conditional',efficacy_direction='reported_ineffective')
+    led=ledger([a,n]);led['report_context']={'safety':{'coverage':[]}}
+    safety=report_safety(led)
+    assert {r['drug'] for r in safety['coverage']}=={'pyridoxine','Stiripentol'}
+    assert all(not r['interactions_checked'] and not r['contraindications_checked'] for r in safety['coverage'])
+    assert led['report_context']['safety']['coverage']==[]  # report presentation does not rewrite ledger checks
+    md,_=build(led,safety=safety)
+    summary=md.split('## Tier 1')[0]
+    assert 'pyridoxine: interactions — 未检查' in summary and 'Stiripentol: interactions — 未检查' in summary
+
+
 @pytest.mark.parametrize('quantity', ['200 mg', '0.5 mL', '30%', '20-30 mg/kg/day', '2-3 L/m2/24 hours'])
 def test_validator_checks_standalone_doses_and_compound_targets(quantity):
     led=ledger([act('drug:L','existing_targeted_therapies','drug L','applicable')])
@@ -243,7 +259,7 @@ def test_report_generation_automatically_fails_step5_for_an_unquoted_dose(tmp_pa
     from scripts import build_report as B, validate_report as R
     import sys
     led=ledger([act('drug:L','existing_targeted_therapies','drug L','applicable')])
-    led['report_context']={'safety':{}}
+    led['report_context']={'safety':{'coverage':[]}}
     (tmp_path/'out/step3').mkdir(parents=True)
     (tmp_path/'out/step3/P.json').write_text(json.dumps(led))
     monkeypatch.setattr(B,'ROOT',tmp_path);monkeypatch.setattr(R,'ROOT',tmp_path)
