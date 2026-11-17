@@ -1,84 +1,172 @@
 {
  "schema": "aitx-status-snapshot-v1",
- "label": "historical/step3a.2-accepted",
- "created_at": 1793887606,
+ "label": "current: user-approved A/B/D/E (2026-11-17)",
+ "created_at": 1794927503,
  "cases": {
   "PRAC-AGXT-c33dup": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-AGXT-c33dup.json",
    "ledger_sha256": "40f024e7d67e54a86da1e4595279770a280b9e8f1645a56f5abf3384674bca33",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "f60e7b2edf1fd463292b87a9b14dbfc52209dfa6be3c7dd4a8dabdc6c179e4e9"
+   "input_fingerprint": "f60e7b2edf1fd463292b87a9b14dbfc52209dfa6be3c7dd4a8dabdc6c179e4e9",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-AGXT-c33dup.json",
+    "ledger_sha256": "46829048f5865bc13bc012488a904b1cde2a901ed6c9715db4ea4e4b1214236e",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "f60e7b2edf1fd463292b87a9b14dbfc52209dfa6be3c7dd4a8dabdc6c179e4e9"
+   },
+   "partial_approval": true
   },
   "PRAC-AGXT-c508GA": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-AGXT-c508GA.json",
    "ledger_sha256": "260b726a89f833a7a599396e9456c6677a5fd2e649c12066309a258aa0e333c3",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "2fb73bb7e0b9139412cba400d0cb187c0e8d6261ed68808bea089e36c756f270"
+   "input_fingerprint": "2fb73bb7e0b9139412cba400d0cb187c0e8d6261ed68808bea089e36c756f270",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-AGXT-c508GA.json",
+    "ledger_sha256": "8f813b68969af0a2e8d7892252f1bafc15c9ef406a07394c0f2affe10b8a5b55",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "2fb73bb7e0b9139412cba400d0cb187c0e8d6261ed68808bea089e36c756f270"
+   },
+   "partial_approval": true
   },
   "PRAC-ANO10": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-ANO10.json",
    "ledger_sha256": "66347f636fc0a31266699fee1fb66fd5a6f7f2fc9e7e2e18e0cf285d7baf8694",
    "code_commit": "7849113+dirty",
-   "input_fingerprint": "47c9df46ef1f266c3986edeff6c40310fd991093b1925886a5141eb759a9e911"
+   "input_fingerprint": "47c9df46ef1f266c3986edeff6c40310fd991093b1925886a5141eb759a9e911",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-ANO10.json",
+    "ledger_sha256": "740962b3a70ef41c67c818a6017ffd27ba1f94c5ff18ec4459a6bb8c3dc1711b",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "47c9df46ef1f266c3986edeff6c40310fd991093b1925886a5141eb759a9e911"
+   },
+   "partial_approval": true
   },
   "PRAC-CFTR-F508del": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-CFTR-F508del.json",
    "ledger_sha256": "f0a73dc64f2fa69a84e0bda82a04d482b5867105cf6db81886205fdb4bea2c8b",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a"
+   "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-CFTR-F508del.json",
+    "ledger_sha256": "3df3d9e99fa72ee68997503f75488125b74403635e9ac4f951959c135a3db5c7",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a"
+   },
+   "partial_approval": true
   },
   "PRAC-COL1A1": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-COL1A1.json",
    "ledger_sha256": "16c6ce05f08473df8589b416fd9b29a29962460d83ddae78b3dcf2ec77b43409",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
+   "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-COL1A1.json",
+    "ledger_sha256": "3cb528b75eef6f102385f22d02f420e6ac09fcc1e565fad8e04d91a17295144d",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
+   },
+   "partial_approval": true
   },
   "PRAC-GRIN2B": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-GRIN2B.json",
    "ledger_sha256": "3dc04370db277607c8160c9e86f174abf446dc7e2f9bbaa1248428138e50999c",
    "code_commit": "7849113+dirty",
-   "input_fingerprint": "5518c96ae99fa68746fb2102379b042ae7c34f80797c19a3b6e5ee4dc7c1925e"
+   "input_fingerprint": "5518c96ae99fa68746fb2102379b042ae7c34f80797c19a3b6e5ee4dc7c1925e",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-GRIN2B.json",
+    "ledger_sha256": "85f35561ebc62a38afb6d0c48cff04e6fa8d59a8a71d05c516ffe111811ecae1",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "5518c96ae99fa68746fb2102379b042ae7c34f80797c19a3b6e5ee4dc7c1925e"
+   },
+   "partial_approval": true
   },
   "PRAC-KMT2B": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-KMT2B.json",
    "ledger_sha256": "0cfe803fb72e11ade0fa804e317fd2f7f292d7582e6d805d74ccaffa6ba402e5",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "62eef26c4900f276d5204279658041b36c6fb685a7509533acd022c25c385b25"
+   "input_fingerprint": "62eef26c4900f276d5204279658041b36c6fb685a7509533acd022c25c385b25",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-KMT2B.json",
+    "ledger_sha256": "fe80d4489e8b145a6870da29514d10e1ddea9250f556bb8193324c3fe44c8a5b",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "62eef26c4900f276d5204279658041b36c6fb685a7509533acd022c25c385b25"
+   },
+   "partial_approval": true
   },
   "PRAC-NF1": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-NF1.json",
    "ledger_sha256": "498e3dcd66aa654d721b4e6fba01bd30bb8c5672ea33379becce74c12bd7c629",
    "code_commit": "7849113+dirty",
-   "input_fingerprint": "d2cd193b9fa42758d2c135a15d6e4eef272de7348c592a300f7eed3cfb59f400"
+   "input_fingerprint": "d2cd193b9fa42758d2c135a15d6e4eef272de7348c592a300f7eed3cfb59f400",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-NF1.json",
+    "ledger_sha256": "0733bd9f3081ec646fd80e19ee457c3b61f1ca6bcd4dae4690ef87c748dba21c",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "d2cd193b9fa42758d2c135a15d6e4eef272de7348c592a300f7eed3cfb59f400"
+   },
+   "partial_approval": true
   },
   "PRAC-OTC": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-OTC.json",
    "ledger_sha256": "899ca749c07c33f3a6eef5ccf8dff7867b8a03a65c2db828cf21413c997ec6ed",
    "code_commit": "c9c6a0b+dirty",
-   "input_fingerprint": "d7ca1aca7f9d79dab40e87c776e532c1d5b32135bc9b696aab9328f359c84ab3"
+   "input_fingerprint": "d7ca1aca7f9d79dab40e87c776e532c1d5b32135bc9b696aab9328f359c84ab3",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-OTC.json",
+    "ledger_sha256": "d63a90101d10b3d8b2825ff5888be1d6f053b45b3ca3bf0523159aff0d75eae8",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "d7ca1aca7f9d79dab40e87c776e532c1d5b32135bc9b696aab9328f359c84ab3"
+   },
+   "partial_approval": true
   },
   "PRAC-SLC35A2-ex7": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-SLC35A2-ex7.json",
    "ledger_sha256": "3406478d20415bf6d97c75ea3df84e5400fa072f83d8dda28cba23b5d8569c1d",
    "code_commit": "34bba14+dirty",
-   "input_fingerprint": "66a1b8c6cf163ec1aca5b4b2ce8b32d26f66ac13ebebbcfdb34d8d61da185059"
+   "input_fingerprint": "66a1b8c6cf163ec1aca5b4b2ce8b32d26f66ac13ebebbcfdb34d8d61da185059",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-SLC35A2-ex7.json",
+    "ledger_sha256": "e01cc1f731ee3821076ab03deaa4e0d39c51be9cc57a389124b6d788302ef4a6",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "66a1b8c6cf163ec1aca5b4b2ce8b32d26f66ac13ebebbcfdb34d8d61da185059"
+   },
+   "partial_approval": true
   },
   "PRAC-SLC35A2-ex8": {
    "available": true,
    "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-SLC35A2-ex8.json",
    "ledger_sha256": "c3157abd5409b1668a969ac336e7fc08470b8c9d539f06f7f071e3758d268f1a",
    "code_commit": "34bba14+dirty",
-   "input_fingerprint": "63e78b4d31f014ba5e69bd1863c0b2cfa287fdd51aa25eb26af5df150d841d1f"
+   "input_fingerprint": "63e78b4d31f014ba5e69bd1863c0b2cfa287fdd51aa25eb26af5df150d841d1f",
+   "approved_live_component": {
+    "available": true,
+    "ledger_path": "/Users/a00/aitx/out/step3/PRAC-SLC35A2-ex8.json",
+    "ledger_sha256": "08918da402b8399612750bf69b47eaec331844c9b16f89841f22b7b27db5bc11",
+    "code_commit": "8e5ea29",
+    "input_fingerprint": "63e78b4d31f014ba5e69bd1863c0b2cfa287fdd51aa25eb26af5df150d841d1f"
+   },
+   "partial_approval": true
   },
   "RETEST-CNNM4": {
    "available": false,
@@ -98,6 +186,78 @@
   }
  },
  "rows": [
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the first coding exon: skipping it would remove the start codon. Failed criterion: this is the first coding exon: skipping it would remove the start codon exceptions: N1C: theoretically possible if a nearby in-frame start codon exists"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "ea441c68c1ce"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "gene replacement (AAV): theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "ea441c68c1ce"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "ea441c68c1ce"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - homozygous leaves no normal copy to raise. Failed criterion: homozygous leaves no normal copy to raise"
+  },
   {
    "case_id": "PRAC-AGXT-c33dup",
    "section": "clinical_trial_eligibility",
@@ -526,6 +686,63 @@
   },
   {
    "case_id": "PRAC-AGXT-c33dup",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1546411",
+   "action": "sodium thiosulfate (STS)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "5dbf07d7b3c6",
+    "73068c59df83"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:2054968",
+   "action": "Stiripentol",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "49adeeae7fa7",
+    "5c2cced574b8",
+    "710106453482",
+    "d884b280950d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: kidney function; other; precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:234416",
+   "action": "lanthanum carbonate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "83f56c769ad3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:253337",
+   "action": "bevacizumab",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "23cd98b54afb",
+    "f9d0b1498494"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
    "section": "supportive_management",
    "action_id": "diet:adequate_fluid_intake",
    "action": "adequate fluid intake",
@@ -545,12 +762,12 @@
    "action": "high oral fluid intake",
    "branch": "MONDO:0009823",
    "evidence_ids": [
-    "ab559d1ba066",
+    "d070a8819848",
     "d4d394c372fd"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: crystal injury to kidneys"
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Supportive Care"
   },
   {
    "case_id": "PRAC-AGXT-c33dup",
@@ -730,6 +947,78 @@
    "records": 1,
    "status": "conditional",
    "reason": "depends on: Small children"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - exon coding length 101 nt is not a multiple of 3, so skipping it disrupts the reading frame (restoring the frame is the aim for loss-of-function variants). Failed criterion: exon coding length 101 nt is not a multiple of 3, so skipping it disrupts the reading frame (restoring the frame is the aim for loss-of-function variants) exceptions: N1C: consecutive out-of-frame exons may be skipped together to keep the reading frame (designing such an ASO is itself difficult); N1C: an out-of-frame exon may be skipped when a whole out-of-frame exon is already deleted"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "980e727819ac"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "gene replacement (AAV): theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "980e727819ac"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "980e727819ac"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - homozygous leaves no normal copy to raise. Failed criterion: homozygous leaves no normal copy to raise"
   },
   {
    "case_id": "PRAC-AGXT-c508GA",
@@ -1159,6 +1448,63 @@
   },
   {
    "case_id": "PRAC-AGXT-c508GA",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1546411",
+   "action": "sodium thiosulfate (STS)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "5dbf07d7b3c6",
+    "73068c59df83"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:2054968",
+   "action": "Stiripentol",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "49adeeae7fa7",
+    "5c2cced574b8",
+    "710106453482",
+    "d884b280950d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: kidney function; other; precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:234416",
+   "action": "lanthanum carbonate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "83f56c769ad3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:253337",
+   "action": "bevacizumab",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "23cd98b54afb",
+    "f9d0b1498494"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
    "section": "supportive_management",
    "action_id": "diet:adequate_fluid_intake",
    "action": "adequate fluid intake",
@@ -1178,12 +1524,12 @@
    "action": "high oral fluid intake",
    "branch": "MONDO:0009823",
    "evidence_ids": [
-    "ab559d1ba066",
+    "d070a8819848",
     "d4d394c372fd"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: crystal injury to kidneys"
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Supportive Care"
   },
   {
    "case_id": "PRAC-AGXT-c508GA",
@@ -1363,6 +1709,151 @@
    "records": 1,
    "status": "conditional",
    "reason": "depends on: Small children"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "ASO exon skipping: cannot be assessed from the information available - missing: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here). unassessable_reason: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here)"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "gene replacement (AAV): cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "RNA knockdown: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "upregulation from the normal allele: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-ANO10",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:21406",
+   "action": "coenzyme Q10",
+   "branch": "MONDO:0013392",
+   "evidence_ids": [
+    "ac600d6a07c8"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Use has been reported; the available reports are not enough to judge whether it works."
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO exon skipping: does not apply to this variant - the deletion already keeps the reading frame, so there is no frame for exon skipping to restore. Failed criterion: the deletion already keeps the reading frame, so there is no frame for exon skipping to restore"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "gene replacement (AAV): cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "RNA knockdown: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "upregulation from the normal allele: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -2541,24 +3032,6 @@
   {
    "case_id": "PRAC-CFTR-F508del",
    "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT07414810",
-   "action": "SWEAT CF (NCT07414810)",
-   "branch": "MONDO:0009061",
-   "evidence_ids": [
-    "1e54f0ee276b",
-    "a3f32b6ce5ee",
-    "b9997e427f1a",
-    "ed95429de386",
-    "fbc108c76e2d",
-    "fc0f7f2b1772"
-   ],
-   "records": 1,
-   "status": "conditional",
-   "reason": "depends on: diagnosis; lab"
-  },
-  {
-   "case_id": "PRAC-CFTR-F508del",
-   "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT07436351",
    "action": "ACT With CF Self-Help Toolkit (NCT07436351)",
    "branch": "MONDO:0009061",
@@ -2890,37 +3363,6 @@
   {
    "case_id": "PRAC-CFTR-F508del",
    "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT07851831",
-   "action": "CGMUCODIAB (NCT07851831)",
-   "branch": "MONDO:0009061",
-   "evidence_ids": [
-    "12023c51fc70",
-    "1997a7fcb62b",
-    "1ca61cd0500e",
-    "2502eb6870d7",
-    "3f5ace1c3303",
-    "83fb11d921c9",
-    "86e321d22068",
-    "95957e0aba9c",
-    "9774395bc007",
-    "af1c20b03ee2",
-    "b1416872f4a9",
-    "bdbfceabfd1c",
-    "bf03aca6ceb2",
-    "ca8c093337b2",
-    "ce918fee3684",
-    "d7301ee54ac0",
-    "eee29bec2475",
-    "f160a47bfa13",
-    "f58b129ad3e6"
-   ],
-   "records": 1,
-   "status": "conditional",
-   "reason": "depends on: current medication; diagnosis; other; participation in other trials"
-  },
-  {
-   "case_id": "PRAC-CFTR-F508del",
-   "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT07879651",
    "action": "SPICE-CF (NCT07879651)",
    "branch": "MONDO:0009061",
@@ -3055,8 +3497,8 @@
     "483060afd969"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "label contraindication names the diagnosis"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3068,8 +3510,8 @@
     "71d110803f70"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Agents/Circumstances to Avoid"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3094,8 +3536,8 @@
     "5583fe332993"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Agents/Circumstances to Avoid"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3180,6 +3622,49 @@
   },
   {
    "case_id": "PRAC-CFTR-F508del",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:10627",
+   "action": "tobramycin",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "22d727fb2b01",
+    "deb83d1757ed"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1439816",
+   "action": "riociguat",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1e2bdd705700",
+    "896452a21e72",
+    "8eb5c83c21df"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: other"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:535",
+   "action": "Prolastin",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "360d1a0e6666",
+    "a9e217687e8c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
    "section": "supportive_management",
    "action_id": "diet:breast_milk",
    "action": "breast milk",
@@ -3219,8 +3704,8 @@
     "e7be26eed986"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: Exocrine pancreatic insufficiency"
+   "status": "not_applicable",
+   "reason": "not met: Newborn with Cystic Fibrosis"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3246,8 +3731,8 @@
     "9b511cce2f2f"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: Exocrine pancreatic insufficiency"
+   "status": "not_applicable",
+   "reason": "not met: Newborn with Cystic Fibrosis"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3415,23 +3900,6 @@
   {
    "case_id": "PRAC-CFTR-F508del",
    "section": "supportive_management",
-   "action_id": "drug:name:hypertonic saline",
-   "action": "hypertonic saline",
-   "branch": "MONDO:0009061",
-   "evidence_ids": [
-    "0b03a79a4a4d",
-    "64fda18869ac",
-    "7b8495f1545f",
-    "c4ec5a9938ab",
-    "fef7dfbbf43f"
-   ],
-   "records": 1,
-   "status": "conditional",
-   "reason": "depends on: After the newborn period"
-  },
-  {
-   "case_id": "PRAC-CFTR-F508del",
-   "section": "supportive_management",
    "action_id": "drug:name:inhaled corticosteroids+or long-acting beta agonist",
    "action": "Inhaled corticosteroids &/or long-acting beta agonist",
    "branch": "MONDO:0009061",
@@ -3512,8 +3980,8 @@
     "e3bcd6ab6ec5"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: Exocrine pancreatic insufficiency"
+   "status": "not_applicable",
+   "reason": "not met: Newborn with Cystic Fibrosis"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3575,6 +4043,24 @@
   {
    "case_id": "PRAC-CFTR-F508del",
    "section": "supportive_management",
+   "action_id": "drug:rxcui:9863",
+   "action": "hypertonic saline",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "17eefa865526",
+    "330ed1ee2595",
+    "387f0c3f88d3",
+    "6566dce42c7a",
+    "b0fc1054920a",
+    "bb006b14ce4e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
    "action_id": "procedure:airway_clearance",
    "action": "airway clearance",
    "branch": "MONDO:0009061",
@@ -3626,8 +4112,8 @@
     "295ba6c8d9ea"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: with every clinical encounter"
+   "status": "not_applicable",
+   "reason": "not met: Newborns"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3773,8 +4259,8 @@
     "c23756f64d14"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: Pulmonary"
+   "status": "not_applicable",
+   "reason": "not met: Newborn with Cystic Fibrosis"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -3863,6 +4349,222 @@
   },
   {
    "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "ASO exon skipping: cannot be assessed from the information available - missing: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here). unassessable_reason: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here)"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "ASO exon skipping: cannot be assessed from the information available - missing: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here). unassessable_reason: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here)"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "ASO exon skipping: cannot be assessed from the information available - missing: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here). unassessable_reason: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here)"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "cd8a9007bd8f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "gene replacement (AAV): does not apply to this variant - the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect. Failed criterion: the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "01a418d7d2a3"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "gene replacement (AAV): does not apply to this variant - the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect. Failed criterion: the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "a9b09aad420c"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "gene replacement (AAV): does not apply to this variant - the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect. Failed criterion: the mechanism is gain of function: adding a normal copy does not remove the abnormal protein's effect"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "cd8a9007bd8f"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "RNA knockdown: theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "01a418d7d2a3"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "RNA knockdown: theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "a9b09aad420c"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "RNA knockdown: theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "cd8a9007bd8f"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it. Failed criterion: the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "01a418d7d2a3"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it. Failed criterion: the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "a9b09aad420c"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it. Failed criterion: the mechanism (gain of function) is not a shortage of product, so making more from the normal copy does not address it"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
    "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT06567119",
    "action": "Preliminary Evaluation of the Safety and Tolerability of SPOT-mRNA01 Subcutaneously Administered in Healthy Subjects (NCT06567119)",
@@ -3941,56 +4643,6 @@
    "records": 1,
    "status": "conditional",
    "reason": "depends on: age; diagnosis; other; pregnancy status; prior therapy"
-  },
-  {
-   "case_id": "PRAC-COL1A1",
-   "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT07653633",
-   "action": "VILLAREALFC (NCT07653633)",
-   "branch": "MONDO:0007522",
-   "evidence_ids": [
-    "12fa04e1fba8",
-    "139c461be69a",
-    "14160823dd2d",
-    "1fcdc8f45b41",
-    "306cea285855",
-    "3d8f2c1c0774",
-    "46059456b544",
-    "6900610e7ff8",
-    "7b1402350b67",
-    "874b53037a22",
-    "8ee40717dcca",
-    "979be51d8b97",
-    "d2b45db2a64d"
-   ],
-   "records": 1,
-   "status": "conditional",
-   "reason": "depends on: age; diagnosis; other; prior therapy"
-  },
-  {
-   "case_id": "PRAC-COL1A1",
-   "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT07653633",
-   "action": "VILLAREALFC (NCT07653633)",
-   "branch": "MONDO:0020521",
-   "evidence_ids": [
-    "12fa04e1fba8",
-    "139c461be69a",
-    "14160823dd2d",
-    "1fcdc8f45b41",
-    "306cea285855",
-    "3d8f2c1c0774",
-    "46059456b544",
-    "6900610e7ff8",
-    "7b1402350b67",
-    "874b53037a22",
-    "8ee40717dcca",
-    "979be51d8b97",
-    "d2b45db2a64d"
-   ],
-   "records": 1,
-   "status": "conditional",
-   "reason": "depends on: age; diagnosis; other; prior therapy"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -4159,8 +4811,8 @@
     "090aade9d756"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Agents/Circumstances to Avoid"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -4268,6 +4920,45 @@
   },
   {
    "case_id": "PRAC-COL1A1",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "7561b9b500a9"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "73ceb6b21bd8"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "e53c9a030cef"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
    "section": "supportive_management",
    "action_id": "drug:chembl:CHEMBL3833333",
    "action": "cannabinoids",
@@ -4332,8 +5023,8 @@
     "388071730439"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Treatment of Manifestations (older chapter without Targeted Therapies)"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -4769,8 +5460,8 @@
     "570ac52a5e03"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: Joint instability"
+   "status": "conditional",
+   "reason": "depends on: Joint instability"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -5000,13 +5691,12 @@
    "action": "physiotherapist",
    "branch": "MONDO:0007522",
    "evidence_ids": [
-    "00543e6e790f",
     "08924139b5df",
     "577414011ba7"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: contractures and head and spinal deformity"
+   "status": "applicable",
+   "reason": "Management / Pregnancy Management"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -5015,13 +5705,334 @@
    "action": "physiotherapist",
    "branch": "MONDO:0030854",
    "evidence_ids": [
-    "00543e6e790f",
     "08924139b5df",
     "577414011ba7"
    ],
    "records": 1,
+   "status": "applicable",
+   "reason": "Management / Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the last coding exon: skipping it would remove the stop codon. Failed criterion: this is the last coding exon: skipping it would remove the stop codon"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the last coding exon: skipping it would remove the stop codon. Failed criterion: this is the last coding exon: skipping it would remove the stop codon"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [
+    "31dfe9cff2ef"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "gene replacement (AAV): theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [
+    "5d3019a5ddbb"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "gene replacement (AAV): theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [
+    "31dfe9cff2ef"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [
+    "5d3019a5ddbb"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [
+    "31dfe9cff2ef"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach. unassessable_reason: no upregulation target looked up for this gene (uORF, NMD exon or antisense transcript: N1C Table S2 not read yet)"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [
+    "5d3019a5ddbb"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach. unassessable_reason: no upregulation target looked up for this gene (uORF, NMD exon or antisense transcript: N1C Table S2 not read yet)"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL1255840",
+   "action": "NEBOGLAMINE",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: NEBOGLAMINE increases the activity of GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL1255840",
+   "action": "NEBOGLAMINE",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: NEBOGLAMINE increases the activity of GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL3544917",
+   "action": "RAPASTINEL",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: RAPASTINEL acts as a partial agonist at GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL3544917",
+   "action": "RAPASTINEL",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: RAPASTINEL acts as a partial agonist at GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL3989872",
+   "action": "APIMOSTINEL",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: APIMOSTINEL acts as a partial agonist at GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "drug_repurposing",
+   "action_id": "drug:chembl:CHEMBL3989872",
+   "action": "APIMOSTINEL",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "ungraded",
+   "reason": "Hypothesis; no patient applicability grade recorded. A hypothesis only: APIMOSTINEL acts as a partial agonist at GRIN2B (selectivity for this gene's subunit is unknown). There is no experimental evidence in this disease and no human precedent."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:6719",
+   "action": "memantine",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [
+    "9e386be80f6f"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Improvement has been reported in {measures}, while other measures did not improve; this is not proof of efficacy."
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:9671",
+   "action": "L-serine",
+   "branch": "MONDO:0014505",
+   "evidence_ids": [
+    "46ccc7cb1507",
+    "97e7df7528a3"
+   ],
+   "records": 1,
    "status": "conditional",
-   "reason": "depends on: contractures and head and spinal deformity"
+   "reason": "depends on: variant function"
+  },
+  {
+   "case_id": "PRAC-GRIN2B",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0013509",
+   "evidence_ids": [
+    "005ea6d9b35b"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the last coding exon: skipping it would remove the stop codon. Failed criterion: this is the last coding exon: skipping it would remove the stop codon"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "b188930aee4f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "gene replacement (AAV): does not apply to this variant - the coding sequence is 8145 nt, beyond the roughly 4.7 kb an AAV vector carries (measured ceiling 5200 nt, Wu 2010), so the full-length cDNA does not fit in a single vector. Failed criterion: the coding sequence is 8145 nt, beyond the roughly 4.7 kb an AAV vector carries (measured ceiling 5200 nt, Wu 2010), so the full-length cDNA does not fit in a single vector"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "b188930aee4f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "b188930aee4f"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach. unassessable_reason: no upregulation target looked up for this gene (uORF, NMD exon or antisense transcript: N1C Table S2 not read yet)"
   },
   {
    "case_id": "PRAC-KMT2B",
@@ -5064,6 +6075,19 @@
   },
   {
    "case_id": "PRAC-KMT2B",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "83ec962214fe"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
    "section": "supportive_management",
    "action_id": "drug:name:antimuscarinic anticholinergic agents",
    "action": "antimuscarinic (anticholinergic) agents",
@@ -5087,8 +6111,8 @@
     "9840d364d00c"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: dystonia"
+   "status": "conditional",
+   "reason": "depends on: dystonia"
   },
   {
    "case_id": "PRAC-KMT2B",
@@ -5129,8 +6153,8 @@
     "c5f6bf1e4f36"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: dystonia"
+   "status": "conditional",
+   "reason": "depends on: dystonia"
   },
   {
    "case_id": "PRAC-KMT2B",
@@ -5143,8 +6167,8 @@
     "a31e778bd8fb"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: dystonia"
+   "status": "conditional",
+   "reason": "depends on: dystonia"
   },
   {
    "case_id": "PRAC-KMT2B",
@@ -5227,8 +6251,8 @@
     "701ab87a4fd5"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: dystonia"
+   "status": "conditional",
+   "reason": "depends on: dystonia"
   },
   {
    "case_id": "PRAC-KMT2B",
@@ -5413,6 +6437,319 @@
    "reason": "Management / Treatment of Manifestations"
   },
   {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "ASO exon skipping: cannot be assessed from the information available - missing: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here). unassessable_reason: functional domains of the exon not checked (UniProt domain annotation not connected); no search for natural exon skipping or in-frame deletions (ClinVar / gnomAD / PubMed not connected here)"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "c5bbb2857bbd"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "gene replacement (AAV): does not apply to this variant - the coding sequence is 8517 nt, beyond the roughly 4.7 kb an AAV vector carries (measured ceiling 5200 nt, Wu 2010), so the full-length cDNA does not fit in a single vector. Failed criterion: the coding sequence is 8517 nt, beyond the roughly 4.7 kb an AAV vector carries (measured ceiling 5200 nt, Wu 2010), so the full-length cDNA does not fit in a single vector"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "c5bbb2857bbd"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "c5bbb2857bbd"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach. unassessable_reason: no upregulation target looked up for this gene (uORF, NMD exon or antisense transcript: N1C Table S2 not read yet)"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:name:vitamin d 3 ointment",
+   "action": "vitamin D(3) ointment",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "5a22aaddb28a",
+    "a86194c2e5a0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:10432",
+   "action": "thalidomide",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "b8942bbcd00c",
+    "cf79e80f4622"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1312397",
+   "action": "regorafenib",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "04948ff97f8e",
+    "d6f0073cbf7a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1363268",
+   "action": "cabozantinib",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "e1932250742b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:141704",
+   "action": "everolimus",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "32975f427073",
+    "9d5cbaca49b2"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1425099",
+   "action": "trametinib",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "1ac8ade1d589",
+    "7d3e6d867b13",
+    "9cdb4b6762ff",
+    "badff57edd6f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; other; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:1592254",
+   "action": "pirfenidone",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "4d4bb7b2e637"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:2183102",
+   "action": "Pexidartinib",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "910bec280c1b",
+    "c94b666e3b84"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: other; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:2955",
+   "action": "curcumin",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "4544527e1b3a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:35302",
+   "action": "sirolimus",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "8216a6752766",
+    "96aa43832b5f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:6472",
+   "action": "lovastatin",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "199c666f46db",
+    "37c9fa2fdd5f",
+    "3c621d85d13c",
+    "8cdeee676c0f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; other; precedent population"
+  },
+  {
+   "case_id": "PRAC-NF1",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:73056",
+   "action": "risedronate sodium",
+   "branch": "MONDO:0018975",
+   "evidence_ids": [
+    "78d97d194c71",
+    "ae9b5f1d2d67"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: manifestation; precedent population"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - exon coding length 88 nt is not a multiple of 3, so skipping it disrupts the reading frame (restoring the frame is the aim for loss-of-function variants). Failed criterion: exon coding length 88 nt is not a multiple of 3, so skipping it disrupts the reading frame (restoring the frame is the aim for loss-of-function variants) exceptions: N1C: consecutive out-of-frame exons may be skipped together to keep the reading frame (designing such an ASO is itself difficult); N1C: an out-of-frame exon may be skipped when a whole out-of-frame exon is already deleted"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "31b567cc4032"
+   ],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "gene replacement (AAV): theoretically possible on molecular grounds alone."
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "31b567cc4032"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "RNA knockdown: does not apply to this variant - the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further. Failed criterion: the mechanism is loss of function, so knocking the transcript down would reduce the remaining function further"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "31b567cc4032"
+   ],
+   "records": 1,
+   "status": "not_graded",
+   "reason": "upregulation from the normal allele: no eligibility grade exists for this approach - hemizygous leaves no normal copy to raise. Failed criterion: hemizygous leaves no normal copy to raise"
+  },
+  {
    "case_id": "PRAC-OTC",
    "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT06488313",
@@ -5474,8 +6811,8 @@
     "1c9248daee6c"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Agents/Circumstances to Avoid"
+   "status": "conditional",
+   "reason": "depends on: the source passage concerns this patient's disease"
   },
   {
    "case_id": "PRAC-OTC",
@@ -5545,6 +6882,19 @@
    "records": 1,
    "status": "conditional",
    "reason": "depends on: Hyper- ammonemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "off_label_expanded_access",
+   "action_id": "searched_none:off_label_expanded_access",
+   "action": "None found",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "ff29fbad3cb4"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched PubMed and expanded-access records; no qualifying precedent"
   },
   {
    "case_id": "PRAC-OTC",
@@ -5784,12 +7134,11 @@
    "action": "nitrogen-scavenging drugs",
    "branch": "MONDO:0010703",
    "evidence_ids": [
-    "5bf4a0c4170d",
     "c99e1bf9b597"
    ],
    "records": 1,
-   "status": "conditional",
-   "reason": "depends on: hyperammonemic episodes"
+   "status": "applicable",
+   "reason": "Management / Prevention of Primary Manifestations / Medical and Dietary Prevention of Hype"
   },
   {
    "case_id": "PRAC-OTC",
@@ -6166,6 +7515,72 @@
   },
   {
    "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the first coding exon: skipping it would remove the start codon. Failed criterion: this is the first coding exon: skipping it would remove the start codon exceptions: N1C: theoretically possible if a nearby in-frame start codon exists"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "gene replacement (AAV): cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "RNA knockdown: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "upregulation from the normal allele: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
    "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT04199000",
    "action": "Clinical and Basic Investigations Into Congenital Disorders of Glycosylation (NCT04199000)",
@@ -6239,6 +7654,21 @@
   },
   {
    "case_id": "PRAC-SLC35A2-ex7",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:4626",
+   "action": "D-galactose",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "362600d33d4a",
+    "3d4d35a502d1",
+    "c0b44fc39d74"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
    "section": "supportive_management",
    "action_id": "supportive_measure:epilepsy_benzodiazepine_rescue_for_prolonged_seizures_iv_lorazepam_or_iv_diazepam",
    "action": "benzodiazepine rescue for prolonged seizures (IV lorazepam or IV diazepam)",
@@ -6263,6 +7693,72 @@
    "records": 1,
    "status": "applicable",
    "reason": "symptomatic: Seizure"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_exon_skipping",
+   "action": "ASO exon skipping",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_eligible",
+   "reason": "ASO exon skipping: not eligible - this is the first coding exon: skipping it would remove the start codon. Failed criterion: this is the first coding exon: skipping it would remove the start codon exceptions: N1C: theoretically possible if a nearby in-frame start codon exists"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:aso_splice_correction",
+   "action": "ASO splice correction",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "ASO splice correction: does not apply to this variant - no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected. Failed criterion: no evidence that this variant changes splicing; this is a limit of our inputs, not evidence that splicing is unaffected"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:base_or_prime_editing",
+   "action": "base or prime editing",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "theoretically_possible",
+   "reason": "base or prime editing: theoretically possible on molecular grounds alone. unassessable_reason: whether a suitable PAM and editing window exist is not assessed"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:gene_replacement",
+   "action": "gene replacement (AAV)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "gene replacement (AAV): cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:rna_knockdown",
+   "action": "RNA knockdown",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "RNA knockdown: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "bespoke_therapies",
+   "action_id": "modality:wt_upregulation",
+   "action": "upregulation from the normal allele",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [],
+   "records": 1,
+   "status": "unable_to_assess",
+   "reason": "upregulation from the normal allele: cannot be assessed from the information available - missing: disease mechanism not stated in GeneReviews (no other mechanism source is connected). unassessable_reason: disease mechanism not stated in GeneReviews (no other mechanism source is connected)"
   },
   {
    "case_id": "PRAC-SLC35A2-ex8",
@@ -6339,6 +7835,21 @@
   },
   {
    "case_id": "PRAC-SLC35A2-ex8",
+   "section": "off_label_expanded_access",
+   "action_id": "drug:rxcui:4626",
+   "action": "D-galactose",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "362600d33d4a",
+    "3d4d35a502d1",
+    "c0b44fc39d74"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: precedent population"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
    "section": "supportive_management",
    "action_id": "supportive_measure:epilepsy_benzodiazepine_rescue_for_prolonged_seizures_iv_lorazepam_or_iv_diazepam",
    "action": "benzodiazepine rescue for prolonged seizures (IV lorazepam or IV diazepam)",
@@ -6366,9 +7877,9 @@
   }
  ],
  "provenance": {
-  "tag": "step3a.2-accepted",
-  "code_commit": "652f6c8",
-  "manifest_sha256": "edee95f682e2de3e2b536455f2be3999ffafad6815ebb000f15910637765aa2f",
-  "note": ""
+  "kind": "approved_composite",
+  "parent_snapshot_sha256": "2c7e28736e9d20568e689a892088c8e9b0ef3098d2680a277f5cfc679aaf48e8",
+  "reviewed_live_snapshot_sha256": "7775051118672401d69bab6022e81262d5936af7d9cf214139357bbeb69f7810",
+  "note": "Only explicitly approved A/B/D/E rows adopted. Rejected C, pending ID-only/details changes, unrelated additions, two HPO-only changes and all RETEST first baselines remain unadopted."
  }
 }

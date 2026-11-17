@@ -53,3 +53,5 @@
 脚本重新计算 diff，要求每个 change_id 精确覆盖且逐条批准，校验基线 / 候选 SHA-256、提交号、批准人和理由。
 验证失败不会修改 current 或批准记录。先追加批准记录，再原子替换 current；历史目录从不写入。
 未获批准的变化不得进入 current，不运行 promote 来掩盖回归。
+
+2026-11-17 首次部分升级已按用户审核完成：A 5、B 5、D 11，及 E 的 124 个后续步骤新增、2 个 hypertonic saline 键规范化、4 个 over_cap 记录，共 151 项。current 为明确批准行组成的复合快照（529 行），不是某一次完整账本的逐字替代；provenance 和 approved_live_component 保留来源。C、61 项证据细节、其他未批准新增/删除及 RETEST 首个基线均未纳入。完整批准清单见 approvals.md；后续修复仍须对这个新 current 出 diff。

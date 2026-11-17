@@ -364,3 +364,12 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 病例原文明写性别时以原文为准。仅在原文性别未知、HGNC 明确基因位置在 X 染色体、Step 1 合子状态为 hemizygous 时推断男性。常染色体基因、其他合子状态或染色体位置未知均不推断。原始 Step 2 事实保持原文提取结果；Step 3 把合子状态和 HGNC 位置作为已验证前提，另记 reasoning 证据，病人上下文和条件引用标记为推断，不能冒充原文。
 
 支持核查“假拦 3/17”不是本轮新增：`out/archive/step3-fix-accepted-20261115/acc_acceptance_step3_0.log` 已有同样结果。三条为 DMD-1（读码框的结论 / 范围被过严判定）、CLAIM-GEMIN5-COQ10（未把上下文中的病人身份连到改善结论）、CLAIM-RRM2B-VALPROATE-CORRECT（未把“限于例外”与病种 / 一般避免的上下文连接）。本轮不改其提示词或决策方法。
+
+## Evidence ID 冻结（2026-11-17，用户审核要求）
+
+冻结当前 `ledger.evidence_id` 和三类构造函数的身份输入，不重编号已有记录：SHA-256(JSON 元组，sort_keys=True、ensure_ascii=False) 的前 12 位。
+- sourced：来源类型、来源 ID、claim、章节、行动键、适用分支、按现行规则归一化的原文。
+- reasoning：排序后的前提 ID、claim、章节、行动键、适用分支。
+- negative：数据库、查询、章节、适用分支。
+
+相同来源、相同原文及相同身份上下文重复获取时 ID 必须不变；获取时间、LLM/代码生产者或缓存传输信息不参与 sourced 身份。不得借“冻结”合并不同 claim / 行动 / 分支，也不把新增或改写证据冒充 ID 迁移。黄金向量与重复获取回归见 `tests/test_evidence_id_freeze.py`。本次 61 项差异审计见 `docs/evidence_id_audit_20261117.md`：历史 ID 全部能用现行算法重算，故不满足“仅 ID 生成方式改变”的批量批准条件，继续待审。

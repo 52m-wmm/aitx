@@ -1,0 +1,508 @@
+{
+ "description": "Stability observations only. No clinical override and no prompt examples. Current cached disagreement is recorded, not corrected by a case-specific rule.",
+ "cases": [
+  {
+   "id": "PRAC-KMT2B:drug:name:benzodiazepines",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "label": "benzodiazepines",
+   "group": "kmt2b_dystonia",
+   "question": "meets:r1",
+   "header": "GeneReviews NBK493766 (KMT2B-Related Disorders), section: Management / Treatment of Manifestations",
+   "passage": "Paragraph 2 [context: Pharmacologic treatment of dystonia; Anti-dystonic agents.]: Anti-dystonic agents. Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0007325",
+      "label": "Generalized dystonia",
+      "status": "present",
+      "quote": "generalized dystonia"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "KMT2B",
+      "transcript": "NM_014727.3",
+      "variant_cdna": "c.8079delC",
+      "variant_protein": "p.(Ile2694SerfsTer44)",
+      "zygosity": "heterozygous",
+      "variant_class": "frameshift",
+      "ptc_aa_position": 2737,
+      "fraction_of_protein_retained": 0.9919,
+      "nmd": "likely_escapes",
+      "exon": 37,
+      "exons_total": 37
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "dystonia",
+     "requirement_evidence": "9840d364d00c",
+     "applies_to": [
+      "MONDO:0015004"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Generalized dystonia",
+      "quote": "generalized dystonia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0007325",
+       "relation": "more specific than HP:0001332",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "unknown",
+     "result": "unknown",
+     "note": "HPO match: exact HPO name or synonym | context check: the patient's finding was not shown to reach the stated degree",
+     "alternative": "NBK493766 Management / Treatment of Manifestations: Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+     "context_check": "degree"
+    }
+   ],
+   "cached_answer": {
+    "final": "split",
+    "answers": [
+     "not_stated",
+     "yes",
+     "yes"
+    ],
+    "quote": "Anti-dystonic agents"
+   },
+   "cached_call_ids": [
+    "2965b8a445b49221d31fbdfdb8074046f817da026546391acc46c6762a2abcc1",
+    "38ee448a2b754ff47e4c87a3336410614093b095ef1b350394931822b76d7746",
+    "b4349966ee59def33662b4208dc8afa06e2e33d333dbd39bcd50ef50255e2773"
+   ],
+   "observation": "Known finding with split votes; do not override status by case rule."
+  },
+  {
+   "id": "PRAC-KMT2B:drug:name:trihexiphenidyl",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "label": "trihexiphenidyl",
+   "group": "kmt2b_dystonia",
+   "question": "meets:r1",
+   "header": "GeneReviews NBK493766 (KMT2B-Related Disorders), section: Management / Treatment of Manifestations",
+   "passage": "Paragraph 2 [context: Pharmacologic treatment of dystonia; Anti-dystonic agents.]: Anti-dystonic agents. Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0007325",
+      "label": "Generalized dystonia",
+      "status": "present",
+      "quote": "generalized dystonia"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "KMT2B",
+      "transcript": "NM_014727.3",
+      "variant_cdna": "c.8079delC",
+      "variant_protein": "p.(Ile2694SerfsTer44)",
+      "zygosity": "heterozygous",
+      "variant_class": "frameshift",
+      "ptc_aa_position": 2737,
+      "fraction_of_protein_retained": 0.9919,
+      "nmd": "likely_escapes",
+      "exon": 37,
+      "exons_total": 37
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "dystonia",
+     "requirement_evidence": "b4e3a9b9244c",
+     "applies_to": [
+      "MONDO:0015004"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Generalized dystonia",
+      "quote": "generalized dystonia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0007325",
+       "relation": "more specific than HP:0001332",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "unknown",
+     "result": "unknown",
+     "note": "HPO match: exact HPO name or synonym | context check: the patient's finding was not shown to reach the stated degree",
+     "alternative": "NBK493766 Management / Treatment of Manifestations: Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+     "context_check": "degree"
+    }
+   ],
+   "cached_answer": {
+    "final": "split",
+    "answers": [
+     "not_stated",
+     "yes",
+     "yes"
+    ],
+    "quote": "Pharmacologic treatment of dystonia"
+   },
+   "cached_call_ids": [
+    "4d2fac66085367679d27f958fac9c3cce51f173e1bf00336af426a782ac2e972",
+    "eb29966309ada24f9bf76e81f66bded45b6069b40a2e50305899480f8e3bcc42",
+    "927c49ffb39261b56e5ea1bcb4256cd08fec83cb9dbc3c7e186ddfe75bbd9d74"
+   ],
+   "observation": "Known finding with split votes; do not override status by case rule."
+  },
+  {
+   "id": "PRAC-KMT2B:drug:rxcui:10390",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "label": "tetrabenazine",
+   "group": "kmt2b_dystonia",
+   "question": "meets:r1",
+   "header": "GeneReviews NBK493766 (KMT2B-Related Disorders), section: Management / Treatment of Manifestations",
+   "passage": "Paragraph 2 [context: Pharmacologic treatment of dystonia; Anti-dystonic agents.]: Anti-dystonic agents. Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0007325",
+      "label": "Generalized dystonia",
+      "status": "present",
+      "quote": "generalized dystonia"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "KMT2B",
+      "transcript": "NM_014727.3",
+      "variant_cdna": "c.8079delC",
+      "variant_protein": "p.(Ile2694SerfsTer44)",
+      "zygosity": "heterozygous",
+      "variant_class": "frameshift",
+      "ptc_aa_position": 2737,
+      "fraction_of_protein_retained": 0.9919,
+      "nmd": "likely_escapes",
+      "exon": 37,
+      "exons_total": 37
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "dystonia",
+     "requirement_evidence": "a31e778bd8fb",
+     "applies_to": [
+      "MONDO:0015004"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Generalized dystonia",
+      "quote": "generalized dystonia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0007325",
+       "relation": "more specific than HP:0001332",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "unknown",
+     "result": "unknown",
+     "note": "HPO match: exact HPO name or synonym | context check: the patient's finding was not shown to reach the stated degree",
+     "alternative": "NBK493766 Management / Treatment of Manifestations: Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+     "context_check": "degree"
+    }
+   ],
+   "cached_answer": {
+    "final": "split",
+    "answers": [
+     "yes",
+     "yes",
+     "not_stated"
+    ],
+    "quote": "dystonia"
+   },
+   "cached_call_ids": [
+    "e2a6cf992698fb2d26864ce03f15ff80147608fd43dbccf2e317f95cb46170c9",
+    "531df3f60723904f152e993f635c4a822822b0a821c788890d4e633ff79e77c7",
+    "eebec36624dcad25ab0c943c2ff1a1f33518f7eb5130d0b1ecbeb08d97798626"
+   ],
+   "observation": "Known finding with split votes; do not override status by case rule."
+  },
+  {
+   "id": "PRAC-KMT2B:drug:rxcui:6375",
+   "case": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "label": "levodopa",
+   "group": "kmt2b_dystonia",
+   "question": "meets:r1",
+   "header": "GeneReviews NBK493766 (KMT2B-Related Disorders), section: Management / Treatment of Manifestations",
+   "passage": "Paragraph 2 [context: Pharmacologic treatment of dystonia; Anti-dystonic agents.]: Anti-dystonic agents. Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0007325",
+      "label": "Generalized dystonia",
+      "status": "present",
+      "quote": "generalized dystonia"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "KMT2B",
+      "transcript": "NM_014727.3",
+      "variant_cdna": "c.8079delC",
+      "variant_protein": "p.(Ile2694SerfsTer44)",
+      "zygosity": "heterozygous",
+      "variant_class": "frameshift",
+      "ptc_aa_position": 2737,
+      "fraction_of_protein_retained": 0.9919,
+      "nmd": "likely_escapes",
+      "exon": 37,
+      "exons_total": 37
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "dystonia",
+     "requirement_evidence": "385242b4fc55",
+     "applies_to": [
+      "MONDO:0015004"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Generalized dystonia",
+      "quote": "generalized dystonia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0007325",
+       "relation": "more specific than HP:0001332",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "unknown",
+     "result": "unknown",
+     "note": "HPO match: exact HPO name or synonym | context check: the patient's finding was not shown to reach the stated degree",
+     "alternative": "NBK493766 Management / Treatment of Manifestations: Use of levodopa and other agents (e.g., trihexiphenidyl, baclofen, gabapentin, tetrabenazine, benzodiazepines) has not resulted in long-term benefit for most individuals with KMT2B-related disorders [Zech et al 2016, Meyer et al 2017, Zech et al 2017a, Lange et al 2021, Aksoy et al 2022]; nonetheless, a trial of these anti-dystonia agents would be considered reasonable.",
+     "context_check": "degree"
+    }
+   ],
+   "cached_answer": {
+    "final": "split",
+    "answers": [
+     "yes",
+     "not_stated",
+     "not_stated"
+    ],
+    "quote": "Pharmacologic treatment of dystonia"
+   },
+   "cached_call_ids": [
+    "f35f648b5dd45ba0c0442ff9330ceaecd6d8d6ec24f6cd2769b4af0acba33d38",
+    "a47a232e9f5622fa85b8c1a53addc95dd7ac65c6a93cc3a95c0d0770e5157991",
+    "d14f1db4564c8d0c310ac2baee72434a4a663af0da11ebf3e19cf13b931bfe34"
+   ],
+   "observation": "Known finding with split votes; do not override status by case rule."
+  },
+  {
+   "id": "PRAC-ANO10:drug:rxcui:35623",
+   "case": "PRAC-ANO10",
+   "section": "supportive_management",
+   "label": "riluzole",
+   "group": "ataxia_mixed_etiology",
+   "question": "evidence",
+   "header": "GeneReviews NBK1138 (Hereditary Ataxia Overview), section: Management of Hereditary Ataxia / Treatment of Manifestations",
+   "passage": "Table 6. Treatment of Manifestations in Individuals with a Hereditary Ataxia\nRow 2: [Manifestation: Ataxia] [Treatment: Pharmacologic treatment] [Considerations/Other: Consider riluzole (100 mg/d 3), the only drug shown to improve ataxia symptoms in persons w/ataxia of mixed etiologies; use requires monitoring of liver enzymes.]",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0002073",
+      "label": "Progressive cerebellar ataxia",
+      "status": "present",
+      "quote": "progressive cerebellar ataxia"
+     },
+     {
+      "hpo_id": "HP:0009830",
+      "label": "Peripheral neuropathy",
+      "status": "present",
+      "quote": "peripheral neuropathy"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "ANO10",
+      "transcript": "NM_018075.5",
+      "variant_cdna": "c.289del",
+      "variant_protein": "p.(Met97Ter)",
+      "zygosity": "homozygous",
+      "variant_class": "nonsense",
+      "ptc_aa_position": 97,
+      "fraction_of_protein_retained": 0.1455,
+      "nmd": "likely_triggers",
+      "exon": 3,
+      "exons_total": 13
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "Ataxia",
+     "requirement_evidence": "1f09f4ade8bc",
+     "applies_to": [
+      "MONDO:0013392"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Progressive cerebellar ataxia",
+      "quote": "progressive cerebellar ataxia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0002073",
+       "relation": "more specific than HP:0001251",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "satisfies",
+     "result": "pass",
+     "note": "HPO match: exact HPO name or synonym",
+     "alternative": "NBK1138 Management of Hereditary Ataxia / Treatment of Manifestations: Consider riluzole (100 mg/d 3), the only drug shown to improve ataxia symptoms in persons w/ataxia of mixed etiologies; use requires monitoring of liver enzymes."
+    },
+    {
+     "id": "r2",
+     "kind": "other",
+     "requirement": "the evidence for this advice comes from patients with this disease",
+     "requirement_evidence": "a7590612ba98",
+     "applies_to": [
+      "MONDO:0013392"
+     ],
+     "patient_fact": {
+      "field": "source scope",
+      "value": null,
+      "quote": null,
+      "step": null
+     },
+     "patient_status": "unknown",
+     "result": "unknown",
+     "note": "context check: the passage bases this advice on animals or cells, or on patients with another gene or subtype",
+     "context_check": "scope"
+    }
+   ],
+   "cached_answer": {
+    "final": "other_gene_or_subtype_patients",
+    "answers": [
+     "other_gene_or_subtype_patients",
+     "other_gene_or_subtype_patients",
+     "other_gene_or_subtype_patients"
+    ],
+    "quote": "the only drug shown to improve ataxia symptoms in persons w/ataxia of mixed etiologies"
+   },
+   "cached_call_ids": [
+    "29bcdcf3faf66d0e0dc9fb726f30969f1576b54b52436a18f97a667c84d4cc93",
+    "704086e0eef851ab4816f3699a3e8811664c860050447e9f13df0ceeda5d2846",
+    "f89e95ce79d55d3a644da0e4589165e9a5489719918e7519a3e81d4e635af6b8"
+   ],
+   "observation": "Mixed-etiology descriptions received opposite evidence classifications; observe consistency, do not override status."
+  },
+  {
+   "id": "PRAC-ANO10:procedure:transcranial_magnetic_stimulation",
+   "case": "PRAC-ANO10",
+   "section": "supportive_management",
+   "label": "transcranial magnetic stimulation",
+   "group": "ataxia_mixed_etiology",
+   "question": "evidence",
+   "header": "GeneReviews NBK1138 (Hereditary Ataxia Overview), section: Management of Hereditary Ataxia / Treatment of Manifestations",
+   "passage": "Table 6. Treatment of Manifestations in Individuals with a Hereditary Ataxia\nRow 3: [Manifestation: Ataxia] [Treatment: Transcranial magnetic stimulation] [Considerations/Other: Consider transcranial magnetic stimulation over cerebellum, 2 which may improve cerebellar motor signs after 21 daily treatments (tested in persons w/various causes of spinocerebellar degeneration).]",
+   "patient": {
+    "age_months": null,
+    "sex": "unknown",
+    "phenotypes": [
+     {
+      "hpo_id": "HP:0002073",
+      "label": "Progressive cerebellar ataxia",
+      "status": "present",
+      "quote": "progressive cerebellar ataxia"
+     },
+     {
+      "hpo_id": "HP:0009830",
+      "label": "Peripheral neuropathy",
+      "status": "present",
+      "quote": "peripheral neuropathy"
+     }
+    ],
+    "variants": [
+     {
+      "gene": "ANO10",
+      "transcript": "NM_018075.5",
+      "variant_cdna": "c.289del",
+      "variant_protein": "p.(Met97Ter)",
+      "zygosity": "homozygous",
+      "variant_class": "nonsense",
+      "ptc_aa_position": 97,
+      "fraction_of_protein_retained": 0.1455,
+      "nmd": "likely_triggers",
+      "exon": 3,
+      "exons_total": 13
+     }
+    ]
+   },
+   "requirements": [
+    {
+     "id": "r1",
+     "kind": "other",
+     "requirement": "Ataxia",
+     "requirement_evidence": "d6f00ec61f06",
+     "applies_to": [
+      "MONDO:0013392"
+     ],
+     "patient_fact": {
+      "field": "manifestation",
+      "value": "Progressive cerebellar ataxia",
+      "quote": "progressive cerebellar ataxia",
+      "step": 2,
+      "match": {
+       "hpo": "HP:0002073",
+       "relation": "more specific than HP:0001251",
+       "basis": "exact HPO name or synonym"
+      }
+     },
+     "patient_status": "satisfies",
+     "result": "pass",
+     "note": "HPO match: exact HPO name or synonym",
+     "alternative": "NBK1138 Management of Hereditary Ataxia / Treatment of Manifestations: Consider transcranial magnetic stimulation over cerebellum, 2 which may improve cerebellar motor signs after 21 daily treatments (tested in persons w/various causes of spinocerebellar degeneration)."
+    }
+   ],
+   "cached_answer": {
+    "final": "this_disease_patients",
+    "answers": [
+     "this_disease_patients",
+     "this_disease_patients",
+     "this_disease_patients"
+    ],
+    "quote": "tested in persons w/various causes of spinocerebellar degeneration"
+   },
+   "cached_call_ids": [
+    "43c805cb0aaba864e48182f8d91767074860a8ba65cc94d601f9426c7b342a8e",
+    "f0ddf6c121ae9e77f52acb59d5a13fe952ce08f3fc8cc05d106425bf1f7311a9",
+    "f76e09a6655cf6c145d64667ab4dc3846e8f45e31a2fd4e3471ab7c4324fc397"
+   ],
+   "observation": "Mixed-etiology descriptions received opposite evidence classifications; observe consistency, do not override status."
+  }
+ ]
+}

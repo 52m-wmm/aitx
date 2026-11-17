@@ -139,3 +139,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 - `baselines/historical/step3a.2-accepted/snapshot.json` 来自真实验收存档（提交 652f6c8，原 manifest SHA 核对），只读且永不覆盖。现有 15 例中只覆盖 11 例，4 个 RETEST 当时不存在，明确为缺基线。**current 仅初始化为 historical 的字节副本，尚未升级**。
 - `scripts/promote_baseline.py` 只能在用户逐条批准实际 diff 后运行。批准文件必须精确覆盖每个 change_id，并匹配基线/候选 SHA-256 和 HEAD，含实际批准人、日期、总体及逐条理由；缺任何批准就停止。每次升级只追加 `baselines/approvals.md`，历史不改，代理不得自行批准。格式与命令见 `baselines/README.md`。
 - 首次对比：历史 409、当前 790 个行动×分支项目；29 项直接匹配的状态变化，其中 11 项降为 not_applicable（KMT2B 6、CFTR 5）；另有细节变化 61、新增 231、删除 7、缺历史病例基线项目 157。完整工具输出在 `out/status_diff/initial-20261117/`，逐项追因与潜在缺陷在 `docs/status_baseline_review_20261117.md`。本轮没有改账本、重跑临床流水线或升级基线，真实 LLM 调用 0 次、费用 $0；全量离线 1223/1223。
+
+**2026-11-17 基线审核落实**：用户批准 A 目的规则5、B CFTR新生儿5、D投票核查不确定性11、E指定结构变化。已先通过 `promote_baseline.py` 升级 **151 项**（A5/B5/D11/E新步骤124/键规范化2/over_cap4），current 529 行；历史409行只读未动。D11含6 scope+5 degree，两项 small-joint HPO 未知不在此批准组。C6、61项证据细节、其他未批准新增/删除、RETEST首次基线均未升级。4个RETEST待本轮报告审阅通过后再以当时结果建首个基线。
+
+两项试验均仍RECRUITING，但NCT01822834明确non-CF/NTM且排除CF，NCT07513051是新生儿呼吸窘迫/CF-CPAP，与该CFTR病例无关，不是召回缺口，不改检索。61项ID差异不是算法变更：18仅新增证据、43内容/集合变化，旧ID全部能用当前算法重算；不满足“仅ID算法变更”的批量批准条件，继续待审。审计见 `docs/trial_recall_audit_20261117.md` 与 `docs/evidence_id_audit_20261117.md`。当前ID实现和身份上下文已冻结并补黄金向量测试；新增6条核查稳定性观察（KMT2B4药、ANO10两项混合病因），只记录缓存分歧，不添加病例代码规则。升级前离线1227项通过。接下来才实施已授权C修复与文字修正，对新current出diff，不自动升级修复结果。
