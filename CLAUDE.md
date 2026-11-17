@@ -134,9 +134,9 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 
 ## 状态基线与报告契约（2026-11-17，当前必须遵循）
 
-- 报告契约当前版本为 `docs/step4_contract.md` **v2.0**；Ranking、Summary、Clinical Trial Table 以其第 4 / 6.4 / 6.6 节为准，覆盖同主题旧记录。本轮只固定规范和工具，不声称完成第四轮临床 / 报告修复。
+- 报告契约当前版本为 `docs/step4_contract.md` **v2.0**；Ranking、Summary、Clinical Trial Table 以其第 4 / 6.4 / 6.6 节为准，覆盖同主题旧记录。实现及尚未完成的缓存依赖见下方最新运行记录，不将局部通过当作整轮通过。
 - 每次修改 Evidence Ledger 或判定逻辑，改前保存快照，改后必须附 `scripts/status_diff.py` 对 **baselines/current** 的输出（snapshot.json、diff.json、diff.md）；它逐病例记录行动×分支的状态、原因、Evidence ID，列出所有新增/删除、状态、原因和证据变化。缺输入报错；没有历史基线时不补旧状态。未解释的变化视为潜在缺陷，必须调查；账本自带 reason 不等于合理解释或批准。
-- `baselines/historical/step3a.2-accepted/snapshot.json` 来自真实验收存档（提交 652f6c8，原 manifest SHA 核对），只读且永不覆盖。现有 15 例中只覆盖 11 例，4 个 RETEST 当时不存在，明确为缺基线。**current 仅初始化为 historical 的字节副本，尚未升级**。
+- `baselines/historical/step3a.2-accepted/snapshot.json` 来自真实验收存档（提交 652f6c8，原 manifest SHA 核对），只读且永不覆盖。现有 15 例中只覆盖 11 例，4 个 RETEST 当时不存在，明确为缺基线。current 初始化为 historical 的字节副本，2026-11-17 已按用户明确批准的 A/B/D/E 部分升级为 529 行；未批准项不在其中。
 - `scripts/promote_baseline.py` 只能在用户逐条批准实际 diff 后运行。批准文件必须精确覆盖每个 change_id，并匹配基线/候选 SHA-256 和 HEAD，含实际批准人、日期、总体及逐条理由；缺任何批准就停止。每次升级只追加 `baselines/approvals.md`，历史不改，代理不得自行批准。格式与命令见 `baselines/README.md`。
 - 首次对比：历史 409、当前 790 个行动×分支项目；29 项直接匹配的状态变化，其中 11 项降为 not_applicable（KMT2B 6、CFTR 5）；另有细节变化 61、新增 231、删除 7、缺历史病例基线项目 157。完整工具输出在 `out/status_diff/initial-20261117/`，逐项追因与潜在缺陷在 `docs/status_baseline_review_20261117.md`。本轮没有改账本、重跑临床流水线或升级基线，真实 LLM 调用 0 次、费用 $0；全量离线 1223/1223。
 
@@ -145,3 +145,5 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 两项试验均仍RECRUITING，但NCT01822834明确non-CF/NTM且排除CF，NCT07513051是新生儿呼吸窘迫/CF-CPAP，与该CFTR病例无关，不是召回缺口，不改检索。61项ID差异不是算法变更：18仅新增证据、43内容/集合变化，旧ID全部能用当前算法重算；不满足“仅ID算法变更”的批量批准条件，继续待审。审计见 `docs/trial_recall_audit_20261117.md` 与 `docs/evidence_id_audit_20261117.md`。当前ID实现和身份上下文已冻结并补黄金向量测试；新增6条核查稳定性观察（KMT2B4药、ANO10两项混合病因），只记录缓存分歧，不添加病例代码规则。升级前离线1227项通过。接下来才实施已授权C修复与文字修正，对新current出diff，不自动升级修复结果。
 
 **2026-11-17 C 修复与第四轮显示实现待缓存验收**：在151项基线升级提交58dd09f之后实施。R15来源措辞仅降为unknown/conditional，保留真实病人不符；Pregnancy Management只作已有同名行动附注，不单独产生行动/缺失信息；split文字为check votes disagreed; unknown，KMT2B四药状态不改。新增GPi/subthalamic DBS验收。按v2.0同步实现来源顺序Ranking、Summary正文一致/只统计显示行动、可读枚举、Note去重/NCT清理与脚注显示。脚注不改原始提取文本或原始Evidence ID，不改提示词/模型参数。离线1236项已过，接下来只缓存一次重生成15例和三份报告、验收、对current输出diff；缺缓存立即停，真实调用先报价，不自动升级C或RETEST首个基线。
+
+**2026-11-17 C 修复缓存阶段结果（部分完成，不能称全部验收通过）**：代码至 `e1b7f56` 已推送，离线 **1238/1238**。实际完成14例整例缓存尝试；COL1A1候选出现physiotherapist两分支applicable→conditional，与用户“只改文字不改状态”冲突，已隔离候选并逐字恢复原正式账本，等待裁决。KMT2B移除孕期独立行动后3c新选中PMID 35418819/37168666/31388109，三篇无抽取缓存；第一篇被$0预算拦在真实请求之前，未覆盖原账本。另行只读3a专项自检和KMT2B五项验收 **5/5**，GPi/subthalamic为conditional且不再被已移除的孕期总类隐藏；另四个孕期独立项移除，四药split仅改文字、状态仍conditional。正式新鲜账本 **13/15**；Step1/2、评测Step1/2、3b **8/8**、3c **7/7**、3e **5/5** PASS；正式3a **25/32 FAIL**（KMT2B5、COL1A1 2过期未计分），3d **2/8 FAIL**（DMD2、KMT2B1、COL1A1 3过期未计分），3.0仍延期。**DMD 因性别推断改动而过期，待下次影响 DMD 的改动时一并重跑**，原文件未改。AGXT/ANO10已生成并通过格式和Step5，58,773/17,692字节；KMT2B完整报告尚未刷新。15例186项试验Known exclusions新增0；对改前的审阅候选共20状态变化、20孕期独立项删除、5细节变化，新增不适用0；两项physiotherapist未发布，其余R15放宽及孕期移除均逐项解释。current529行、历史409行SHA不变，C/证据61项/RETEST均不升级。本轮所有尝试 **真实DeepSeek请求0次，费用$0**，长任务nohup+caffeinate；缓存不传启动门禁CLI --offpeak-only，仍保留真实请求前高峰保护。详见 `docs/c_repair_review_20261117.md`、`out/acceptance/c_repair_review_20261117.json`；对current的正式输出 `out/status_diff/c-repair-20261117/canonical/`，另供审阅的KMT2B仅3a+隔离COL1A1候选输出在 `review/`，不得将它当整例新鲜账本或直接升级。报告：`out/step4/PRAC-AGXT-c33dup.md`、`out/step4/PRAC-ANO10.md`；submission只含这两例。

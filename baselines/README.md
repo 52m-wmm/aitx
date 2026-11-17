@@ -1,7 +1,7 @@
 # 状态基线（v1）
 
 - `historical/step3a.2-accepted/snapshot.json`：从真实历史验收存档生成，保留来源提交、存档 manifest 摘要和逐病例账本 SHA-256；只读，永不覆盖。
-- `current/snapshot.json`：默认比较基线。本轮仅初始化为 historical 的逐字副本，不含对当前账本变化的认可。
+- `current/snapshot.json`：默认比较基线。初始为 historical 的逐字副本；2026-11-17 已按用户审核部分升级为 529 行，仅认可 approvals.md 中列出的变化。
 - `approvals.md`：只追加升级批准记录。账本自己给出的 reason 不等于合理解释或用户批准。
 
 对象固定为 11 个练习病例（DMD 按已批准决定延期）与 4 个 RETEST，共 15 例；不读取评测病例的 Step 3。
