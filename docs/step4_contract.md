@@ -1,6 +1,6 @@
-# Step 4 契约：报告组装（v1.0 定稿，2026-11-15）
+# Step 4 契约：报告组装（v2.0，2026-11-17）
 
-> 状态：**v1.0 定稿**（2026-11-15，用户答复 10 个待定问题，见第 13 节）。`docs/step4_contract_todo.md` 的全部事项已纳入（各条注明出处），另加用户 2026-11-15 指定的七项。
+> 状态：**v2.0 当前有效契约**（2026-11-17，用户第四轮审阅及基线工具要求）。Ranking、Summary、Clinical Trial Table 以第 4、6.4、6.6 节为准；第 13–23 节保留历史记录，与本版同主题冲突时不再适用。其他未被覆盖的已批准规则继续有效。所有后续修改必须遵循本契约；本轮先固定契约与基线，不代表现有报告已完成第四轮实现。
 
 ## 0. 目标与边界
 
@@ -34,20 +34,21 @@
 | --- | --- | --- |
 | 不适用的条目 | `status_by_branch.*.status == "not_applicable"` | 通则 |
 | 年龄段不适用 | `context_check == "limit"` 行、note 含 "age band" | todo 2026-11-12 |
-| 孕期专属（非孕期病人） | `pregnancy_notes` / 孕期行不满足 | todo 2026-11-09 |
-| 原文不是推荐（描述用法 / 报告无效） | `context_check == "recommendation"` 不满足行，`recommendation_reason` | todo 2026-11-12（R15） |
+| Pregnancy Management 独立句 | 只能作为已有同名行动的附注，不独立生成行动或缺失信息 | 2026-11-17 第四轮 |
 | 超出每节上限 | 第 7 节 | todo 2026-11-11 |
 
 例外：**禁忌与注意**节的"不适用"不等于"可以用"，写法见第 6.3 节（待定问题 Q2）。
 
+来源措辞强弱不能成为病人不适用的理由。R15 判为仅描述使用、没有明确推荐时，上游状态最多降为 conditional，报告显示 `source describes use; no explicit recommendation`；not_applicable 只能来自病人事实不符。此规则覆盖历史“非推荐即不适用 / 不写报告”的约定，由后续 Step 3 修复落实，Step 4 不自行篡改账本状态。
+
 ## 4. Summary
 
-固定四块：
-
-1. **诊断**：Step 2 主诊断、状态（确定 / 待定）与备选；待定时写明"以下各节按 N 个可能诊断分别列出"。
-2. **最关键缺失信息**：从账本 `missing_information` 取"影响条目数最多"的前 3 项（`why_it_matters` 已有计数），每项写"影响哪些条目、补上后会变成什么"。
-3. **用药前需核实**：第 9 节用药安全核对的结果（相互作用、说明书禁忌、外部禁忌清单），只列需要医生动作的。
-4. **各节要点**：每节一句，写最强的 1–2 条与状态。
+1. **正文一致**：Summary 必须来自本次正文实际显示的行动或评估。某层正文已有条目时，不得称该层 not recorded；只有阴性 / 不适用评估时说明已记录的结果，不能把它推荐为可用治疗。检索无结果与未记录也必须区分。
+2. **三层要点**：Tier 1–3 各列 1–3 条。Tier 1 按 Ranking 的 targeted → supportive 及来源原文顺序取前三，不按状态、字母、未知项数重排。Tier 2 不能只从试验取：没有试验而有超说明书条目时必须覆盖后者（如 ANO10 coenzyme Q10）。Tier 3 优先列 theoretically possible 的个性化方法；没有理论可行方法但正文有评估时，概述其评估结论，不写没有记录。
+3. **诊断与变异事实**：以账本 Step 1 / 2 事实为准，保留 RefSeq 版本、ClinVar 与计算依据；多个待定诊断按分支写明，不补确定诊断。
+4. **Most important missing information**：只统计正文显示行动所依赖、医生能核实的具体变量，按影响数取前三；kidney function 与 eGFR 合并。other trial criteria、source scope、笼统 evidence 类别不列。只列条目名，不列行内 Evidence ID；不能把已知年龄列为缺失年龄。
+5. **Check before use**：只覆盖正文显示的行动 / 药物。未显示的账本行动不进入本块，也不进入缺失信息计数；这里的“显示”不是 Ranking 集合，不能因预防 / 禁忌不参与排名而删除正文已显示的安全事项。没做的检查写 not checked；空数组不等于没有相互作用。
+6. 与正文对照的确定性检查由 `validate_report.py` 承担，后续实现必须补正反测试。Summary 不改变账本状态或另做临床判断。
 
 ## 5. 条件的写法：按缺失信息归组
 
@@ -65,7 +66,7 @@
 - **同类多药写成可选方案**（todo 2026-11-09，DDC）：择一或按序试用，不排成"全部使用"的清单；分组依据见待定问题 Q3。
 - **状态类标签写成具体动作**（todo 2026-11-11，RRM2B "catabolism"）：动作在前、条件在后。
 - **指向外部清单的条目**（todo 2026-11-11，CMT 协会清单）：写成"用药前对照 <清单名> 核对"，附清单出处。
-- **孕期句只进孕期段落**（todo 2026-11-09）。
+- **孕期小节只作附注**：Pregnancy Management 句子只挂在已有同名行动下，不独立产生行动、病人条件或缺失信息。
 - **L3 无结果 / L4 兜底**（todo 2026-11-05）：写明"已检索文献（检索式、日期、篇数），未发现明确的管理推荐"，并指向 Tier 2 相关条目；落到 L4 时节首写 "No disease-specific management recommendations were found; the following is symptomatic management."；不能把"没找到推荐"写成"不需要管理"。
 
 ### 6.3 Contraindications & Precautions
@@ -73,9 +74,12 @@
 - 外部清单条目同 6.2。
 
 ### 6.4 Clinical Trial Eligibility
-- **干预性试验在前、观察性研究在后**，各自按未知项数从少到多排序，阶段作同分排序；未知类型排在两者之后。按此顺序截取前 5 条（2026-11-16 审阅修正）。
-- 只收其他基因的试验（基因型规则判不满足）不写。
-- 每分支逐条分析上限 10 条（3b），超出的写"另有 N 条相关试验未逐条分析，见账本 / ClinicalTrials.gov 检索式"。
+- **列固定为**：Trial / Inclusion met / Exclusion ruled out / Unable to assess / Known exclusions / Status & verified date。排除条款通过只能进 Exclusion ruled out，不能进入 Inclusion met；未知 / 未评估如实保留。
+- **显示范围**：干预性试验全部列出，不用前五条上限隐藏；观察性研究（登记、生物样本库等）另列一行汇总，数目等于实际列出数。3b 每分支至多十项做逐条分析；未逐条分析的候选必须明确标注，不能声称已完成分析。禁止为压缩报告隐藏干预试验。
+- **表格排序**：招募状态 → 零已知排除优先 → 已满足的关键条件（诊断、年龄）→ 未知项数。这个筛选审查顺序独立于 Ranking，不套用 Ranking 的来源顺序。招募状态与核验日期来自账本已有来源，未知写 unknown，不把生成日期冒充核验日期。
+- **年龄**：只有结构化 minimumAge / maximumAge 总范围之外能产生年龄 Known exclusion。组内上下界同时满足才确认 Inclusion met；不能确认的分组为 Unable to assess，不得成为排除。已有分组识别只用于确认满足；年龄未知保持未知。
+- **逻辑组与例外**：诊断 / 条件满足其一后，不再把其他选项列为依赖条件。bilirubin/Gilbert、INR/warfarin 等放行例外随完整排除条款保留；不能可靠组合比较时整条 Unable to assess，不把例外单独当排除。恢复文本必须是登记原文的连续逐字子串，不拼接或改写。
+- **引用**：试验标题后只放注册页链接；每行至多三个 Evidence ID，完整对应放证据表。重复的 NCT 名称只显示一次；同来源同一句在本节只出现一次，不能为去重隐藏不同判定。
 
 ### 6.5 Off-label or Expanded-Access Therapies
 - 带药物层面疗效方向（阳性 / 阴性 / 结果不一致 / 部分改善 / 未报告）与逐篇先例（设计、病例数、方向）（todo 2026-11-05）。
@@ -85,14 +89,17 @@
 - 同一药物同时在 3b 和 3c 时互相注明"见对方章节"。
 
 ### 6.6 Bespoke Therapies / Drug Repurposing / Outcome Measures & Ranking
-- 3d 提供四个字段：`classification`、`premises_complete`、`human_precedent`、`approved_or_in_trial`（todo 2026-11-05）；3e 提供候选药与"对本亚基选择性未知"类标注。
-- **Outcome Measures & Ranking** 由 Step 4 统一排序 3c / 3d / 3e，规则不放进任何子节点（todo 2026-11-05）；排序规则见待定问题 Q5。
+- 3d 的 classification、failed_criterion、exceptions、unassessable_reason 是代码输出，必须忠实呈现；内部枚举显示为可读英文，不改变账本原值或等级。Summary Tier 3 与临床前验证只把 theoretically possible 方法当成待验证行动；负面评估仍在正文显示理由，不能误称没有记录。
+- **Ranking 范围**：只列正文显示的行动；预防 / 禁忌与注意事项不进入排名，不因其 applicable 就排到首位。个性化只列 theoretically possible 的方法。
+- **固定节顺序**：Existing Targeted Therapies → Supportive Management → Clinical Trial Eligibility → Off-label or Expanded-Access Therapies → Bespoke Therapies。不得按适用状态或字母重排各节。
+- **节内顺序**：按支持该行动的来源原文出现顺序（章节、段落、表格行）；多个来源保留账本的来源顺序。不能用状态、未知项数、字母、推测的疗效权重替代来源顺序；无法定位时明确记录顺序信息缺失，不捏造来源位置。
+- 每条排名附一句来自账本字段的理由，不由模型生成新的医学论证。Ranking 由 Step 4 统一呈现，不能回写子节点判定；临床试验表继续遵循第 6.4 节自己的排序。
+- Unassessed 与 Note 内容相同时只显示一次；显示清理不改变原始账本字段或判定。
 
 ## 7. 每节条目上限（todo 2026-11-11，架构原则 4）
 
-- 每节写进报告的条目设上限，3b、3c 各取证据最强的前 3–5 条，其余留在账本，报告注明"另有 N 条见账本"。
-- 排序依据各节已有字段（3b：未知项数、试验类型、阶段；3c：疗效方向与证据规模；3d：四个字段）。
-- 具体上限值见待定问题 Q6。
+- 干预性试验与有明确指征 / 核心管理的支持治疗不能被上限隐藏。其他仍有效的上限必须按本版规定的顺序截取，不自行改成状态或字母排序。
+- 显示 N 条必须等于实际列出数；截掉的条目写“另有 M 条见证据表”。本版第 6.4 节覆盖历史试验五条上限。
 
 ## 8. 来源更新日期（todo 2026-11-11，Argus II）
 
@@ -118,6 +125,7 @@
 
 - 结构校验：章节齐全且顺序正确；每节非空（或为检索无结果写法）。
 - 引用核验：每个引用的 id 能解析到记录（离线校验格式，联网验收解析 HTTP 200）；引文逐字出现在账本的已核实证据里。
+- GeneReviews 的 `<sup>` 引用在解析显示时渲染为 `[n]`，不得把脚注数字接到正文或剂量数字上；除此之外保留原文，不改写剂量、单位或目标。
 - 去重校验：同一行动键在报告中只完整出现一次。
 - 不写进报告的条目（第 3 节）一条都不出现。
 
@@ -126,6 +134,9 @@
 - 离线测试：每条规则正反用例（例如：非推荐条目不出现；同类多药写成可选方案；超上限写"另有 N 条"；孕期句不进一般段落）。
 - 验收：练习病例逐份检查结构与引用；用 `docs/clinical_reading_rules.md` 审查清单逐条过；先单例试跑。
 - 不涉及新的 LLM 调用时不需要报价；若 Q1 决定用 LLM 润色，按花钱规矩先报价。
+- **状态基线门禁**：每次修改 Evidence Ledger 或判定逻辑，改前保存状态快照，改后附 `scripts/status_diff.py` 对 `baselines/current/` 的完整输出（snapshot.json / diff.json / diff.md）。状态、原因和 Evidence ID 都须可回查，未解释的变化视为潜在缺陷，必须调查。
+- 历史基线 `baselines/historical/step3a.2-accepted/` 只读且永不覆盖；current 初始等于 historical。历史未涵盖的四例 RETEST 明确记为缺基线，不能填默认旧状态。
+- **批准后才能升级**：`scripts/promote_baseline.py` 只在用户逐条批准 diff 后运行，精确核对当前 / 候选快照及批准清单；每次升级在 `baselines/approvals.md` 追加日期、提交号、批准人、批准变化清单与理由。未批准变化不得进入 current，代理不得自行批准。具体命令及批准文件格式见 `baselines/README.md`。
 
 ## 13. 已定决策（原待定问题，用户 2026-11-15 答复）
 

@@ -131,3 +131,11 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 本次只用缓存，真实调用 0 次的报价仍为 $0；缓存缺失即停，不启用新请求。新增回归后离线 1206 个测试通过。将继续生成 AGXT-c33dup、ANO10、KMT2B 三份报告并运行可跑验收；DMD 继续按原决定延期，评测病例不运行 Step 3 及以后。
 
 **2026-11-17 第三轮审阅完成**：实现 `8e5ea29`，离线 **1206/1206**；15 例 LLM 缓存完成、新鲜账本无 fail。186 项试验 Known exclusions 列表完全一致，原始判定记录 **124 → 124**（试验内去重条件 **122 → 122**），新增 **0**；行动 / 分支总状态与 3d classification 变化 0。112 组条款表示 / 判定变化已逐项归档（100 年龄、12 完整例外合并），见 `out/acceptance/agxt_review3b_changes_20261117.md`。Step 1 / 2、3a 30/30、3b 8/8、3c 7/7、3e 5/5、评测 Step 1 / 2、三份报告格式 / Step 5 全过；3d 6/8 整体 FAIL，DMD 两项过期未计分，3.0 继续延期。**DMD 因性别推断改动而过期，待下次影响 DMD 的改动时一并重跑**，其字节未改；评测病例未跑 Step 3 及以后。报告：AGXT-c33dup 59,359 字节、ANO10 17,520、KMT2B 23,552，均 <60 KB；Evidence ID 定义分别 265 / 53 / 77 个，存在、verified、唯一，英文 / 官方标题 / 行内上限 / 去重 / 数值原句检查通过。3d 原判定与理由原样显示；例外原文完整、未知，不新增排除。COL1A1 交替体位仍漏婴儿限定，支持核查假拦仍历史 3/17。全部尝试真实 DeepSeek 请求 **0 次、费用 $0**。CNNM4 一次 HTTP 重试拼接响应错误在临时 curl 传输脚本修复，单条损坏 HTTP 缓存清除后续跑；不改临床代码、LLM 缓存。详情见 Step 4 契约第 23 节与 `out/acceptance/agxt_review3b_20261117.json`。
+
+## 状态基线与报告契约（2026-11-17，当前必须遵循）
+
+- 报告契约当前版本为 `docs/step4_contract.md` **v2.0**；Ranking、Summary、Clinical Trial Table 以其第 4 / 6.4 / 6.6 节为准，覆盖同主题旧记录。本轮只固定规范和工具，不声称完成第四轮临床 / 报告修复。
+- 每次修改 Evidence Ledger 或判定逻辑，改前保存快照，改后必须附 `scripts/status_diff.py` 对 **baselines/current** 的输出（snapshot.json、diff.json、diff.md）；它逐病例记录行动×分支的状态、原因、Evidence ID，列出所有新增/删除、状态、原因和证据变化。缺输入报错；没有历史基线时不补旧状态。未解释的变化视为潜在缺陷，必须调查；账本自带 reason 不等于合理解释或批准。
+- `baselines/historical/step3a.2-accepted/snapshot.json` 来自真实验收存档（提交 652f6c8，原 manifest SHA 核对），只读且永不覆盖。现有 15 例中只覆盖 11 例，4 个 RETEST 当时不存在，明确为缺基线。**current 仅初始化为 historical 的字节副本，尚未升级**。
+- `scripts/promote_baseline.py` 只能在用户逐条批准实际 diff 后运行。批准文件必须精确覆盖每个 change_id，并匹配基线/候选 SHA-256 和 HEAD，含实际批准人、日期、总体及逐条理由；缺任何批准就停止。每次升级只追加 `baselines/approvals.md`，历史不改，代理不得自行批准。格式与命令见 `baselines/README.md`。
+- 首次对比：历史 409、当前 790 个行动×分支项目；29 项直接匹配的状态变化，其中 11 项降为 not_applicable（KMT2B 6、CFTR 5）；另有细节变化 61、新增 231、删除 7、缺历史病例基线项目 157。完整工具输出在 `out/status_diff/initial-20261117/`，逐项追因与潜在缺陷在 `docs/status_baseline_review_20261117.md`。本轮没有改账本、重跑临床流水线或升级基线，真实 LLM 调用 0 次、费用 $0；全量离线 1223/1223。

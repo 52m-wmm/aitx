@@ -1,0 +1,6374 @@
+{
+ "schema": "aitx-status-snapshot-v1",
+ "label": "historical/step3a.2-accepted",
+ "created_at": 1793887606,
+ "cases": {
+  "PRAC-AGXT-c33dup": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-AGXT-c33dup.json",
+   "ledger_sha256": "40f024e7d67e54a86da1e4595279770a280b9e8f1645a56f5abf3384674bca33",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "f60e7b2edf1fd463292b87a9b14dbfc52209dfa6be3c7dd4a8dabdc6c179e4e9"
+  },
+  "PRAC-AGXT-c508GA": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-AGXT-c508GA.json",
+   "ledger_sha256": "260b726a89f833a7a599396e9456c6677a5fd2e649c12066309a258aa0e333c3",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "2fb73bb7e0b9139412cba400d0cb187c0e8d6261ed68808bea089e36c756f270"
+  },
+  "PRAC-ANO10": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-ANO10.json",
+   "ledger_sha256": "66347f636fc0a31266699fee1fb66fd5a6f7f2fc9e7e2e18e0cf285d7baf8694",
+   "code_commit": "7849113+dirty",
+   "input_fingerprint": "47c9df46ef1f266c3986edeff6c40310fd991093b1925886a5141eb759a9e911"
+  },
+  "PRAC-CFTR-F508del": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-CFTR-F508del.json",
+   "ledger_sha256": "f0a73dc64f2fa69a84e0bda82a04d482b5867105cf6db81886205fdb4bea2c8b",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a"
+  },
+  "PRAC-COL1A1": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-COL1A1.json",
+   "ledger_sha256": "16c6ce05f08473df8589b416fd9b29a29962460d83ddae78b3dcf2ec77b43409",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
+  },
+  "PRAC-GRIN2B": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-GRIN2B.json",
+   "ledger_sha256": "3dc04370db277607c8160c9e86f174abf446dc7e2f9bbaa1248428138e50999c",
+   "code_commit": "7849113+dirty",
+   "input_fingerprint": "5518c96ae99fa68746fb2102379b042ae7c34f80797c19a3b6e5ee4dc7c1925e"
+  },
+  "PRAC-KMT2B": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-KMT2B.json",
+   "ledger_sha256": "0cfe803fb72e11ade0fa804e317fd2f7f292d7582e6d805d74ccaffa6ba402e5",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "62eef26c4900f276d5204279658041b36c6fb685a7509533acd022c25c385b25"
+  },
+  "PRAC-NF1": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-NF1.json",
+   "ledger_sha256": "498e3dcd66aa654d721b4e6fba01bd30bb8c5672ea33379becce74c12bd7c629",
+   "code_commit": "7849113+dirty",
+   "input_fingerprint": "d2cd193b9fa42758d2c135a15d6e4eef272de7348c592a300f7eed3cfb59f400"
+  },
+  "PRAC-OTC": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-OTC.json",
+   "ledger_sha256": "899ca749c07c33f3a6eef5ccf8dff7867b8a03a65c2db828cf21413c997ec6ed",
+   "code_commit": "c9c6a0b+dirty",
+   "input_fingerprint": "d7ca1aca7f9d79dab40e87c776e532c1d5b32135bc9b696aab9328f359c84ab3"
+  },
+  "PRAC-SLC35A2-ex7": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-SLC35A2-ex7.json",
+   "ledger_sha256": "3406478d20415bf6d97c75ea3df84e5400fa072f83d8dda28cba23b5d8569c1d",
+   "code_commit": "34bba14+dirty",
+   "input_fingerprint": "66a1b8c6cf163ec1aca5b4b2ce8b32d26f66ac13ebebbcfdb34d8d61da185059"
+  },
+  "PRAC-SLC35A2-ex8": {
+   "available": true,
+   "ledger_path": "/Users/a00/aitx/.cache/snapshots/step3a.2-accepted/out/step3/PRAC-SLC35A2-ex8.json",
+   "ledger_sha256": "c3157abd5409b1668a969ac336e7fc08470b8c9d539f06f7f071e3758d268f1a",
+   "code_commit": "34bba14+dirty",
+   "input_fingerprint": "63e78b4d31f014ba5e69bd1863c0b2cfa287fdd51aa25eb26af5df150d841d1f"
+  },
+  "RETEST-CNNM4": {
+   "available": false,
+   "reason": "case/Step 3 not present in this historical baseline"
+  },
+  "RETEST-EIF2B1": {
+   "available": false,
+   "reason": "case/Step 3 not present in this historical baseline"
+  },
+  "RETEST-PFN1": {
+   "available": false,
+   "reason": "case/Step 3 not present in this historical baseline"
+  },
+  "RETEST-THPO": {
+   "available": false,
+   "reason": "case/Step 3 not present in this historical baseline"
+  }
+ },
+ "rows": [
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT02026388",
+   "action": "Rare Kidney Stone Consortium Biobank (NCT02026388)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "23ed6f06b7e2",
+    "2ab6afd878f8",
+    "59a18f42f816",
+    "8a8bdccdc1a6",
+    "9d30aeca4a18",
+    "abf5a56ce8e1",
+    "afdc8bd2f711",
+    "f552a3642f9f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; genetic confirmation"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04580420",
+   "action": "PHYOX7 (NCT04580420)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "10becff6590a",
+    "1149694f6e55",
+    "1da764a00453",
+    "1f0e3cd829d9",
+    "2a84d21fed15",
+    "3984dee31dbd",
+    "39ebb811a59a",
+    "476889e6de5d",
+    "47fe49c8b7f4",
+    "4e77acbf6a2e",
+    "4f80272f5f70",
+    "5426c62e23e5",
+    "5ea61999ba7b",
+    "628c81097394",
+    "6b3a376c1173",
+    "721fa5429193",
+    "72fead3bd1da",
+    "731e23c14357",
+    "7494f05b2760",
+    "7affaa8d9c4f",
+    "7e8a9d3a239d",
+    "800d71712781",
+    "81bf62cc49f3",
+    "82cf4bea747e",
+    "849eabaae6d6",
+    "869868c9e1d5",
+    "914ffc1dd334",
+    "95fd5d0d562f",
+    "a2ca10dbe609",
+    "bc57f3ae9d94",
+    "bf8bef199222",
+    "db0b3bb8fa15",
+    "db8c7e6c01ef",
+    "e28690da130a",
+    "e4c90843622f",
+    "e5178631b85a",
+    "e7112ebbf88b",
+    "edce1bab91d0",
+    "f5e375ebf0f1",
+    "fd4410ce04c5"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; eGFR; genetic confirmation; lab; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06225882",
+   "action": "DAILY-LUMA (NCT06225882)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "3317e67b743e",
+    "6f240936da79",
+    "70d6ec2f16e6",
+    "8d73dea9b779",
+    "deb9fc777c0d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06465472",
+   "action": "CRYSTAL (NCT06465472)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "09eb2c1e51bc",
+    "0d6d95abf32a",
+    "0ee47b05b7be",
+    "1209fd35b56e",
+    "1710ff9463aa",
+    "1c157aa0ae4a",
+    "2261dfe8f21b",
+    "22d38054b1db",
+    "3092c6c79081",
+    "36c039fb3142",
+    "40c99a051e72",
+    "40e4b4b26f23",
+    "4329d44a1f33",
+    "4c4247b764b5",
+    "51250405cf3d",
+    "5204c85b97a4",
+    "56b6631fded4",
+    "58a3a097baee",
+    "65a8f8d61c2f",
+    "72e73e7f2fb8",
+    "7396bca87ba4",
+    "7a7385f23105",
+    "7f170db0ff04",
+    "8a4eeb45dd2e",
+    "94bbbff7728f",
+    "989448f6aa97",
+    "a42ff6fc45c0",
+    "b2ddff7e40eb",
+    "b996a9b17195",
+    "bfbbb409d1f8",
+    "c5c6d4c727ef",
+    "cb18600c4c2c",
+    "cc07d1e2183e",
+    "d7d503ee0f74",
+    "deb491624304",
+    "ea3565e2bfa9",
+    "f7fe5e7782be",
+    "f9c2317a9a34"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: bilirubin; current medication; diagnosis; eGFR; genetic confirmation; lab; other; participation in other trial"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06511349",
+   "action": "Clinical Exploration Study of YOLT-203 in the Treatment of Type 1 Primary Hyperoxaluria (PH1) (NCT06511349)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "026e0d63472c",
+    "2d7f7dcabe4a",
+    "3f47cdcaf65a",
+    "42f1e51bd663",
+    "45d87849e17b",
+    "4add66a9134d",
+    "4cfa0e6b86f7",
+    "52a3aa3ffd96",
+    "5ec6b68afd2e",
+    "63bb67e3b01a",
+    "6597fe2daef3",
+    "6d53fef54d93",
+    "733e01230335",
+    "733f1aeab58f",
+    "82a4017c72cb",
+    "8946858180c4",
+    "8e23cdb8fa09",
+    "9b8984cfcd90",
+    "a106481c5cca",
+    "a15ee18870b0",
+    "b0bb42a4419b",
+    "b99199767f17",
+    "cb3e1b4df061",
+    "d49db3300944",
+    "dbc307575503",
+    "dbc9c7795c19",
+    "dea4c7003e9c",
+    "ef07a649cb95",
+    "f520b7fdd9e7",
+    "fc7abb7e2cfb"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: bilirubin; current medication; diagnosis; eGFR; lab; other; participation in other trials; prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06839235",
+   "action": "Phase 1/2 Study of ABO-101 in Primary Hyperoxaluria Type 1 (redePHine) (NCT06839235)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "0d6c92266736",
+    "0fea7a51f678",
+    "10957a1e61af",
+    "10dc5774247a",
+    "15b7d8146f72",
+    "411956938331",
+    "44f334fdd845",
+    "74973e211c91",
+    "8a68232591fa",
+    "9b5ed84329bd",
+    "ad1d801ea864",
+    "b0c7dd35e0f2",
+    "bc46b535eecb",
+    "bc9907ebeaf7",
+    "beac44f25a5f",
+    "c7d15dc6760c",
+    "dc40c367437b",
+    "f2c214c5dce2"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; eGFR; lab; other; prior therapy; weight"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07587021",
+   "action": "Study of YOLT-203 in Children and Adults With Primary Hyperoxaluria Type 1 (PH1) (NCT07587021)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "1443a61c483f",
+    "1ffd0c573335",
+    "24352e5aba60",
+    "2712d5f851f4",
+    "2a50f5c982fe",
+    "437294d0325b",
+    "4372bc480296",
+    "5705dc8f438b",
+    "61aefeea83ac",
+    "660dda6990b9",
+    "6f1df5bbb1e9",
+    "71397d5ce4b9",
+    "76d9ca888cc5",
+    "89e4f01dcdfa",
+    "94cec29cf393",
+    "9edaaa9a4234",
+    "c6f165cb792e",
+    "d023b680b7b3",
+    "d03fc665c207",
+    "ef3e179c0c75"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; genetic confirmation; lab; liver function; other"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07776626",
+   "action": "Phase I Exploratory Study of YOLT-203 in Patients With Primary Hyperoxaluria Type 1 (PH1) (NCT07776626)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "0b58d93448fb",
+    "1926f16af78b",
+    "20f6876d16b6",
+    "2ef809f87db0",
+    "34e0c1cbfb3a",
+    "42094fd65351",
+    "44fd1484263f",
+    "50f4b3e9f5cc",
+    "577be0ed7ece",
+    "5cd5205b1f26",
+    "6761128970f8",
+    "697a567bd06d",
+    "73f4e1353fd8",
+    "7e9ec74487a4",
+    "81e3afe036f8",
+    "837ee3c947c6",
+    "8501cb18376b",
+    "877cde998a78",
+    "88b7e06208ba",
+    "8ed6cc4ac149",
+    "9854fa39d900",
+    "9bfc50aa0af0",
+    "a187ac906b94",
+    "b4f023c83223",
+    "c1a923a3591f",
+    "c23efc657def",
+    "d16a7553b05b",
+    "d9cd23d998d0",
+    "f645737272df",
+    "f9545ac1dd36",
+    "fadf5d66b521",
+    "fe2462cd7c83"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: bilirubin; current medication; diagnosis; eGFR; lab; other; participation in other trials; prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:foods_high_in_oxalate",
+   "action": "Foods high in oxalate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "a97b07d8269d"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:intake_of_vitamin_c_that_exceeds_the_recommended_daily_allowance",
+   "action": "Intake of vitamin C that exceeds the recommended daily allowance",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "e5837eb76481"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:intravascular_volume_depletion",
+   "action": "Intravascular volume depletion",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "6d4917442a1a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:loop_diuretics",
+   "action": "Loop diuretics",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "2042bb139a4a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:nonsteroidal_anti_inflammatory_drugs_nsaids",
+   "action": "Nonsteroidal anti-inflammatory drugs (NSAIDs)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "7c026724bf61"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:pharmacologic_agents_that_can_compromise_kidney_function",
+   "action": "Pharmacologic agents that can compromise kidney function",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "126892ad6644"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:2467140",
+   "action": "lumasiran",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "37c0493ed701",
+    "64d181eb8966"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Targeted Therapies"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:2675287",
+   "action": "nedosiran",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "311b22dc1777",
+    "561cf6ba43ed",
+    "62d34a0ac4da",
+    "6ad8eecec4ce",
+    "6f8f230c5169",
+    "d5df393b3574"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: relatively preserved kidney function, e.g., eGFR ≥30 mL/min/1.73 m 2"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:684879",
+   "action": "pyridoxine",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "4d3cb5fa63e5",
+    "642a00ade5cb",
+    "993e4a82c627"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: 1 or 2 missense AGXT pathogenic variants"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "existing_targeted_therapies",
+   "action_id": "procedure:liver_transplant",
+   "action": "liver transplant",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "15da4fd4e4ad",
+    "ed15b827b5ef"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: GFR <25-30 mL/min/1.73 m2"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "diet:adequate_fluid_intake",
+   "action": "adequate fluid intake",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "28f40bef8265",
+    "a79aefcac69b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "diet:high_oral_fluid_intake",
+   "action": "high oral fluid intake",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "ab559d1ba066",
+    "d4d394c372fd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: crystal injury to kidneys"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "drug:name:pyrophosphate-containing solutions",
+   "action": "pyrophosphate-containing solutions",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "1f7957776ab3",
+    "a56eeafd38ad"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: In individuals with good kidney function (eGFR >30 mL/min/1.73 m2)"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:54993",
+   "action": "potassium citrate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "c02e4e622e5b",
+    "d936e13880da"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: If the GFR is preserved"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:56466",
+   "action": "sodium citrate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "68bb9b2a970e",
+    "b28ebcb01b45"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: If the GFR is reduced or blood potassium concentration is elevated"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:dialysis",
+   "action": "dialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "8e569bd97977",
+    "c05e3559a6eb"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: systemic oxalosis"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:gastrostomy_tube_placement",
+   "action": "gastrostomy tube placement",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "eec91de7226c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Infants or small children"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:hemodialysis",
+   "action": "hemodialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "8d1b0f380d42",
+    "952d80374af3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: with kidney failure"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:intravenous_fluid_administration",
+   "action": "intravenous fluid administration",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "26d65882003e",
+    "4cb103f6115b",
+    "d94e3bc6ad67"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:intravenous_fluids",
+   "action": "intravenous fluids",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "528a1959636b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: if needed"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:percutaneous_nephrolithotomy",
+   "action": "percutaneous nephrolithotomy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "842f263c5d0e",
+    "8f0b069c61f0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: larger, bulky stone burden"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:peritoneal_dialysis",
+   "action": "peritoneal dialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "74b4035bf4af"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Supportive Care"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:shockwave_lithotripsy",
+   "action": "shockwave lithotripsy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "15befd82870d",
+    "8e04023c4b96"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Calcium oxalate monohydrate stones"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "procedure:ureteroscopy",
+   "action": "ureteroscopy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "53eb96a7dbb8",
+    "7e96596f21d0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when appropriate"
+  },
+  {
+   "case_id": "PRAC-AGXT-c33dup",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:nasogastric_tube",
+   "action": "nasogastric tube",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "09f2e19b79dd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Small children"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT02026388",
+   "action": "Rare Kidney Stone Consortium Biobank (NCT02026388)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "23ed6f06b7e2",
+    "2ab6afd878f8",
+    "59a18f42f816",
+    "8a8bdccdc1a6",
+    "9d30aeca4a18",
+    "abf5a56ce8e1",
+    "afdc8bd2f711",
+    "f552a3642f9f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; genetic confirmation"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04580420",
+   "action": "PHYOX7 (NCT04580420)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "10becff6590a",
+    "1149694f6e55",
+    "1da764a00453",
+    "1f0e3cd829d9",
+    "2a84d21fed15",
+    "3984dee31dbd",
+    "39ebb811a59a",
+    "476889e6de5d",
+    "47fe49c8b7f4",
+    "4e77acbf6a2e",
+    "4f80272f5f70",
+    "5426c62e23e5",
+    "5ea61999ba7b",
+    "628c81097394",
+    "6b3a376c1173",
+    "721fa5429193",
+    "72fead3bd1da",
+    "731e23c14357",
+    "7494f05b2760",
+    "7affaa8d9c4f",
+    "7e8a9d3a239d",
+    "800d71712781",
+    "81bf62cc49f3",
+    "82cf4bea747e",
+    "849eabaae6d6",
+    "869868c9e1d5",
+    "914ffc1dd334",
+    "95fd5d0d562f",
+    "a2ca10dbe609",
+    "bc57f3ae9d94",
+    "bf8bef199222",
+    "db0b3bb8fa15",
+    "db8c7e6c01ef",
+    "e28690da130a",
+    "e4c90843622f",
+    "e5178631b85a",
+    "e7112ebbf88b",
+    "edce1bab91d0",
+    "f5e375ebf0f1",
+    "fd4410ce04c5"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; eGFR; genetic confirmation; lab; other; pregnancy status; prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06225882",
+   "action": "DAILY-LUMA (NCT06225882)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "3317e67b743e",
+    "6f240936da79",
+    "70d6ec2f16e6",
+    "8d73dea9b779",
+    "deb9fc777c0d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; prior therapy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06465472",
+   "action": "CRYSTAL (NCT06465472)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "09eb2c1e51bc",
+    "0d6d95abf32a",
+    "0ee47b05b7be",
+    "1209fd35b56e",
+    "1710ff9463aa",
+    "1c157aa0ae4a",
+    "2261dfe8f21b",
+    "22d38054b1db",
+    "3092c6c79081",
+    "36c039fb3142",
+    "40c99a051e72",
+    "40e4b4b26f23",
+    "4329d44a1f33",
+    "4c4247b764b5",
+    "51250405cf3d",
+    "5204c85b97a4",
+    "56b6631fded4",
+    "58a3a097baee",
+    "65a8f8d61c2f",
+    "72e73e7f2fb8",
+    "7396bca87ba4",
+    "7a7385f23105",
+    "7f170db0ff04",
+    "8a4eeb45dd2e",
+    "94bbbff7728f",
+    "989448f6aa97",
+    "a42ff6fc45c0",
+    "b2ddff7e40eb",
+    "b996a9b17195",
+    "bfbbb409d1f8",
+    "c5c6d4c727ef",
+    "cb18600c4c2c",
+    "cc07d1e2183e",
+    "d7d503ee0f74",
+    "deb491624304",
+    "ea3565e2bfa9",
+    "f7fe5e7782be",
+    "f9c2317a9a34"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; bilirubin; current medication; diagnosis; eGFR; genetic confirmation; lab; other; participation in other "
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06511349",
+   "action": "Clinical Exploration Study of YOLT-203 in the Treatment of Type 1 Primary Hyperoxaluria (PH1) (NCT06511349)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "026e0d63472c",
+    "2d7f7dcabe4a",
+    "3f47cdcaf65a",
+    "42f1e51bd663",
+    "45d87849e17b",
+    "4add66a9134d",
+    "4cfa0e6b86f7",
+    "52a3aa3ffd96",
+    "5ec6b68afd2e",
+    "63bb67e3b01a",
+    "6597fe2daef3",
+    "6d53fef54d93",
+    "733e01230335",
+    "733f1aeab58f",
+    "82a4017c72cb",
+    "8946858180c4",
+    "8e23cdb8fa09",
+    "9b8984cfcd90",
+    "a106481c5cca",
+    "a15ee18870b0",
+    "b0bb42a4419b",
+    "b99199767f17",
+    "cb3e1b4df061",
+    "d49db3300944",
+    "dbc307575503",
+    "dbc9c7795c19",
+    "dea4c7003e9c",
+    "ef07a649cb95",
+    "f520b7fdd9e7",
+    "fc7abb7e2cfb"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; bilirubin; current medication; diagnosis; eGFR; lab; other; participation in other trials; pregnancy stat"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06839235",
+   "action": "Phase 1/2 Study of ABO-101 in Primary Hyperoxaluria Type 1 (redePHine) (NCT06839235)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "0d6c92266736",
+    "0fea7a51f678",
+    "10957a1e61af",
+    "10dc5774247a",
+    "15b7d8146f72",
+    "411956938331",
+    "44f334fdd845",
+    "74973e211c91",
+    "8a68232591fa",
+    "9b5ed84329bd",
+    "ad1d801ea864",
+    "b0c7dd35e0f2",
+    "bc46b535eecb",
+    "bc9907ebeaf7",
+    "beac44f25a5f",
+    "c7d15dc6760c",
+    "dc40c367437b",
+    "f2c214c5dce2"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; current medication; diagnosis; eGFR; lab; other; pregnancy status; prior therapy; weight"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07587021",
+   "action": "Study of YOLT-203 in Children and Adults With Primary Hyperoxaluria Type 1 (PH1) (NCT07587021)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "1443a61c483f",
+    "1ffd0c573335",
+    "24352e5aba60",
+    "2712d5f851f4",
+    "2a50f5c982fe",
+    "437294d0325b",
+    "4372bc480296",
+    "5705dc8f438b",
+    "61aefeea83ac",
+    "660dda6990b9",
+    "6f1df5bbb1e9",
+    "71397d5ce4b9",
+    "76d9ca888cc5",
+    "89e4f01dcdfa",
+    "94cec29cf393",
+    "9edaaa9a4234",
+    "c6f165cb792e",
+    "d023b680b7b3",
+    "d03fc665c207",
+    "ef3e179c0c75"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; current medication; diagnosis; genetic confirmation; lab; liver function; other; pregnancy status"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07776626",
+   "action": "Phase I Exploratory Study of YOLT-203 in Patients With Primary Hyperoxaluria Type 1 (PH1) (NCT07776626)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "0b58d93448fb",
+    "1926f16af78b",
+    "20f6876d16b6",
+    "2ef809f87db0",
+    "34e0c1cbfb3a",
+    "42094fd65351",
+    "44fd1484263f",
+    "50f4b3e9f5cc",
+    "577be0ed7ece",
+    "5cd5205b1f26",
+    "6761128970f8",
+    "697a567bd06d",
+    "73f4e1353fd8",
+    "7e9ec74487a4",
+    "81e3afe036f8",
+    "837ee3c947c6",
+    "8501cb18376b",
+    "877cde998a78",
+    "88b7e06208ba",
+    "8ed6cc4ac149",
+    "9854fa39d900",
+    "9bfc50aa0af0",
+    "a187ac906b94",
+    "b4f023c83223",
+    "c1a923a3591f",
+    "c23efc657def",
+    "d16a7553b05b",
+    "d9cd23d998d0",
+    "f645737272df",
+    "f9545ac1dd36",
+    "fadf5d66b521",
+    "fe2462cd7c83"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; bilirubin; current medication; diagnosis; eGFR; lab; other; participation in other trials; pregnancy stat"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:foods_high_in_oxalate",
+   "action": "Foods high in oxalate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "a97b07d8269d"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:intake_of_vitamin_c_that_exceeds_the_recommended_daily_allowance",
+   "action": "Intake of vitamin C that exceeds the recommended daily allowance",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "e5837eb76481"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:intravascular_volume_depletion",
+   "action": "Intravascular volume depletion",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "6d4917442a1a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:loop_diuretics",
+   "action": "Loop diuretics",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "2042bb139a4a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:nonsteroidal_anti_inflammatory_drugs_nsaids",
+   "action": "Nonsteroidal anti-inflammatory drugs (NSAIDs)",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "7c026724bf61"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:pharmacologic_agents_that_can_compromise_kidney_function",
+   "action": "Pharmacologic agents that can compromise kidney function",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "126892ad6644"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:2467140",
+   "action": "lumasiran",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "37c0493ed701",
+    "64d181eb8966"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Targeted Therapies"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:2675287",
+   "action": "nedosiran",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "311b22dc1777",
+    "561cf6ba43ed",
+    "62d34a0ac4da",
+    "6ad8eecec4ce",
+    "6f8f230c5169",
+    "d5df393b3574"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: children 2 years of age and older and adults"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:684879",
+   "action": "pyridoxine",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "4d3cb5fa63e5",
+    "642a00ade5cb",
+    "993e4a82c627"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: 1 or 2 missense AGXT pathogenic variants"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "existing_targeted_therapies",
+   "action_id": "procedure:liver_transplant",
+   "action": "liver transplant",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "15da4fd4e4ad",
+    "ed15b827b5ef"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: GFR <25-30 mL/min/1.73 m2"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "diet:adequate_fluid_intake",
+   "action": "adequate fluid intake",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "28f40bef8265",
+    "a79aefcac69b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: throughout pregnancy"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "diet:high_oral_fluid_intake",
+   "action": "high oral fluid intake",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "ab559d1ba066",
+    "d4d394c372fd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: crystal injury to kidneys"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "drug:name:pyrophosphate-containing solutions",
+   "action": "pyrophosphate-containing solutions",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "1f7957776ab3",
+    "a56eeafd38ad"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: In individuals with good kidney function (eGFR >30 mL/min/1.73 m2)"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:54993",
+   "action": "potassium citrate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "c02e4e622e5b",
+    "d936e13880da"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: If the GFR is preserved"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:56466",
+   "action": "sodium citrate",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "68bb9b2a970e",
+    "b28ebcb01b45"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: If the GFR is reduced or blood potassium concentration is elevated"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:dialysis",
+   "action": "dialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "8e569bd97977",
+    "c05e3559a6eb"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: systemic oxalosis"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:gastrostomy_tube_placement",
+   "action": "gastrostomy tube placement",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "eec91de7226c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Infants or small children"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:hemodialysis",
+   "action": "hemodialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "8d1b0f380d42",
+    "952d80374af3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: with kidney failure"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:intravenous_fluid_administration",
+   "action": "intravenous fluid administration",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "26d65882003e",
+    "4cb103f6115b",
+    "d94e3bc6ad67"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: during the first trimester"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:intravenous_fluids",
+   "action": "intravenous fluids",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "528a1959636b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: if needed"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:percutaneous_nephrolithotomy",
+   "action": "percutaneous nephrolithotomy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "842f263c5d0e",
+    "8f0b069c61f0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: larger, bulky stone burden"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:peritoneal_dialysis",
+   "action": "peritoneal dialysis",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "74b4035bf4af"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Supportive Care"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:shockwave_lithotripsy",
+   "action": "shockwave lithotripsy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "15befd82870d",
+    "8e04023c4b96"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Calcium oxalate monohydrate stones"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "procedure:ureteroscopy",
+   "action": "ureteroscopy",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "53eb96a7dbb8",
+    "7e96596f21d0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when appropriate"
+  },
+  {
+   "case_id": "PRAC-AGXT-c508GA",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:nasogastric_tube",
+   "action": "nasogastric tube",
+   "branch": "MONDO:0009823",
+   "evidence_ids": [
+    "09f2e19b79dd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Small children"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT01822834",
+   "action": "Bronchiectasis and NTM Research Registry (NCT01822834)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "e0b7d154fbaf"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 120 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT01851642",
+   "action": "Lung Disease and Its Affect on the Work of White Blood Cells in the Lungs (NCT01851642)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1091161f55f2"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT01851694",
+   "action": "Beta-cell Response to Incretin Hormones in Cystic Fibrosis (NCT01851694)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "6392ba1a80d6"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT03161808",
+   "action": "RARE (NCT03161808)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "dda8a33927c8"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 17 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT03587961",
+   "action": "Personalized Theratyping Trial (NCT03587961)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "100bd41d221b",
+    "1782a0ef0438",
+    "42159235df4e",
+    "46c8ee07c112",
+    "5a7fc6e8c796",
+    "8a82f5c8ecc4",
+    "8fdb1e0145c0",
+    "957d24755a09",
+    "969dda2749f0",
+    "bf91e294d499",
+    "d312db164b78",
+    "d7ab4a88152c",
+    "d8ccdee3ee2f",
+    "e19580353ccb",
+    "f39ee527b6e3",
+    "f990522e1532"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; other; participation in other trials; variant"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT03921060",
+   "action": "Markers of Osteoporosis in Cystic Fibrosis (NCT03921060)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a0cfc06c3466"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 64 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04002882",
+   "action": "Role of Body Fat Distribution in Metabolic and Pulmonary Decline in Cystic Fibrosis (ORBIT-CF) (NCT04002882)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "7a501bf93c1e"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04294043",
+   "action": "ABATE (NCT04294043)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "981d0cc77d67"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04469439",
+   "action": "Impact of Sinus Surgery on Individuals With Cystic Fibrosis (NCT04469439)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1f75d85f8a4d"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 99 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04509050",
+   "action": "BEGIN (NCT04509050)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1701622d8c2b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: none; maximumAge: 10 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04530383",
+   "action": "Metformin for People With CFRD on CFTR Modulator Therapy to Improve Ion Channel Function (NCT04530383)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "9c91b5399de1"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04700358",
+   "action": "Characterization of Antibacterial Antibodies in Patients With Cystic Fibrosis (NCT04700358)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "d7a4285078c6"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04731272",
+   "action": "GLP-1 Agonist Therapy in Cystic Fibrosis-Related Glucose Intolerance (NCT04731272)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "f76b2fe00dc3"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04940533",
+   "action": "Pharmacokinetics of CFTR Modulators in Pregnant Individuals and in Postpartum Breastfeeding Mothers (NCT04940533)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "24fa58160ee8",
+    "f1b124456fd7"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05017766",
+   "action": "AntiResist (NCT05017766)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0903e1e60588"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05099939",
+   "action": "ProspeC-F (NCT05099939)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c70e47367e71"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05248230",
+   "action": "CF (NCT05248230)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a7de48d62cad"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05279040",
+   "action": "Trikafta Exercise Study in Cystic Fibrosis (NCT05279040)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "cc7eb9e7622b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 19 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05504837",
+   "action": "A Study Assessing KB407 for the Treatment of Cystic Fibrosis (NCT05504837)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "9a224e20025a"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05548283",
+   "action": "STOP360AG (NCT05548283)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "06edfafd62d8",
+    "0db2573c29da",
+    "0f98d769a977",
+    "151fbbebcdd1",
+    "358aec843f8d",
+    "3f2900a30dc6",
+    "4d4ea23ed510",
+    "666bdb591087",
+    "69d4646aaefb",
+    "6d75188a8dc0",
+    "7f28dd4f36b9",
+    "890646c3b136",
+    "9bfa563ab635",
+    "a5b6214ee2c2",
+    "af72ca0dad22",
+    "dc78a10d7af4",
+    "ddf581c7a931",
+    "e045dbaeffed",
+    "f2ed94c101ec",
+    "f5a56c4f7f08"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; kidney function; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05704036",
+   "action": "STURDY (NCT05704036)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "6d727268361d",
+    "ac75a03e9b78"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: sex: FEMALE"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05723445",
+   "action": "DINE (NCT05723445)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a937205380b6"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 70 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05766774",
+   "action": "FEED-CF (NCT05766774)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "53545385f9af"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05802264",
+   "action": "ABCI (NCT05802264)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1c89dca94185"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05818319",
+   "action": "Cystic Fibrosis in the Kidney: Monitoring the Effectiveness of Elexacaftor/tezacaftor/ivacaftor in Urine After a Short Pause of Therapy (NCT05818319)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "b6d72c9bf24c"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05860803",
+   "action": "Breathing Training and Exercise Capacity in Non-CFB (NCT05860803)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a1f385f7061b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 21 Years; maximumAge: 80 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05982795",
+   "action": "Impact of Highly Effective Modulator Therapy on the Cystic Fibrosis Microbiome (NCT05982795)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "113605a9e9c4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 99 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05986045",
+   "action": "ENHANCE- Establishing Natural History in an Advanced New CF Care Era (NCT05986045)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "f1dc44932cdc"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 1 Month; maximumAge: 5 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05998629",
+   "action": "Skin-interfaced Colorimetric Bifluidic Sweat Sensor Device for the Diagnosis of Cystic Fibrosis (CF) (NCT05998629)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "5c167c5ce3a1"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 80 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06020274",
+   "action": "iCF-PWR (NCT06020274)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "ed9a6b4fd708"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 8 Years; maximumAge: 12 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06032273",
+   "action": "Lung Transplant READY CF 2: CARING CF Ancillary RCT (NCT06032273)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "265489a449ac"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06045702",
+   "action": "CFTR-EP (NCT06045702)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8959bea29f8c",
+    "dbd0c0b11b0c"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06057714",
+   "action": "Quantitation and Spatial Registration of Airways Dysfunction With Dynamic 19F MRI in Cystic Fibrosis (NCT06057714)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "bd5aca88b22a"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 99 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06132048",
+   "action": "MuControl-Sum (NCT06132048)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "bf89f140eb05"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06147414",
+   "action": "DANNIgene (NCT06147414)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "24e2bec57886",
+    "e0bf925080da"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06163482",
+   "action": "Hormonal Responses to a Mixed Meal in People With Cystic Fibrosis (NCT06163482)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "efcba1d41514"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 45 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06191640",
+   "action": "Sinus Disease in Young Children With Cystic Fibrosis (NCT06191640)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "80d1b70ba7b6"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 2 Years; maximumAge: 8 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06242795",
+   "action": "Hypertonic Saline in NCFB (NCT06242795)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0e22fa6d1335"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06273566",
+   "action": "Trans-AdT (NCT06273566)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8050acba784f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 100 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06296394",
+   "action": "HOPeCF (NCT06296394)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "7d4854af4729"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06339593",
+   "action": "Regional Monitoring of CF Lung Disease (NCT06339593)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "34c35b7b2aa9",
+    "47c257a54e42",
+    "481970adb701",
+    "49246b6a4385",
+    "531a4241455e",
+    "5938cda1eeb3",
+    "5b1543d7bb22",
+    "608deca7b742",
+    "65289612a5b4",
+    "7a7208332f95",
+    "a21f4a91ddc0",
+    "a7ab3e33d362",
+    "a99c6e08b5ef",
+    "beaef8b9bd89",
+    "c26844cabadb",
+    "d234c8455ba6",
+    "fddf288ecf7f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; other"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06356246",
+   "action": "E-MUCODENT (NCT06356246)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "50f3ff7692ea"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06364176",
+   "action": "Targeting Inflammation With Losartan to Improve Response to Modulator Therapy in Cystic Fibrosis. (NCT06364176)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0fd187c8339b",
+    "730c965b2f01",
+    "781adf31ea00",
+    "7bd760268eb4",
+    "7dd44463b05d",
+    "8b333052d58c",
+    "8fda82e65f7c",
+    "99bca39132d1",
+    "9f080ca1e164",
+    "ae7fd8e8d20c",
+    "c19518f4362c",
+    "c8ea297a39ff",
+    "d7bc1bf6f3ce",
+    "e42702f08a39",
+    "e480e0d9985c",
+    "e9c2bc11a0c7",
+    "f56c2894cc7e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; eGFR; lab; other; participation in other trials; prior therapy"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06368804",
+   "action": "ANTEIPA (NCT06368804)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "14d8750d9d01"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06413459",
+   "action": "BioMol-MA (NCT06413459)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "e88df2ee5c7f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06429176",
+   "action": "Safety, Tolerability, Pharmacokinetics, and Preliminary Efficacy of SPL84 in Patients With Cystic Fibrosis (NCT06429176)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "4029b9ac6597"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06457451",
+   "action": "DIAPASOM (NCT06457451)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "ccf96fa4496d"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06487273",
+   "action": "Home-BRAC (NCT06487273)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "59e321978b61"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06507956",
+   "action": "ACTIVMUCO (NCT06507956)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "5c9754238072"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06526923",
+   "action": "SAAVe (NCT06526923)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "bfa57451ddbe"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06528418",
+   "action": "Identification of Multiple Pulmonary Diseases Using Volatile Organic Compounds Biomarkers in Human Exhaled Breath (NCT06528418)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8c151f6e1ebb"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 100 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06559150",
+   "action": "A Phase II Study of Ensifentrine in Non-Cystic Fibrosis Bronchiectasis (NCT06559150)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "432106ddefe4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 80 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06560463",
+   "action": "Continuous Glucose Monitoring and OGTT Screen for Cystic Fibrosis Related Diabetes in Cystic Fibrosis (NCT06560463)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "99d407c89dc0"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06602869",
+   "action": "MUCEM (NCT06602869)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8b05f69cfeee"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06660992",
+   "action": "A Study to Assess the Efficacy and Safety of HSK31858 in Participants With Non-Cystic Fibrosis Bronchiectasis (NCT06660992)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "cc90d9f41e18"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06715956",
+   "action": "Observational Study of Sputum Inflammation Phenotypes and Clinical Outcomes in Non-Cystic Fibrosis Bronchiectasis (NCT06715956)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a34d0421eb16"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06747858",
+   "action": "LunairCF (NCT06747858)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "7e84209453fe"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06902363",
+   "action": "Sweat Testing in Infants: Comparing Sweat Collection on Upper Vs Lower Limbs (NCT06902363)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "99d131f1bb37"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 10 Days; maximumAge: 6 Months"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06950892",
+   "action": "RESCUe (NCT06950892)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "449f9499f3bc"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06985225",
+   "action": "Evaluation of Ventilation Defects Downstream of Mucus Plugs in Patients With Muco-Obstructive Lung Disease (NCT06985225)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "6eba24b6514f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06995651",
+   "action": "Dorzagliatin in Pancreatic Insufficient Cystic Fibrosis (NCT06995651)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8f2a74b0621f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06996951",
+   "action": "Sinonasal Therapies and Histologic Correlations of Patients With Cystic Fibrosis in the Era of Highly Effective Modulator Therapy (NCT06996951)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "e6c6a1194355"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06998043",
+   "action": "Study With Phage for CF Subjects With Pseudomonas Lung Infection (NCT06998043)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "5abf08fa8d7f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07027553",
+   "action": "RHH-CF (NCT07027553)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "51970b1da64a"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07048262",
+   "action": "Dose Range Finding, Efficacy, and Safety Study of Nebulized CSL787 in Adults With Non-cystic Fibrosis Bronchiectasis (NCFB) (NCT07048262)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c0a9a24ea03e"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 85 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07048574",
+   "action": "TIDES 2 (NCT07048574)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "52198692bf5a"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Months; maximumAge: 11 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07062939",
+   "action": "Comparative Effects of Mechanical and Manual Airway Clearance Techniques in Cystic Fibrosis (NCT07062939)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "eae01bb3e719"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: 40 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07071324",
+   "action": "CF Wellness Program (NCT07071324)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "bb83fcc79090"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07083557",
+   "action": "VALD (NCT07083557)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "b9c0abbd825f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 100 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07148739",
+   "action": "ENACT (NCT07148739)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "221b4bc527d9",
+    "2d2d31953c76",
+    "3050b35c4a70",
+    "4f27c3d0c09e",
+    "4fcfe48213b7",
+    "6d01f526f396",
+    "784aae7807a7",
+    "92faf67e2d0a",
+    "92fe7a8c6558",
+    "930fe3d4b9c7",
+    "b9e0abed1e83",
+    "c41944299018",
+    "cea562a61cdc"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; lab; other"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07163078",
+   "action": "Nutrition Supplement for Cystic Fibrosis (NCT07163078)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "66eabd386669"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 50 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07255131",
+   "action": "RAKITZIHCFA (NCT07255131)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "11f83cc3a163"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 70 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07274020",
+   "action": "Long-Term Safety and Efficacy of Moxifloxacin in Bronchiectasis Patients (NCT07274020)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0170a5c8f861"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07274631",
+   "action": "PALMIRE (NCT07274631)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c1aa63f9b5ac"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07275905",
+   "action": "Bacteriophages for Adults With Cystic Fibrosis and Chronic Achromobacter Lung Infection (NCT07275905)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "db961e0a22d4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07280598",
+   "action": "Safety of Combined Intravenous Antibiotic and Bacteriophage Therapy in Adults With Cystic Fibrosis and Antibiotic-Resistant Lung Infections (NCT07280598)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "acd2bb5d3418"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07283770",
+   "action": "Evaluation of VX-581 in Healthy Participants and in Participants With Cystic Fibrosis (NCT07283770)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a8f0ea84172d"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 55 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07289035",
+   "action": "TMX (NCT07289035)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "b8a68a920283"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07289100",
+   "action": "NOVEL (NCT07289100)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "de9d9d46d781"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07312734",
+   "action": "SEND-CF (NCT07312734)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c115699bff10"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07314229",
+   "action": "MUCOLIMEX (NCT07314229)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "f1566055c8fe"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07342920",
+   "action": "Taba-Muco (NCT07342920)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "62327d2dc172"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07376187",
+   "action": "Digital Physiotherapy for Pediatric Chronic Suppurative Lung Diseases (NCT07376187)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a7484c0bd9d4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 6 Years; maximumAge: 12 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07402434",
+   "action": "ADVANCE-CFTR (NCT07402434)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "3331a9433a50"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07414810",
+   "action": "SWEAT CF (NCT07414810)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1e54f0ee276b",
+    "a3f32b6ce5ee",
+    "b9997e427f1a",
+    "ed95429de386",
+    "fbc108c76e2d",
+    "fc0f7f2b1772"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; lab"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07436351",
+   "action": "ACT With CF Self-Help Toolkit (NCT07436351)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "5e9cea1cf5a4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07437105",
+   "action": "Dose Escalation Study Evaluating the Safety and Pharmacokinetics of VX-272 in Healthy Participants (NCT07437105)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c4541f855c2f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 55 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07484607",
+   "action": "UNIFIED-CF (NCT07484607)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "65191811c685"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07485543",
+   "action": "Safety and Efficacy of Inhaled BMD003 (CFTR mRNA) in Chinese Cystic Fibrosis Patients Aged ≥12 Years (NCT07485543)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "03a04f7fe4ac",
+    "140dc6161657",
+    "18276bbf6e54",
+    "22d80e09d39b",
+    "2b1e16c9da6f",
+    "39c59abd4c98",
+    "3eb4c3214f44",
+    "414dddb0a73d",
+    "420da87ecfa0",
+    "4a16d5062480",
+    "576994fb252b",
+    "593666a3115f",
+    "64ee037a4b36",
+    "6f229cbe95b2",
+    "6f3a2ebeb1c2",
+    "6fc1b2cc01ea",
+    "70b725afa335",
+    "7968fbf5448e",
+    "80bd663e601d",
+    "824062cccd3e",
+    "8261fb4e2f93",
+    "8d7940be01d5",
+    "93cde8f8a510",
+    "adc3b7c91b77",
+    "c80474bbe6ee",
+    "d1e33e774052",
+    "d50b2973142c",
+    "d7200ec238ba",
+    "d945921b34ab",
+    "dc6c9365629a",
+    "dd982dce3542",
+    "e09fae8dce20",
+    "e3ad42954514",
+    "e92750d1e904",
+    "f6b1208cd47c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis; lab; liver function; other; prior therapy; weight"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07500493",
+   "action": "CF-TR (NCT07500493)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "e02fc2d5fd3d"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07513051",
+   "action": "DIaphragmatic Swing According to Cpap Flow Output in NEOnates (DISCONEO) (NCT07513051)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a23692dcb0cb"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 72 Hours; maximumAge: 10 Weeks"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07519460",
+   "action": "Effects of High-Frequency Chest Wall Oscillation Combined With Concurrent Training on Cough,in Cystic Fibrosis Patients (NCT07519460)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "99a84a8e508e"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: 35 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07559175",
+   "action": "EPIC (NCT07559175)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "893f5854abf8"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 85 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07569419",
+   "action": "MODEL (NCT07569419)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "183fc8edf129"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07599839",
+   "action": "BASE (NCT07599839)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "22df11fb5316"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07599969",
+   "action": "BPIM (NCT07599969)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "404be3e6b9fd"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07608328",
+   "action": "AMBER (NCT07608328)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8b6bef9ec684"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07616375",
+   "action": "A Study to Assess the Safety of HSK31858 in Participants With Non-Cystic Fibrosis Bronchiectasis (NCT07616375)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "3620cca5571c"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07628530",
+   "action": "RESTart (NCT07628530)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "2c4557ca27c8"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 89 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07692594",
+   "action": "CHi-CF (NCT07692594)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "50d01857ef76"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07696091",
+   "action": "Study on Drug Interactions Affecting the Pharmacokinetics of RSS0343 Tablet (NCT07696091)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "76101f817548"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 55 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07720375",
+   "action": "ATMOS (NCT07720375)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "d9f6b0d59e46"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 80 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07722364",
+   "action": "HFCWO in Children With Non-CF Bronchiectasis (NCT07722364)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a7b1fb1eda95"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 6 Years; maximumAge: 12 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07729787",
+   "action": "ADMP-CF (NCT07729787)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "cb31db1a9963"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 6 Years; maximumAge: 12 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07780344",
+   "action": "FEMPTO (NCT07780344)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "30ae99ec45f9"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 50 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07805174",
+   "action": "High-Intensity Interval Exercise in Bronchiectasis Patients (NCT07805174)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "cb79fde95c7b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07809867",
+   "action": "Pharmacokinetics of Elexacaftor/Tezacaftor/Ivacaftor in Cystic Fibrosis (NCT07809867)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "237e4761f243",
+    "2a029044f0c5",
+    "3efe6c74d583",
+    "3fdda50c11d2",
+    "534ed8ddfce4",
+    "6fafad53b042",
+    "d1b63df215ba",
+    "d9f2072d6386",
+    "e260156d7226",
+    "f07816336bdd",
+    "f2a752007511",
+    "faf77b296e0c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07851831",
+   "action": "CGMUCODIAB (NCT07851831)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "12023c51fc70",
+    "1997a7fcb62b",
+    "1ca61cd0500e",
+    "2502eb6870d7",
+    "3f5ace1c3303",
+    "83fb11d921c9",
+    "86e321d22068",
+    "95957e0aba9c",
+    "9774395bc007",
+    "af1c20b03ee2",
+    "b1416872f4a9",
+    "bdbfceabfd1c",
+    "bf03aca6ceb2",
+    "ca8c093337b2",
+    "ce918fee3684",
+    "d7301ee54ac0",
+    "eee29bec2475",
+    "f160a47bfa13",
+    "f58b129ad3e6"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; other; participation in other trials"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07879651",
+   "action": "SPICE-CF (NCT07879651)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "f7904f8ad301"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 16 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07885410",
+   "action": "PERCE-MUCO (NCT07885410)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0e3920a4e971"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07892443",
+   "action": "Type 2 Inflammation in Adults With Cystic Fibrosis (NCT07892443)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "be92ef9c2476"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07903311",
+   "action": "Iron Repletion in Cystic Fibrosis (NCT07903311)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "9263d64113b4"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07903792",
+   "action": "Diagnostic Value of Oropharyngeal Suction and Effect of Respiratory Physiotherapy on the Detection of Microorganisms in the Pediatric Patient (NCT07903792)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "04c876f2d173",
+    "1307c3781c47",
+    "159559db74a4",
+    "882a8faec60b",
+    "9d78522df1dc",
+    "a21ee0547b11",
+    "ba2c36ca6bc5",
+    "de0ff36027bd",
+    "e1dffdedec44",
+    "e37a9b292b37",
+    "e5173503d1ca"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07904325",
+   "action": "CF-VHF (NCT07904325)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8019e6130bff"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 40 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07913009",
+   "action": "Investigation of Pharmacokinetics, Safety of HSK31858 in Subjects With Hepatic Impairment (NCT07913009)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a9b4a565c3bf"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 70 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07915011",
+   "action": "Investigation of Pharmacokinetics, Safety of HSK31858 in Subjects With Renal Impairment (NCT07915011)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "12a47abcde59"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 70 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07915024",
+   "action": "Phase 1 Study to Assess the Effects of HSK31858 on the QT/QTc Interval in Healthy Chinese Participants (NCT07915024)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "86c63869d167"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 45 Years"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "contraindications_precautions",
+   "action_id": "drug:rxcui:85762+2587892",
+   "action": "Paxlovid",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "483060afd969"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "label contraindication names the diagnosis"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:dehydration",
+   "action": "Dehydration",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "71d110803f70"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:environmental_smoke_and_inhalants",
+   "action": "Environmental smoke and inhalants",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1ac9d8bdc9a6"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:exposure_to_respiratory_infections",
+   "action": "Exposure to respiratory infections",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "5583fe332993"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:1243041",
+   "action": "Ivacaftor",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "84757ee429bd",
+    "9337e8b6d363",
+    "f4855961924b",
+    "f9f0948e6b5e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: at least one mutation in the CFTR gene that is responsive to ivacaftor potentiat"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:1243041+1655922",
+   "action": "Lumacaftor/ivacaftor",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1191384cc9bc",
+    "5c1ebe4950b0",
+    "690ca2bfdcce",
+    "aacf64ecf56d",
+    "d7819c98d1cd"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: aged 1 year and older; F508del mutation in the CFTR gene; homozygous"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:1243041+1999382",
+   "action": "Tezacaftor/ivacaftor",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "3d126d81f78e",
+    "82d222dc4142",
+    "8c415debe96a",
+    "d1b480b9c357"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: aged 6 years and older; who are homozygous for the F508del mutation or who have "
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:1243041+1999382+2256951",
+   "action": "Elexacaftor/tezacaftor/ivacaftor",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "2e1e83c16b40",
+    "94d399aa7be0",
+    "c2c7870b4617",
+    "d268534d3b55"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: adult and pediatric patients aged 2 years and older; at least one variant in the"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:1999382+2701430+2701431",
+   "action": "Vanzacaftor/tezacaftor/deutivacaftor",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "734f231adfc5",
+    "9923f2e033e4",
+    "d2ae383f4d1d",
+    "fa164eafc493"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: adult and pediatric patients 6 years of age and older; who have at least one var"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:breast_milk",
+   "action": "breast milk",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "24a4897bc2c6",
+    "51c5959b3c4b",
+    "94cb22362bf9",
+    "d04ef5677df3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Newborns"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:extra_salt_water",
+   "action": "Extra salt & water",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "30479f68a1d2",
+    "5b93fbd89e1e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: in situations w/salt loss (e.g., increased heat/humidity, exercise)"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:fat_soluble_vitamin_supplements",
+   "action": "Fat-soluble vitamin supplements",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "8ee0704f9f4c",
+    "e7be26eed986"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Exocrine pancreatic insufficiency"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:nutrient_dense_food_and_supplements",
+   "action": "nutrient-dense food and supplements",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "d5ddafa1679c"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:nutrient_dense_food_supplements",
+   "action": "Nutrient-dense food & supplements",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "886c2bdbc17a",
+    "9b511cce2f2f"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Exocrine pancreatic insufficiency"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:salt_supplementation",
+   "action": "salt supplementation",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "dda52df9d307",
+    "f494f47c60c2",
+    "fb578907584c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "diet:zinc_supplementations",
+   "action": "Zinc supplementations",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "9b964b8b73d1",
+    "e38b2ceea71a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Exocrine pancreatic insufficiency"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:aerosolized antibiotic",
+   "action": "aerosolized antibiotic",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "2a38ab41cbb7",
+    "8621be21f6aa",
+    "8e2aad22931c",
+    "abc12432c97c",
+    "e6da5a1443de"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:annual influenza vaccine",
+   "action": "Annual influenza vaccine",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "163b97df725d",
+    "badb53526050"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Infection"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:antibiotics",
+   "action": "antibiotics",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "12d6a404f808",
+    "91cbe0b72c51",
+    "c9c8c4b999c8",
+    "f7a5583af286"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Infection"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:bronchodilator",
+   "action": "bronchodilator",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "56746cd3fc2a",
+    "66e55747b1e7",
+    "a0dab0bc903e",
+    "c8afb3d943bb",
+    "d6cb9d37fb53"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:cftr modulator therapy",
+   "action": "CFTR modulator therapy",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a74e1b54e799",
+    "ea7bdb9e128b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: responsive CFTR variants"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:fat-soluble vitamin a supplementation",
+   "action": "fat-soluble vitamin A supplementation",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "317409633e56",
+    "fdd37d5d4934"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:fat-soluble vitamin supplements",
+   "action": "fat-soluble vitamin supplements",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c0333babc81e"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:folate supplementation",
+   "action": "folate supplementation",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "2dc9647e8c93",
+    "eb41a295754b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:gonadotropin ovulation induction",
+   "action": "Gonadotropin ovulation induction",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "40c670e5c59c",
+    "661fe03de026",
+    "bf8e655b7419"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Females"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:hypertonic saline",
+   "action": "hypertonic saline",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0b03a79a4a4d",
+    "64fda18869ac",
+    "7b8495f1545f",
+    "c4ec5a9938ab",
+    "fef7dfbbf43f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:inhaled corticosteroids+or long-acting beta agonist",
+   "action": "Inhaled corticosteroids &/or long-acting beta agonist",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "30205d855485",
+    "8089710da3df",
+    "9f35d17ed3e0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: As needed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:insulin therapy",
+   "action": "Insulin therapy",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "b8836209467e",
+    "fe228cfb045b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Diabetes (CFRD)"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:iron supplementation",
+   "action": "iron supplementation",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "40c99ddbe12b",
+    "a5dc732d8286"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:laxative treatment",
+   "action": "laxative treatment",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "6c71609f3380"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:laxatives",
+   "action": "Laxatives",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "2b1aa0b41065",
+    "3c92722ed537",
+    "7215e9afb6ee",
+    "938ae8ad5c77"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: If not obstructed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:pancreatic enzyme replacement therapy",
+   "action": "Pancreatic enzyme replacement therapy",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "c046e18f46a2",
+    "e3bcd6ab6ec5"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Exocrine pancreatic insufficiency"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:name:pancreatic enzyme replacement",
+   "action": "pancreatic enzyme replacement",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "a35322dc2e49"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:253182",
+   "action": "insulin",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "10c5e8de62f2",
+    "82cc8cee7fad",
+    "ae74cbffa9d1"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: females"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:337623",
+   "action": "dornase alfa",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "53fc6d96b55f",
+    "7dba3dbcae2b",
+    "7fe93bb4abdf",
+    "f7f8d496e20a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Pulmonary"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:8308",
+   "action": "Phytonadione",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "995dad09433b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Phytonadione injectable emulsion is indicated in: • anticoagulant-induced prothr"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:airway_clearance",
+   "action": "airway clearance",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0c1198f7517e",
+    "50c4b163d265",
+    "ccf780d1b644"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Pulmonary"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:airway_clearance_practices",
+   "action": "airway clearance practices",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "9b536b7aca23",
+    "afba8bb77b7f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:assisted_reproductive_technologies_art",
+   "action": "assisted reproductive technologies (ART)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "4b9f50582356",
+    "614d208d6524",
+    "8b1e6d25ed81"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:contact_precautions",
+   "action": "contact precautions",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "295ba6c8d9ea"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: with every clinical encounter"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:contact_precautions_gown_gloves",
+   "action": "Contact precautions (gown & gloves)",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "02cdcb54b569",
+    "8532b1369f1a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Infection"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:double_lung_transplant",
+   "action": "double lung transplant",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "42458d89b7d8",
+    "4f3fd8447e92",
+    "935d500e5cbc",
+    "d40908bb6a6a",
+    "e7de42733d77"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:eradication_attempts",
+   "action": "Eradication attempts",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1829717b5ee1",
+    "4d3affe5a40c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Pseudomonas aeruginosa"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:intrauterine_insemination",
+   "action": "Intrauterine insemination",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0c7a6aa41246",
+    "4236c5a733b2",
+    "eb9dd788099b"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Females"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:ivf",
+   "action": "IVF",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "42106bd4c310",
+    "a8551621343b",
+    "e3302f3eebe9"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Females"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:ivf_w_intracytoplasmic_sperm_injection",
+   "action": "IVF w/intracytoplasmic sperm injection",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "01b9ee4d098d",
+    "25ddbec06644",
+    "7056faa87299"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Males; Infertility"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:liver_transplant",
+   "action": "liver transplant",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "916d34545dc3",
+    "e536f005a09f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when indicated"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:microsurgical_epididymal_sperm_aspiration",
+   "action": "Microsurgical epididymal sperm aspiration",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "0740d283d8ff",
+    "30793966e730",
+    "475a3b7d9576"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Males; Infertility"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:polypectomy",
+   "action": "Polypectomy",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1e7a9cc07e22",
+    "4f24d8f4d545"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:postural_drainage_percussion",
+   "action": "Postural drainage & percussion",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "856833f6b93e",
+    "c23756f64d14"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Pulmonary"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:routine_vaccinations",
+   "action": "routine vaccinations",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "e9bc8d5862f9"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:sinus_surgery",
+   "action": "Sinus surgery",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "053d918a4cc1",
+    "d11eafcecf95"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:surgical_intervention_for_nasal_sinus_symptoms",
+   "action": "surgical intervention for nasal/sinus symptoms",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "219560679664",
+    "607f9e602ac1",
+    "89b87756709f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: After the newborn period"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:surgical_management_for_bowel_obstruction",
+   "action": "surgical management for bowel obstruction",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "533c698eed29",
+    "92869ccfefd8"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: bowel obstruction"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "procedure:testicular_biopsy_sperm_extraction",
+   "action": "Testicular biopsy & sperm extraction",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "485a7b6431bc",
+    "4d31c56a92b5",
+    "5a8f6b57e90a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Males; Infertility"
+  },
+  {
+   "case_id": "PRAC-CFTR-F508del",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:gastrostomy_tube",
+   "action": "Gastrostomy tube",
+   "branch": "MONDO:0009061",
+   "evidence_ids": [
+    "1b1790e20408",
+    "1b753fc04a9e"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Exocrine pancreatic insufficiency"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06567119",
+   "action": "Preliminary Evaluation of the Safety and Tolerability of SPOT-mRNA01 Subcutaneously Administered in Healthy Subjects (NCT06567119)",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "3688c6165fb1",
+    "40f46f182928",
+    "683abb66c407",
+    "6a7c5b107bb3",
+    "6c8ecce84493",
+    "817ee97cd6d7",
+    "86a4d3f918a9",
+    "8cf0bcb34922",
+    "99bf0f18e37b",
+    "bd2ccb89669e",
+    "d5e2667479ca",
+    "dafd7618c566",
+    "e161dcdca036",
+    "ecdd947ef066",
+    "f80bf591fb75"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; pregnancy status; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06567119",
+   "action": "Preliminary Evaluation of the Safety and Tolerability of SPOT-mRNA01 Subcutaneously Administered in Healthy Subjects (NCT06567119)",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "3688c6165fb1",
+    "40f46f182928",
+    "683abb66c407",
+    "6a7c5b107bb3",
+    "6c8ecce84493",
+    "817ee97cd6d7",
+    "86a4d3f918a9",
+    "8cf0bcb34922",
+    "99bf0f18e37b",
+    "bd2ccb89669e",
+    "d5e2667479ca",
+    "dafd7618c566",
+    "e161dcdca036",
+    "ecdd947ef066",
+    "f80bf591fb75"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; pregnancy status; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06567119",
+   "action": "Preliminary Evaluation of the Safety and Tolerability of SPOT-mRNA01 Subcutaneously Administered in Healthy Subjects (NCT06567119)",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "3688c6165fb1",
+    "40f46f182928",
+    "683abb66c407",
+    "6a7c5b107bb3",
+    "6c8ecce84493",
+    "817ee97cd6d7",
+    "86a4d3f918a9",
+    "8cf0bcb34922",
+    "99bf0f18e37b",
+    "bd2ccb89669e",
+    "d5e2667479ca",
+    "dafd7618c566",
+    "e161dcdca036",
+    "ecdd947ef066",
+    "f80bf591fb75"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; pregnancy status; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07653633",
+   "action": "VILLAREALFC (NCT07653633)",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "12fa04e1fba8",
+    "139c461be69a",
+    "14160823dd2d",
+    "1fcdc8f45b41",
+    "306cea285855",
+    "3d8f2c1c0774",
+    "46059456b544",
+    "6900610e7ff8",
+    "7b1402350b67",
+    "874b53037a22",
+    "8ee40717dcca",
+    "979be51d8b97",
+    "d2b45db2a64d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07653633",
+   "action": "VILLAREALFC (NCT07653633)",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "12fa04e1fba8",
+    "139c461be69a",
+    "14160823dd2d",
+    "1fcdc8f45b41",
+    "306cea285855",
+    "3d8f2c1c0774",
+    "46059456b544",
+    "6900610e7ff8",
+    "7b1402350b67",
+    "874b53037a22",
+    "8ee40717dcca",
+    "979be51d8b97",
+    "d2b45db2a64d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07653633",
+   "action": "VILLAREALFC (NCT07653633)",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "12fa04e1fba8",
+    "139c461be69a",
+    "14160823dd2d",
+    "1fcdc8f45b41",
+    "306cea285855",
+    "3d8f2c1c0774",
+    "46059456b544",
+    "6900610e7ff8",
+    "7b1402350b67",
+    "874b53037a22",
+    "8ee40717dcca",
+    "979be51d8b97",
+    "d2b45db2a64d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; diagnosis; other; prior therapy"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "drug:rxcui:1886",
+   "action": "caffeine",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "6a970dc03c7d"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "searched_none:contraindications_precautions",
+   "action": "None found",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "7cceee421bb8"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:activities_with_increased_fall_or_high_impact_collision_risk",
+   "action": "activities with increased fall or high-impact collision risk",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "bb756cdabd4d"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:contact_sports",
+   "action": "contact sports",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "d33a6675e998",
+    "dd6afae0a846"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:contact_sports",
+   "action": "contact sports",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "d33a6675e998",
+    "dd6afae0a846"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:excessive_alcohol",
+   "action": "excessive alcohol",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "6e4149f81807"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:fighting_sports",
+   "action": "fighting sports",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "18c496c7e13c"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:football",
+   "action": "football",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "930b6589642a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:lifting_an_infant_by_the_ankle_when_diapering",
+   "action": "lifting an infant by the ankle when diapering",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "a2afb3dededd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: infant"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:running",
+   "action": "running",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "2b20dfc64843"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:secondhand_smoke",
+   "action": "secondhand smoke",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "090aade9d756"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:smoking",
+   "action": "smoking",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "1538e426fcd5"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:steroids",
+   "action": "steroids",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "64078f05bf59"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:substances_or_medications_that_may_affect_bone_health",
+   "action": "substances or medications that may affect bone health",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "d57b5b280526"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:sudden_acceleration_deceleration_movements",
+   "action": "sudden acceleration/deceleration movements",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "b6318d91a714"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: In young children"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:throwing_a_child_in_the_air",
+   "action": "throwing a child in the air",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "b654b0316098"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: In young children"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "cf78fbb6e320"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "cf78fbb6e320"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "cf78fbb6e320"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:chembl:CHEMBL3833333",
+   "action": "cannabinoids",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "21c8321dbcde",
+    "c462b21e9d5f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: where legal"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:anti-seizure medications",
+   "action": "anti-seizure medications",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "0536b27b9cc4",
+    "570dfa858f32"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: neuropathic pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:benzodiazepines",
+   "action": "benzodiazepines",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "7b4f12907809",
+    "8c75862b56c5"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle spasm"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:bisphosphonates",
+   "action": "bisphosphonates",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "45b982f43707",
+    "b86fa7604faf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: OI"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:bone morphogenetic protein-2",
+   "action": "bone morphogenetic protein-2",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "388071730439"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations (older chapter without Targeted Therapies)"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:cox-2 inhibitors",
+   "action": "COX-2 inhibitors",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "183668a71bae",
+    "ec16f1cacae4"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Joint pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:muscle relaxants",
+   "action": "muscle relaxants",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "2ea046593431",
+    "44d6107fa3dd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: myofascial spasm & neuropathic pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:nonsteroidal anti-inflammatory drugs",
+   "action": "nonsteroidal anti-inflammatory drugs",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "887ea7e36d0b",
+    "f7bbda7132dd"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Chronic pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:norepinephrine receptor inhibitors+serotonin",
+   "action": "serotonin/norepinephrine receptor inhibitors",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "6bb09bab9871",
+    "ea80cdba5a92"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: depression & neuropathic pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:nsaids",
+   "action": "NSAIDs",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "19446d968d41",
+    "c22e87c4fb72"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as tolerated by upper GI symptoms"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:opioids",
+   "action": "opioids",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "3045be2f0d3c",
+    "72c921430b89"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: after failing the above medications"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:steroids",
+   "action": "steroids",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "98672cacf750",
+    "a506421b86c1"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Short courses"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:name:tricyclic antidepressants",
+   "action": "tricyclic antidepressants",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "47ebb5e2b2e3",
+    "7f810f450851"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: neuropathic pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:10689",
+   "action": "tramadol",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "1d01fb07aaa6",
+    "663e7186e87b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: before resorting to other opioids"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:10691",
+   "action": "tranexamic acid",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "9c8bf66bf2ac",
+    "b50fc6e6d186",
+    "cf37e26fcab3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: postpartum hemorrhage"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1151",
+   "action": "ascorbic acid",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "030707bbd082",
+    "8df865075fe9",
+    "cbfcb43211c1"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: easy bruising"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:161",
+   "action": "acetaminophen",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "6a731edda0af",
+    "b2259cc95a0d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Joint pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1952+1010971+1368202",
+   "action": "glucosamine & chondroitin",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "0e4e4a4fa0f9",
+    "56b2134074c3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: osteoarthritis"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1992",
+   "action": "topical capsaicin",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "8d092731f8c5"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations (older chapter without Targeted Therapies)"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:3251",
+   "action": "desmopressin",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "12f9a60684fb",
+    "482c53749e26",
+    "7c8643365c54",
+    "8a9393b7537a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: before procedures such as dental extractions"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:6387",
+   "action": "topical lidocaine",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "82e3024c9dcb",
+    "bb1e2df53ebe"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: localized pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:6574",
+   "action": "magnesium",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "19f7ef32eb10",
+    "8fd54ded1c39"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle spasm & pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:7824",
+   "action": "oxytocin",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "8010633e889f",
+    "b554f9638c2a",
+    "cf2a7e1d5b9b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: postpartum"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:alternating_positions",
+   "action": "alternating positions",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "5f4d985b1e3f",
+    "d4b6ec372ec4"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: skull and limb deformities"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:anesthesia",
+   "action": "anesthesia",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "5c56fdc764cb"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:cesarean_section",
+   "action": "cesarean section",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "1c42fe5d670e",
+    "844e678af4ce"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Pregnancy Management"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:dermal_wound_closure_without_tension",
+   "action": "dermal wound closure without tension",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "d1b8fa88067b",
+    "dd3f73615b40"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Skin"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:episiotomy",
+   "action": "episiotomy",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "413254edfcfa",
+    "b0c0c412817d",
+    "c0ca21c9664d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: For vaginal delivery"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:intramedullary_rodding",
+   "action": "intramedullary rodding",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "13fd3aee39ce",
+    "87b7f8754c01"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: recurrent fractures or progressive deformity"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:osteotomy",
+   "action": "osteotomy",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "ef4c93d6e9c6",
+    "fb8b4d277ecc"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: When surgery for deformity correction is indicated"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:preoperative_and_intraoperative_traction",
+   "action": "preoperative and intraoperative traction",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "4a18ff16e62a",
+    "64a1ad7e6114"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: When surgery for deformity correction is indicated"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:reduction_and_realignment",
+   "action": "reduction and realignment",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "81784a22101b",
+    "b236e677d978"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:segmental_pedicle_screw_fixation",
+   "action": "segmental pedicle screw fixation",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "37c12b81c1e6",
+    "c1bfdaed144b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: When surgery for deformity correction is indicated"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "procedure:surgery",
+   "action": "surgery",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "7de3dd3d173a",
+    "aaf9371b4dbf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: bone deformities and fractures"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "searched_none:supportive_management",
+   "action": "None found",
+   "branch": "MONDO:0020521",
+   "evidence_ids": [
+    "11334066cf2f"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:braces",
+   "action": "braces",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "3265fbd9a1d2",
+    "570ac52a5e03"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: Joint instability"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:bracing",
+   "action": "bracing",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "1470b2e3f806",
+    "fb680f185849"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: scoliosis"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:casts",
+   "action": "casts",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "840e70d418e6",
+    "946fbb2b2757"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Fractures"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:external_braces",
+   "action": "external braces",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "46b5fed3948f",
+    "8e0c92f07d17"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: deforming limbs"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:knee_or_ankle_braces",
+   "action": "knee or ankle braces",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "9635e319d695",
+    "dd60907dac98"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:modified_automobiles",
+   "action": "modified automobiles",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "109179ff28a8"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: adults"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:orthotics",
+   "action": "orthotics",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "0d3de039b813",
+    "84a73277ce7e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: ankle instability"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:protective_pads_or_bandages",
+   "action": "protective pads or bandages",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "139c465a2697",
+    "fde534cb35f9"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Very young children"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:ring_splints",
+   "action": "ring splints",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "2cb1038b0727",
+    "e8957dd5f4f4"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: small joint instability"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:soccer_pads_or_ski_stockings_w_shin_padding",
+   "action": "soccer pads or ski stockings w/shin padding",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "c38d5553238b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Older children who are active"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:soft_neck_collar",
+   "action": "soft neck collar",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "1372418f8fed",
+    "7d8a09f26a7e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: if tolerated"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:waterbed_adjustable_air_mattress_or_viscoelastic_foam_mattress",
+   "action": "waterbed, adjustable air mattress, or viscoelastic foam mattress",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "02af111677c3",
+    "7b2e325cc5b8"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: pain"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:wheelchair_customizations",
+   "action": "wheelchair customizations",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "3e08ff770f2c",
+    "cf631ad28c9d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:wheelchair_or_scooter",
+   "action": "wheelchair or scooter",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "0a4bb3b47043",
+    "53ea53f1ed53"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:wheelchairs",
+   "action": "wheelchairs",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "6ee93b42f26d"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:wrist_or_wrist_thumb_braces",
+   "action": "wrist or wrist & thumb braces",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "6602eb8072f5",
+    "db50732bcf1b"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: small joint instability"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "therapy:occupational_therapy",
+   "action": "occupational therapy",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "7b768c7aace7",
+    "ed2e4d55a375"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: contractures and head and spinal deformity"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "therapy:physical_therapy",
+   "action": "physiotherapist",
+   "branch": "MONDO:0007522",
+   "evidence_ids": [
+    "00543e6e790f",
+    "08924139b5df",
+    "577414011ba7"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: contractures and head and spinal deformity"
+  },
+  {
+   "case_id": "PRAC-COL1A1",
+   "section": "supportive_management",
+   "action_id": "therapy:physical_therapy",
+   "action": "physiotherapist",
+   "branch": "MONDO:0030854",
+   "evidence_ids": [
+    "00543e6e790f",
+    "08924139b5df",
+    "577414011ba7"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: contractures and head and spinal deformity"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "clinical_trial_eligibility",
+   "action_id": "searched_none:clinical_trial_eligibility",
+   "action": "None found",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "db1807c9db87"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched ClinicalTrials.gov; no open relevant trial"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "contraindications_precautions",
+   "action_id": "searched_none:contraindications_precautions",
+   "action": "None found",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "86d78dbb3e2d"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "72f4403907d0"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:name:antimuscarinic anticholinergic agents",
+   "action": "antimuscarinic (anticholinergic) agents",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "4d085e49d2e8",
+    "6061c8ac4e11"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: confirmed diagnosis of a KMT2B-related disorder"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:name:benzodiazepines",
+   "action": "benzodiazepines",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "629e3858dada",
+    "9840d364d00c"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:name:influenza immunizations",
+   "action": "influenza immunizations",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "6998874cd20e",
+    "f455af9539cf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: respiratory compromise from chest deformities related to scoliosis"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:name:prophylactic antibiotics",
+   "action": "prophylactic antibiotics",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "54b388d841b0",
+    "e20e85668e87"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: respiratory compromise from chest deformities related to scoliosis"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:name:trihexiphenidyl",
+   "action": "trihexiphenidyl",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "b4e3a9b9244c",
+    "c5f6bf1e4f36"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:10390",
+   "action": "tetrabenazine",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "1306cd49a15c",
+    "a31e778bd8fb"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:10811",
+   "action": "trihexyphenidyl",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "bec61b4b5d91",
+    "e67887db96e1"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: during pregnancy"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1292",
+   "action": "baclofen",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "4789c536c50e",
+    "5b23fb23696e"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:2019+6375",
+   "action": "levodopa/carbidopa",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "bc27476cd71e",
+    "df06282a658e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: during pregnancy"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:25480",
+   "action": "gabapentin",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "25893954e4e0",
+    "9a037ffbc8a7"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:2598",
+   "action": "clonazepam",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "4df091562a74",
+    "aefbab6b1da4"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: during pregnancy"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:6375",
+   "action": "levodopa",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "385242b4fc55",
+    "701ab87a4fd5"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "procedure:bilateral_globus_pallidus_pars_interna_deep_brain_stimulation_gpi_dbs",
+   "action": "Bilateral globus pallidus pars interna deep brain stimulation (GPi-DBS)",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "23bbdc9937ef",
+    "f79048a6b89a"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "procedure:chest_physical_therapy",
+   "action": "chest physical therapy",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "10091145c42e",
+    "d32c9973658b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: respiratory compromise from chest deformities related to scoliosis"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "procedure:deep_brain_stimulation_dbs",
+   "action": "Deep brain stimulation (DBS)",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "253fe3fb2372",
+    "f9de78f7ac2a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: women"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "procedure:subthalamic_nucleus_dbs",
+   "action": "subthalamic nucleus DBS",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "435f3d2889a1",
+    "aa82d997aaa0"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "met: dystonia"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:ankle_foot_orthoses",
+   "action": "ankle-foot orthoses",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "4ffc00fc3def"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:augmentative_and_alternative_communication_aac",
+   "action": "augmentative and alternative communication (AAC)",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "05065acead82",
+    "f9dbb004dd0c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: expressive language difficulties"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:walkers",
+   "action": "walkers",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "06f058744f13"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:early_intervention",
+   "action": "early intervention program",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "30a157cf429a",
+    "fc789a2107b4"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Ages 0-3 years"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:feeding_therapy",
+   "action": "feeding therapy",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "620ade153582",
+    "95e499e9758c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: safe to eat by mouth"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:occupational_therapy",
+   "action": "occupational therapy",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "5e4e9b9b6021",
+    "cfe8b363b238",
+    "de8e497e96cc"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Fine motor dysfunction"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:other_rehabilitation",
+   "action": "developmental preschool",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "dca9182bbf01",
+    "f0ff07a462f5"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Ages 3-5 years"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:physical_therapy",
+   "action": "physical therapy",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "54615bc63548",
+    "7809fc6a543c",
+    "d26ebb41f256"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: joint contractures, hip dislocation, and/or kyphoscoliosis"
+  },
+  {
+   "case_id": "PRAC-KMT2B",
+   "section": "supportive_management",
+   "action_id": "therapy:speech_language_therapy",
+   "action": "Speech-language therapy",
+   "branch": "MONDO:0015004",
+   "evidence_ids": [
+    "6df8ab34284b",
+    "9ee135eeebe5"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06488313",
+   "action": "A Study to Evaluate the Pharmacodynamics and Safety of ARCT-810 in Participants With OTCD (NCT06488313)",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "5b71ab2d2f2c"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 12 Years; maximumAge: none"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT06805695",
+   "action": "Long-term Follow-up (LTFU) Study of Participants in Any iECURE Protocol Using an Investigational Product (IP) (NCT06805695)",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2e65c884f369"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 7 Months; maximumAge: 15 Months"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT07773246",
+   "action": "ANCHOR (NCT07773246)",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "908720cf138f"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: minimumAge: 18 Years; maximumAge: 65 Years"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "action_id": "drug:rxcui:40254",
+   "action": "Valproate",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "73f215e178a4"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "action_id": "drug:rxcui:5093",
+   "action": "Haloperidol",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "1c9248daee6c"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:fasting",
+   "action": "Fasting",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "b85ac5875b7c"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:stress",
+   "action": "Stress",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "928510c245a4"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "contraindications_precautions",
+   "action_id": "supportive_measure:systemic_corticosteroids",
+   "action": "Systemic corticosteroids",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "07fc2673cabc"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Agents/Circumstances to Avoid"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "existing_targeted_therapies",
+   "action_id": "drug:rxcui:81647",
+   "action": "phenylbutyrate",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0d149f3945c8",
+    "0dcbd0beee30",
+    "1a152d71f673",
+    "2078edf2b8ec",
+    "22628a75d292",
+    "23546434bb69",
+    "2efe4196186e",
+    "32a850c25d6e",
+    "757683db29de",
+    "7746ac5a16c7",
+    "86398d0bb9b5",
+    "8eaf7444ef54",
+    "91f79f3b5ac8",
+    "95c17a8bf39b",
+    "a1ddb801e3b7",
+    "d2c259f6d874",
+    "dea6840ca559",
+    "dfb738c7a83b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Hyper- ammonemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:chilled_feeds",
+   "action": "chilled feeds",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "8c7d1cc16a1d",
+    "b9d677232948"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Oral motor dysfunction"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:essential_amino_acid_medical_food",
+   "action": "essential amino acid medical food",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "39c005893cdb",
+    "aa36e46eefdc"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: on significant protein restriction"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:essential_amino_acid_mix",
+   "action": "essential amino acid mix",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "8e390d458fb8",
+    "cd5115c5c6bf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Increased catabolism"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:glucose_fat_calories",
+   "action": "glucose & fat calories",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0a13b095b6bb",
+    "a60e185d852f"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Increased catabolism"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:intact_versus_essential_amino_acid_supplementation",
+   "action": "intact versus essential amino acid supplementation",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "3bfea048e595",
+    "50dd3e4fba8a",
+    "7b0e919ac943",
+    "ca1aaf5470b5"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: female"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:low_protein_diet",
+   "action": "low-protein diet",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "51cb22f52289",
+    "587cf1f3d8b2",
+    "6d36a6ad4886",
+    "770e3052a550",
+    "d6e323d92286",
+    "ebcc39d8485e",
+    "f4ffe7b049b9"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Risk for hyperammo- nemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:protein_intake",
+   "action": "protein intake",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "cec27ccd8026"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Treatment of Manifestations / Long-Term Treatment"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:thickened_feeds",
+   "action": "thickened feeds",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "5b850ddd9e22",
+    "c09acc130b48"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Oral motor dysfunction"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "diet:total_energy",
+   "action": "total energy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "08cb1f27f8c2",
+    "66e5311844f2"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Increased catabolism"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:ammonia scavenger treatment",
+   "action": "ammonia scavenger treatment",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "6571aa425d27"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Females and males"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:ammonia scavengers",
+   "action": "ammonia scavengers",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "446623488aca",
+    "b3fec5f95735"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: neonatal-onset"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:anti-parkinsonian medications",
+   "action": "anti-parkinsonian medications",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "425df71dd849",
+    "8ad71ecebef3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle tone abnormalities including hypertonia or dystonia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:botulinum toxin",
+   "action": "botulinum toxin",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2a19f5661b90",
+    "b2f02f2b5c7e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle tone abnormalities including hypertonia or dystonia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:continuous insulin",
+   "action": "continuous insulin infusion",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "3c71d75974c7",
+    "f5588786484d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:essential amino acids",
+   "action": "essential amino acids",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "8e1a89fdfbec"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "Management / Prevention of Primary Manifestations / Medical and Dietary Prevention of Hype"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:lipid emulsion",
+   "action": "lipid emulsion",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0b9b2cc2b3e1",
+    "6020d09ff06b",
+    "6b2bc6b99c72",
+    "a86a0c76ef7d",
+    "c9df1e050560"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: female"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:nitrogen-scavenging drugs",
+   "action": "nitrogen-scavenging drugs",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "5bf4a0c4170d",
+    "c99e1bf9b597"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: hyperammonemic episodes"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:name:phenylacetate benzoate",
+   "action": "sodium phenylacetate & sodium benzoate",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "6039ecc1885a",
+    "8fa503aa3ba4"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: for acute mgmt"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1292",
+   "action": "baclofen",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "27167c12dc64",
+    "3a211adaaf5b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle tone abnormalities including hypertonia or dystonia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:1368451",
+   "action": "glycerol phenylbutyrate",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0317584182d0",
+    "5737a50657e3"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Risk for hyperammo- nemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:2567",
+   "action": "citrulline",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0c935de5c8f5",
+    "4b6efb28132b",
+    "c89fe0406b36",
+    "d73ad525dced"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Hyper- ammonemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:4850",
+   "action": "dextrose",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "659d139d7b65",
+    "7650b7e1edc6",
+    "7f178ea3f0e0",
+    "922473cf7d20",
+    "a67cca8b81b4",
+    "d383d43c20e5"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: female"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:57258",
+   "action": "tizanidine",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "3d10c18b16ee",
+    "ff51ffd773db"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle tone abnormalities including hypertonia or dystonia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "drug:rxcui:70589",
+   "action": "sodium benzoate",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "09d34b9cd49d",
+    "1e9456df4dde",
+    "5fe91a3c1e03",
+    "b33c43fde118"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: for long-term maintenance therapy"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:ckrt",
+   "action": "CKRT",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "4f05319989f8",
+    "fccde91a5a3e"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: pediatric population"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:cvvhd",
+   "action": "CVVHD",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "9c60406f643c",
+    "e4bc03d10434"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: pediatric population"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:high_dose_ckrt",
+   "action": "high-dose CKRT",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "8c736c6cb19f",
+    "cf1e1c20184a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: w/ammonia level >1,000 μmol/L"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:intermittent_hd",
+   "action": "intermittent HD",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2d178078eae0",
+    "80c2da17bcc0"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: who require rapid ammonia clearance due to fast deterioration & signs of cerebra"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:liver_transplantation",
+   "action": "Liver transplantation",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2f9a0ecf26dd",
+    "753020fbb116",
+    "ac95a0e80830",
+    "ae7b6d8c77c5",
+    "e74bc1559223"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Risk for life- threatening hyper- ammonemic crisis"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:orthopedic_procedures",
+   "action": "orthopedic procedures",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "49a28711d58e",
+    "c0b666cc7a66"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: muscle tone abnormalities including hypertonia or dystonia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:regular_ckrt",
+   "action": "regular CKRT",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "44c58a674a34",
+    "e306265bfdc1"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when blood ammonia level is <200 μmol/L"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "procedure:renal_replacement_therapy",
+   "action": "renal replacement therapy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "0473531d5304",
+    "e2861de9b16d"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: Hyper- ammonemia"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:durable_medical_equipment_and_positioning_devices",
+   "action": "durable medical equipment and positioning devices",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2c63fc8a32a6",
+    "c1e94ec440e7"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: as needed"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:g_tube",
+   "action": "G-tube",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "81326e5ea386",
+    "98bd1dbb77f2"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when feeding dysfunction is severe"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:gastrostomy_tube_feedings",
+   "action": "Gastrostomy tube feedings",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "d75477da65cc",
+    "fa8b3f75e549"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: self-restrict protein intake"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:ng_tube",
+   "action": "NG-tube",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "6c95c40949a0",
+    "9e7a84f1353a"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: when feeding dysfunction is severe"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:early_intervention",
+   "action": "early intervention program",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "5ccad7ab720f",
+    "900fc2121aae",
+    "e3810ca4198b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: developmental delay / intellectual disability"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:feeding_therapy",
+   "action": "feeding therapy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "789000305d2a",
+    "8d0239cf5887",
+    "acc31bf9ec8e",
+    "b32e2107aca5",
+    "bb515ae28987"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: developmental delay / intellectual disability"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:occupational_therapy",
+   "action": "occupational therapy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "293c2cbba5a7",
+    "8bb10e9ecb5e",
+    "bb67c9659fe3",
+    "d4773532455a",
+    "df28fdd0f88b"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: developmental delay / intellectual disability"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:other_rehabilitation",
+   "action": "developmental preschool",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "218a6aadf5c6",
+    "301140499deb",
+    "dcf8a40d98a5"
+   ],
+   "records": 1,
+   "status": "not_applicable",
+   "reason": "not met: Ages 3-5 years"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:physical_therapy",
+   "action": "physical therapy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "4aea02f0274f",
+    "74515893a591",
+    "a2914fe3d79c",
+    "a6c298cf7fc1",
+    "db3c1c6857f9"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: developmental delay / intellectual disability"
+  },
+  {
+   "case_id": "PRAC-OTC",
+   "section": "supportive_management",
+   "action_id": "therapy:speech_language_therapy",
+   "action": "speech therapy",
+   "branch": "MONDO:0010703",
+   "evidence_ids": [
+    "2902f35a68e4",
+    "3a4e1a58cc9a",
+    "4c7b0e4b1729"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: developmental delay / intellectual disability"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04199000",
+   "action": "Clinical and Basic Investigations Into Congenital Disorders of Glycosylation (NCT04199000)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "2e5dd4d2d94c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05402384",
+   "action": "AVTX-801 D-galactose Supplementation in SLC35A2-CDG (NCT05402384)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "12a3be0eb0be",
+    "20d8c8b62cac",
+    "22daf9387b9d",
+    "32dc288518aa",
+    "331367cfc46d",
+    "33328da267d2",
+    "33432edc5716",
+    "5b97eb66c2e5",
+    "5d3791265ee7",
+    "9b1bf5d07122",
+    "9df56a9741f0",
+    "b774785b7064",
+    "bac7727a0f1d",
+    "cab78f845713",
+    "cc16d68b0076",
+    "d5a9cfdf9a88",
+    "dfc11816b80a",
+    "dfe2e1fc5019",
+    "ebf784db5f2d",
+    "fe2928fc90c9",
+    "ff3c21ebcf77",
+    "ff58b462cc67"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: age; current medication; diagnosis; hemoglobin; lab; other; participation in other trials; pregnancy status"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "contraindications_precautions",
+   "action_id": "searched_none:contraindications_precautions",
+   "action": "None found",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "48c9e3f6a147"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "323f0a426a1f"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:epilepsy_benzodiazepine_rescue_for_prolonged_seizures_iv_lorazepam_or_iv_diazepam",
+   "action": "benzodiazepine rescue for prolonged seizures (IV lorazepam or IV diazepam)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "3e04d7455f4a",
+    "a3d6f9959fbf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: seizures lasting at least 5 minutes"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex7",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:epilepsy_individualised_antiseizure_medication_treatment_strategy",
+   "action": "individualised antiseizure medication treatment strategy",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "7df019ee6231"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "symptomatic: Seizure"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT04199000",
+   "action": "Clinical and Basic Investigations Into Congenital Disorders of Glycosylation (NCT04199000)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "2e5dd4d2d94c"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: diagnosis"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "clinical_trial_eligibility",
+   "action_id": "trial:NCT05402384",
+   "action": "AVTX-801 D-galactose Supplementation in SLC35A2-CDG (NCT05402384)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "12a3be0eb0be",
+    "20d8c8b62cac",
+    "22daf9387b9d",
+    "32dc288518aa",
+    "331367cfc46d",
+    "33328da267d2",
+    "33432edc5716",
+    "5b97eb66c2e5",
+    "5d3791265ee7",
+    "9b1bf5d07122",
+    "9df56a9741f0",
+    "b774785b7064",
+    "bac7727a0f1d",
+    "cab78f845713",
+    "cc16d68b0076",
+    "d5a9cfdf9a88",
+    "dfc11816b80a",
+    "dfe2e1fc5019",
+    "ebf784db5f2d",
+    "fe2928fc90c9",
+    "ff3c21ebcf77",
+    "ff58b462cc67"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: current medication; diagnosis; hemoglobin; lab; other"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "contraindications_precautions",
+   "action_id": "searched_none:contraindications_precautions",
+   "action": "None found",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "48c9e3f6a147"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "existing_targeted_therapies",
+   "action_id": "searched_none:existing_targeted_therapies",
+   "action": "None found",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "323f0a426a1f"
+   ],
+   "records": 1,
+   "status": "searched_none",
+   "reason": "searched GeneReviews and FDA labels; none found"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:epilepsy_benzodiazepine_rescue_for_prolonged_seizures_iv_lorazepam_or_iv_diazepam",
+   "action": "benzodiazepine rescue for prolonged seizures (IV lorazepam or IV diazepam)",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "3e04d7455f4a",
+    "a3d6f9959fbf"
+   ],
+   "records": 1,
+   "status": "conditional",
+   "reason": "depends on: seizures lasting at least 5 minutes"
+  },
+  {
+   "case_id": "PRAC-SLC35A2-ex8",
+   "section": "supportive_management",
+   "action_id": "supportive_measure:epilepsy_individualised_antiseizure_medication_treatment_strategy",
+   "action": "individualised antiseizure medication treatment strategy",
+   "branch": "MONDO:0010478",
+   "evidence_ids": [
+    "7df019ee6231"
+   ],
+   "records": 1,
+   "status": "applicable",
+   "reason": "symptomatic: Seizure"
+  }
+ ],
+ "provenance": {
+  "tag": "step3a.2-accepted",
+  "code_commit": "652f6c8",
+  "manifest_sha256": "edee95f682e2de3e2b536455f2be3999ffafad6815ebb000f15910637765aa2f",
+  "note": ""
+ }
+}
