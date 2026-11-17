@@ -627,11 +627,12 @@
   {
    "id": "kmt2b-gpi-dbs",
    "case": "PRAC-KMT2B",
-   "branch": "KMT2B",
+   "branch": "dystonia 28",
    "section": "supportive_management",
    "match": "GPi-DBS",
    "expect": {
     "status": "conditional",
+    "reported": true,
     "unknown": [
      "source describes use; no explicit recommendation"
     ]
@@ -650,11 +651,12 @@
   {
    "id": "kmt2b-subthalamic-dbs",
    "case": "PRAC-KMT2B",
-   "branch": "KMT2B",
+   "branch": "dystonia 28",
    "section": "supportive_management",
    "match": "subthalamic nucleus DBS",
    "expect": {
     "status": "conditional",
+    "reported": true,
     "unknown": [
      "source describes use; no explicit recommendation"
     ]

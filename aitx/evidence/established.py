@@ -1668,6 +1668,13 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
         led.actions.append(rec)
         for b in branches:
             placed[section].add(b)
+    present = {rec["action_key"] for rec in led.actions if rec.get("action_key")}
+    for rec in led.actions:
+        if rec.get("narrower_than") and rec["narrower_than"]["key"] not in present:
+            # A removed pregnancy-only parent cannot stand in for this clinical action.
+            rec.pop("narrower_than")
+            rec.pop("report", None)
+            rec.pop("report_note", None)
     for a_label, text in unreported:
         led.note_missing(MISSING_MANIFESTATIONS, a_label, text, "3a")
     for s in SECTIONS_3A:

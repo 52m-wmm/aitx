@@ -662,6 +662,18 @@ def test_broader_and_narrower_are_related_not_merged(monkeypatch):
     assert hd["report"] is False and "dialysis" in hd["report_note"] and dia["includes"][0]["label"] == "hemodialysis"
 
 
+def test_removed_pregnancy_only_parent_does_not_hide_a_clinical_action():
+    found = {**_np("procedure:dbs", "DBS", section="Management / Pregnancy Management"),
+             **_np("procedure:gpi", "GPi-DBS")}
+    found["procedure:dbs"]["pregnancy_only"] = True
+    found["procedure:gpi"]["narrower_than"] = {"key": "procedure:dbs", "label": "DBS"}
+    led = LG.Ledger("P", [dict(BR, id="b1")])
+    E._records(led, found, PF_FS, [])
+    rec = next(a for a in led.actions if a["action_key"] == "procedure:gpi")
+    assert rec.get("report", True) is True and "narrower_than" not in rec
+    assert not any(a["action_key"] == "procedure:dbs" for a in led.actions)
+
+
 def test_condition_from_another_row_is_not_attached():
     row1 = ["Kidney stones", "Ureteroscopy", "In kidney failure"]
     assert E._reqs([{"text": "if needed", "field": "situation"}], None, " | ".join(row1)) == []

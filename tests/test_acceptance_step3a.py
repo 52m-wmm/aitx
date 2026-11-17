@@ -33,6 +33,14 @@ def test_hidden_action_still_counts_when_it_is_the_only_match():
     assert not r["ok"] and "not_applicable" in r["problem"]
 
 
+def test_reported_expectation_rejects_a_hidden_conditional_action():
+    item = dict(ITEM, expect={"status": "conditional", "reported": True})
+    a = _act("IV fluid", "conditional", report=False)
+    assert "hidden from the report" in A.compare(item, dict(LED, actions=[a]))["problem"]
+    a.pop("report")
+    assert A.compare(item, dict(LED, actions=[a]))["ok"]
+
+
 # --- supportive fallback-chain expectations (2026-11-05)
 
 def _led_tier(tier="symptomatic", lit=None, actions=(), disabled=("developmental_delay_intellectual_disability",)):

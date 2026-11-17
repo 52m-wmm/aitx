@@ -89,6 +89,8 @@ def compare(item: dict, led: dict | None) -> dict:
                 "problem": "not found in this section" + (f" (found: {'; '.join(elsewhere)})" if elsewhere else "")}
     actual, problems = [], []
     for a in hits:
+        if want.get("reported") is True and a.get("report") is False:
+            problems.append(f"{a['label']}: hidden from the report")
         per = {b: a["status_by_branch"][b] for b in branches if b in a["status_by_branch"]}
         unknown = [r["requirement"] for r in a["requirements"] if r["result"] == "unknown" and set(r["applies_to"]) & set(per)]
         actual.append({"action_key": a.get("action_key"), "label": a["label"], "report": a.get("report", True),

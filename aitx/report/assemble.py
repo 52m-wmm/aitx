@@ -37,8 +37,7 @@ def status_of(a: dict) -> str:
 
 
 def written(a: dict) -> bool:
-    """Entries the report writes (contract section 3): not not-applicable, not flagged report=false, not a
-    non-recommendation, not an age band ruled out."""
+    """Present applicable/conditional entries unless an existing broader entry represents them."""
     if a.get("report") is False:
         return False
     return status_of(a) in ("applicable", "conditional")
