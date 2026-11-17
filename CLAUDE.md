@@ -57,6 +57,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 
 **2026-11-17 官方模板与证据链审阅授权**：只用 LLM 缓存，缺缓存即停，真实调用先报价。本轮用户要求 0–11 项，覆盖标题逐字对照、三层 Summary、三块结局指标、完整支持治疗与干预试验、变异事实来源、移植选择原句，以及全部行动 / 负面结论 / 指标的 Evidence ID、安全检查覆盖范围和 Step 5 确定性校验。官方模板原文保存 `data/aitxchallenge_report_template.md`；这轮规则覆盖此前试验五条上限及仅呈现代码技术理由的做法。技术前提无账本来源时删除论证、标“未确认”，不补编 AAV / Prime Editing / ASO 技术依据；不改变 Step 3 判定。未检查的安全项必须写“未检查”，空数组不能推成无风险。不新增临床数据源，只把账本已有 FDA / NCT / GeneReviews 来源中的原文记入账本。报告生成后自动执行 `scripts/validate_report.py` 使用的检查，不通过退出。**DMD 因性别推断改动而过期，待下次影响 DMD 的改动时一并重跑**；本轮不为其启动新调用。
 
+**2026-11-17 官方模板与证据链审阅完成**：实现代码至 `b8e986b`；离线 **1186/1186**。15 例只用 LLM 缓存完成，新鲜账本无 fail，所有行动 / 分支状态及 3d classification 变化 **0**；末次补全安全展示后，AGXT 两例及可跑验收再次缓存完成。Step 1 / 2、3a **30/30**、3b **8/8**、3c **7/7**、3e **5/5**、评测 Step 1 / 2、报告格式及 Step 5 确定性检查全部 PASS；3d **6/8**，DMD 两项过期未计分、整体 FAIL，3.0 仍延期，未称全套通过。报告列全 **6** 项已分析干预试验、**4** 项观察研究汇总、**11** 项支持治疗；证据表 **285** 个 ID 均存在、verified、定义唯一。全部账本 **10** 项药物均列安全覆盖，含未检查的吡哆醇和 Stiripentol；无来源技术理由删除、前提标未确认。基线没有 ID 重复、没有“空数组=无相互作用”、没有 RNAi 移植决策论断，未改这些临床判断。COL1A1 交替体位仍未补婴儿限定（历史核查漏判，不加代码规则）；支持核查仍假拦 **3/17**，本轮未新增。**全部尝试合计真实 DeepSeek 请求 0 次、新增费用 $0**；未跑评测病例 Step 3 及以后，DMD 账本字节未改。缓存工作未传启动即拦缓存的 CLI `--offpeak-only`，真实请求前的高峰保护一直保留，且 cache-only / 零预算双重禁用新调用。报告：`out/step4/PRAC-AGXT-c33dup.md`；验收汇总：`out/acceptance/agxt_template_review_20261117.json`；核实及结果见 Step 4 契约第 20–21 节。**DMD 因性别推断改动而过期，待下次影响 DMD 的改动时一并重跑**。
+
 - **只会把判定结果放宽成"有条件"的改动**（如把某条要求改判为"未知"），可以先做后报。
 - **可能产生新的"不适用"（或把未知变成确定的满足 / 不满足）的改动**，先报给用户确认，再改。
 - 无论哪种，都要补离线测试和反向验证，并在契约里记下原因。
@@ -89,8 +91,8 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 | 3d | 定制疗法（Bespoke Therapies） | ✅ 已验收（2026-11-08，tag `step3d-accepted`）：12 个练习病例 8/8 核实期望成立、全部新鲜输出。48 条判定中 12 条"无法评估"（25%）：PAM 5、结构域 3、天然跳跃证据 3、上调靶点 1——全是审阅决定暂缓接入的数据源，**没有一条因机制取不到**（GeneReviews 供得上）。契约 `docs/step3d_contract.md` |
 | 3e | 药物重定位（Drug Repurposing） | ✅ 已验收（2026-11-08，tag `step3e-accepted`）：5/5 核实期望成立。12 个练习病例里只有 GRIN2B 产出候选（62 条机制记录排除 56 条，全因方向相反；保留 NEBOGLAMINE / RAPASTINEL / APIMOSTINEL，均标注"对本亚基选择性未知"）；DMD 的外显子跳跃 ASO 按药物类型转交 3d；其余基因在 Open Targets 无药物记录，整节留"检索无结果"负面证据。契约 `docs/step3e_contract.md` |
 | 盲测 | 在未调过参的病例上量写错 / 漏写 / 有条件率 | **修复阶段已收尾（2026-11-15，tag `step3-fix-accepted`）**：复测 4 例（retest-20261112）发现的 Tier 1 写错全部修复，PFN1、EIF2B1 用于修复不计入盲测率，按既定规则不再开新一轮复测；结论与已知局限见 `docs/blind_test_results.md` 文末，存档 `out/archive/step3-fix-accepted-20261115/`。此前：**批次 20261108 已跑完（2026-11-11），进入修复阶段**：修复计划 `docs/post_blind_fix_plan.md`（审阅通过后开工）；结果与事故记录 `docs/blind_test_results.md`（B 组前 4 批因病例文件字段名写错、在无描述条件下运行，已修工具并全部重跑）。方案 `docs/blind_test_plan.md`（v0.2，2026-11-08）；机械召回评估方案 `docs/blind_recall_plan.md`（v1.0 定稿，2026-11-10，B 组跑完后统一计算）：A 组 2 个（Phase 1 Validator）+ B 组 10 个（5 个有 GeneReviews 专章、5 个只有 GenCC Definitive 评级，后者的临床描述由代码按 HPO 表型合成并标注）；抽样规则写死可复现，抽到的基因先过目；机器先判六项可机判的检查，其余列给审阅人；**盲测期间冻结代码**；写错率偏高的处理顺序已定（先通用修复 → 换新一批验证 → 3a 必须修好或降为有条件才能进 Step 4，3d/3e 降级措辞或整节写无法评估）。约 \$0.5，待充值后执行 |
-| 4 | 报告组装（按官方模板生成 markdown、格式校验、引用核验） | 契约 v1.0 定稿（2026-11-15，`docs/step4_contract.md`）；第一版实现 `aitx/report/`（模板组装、格式校验、说明书安全核对，不用 LLM）+ `scripts/build_report.py`，离线测试 `tests/test_report.py`；**只做了练习病例 PRAC-AGXT-c33dup 一份**（格式校验通过），待用户审阅 |
-| 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | 未开始 |
+| 4 | 报告组装（按官方模板生成 markdown、格式校验、引用核验） | `aitx/report/` + `scripts/build_report.py`，不用 LLM；2026-11-17 按官方原文、完整试验 / 支持治疗、证据链和安全覆盖修订，PRAC-AGXT-c33dup 报告重建，格式与确定性核验 PASS；待用户内容审阅，详见 Step 4 契约第 19–21 节 |
+| 5 | 对照病人条件 + 报告组装 + 格式校验 + 引用核验 | **确定性部分已实现**（2026-11-17）：`scripts/validate_report.py`，生成后自动校验标题、Evidence ID、计数及临床数量原句，失败非零退出；医学语义支持度部分未实现，不能据此称完整 Step 5 验收通过 |
 
 ## 医学文献阅读规则（2026-11-11）
 
