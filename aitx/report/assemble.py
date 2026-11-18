@@ -11,7 +11,7 @@ import re
 import textwrap
 from collections import OrderedDict
 
-from aitx.evidence import ledger as LG
+from aitx.evidence import ledger as LG, action_identity as ID
 from aitx.report.validate import HEADINGS, TITLE, sentences, source_identity
 
 CAPS = {"off_label_expanded_access": 5, "drug_repurposing": 3}
@@ -337,7 +337,7 @@ class Report:
         out = self.section("existing_targeted_therapies", items, None, "entries")
         if not items:      # cross-reference (contract 6.1): disease-modifying drugs written under Supportive Management
             drugs = [a["label"] for a in self.actions("supportive_management") if written(a)
-                     and str(a.get("action_key") or "").startswith("drug:")
+                     and ID.is_drug(a, self.led)
                      and any("without Targeted Therapies" in v.get("reason", "") for v in a["status_by_branch"].values())]
             if drugs:
                 out.append(f"- See Supportive Management for {', '.join(drugs)} (listed there by the source chapter, "
@@ -701,7 +701,7 @@ def drugs_for_safety(led: dict) -> list[dict]:
     out = []
     for a in led["actions"]:
         if a["section"] not in ("existing_targeted_therapies", "supportive_management", "off_label_expanded_access") \
-                or not str(a.get("action_key") or "").startswith("drug:") or not written(a) \
+                or not ID.is_drug(a, led) or not written(a) \
                 or a.get("efficacy_direction") == "reported_ineffective":       # written as "not recommended"
             continue
         ings = [i.get("name") for e in (ev.get(i) for i in a.get("evidence_ids") or []) if e

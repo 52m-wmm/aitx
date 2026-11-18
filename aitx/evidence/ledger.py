@@ -448,7 +448,7 @@ class Ledger:
 
     def to_dict(self) -> dict:
         ev = sorted(self.evidence.values(), key=lambda e: (list(TIERS).index(e["section"]), e["id"]))
-        return {"schema_version": SCHEMA_VERSION, "patient_id": self.patient_id, "branches": self.branches,
+        result = {"schema_version": SCHEMA_VERSION, "patient_id": self.patient_id, "branches": self.branches,
                 "branch_assessment": self.branch_assessment, "branch_order": self.branch_order,
                 "patient_context": self.patient_context, "missing_information": self.missing_information,
                 "rules_applied": self.rules_applied, "rules_skipped": self.rules_skipped,
@@ -462,6 +462,9 @@ class Ledger:
                 "repurposing_searches": self.repurposing_searches,
                 "sections": {s: [e["id"] for e in self.in_section(s)] for s in SECTIONS},
                 "evidence": ev, "checks": self.checks()}
+
+        from aitx.evidence import action_identity
+        return action_identity.export(result)
 
 
 # ------------------------------------------------------------------ possible duplicates across sections (fix plan N3)

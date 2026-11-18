@@ -33,11 +33,11 @@ def mark_pending(result,missing_assembly):
             action['status_by_branch']={b:{'status':'not_tested','reason':'pending: context check or assembly requires uncached model response'} for b in action['status_by_branch']}
 
 
-def run(cid,n,out,public_cache=None,offline=False):
+def run(cid,n,out,public_cache=None,offline=False,raw_dir=None):
     if out.exists():raise FileExistsError(str(out))
     out.mkdir(parents=True)
     original_http=http.get
-    source=ROOT/'runs/step3-offline-audit-v2-20261118'/cid/str(n)/'raw_extractions'
+    source=raw_dir if raw_dir is not None else ROOT/'runs/step3-offline-audit-v2-20261118'/cid/str(n)/'raw_extractions'
     campaign=ROOT/'runs/step3-staged-050-v3-20261118'
     frozen=json.loads((campaign/'manifest.json').read_text())
     raw={p.stem:json.loads(p.read_text()) for p in source.glob('*.json')}
@@ -146,5 +146,5 @@ def run(cid,n,out,public_cache=None,offline=False):
     print(cid,n,'actions',len(result['actions']),'pending',len(pending),'missing_assembly',len(missing_assembly),flush=True)
 
 if __name__=='__main__':
-    ap=argparse.ArgumentParser();ap.add_argument('--case',required=True);ap.add_argument('--round',type=int,required=True);ap.add_argument('--out',type=Path,required=True);ap.add_argument('--public-cache',type=Path);ap.add_argument('--offline',action='store_true')
-    a=ap.parse_args();runmeta.refuse_eval_cases([a.case],'3a replay');run(a.case,a.round,a.out.resolve(),a.public_cache,a.offline)
+    ap=argparse.ArgumentParser();ap.add_argument('--case',required=True);ap.add_argument('--round',type=int,required=True);ap.add_argument('--out',type=Path,required=True);ap.add_argument('--public-cache',type=Path);ap.add_argument('--offline',action='store_true');ap.add_argument('--raw-dir',type=Path)
+    a=ap.parse_args();runmeta.refuse_eval_cases([a.case],'3a replay');run(a.case,a.round,a.out.resolve(),a.public_cache,a.offline,a.raw_dir)

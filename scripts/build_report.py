@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from aitx import runmeta  # noqa: E402
+from aitx.evidence import action_identity
 from aitx.report import assemble as A, sources as SRC, validate as V  # noqa: E402
 from scripts.validate_report import validate_case  # noqa: E402
 
@@ -30,7 +31,7 @@ def report_safety(led: dict) -> dict:
     coverage = safety["coverage"]
     recorded = {r["drug"] for r in coverage}
     for a in led["actions"]:
-        if str(a.get("action_key") or "").startswith("drug:") and a["label"] not in recorded:
+        if action_identity.is_drug(a, led) and a["label"] not in recorded:
             coverage.append({"drug": a["label"], "interactions_checked": False, "contraindications_checked": False,
                              "evidence_ids": a["evidence_ids"], "note": "No safety-check record in the ledger; outside the checked drug combination."})
             recorded.add(a["label"])
