@@ -55,3 +55,5 @@
 未获批准的变化不得进入 current，不运行 promote 来掩盖回归。
 
 2026-11-17 首次部分升级已按用户审核完成：A 5、B 5、D 11，及 E 的 124 个后续步骤新增、2 个 hypertonic saline 键规范化、4 个 over_cap 记录，共 151 项。current 为明确批准行组成的复合快照（529 行），不是某一次完整账本的逐字替代；provenance 和 approved_live_component 保留来源。C、61 项证据细节、其他未批准新增/删除及 RETEST 首个基线均未纳入。完整批准清单见 approvals.md；后续修复仍须对这个新 current 出 diff。
+
+2026-11-17 用户更正后，另通过升级脚本纳入 COL1A1 physiotherapist 的两个分支：applicable → conditional，reason 指明普通 NBK1295 来源对相应诊断的适用范围未知。用户明确撤销此例“只改文字不改状态”的旧要求；原因与两条批准记录已追加 approvals.md。累计批准 diff 项 153，current 仍为 529 行；除此之外的 C、证据细节及 RETEST 首个基线仍未升级。

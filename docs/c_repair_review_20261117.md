@@ -61,3 +61,16 @@ KMT2B 苯二氮䓬类、trihexiphenidyl、tetrabenazine、levodopa 四项状态�
 - C 修复审阅输出：`out/status_diff/c-repair-20261117/review/`，用同一工具函数生成，明确加入 **KMT2B 3a 专项**与**隔离的 COL1A1 候选**。对 current：状态变化 6（KMT2B DBS 2、待裁决 physiotherapist 2、历史待审小关节 HPO 2）、细节变化 61、新增 106、删除 22、RETEST 缺历史基线 157。这个混合范围只用于审阅，**不是整例新鲜账本，也不是可直接升级的候选基线**。
 - 对改前实际快照的补充输出：`out/status_diff/c-repair-20261117/since-before/`，20 项状态变化、20 个孕期独立项删除、5 项细节变化。20 项状态变化为 KMT2B 2、RETEST-EIF2B1 corticosteroids 的 3 分支、RETEST-PFN1 13 项（均 R15 来源措辞放宽），以及未批准的 physiotherapist 2。5 项细节为 KMT2B 4 项仅改 reason，另 CFTR modulator therapy 移除孕期条件引用的 Evidence ID `8ce6ab5c0c7d`，状态不变、同名行动孕期原文仍保留为附注。全部逐条解释见 `review/analysis.md`，没有把 reason 本身当作批准。
 - 完整验收汇总：`out/acceptance/c_repair_review_20261117.json`。current 与历史 SHA、DMD 原文件 SHA 已核对，未运行评测 Step 3 及以后；全部尝试合计 **真实 DeepSeek 请求 0 次，费用 $0**。尚待用户裁决 physiotherapist 联动及后续 C diff，不以本记录自行批准任何变化。
+
+## 7. 用户批准 physiotherapist 更正后的继续运行（2026-11-17，覆盖上节该例的等待状态）
+
+用户明确批准两个分支 applicable → conditional，并撤销此前此例“只改文字不改状态”的要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源的核查结果为准。
+
+- 正式 COL1A1 账本已完成缓存重跑、发布且新鲜。MONDO:0007522（经典型 EDS）、MONDO:0030854（OI/EDS 联合型）的 reason 分别指明 **GeneReviews NBK1295 / Management / Treatment of Manifestations 对该诊断分支的适用范围尚未确认**，显示 `source-scope check unknown`。普通来源未记录额外的年龄、表现程度等病人条件，未补写成“不满足”的临床阈值；孕期原文仅保留同名附注。
+- 使用 `promote_baseline.py` 仅升级这两行，差异字段只有 status/reason，Evidence ID 不变；current SHA 从 `eecc4996…` 变为 `43f31989…`，仍 529 行。`baselines/approvals.md` 已追加日期、批准人、提交号 `26a54c5`、两个变化及撤销旧要求的原因。基线升级提交 `79e93d6`。其他 C / 61 项证据细节 / RETEST 首个基线未获本次批准，未纳入。
+- 离线 **1240/1240**；新增正反测试直接经过普通/孕期混合来源的真实 3a 判定路径，覆盖两个诊断分支的 unknown 来源理由，以及普通来源已确认时仍 applicable。没有添加 COL1A1 病例特例、改提示词、改 ID 生成方式或调用模型。
+- 14 例完整缓存重跑均成功，正式新鲜账本 **14/15**；KMT2B 原正式账本保留，3a 只读专项仍 **5/5**。本次相较改前正式快照仅有 **physiotherapist 两个已批准状态变化**和四个纯孕期独立项移除（tranexamic acid、oxytocin、cesarean section、episiotomy，遵循此前批准的通用孕期规则），没有其他状态或证据 ID 变化。
+- Step 1/2、评测 Step 1/2、3b **8/8**、3c **7/7**、3e **5/5** PASS；正式 3a **27/32、FAIL**（仅 KMT2B 5 项过期未计分），3d **5/8、FAIL**（DMD 2、KMT2B 1 项过期未计分），3.0 继续延期。不是全套通过。15 例 **186** 项试验 Known exclusions 完全一致、新增 **0**；新增 not_applicable **0**。
+- AGXT / ANO10 报告已再次生成，大小仍 58,773 / 17,692 bytes，格式及 Step 5 PASS。KMT2B 完整 3c 仍缺三篇文章缓存，没有新调用授权，不重写其原账本或生成假称新鲜的完整报告。DMD 原延期决定继续有效，原文件逐字未动；评测病例未运行 Step 3 及之后。
+- 对新 current 的正式工具输出 `out/status_diff/col1a1-approved-20261117/canonical/`；对本次改前实际结果的补充输出 `since-before/`。KMT2B 只读 3a 的 C 审阅输出在 `review/`，不再包含隔离 COL1A1 候选：对 current 的直接状态变化为 4（KMT2B 两种 DBS、历史待审 small-joint HPO 两项），其他差异逐项保留。审阅快照仍不是整例新鲜 KMT2B 账本或可直接升级的候选。
+- 最新验收汇总 `out/acceptance/col1a1_approved_20261117.json`，运行及升级批准文件在 `runs/col1a1-approved-20261117/`。此次全部尝试 **真实 DeepSeek 请求 0 次，费用 $0**；cache-only、零预算、请求前非高峰保护始终有效，长任务 nohup+caffeinate。缓存未传启动即拦缓存的 CLI `--offpeak-only`。历史基线与其他未批准项目保持原样。
