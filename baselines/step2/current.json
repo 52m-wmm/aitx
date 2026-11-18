@@ -1,0 +1,6 @@
+{
+  "frozen_version": "step2-stability-20261118-v1",
+  "path": "baselines/step2/stability-20261118",
+  "manifest_sha256": "cc328b5e4371a97605805b645d1eb3ef210ccf282f6b707daa932273d05d79f8",
+  "status": "diagnostic_stability_pass_with_documented_extraction_variability"
+}

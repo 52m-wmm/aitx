@@ -1,0 +1,202 @@
+[
+  {
+    "case": "PRAC-CFTR-F508del",
+    "round": 1,
+    "calls": 6,
+    "usd": 0.005847443999999999,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-COL1A1",
+    "round": 1,
+    "calls": 3,
+    "usd": 0.0009517080000000001,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-GRIN2B",
+    "round": 1,
+    "calls": 6,
+    "usd": 0.0012992579999999997,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-SLC35A2-ex8",
+    "round": 1,
+    "calls": 3,
+    "usd": 0.0024914100000000003,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-CFTR-F508del",
+    "round": 2,
+    "calls": 6,
+    "usd": 0.008461482,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-COL1A1",
+    "round": 2,
+    "calls": 3,
+    "usd": 0.000879708,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-GRIN2B",
+    "round": 2,
+    "calls": 6,
+    "usd": 0.001304058,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-SLC35A2-ex8",
+    "round": 2,
+    "calls": 3,
+    "usd": 0.00186021,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-CFTR-F508del",
+    "round": 3,
+    "calls": 6,
+    "usd": 0.004931046,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-COL1A1",
+    "round": 3,
+    "calls": 3,
+    "usd": 0.001018308,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-GRIN2B",
+    "round": 3,
+    "calls": 6,
+    "usd": 0.001283058,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-SLC35A2-ex8",
+    "round": 3,
+    "calls": 3,
+    "usd": 0.0018596099999999998,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-CFTR-F508del",
+    "round": 4,
+    "calls": 6,
+    "usd": 0.007904195999999999,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-COL1A1",
+    "round": 4,
+    "calls": 3,
+    "usd": 0.000966708,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-GRIN2B",
+    "round": 4,
+    "calls": 6,
+    "usd": 0.001155858,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-SLC35A2-ex8",
+    "round": 4,
+    "calls": 3,
+    "usd": 0.00182961,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-CFTR-F508del",
+    "round": 5,
+    "calls": 6,
+    "usd": 0.0070074479999999995,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-COL1A1",
+    "round": 5,
+    "calls": 3,
+    "usd": 0.000963708,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-GRIN2B",
+    "round": 5,
+    "calls": 6,
+    "usd": 0.001309458,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  },
+  {
+    "case": "PRAC-SLC35A2-ex8",
+    "round": 5,
+    "calls": 3,
+    "usd": 0.00239541,
+    "models": [
+      "deepseek-flash"
+    ],
+    "cached_responses": 0
+  }
+]

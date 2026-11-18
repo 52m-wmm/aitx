@@ -1,0 +1,42 @@
+{
+  "PRAC-CFTR-F508del": {
+    "hpo_semantic_changed": 4,
+    "extracted_feature_spans_changed": 9,
+    "selection_answers_changed": 10,
+    "three_vote_hpo_diff": 10,
+    "diagnosis_changed": 0,
+    "candidate_set_changed": 0,
+    "same_pick_request_groups": 0,
+    "same_pick_request_answer_disagreements": 0
+  },
+  "PRAC-COL1A1": {
+    "hpo_semantic_changed": 0,
+    "extracted_feature_spans_changed": 0,
+    "selection_answers_changed": 0,
+    "three_vote_hpo_diff": 0,
+    "diagnosis_changed": 0,
+    "candidate_set_changed": 0,
+    "same_pick_request_groups": 0,
+    "same_pick_request_answer_disagreements": 0
+  },
+  "PRAC-GRIN2B": {
+    "hpo_semantic_changed": 0,
+    "extracted_feature_spans_changed": 0,
+    "selection_answers_changed": 0,
+    "three_vote_hpo_diff": 0,
+    "diagnosis_changed": 0,
+    "candidate_set_changed": 0,
+    "same_pick_request_groups": 3,
+    "same_pick_request_answer_disagreements": 0
+  },
+  "PRAC-SLC35A2-ex8": {
+    "hpo_semantic_changed": 0,
+    "extracted_feature_spans_changed": 0,
+    "selection_answers_changed": 0,
+    "three_vote_hpo_diff": 0,
+    "diagnosis_changed": 0,
+    "candidate_set_changed": 0,
+    "same_pick_request_groups": 0,
+    "same_pick_request_answer_disagreements": 0
+  }
+}

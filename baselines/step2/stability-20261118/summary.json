@@ -1,0 +1,52 @@
+{
+  "completed": 20,
+  "cost": {
+    "calls": 90,
+    "cache_hit": 37632,
+    "cache_miss": 22820,
+    "output": 86973,
+    "reasoning": 71525,
+    "usd": 0.05571969599999999,
+    "peak_calls": 0,
+    "known_usd": 0.05571969599999999,
+    "reserved_usd": 0.0,
+    "missing_usage": 0
+  },
+  "campaign_accounted_usd": 0.05571969599999998,
+  "critical_changes": {
+    "PRAC-CFTR-F508del": [],
+    "PRAC-COL1A1": [],
+    "PRAC-GRIN2B": [],
+    "PRAC-SLC35A2-ex8": []
+  },
+  "pairwise": {
+    "PRAC-CFTR-F508del": {
+      "comparisons": 10,
+      "hpo_changed": 10,
+      "facts_changed": 0,
+      "candidates_changed": 0,
+      "diagnosis_changed": 0
+    },
+    "PRAC-COL1A1": {
+      "comparisons": 10,
+      "hpo_changed": 10,
+      "facts_changed": 0,
+      "candidates_changed": 0,
+      "diagnosis_changed": 0
+    },
+    "PRAC-GRIN2B": {
+      "comparisons": 10,
+      "hpo_changed": 10,
+      "facts_changed": 0,
+      "candidates_changed": 0,
+      "diagnosis_changed": 0
+    },
+    "PRAC-SLC35A2-ex8": {
+      "comparisons": 10,
+      "hpo_changed": 10,
+      "facts_changed": 0,
+      "candidates_changed": 0,
+      "diagnosis_changed": 0
+    }
+  }
+}

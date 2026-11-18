@@ -1,0 +1,42 @@
+{
+  "status": "proposed; awaiting quote approval; no real calls",
+  "commit": "69367ad4c60b9bea88762588da1525e59b5cdbb3",
+  "cases": [
+    "PRAC-CFTR-F508del",
+    "PRAC-COL1A1",
+    "PRAC-GRIN2B",
+    "PRAC-SLC35A2-ex8"
+  ],
+  "rounds_per_case": 5,
+  "samples_per_round": 3,
+  "model": "deepseek-flash",
+  "official_documented_version": "DeepSeek-V4.1-Flash-1017",
+  "prompt_version": "step2-extract-v5",
+  "estimated_requests": 90,
+  "normal_request_range": [
+    60,
+    120
+  ],
+  "estimated_usd": 0.08810751,
+  "campaign_cap_usd": 0.32,
+  "code_and_input_sha256": {
+    "aitx/disease/datasets.py": "6a46133bb97d6cb47495bdf5eaa1008e281c792ec54d25bee61aad05ca0162d5",
+    "aitx/disease/extract.py": "5bb7a6d46813f5a73448355b883259e6a8595905995df8a9cfa250aca364f57f",
+    "aitx/disease/hpo.py": "0fa1e00156a651547a7c20c0f03c0b5c7047df8b4cf9244c1eadf473f9f0295e",
+    "aitx/disease/live.py": "c4a9569fe54dab8affa0356ac6bb290d96592030606ec7cb8b9e8103ccb724c9",
+    "aitx/disease/pipeline.py": "782e837092e815946e63242c92e1c876018045be62ca7eb1e9279bb5ea8c977a",
+    "aitx/disease/resolve.py": "d753876a02ce8aed854f101ac6f4d00eb0c0b410cc7bf6fd410a1810f12b47e0",
+    "aitx/disease/sources.py": "6601d3a01d0ca580fcaab3683902d1773e3f7bd7a68eeeccfd22a5a7adbbfb7b",
+    "aitx/caseinput.py": "0adfb70038fe55cf9befa47f3e24370d80ed470e3389f528b52e1b6a30d10cc1",
+    "aitx/llm.py": "43d2a0c57091a7c0fe73e1f5650510f3e7cfc05fe04e3cfa25b8d400e1db2d61",
+    "aitx/http.py": "e383005e9d596914e5b22701bd2f99f536acd459754dd070a92dd90fb64a31a6",
+    "aitx/budget.py": "ab76de2f77ea67132190ab2b11c92cd53e9d7facb2abea28a9d7a6a089804ea2",
+    "data/cases/practice/official_examples.json": "2b51ed1ce61a4e58d84571fa2e72c6c991b1ce68acaad7aba914e31fff511494"
+  },
+  "reference_sha256": {
+    "PRAC-CFTR-F508del": "f5c28b69739c922fc9cedc46c06c706c34b73e1ac207a431786c070bccf4a11f",
+    "PRAC-COL1A1": "1771b53714b44faa87641446290fdfd52e54309865ef00d5cfd6d73c50b0e146",
+    "PRAC-GRIN2B": "e7db37e5185e0dda46d863d9daf8bbead0748ab3ab762cd3796383c99903eab6",
+    "PRAC-SLC35A2-ex8": "13cd08c1a258e73740507907b048626b56076e85a1576558fc49f7e83c6513a7"
+  }
+}

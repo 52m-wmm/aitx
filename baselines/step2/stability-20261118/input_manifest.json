@@ -1,0 +1,788 @@
+{
+  "datasets": {
+    "PRAC-CFTR-F508del": [
+      {
+        "name": "clingen",
+        "url": "https://search.clinicalgenome.org/kb/gene-validity/download",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823527,
+        "bytes": 1139932,
+        "sha256": "01e06d03813211c74768e93fb9444890bdde0e18ddbec3fe2caee33f67654546",
+        "rows": 3733
+      },
+      {
+        "name": "gencc",
+        "url": "https://search.thegencc.org/download/action/submissions-export-tsv",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823523,
+        "bytes": 26675181,
+        "sha256": "aa6c02723d9fed8baee244f40ea2b78ad3a72dd164a3dd60e79fddad8041a8c9",
+        "rows": 30383
+      },
+      {
+        "name": "genereviews",
+        "url": "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews/GRshortname_NBKid_genesymbol_dzname.txt",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585642,
+        "bytes": 132399,
+        "sha256": "e2737c4c9d40973bbc723e4d43a738669261e47eecb7a5fbf48c57c64c1f48d8",
+        "rows": 2361
+      },
+      {
+        "name": "hpo_annotations",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/phenotype.hpoa",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585640,
+        "bytes": 35816037,
+        "sha256": "e89aa39c8f97bf5a52c5d160f9250a603681d630ade8ec2679d84ac5aece1f72",
+        "rows": 286651
+      },
+      {
+        "name": "hpo_genes_to_disease",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/genes_to_disease.txt",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823551,
+        "bytes": 1492039,
+        "sha256": "7937a1b92779dc8614e39ace623b443c7c71dd15e4de11d5e52b14e331ab5978",
+        "rows": 16099
+      },
+      {
+        "name": "hpo_ontology",
+        "url": "https://purl.obolibrary.org/obo/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794583424,
+        "bytes": 21915519,
+        "sha256": "a7b3a012e7b4007a35a7cf8da35f2373b54cc16907f80d13d62470d31f833501",
+        "rows": 20532
+      },
+      {
+        "name": "hpo_ontology_2022",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2022-10-05/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584023,
+        "bytes": 22620236,
+        "sha256": "493d4d00f40f016d9a1d0e4144215b61b2db411fe2b05cb32dd7ccc2793259d5",
+        "rows": 17091
+      },
+      {
+        "name": "hpo_ontology_2024",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-04-26/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584048,
+        "bytes": 20839330,
+        "sha256": "247e3f6a836e7e1f64c2ea03ef324abd6e00a15aa223315a4dc2d7a0f2321bf9",
+        "rows": 18989
+      },
+      {
+        "name": "mondo_sssom",
+        "url": "https://purl.obolibrary.org/obo/mondo/mappings/mondo.sssom.tsv",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823562,
+        "bytes": 13129302,
+        "sha256": "0a9e732f7f8c8f9c6a67c2493370b794fedf073b2056c000dd1ec1ce44cf25f0",
+        "rows": 109738
+      },
+      {
+        "name": "omim_mim2gene",
+        "url": "https://omim.org/static/omim/data/mim2gene.txt",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823962,
+        "bytes": 991752,
+        "sha256": "d291981f0cb235f4a0636b6944711d2f714459dc616b0d58f65ca96692f7ce5d",
+        "rows": 29775
+      },
+      {
+        "name": "orphanet_genes",
+        "url": "https://www.orphadata.com/data/xml/en_product6.xml",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823943,
+        "bytes": 22612034,
+        "sha256": "f1c039f78683beea7ca5b34d1c01c4ec98f80e8ca488eee69770074db1020e39",
+        "rows": 4245
+      }
+    ],
+    "PRAC-COL1A1": [
+      {
+        "name": "clingen",
+        "url": "https://search.clinicalgenome.org/kb/gene-validity/download",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823527,
+        "bytes": 1139932,
+        "sha256": "01e06d03813211c74768e93fb9444890bdde0e18ddbec3fe2caee33f67654546",
+        "rows": 3733
+      },
+      {
+        "name": "gencc",
+        "url": "https://search.thegencc.org/download/action/submissions-export-tsv",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823523,
+        "bytes": 26675181,
+        "sha256": "aa6c02723d9fed8baee244f40ea2b78ad3a72dd164a3dd60e79fddad8041a8c9",
+        "rows": 30383
+      },
+      {
+        "name": "genereviews",
+        "url": "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews/GRshortname_NBKid_genesymbol_dzname.txt",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585642,
+        "bytes": 132399,
+        "sha256": "e2737c4c9d40973bbc723e4d43a738669261e47eecb7a5fbf48c57c64c1f48d8",
+        "rows": 2361
+      },
+      {
+        "name": "hpo_annotations",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/phenotype.hpoa",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585640,
+        "bytes": 35816037,
+        "sha256": "e89aa39c8f97bf5a52c5d160f9250a603681d630ade8ec2679d84ac5aece1f72",
+        "rows": 286651
+      },
+      {
+        "name": "hpo_genes_to_disease",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/genes_to_disease.txt",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823551,
+        "bytes": 1492039,
+        "sha256": "7937a1b92779dc8614e39ace623b443c7c71dd15e4de11d5e52b14e331ab5978",
+        "rows": 16099
+      },
+      {
+        "name": "hpo_ontology",
+        "url": "https://purl.obolibrary.org/obo/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794583424,
+        "bytes": 21915519,
+        "sha256": "a7b3a012e7b4007a35a7cf8da35f2373b54cc16907f80d13d62470d31f833501",
+        "rows": 20532
+      },
+      {
+        "name": "hpo_ontology_2022",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2022-10-05/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584023,
+        "bytes": 22620236,
+        "sha256": "493d4d00f40f016d9a1d0e4144215b61b2db411fe2b05cb32dd7ccc2793259d5",
+        "rows": 17091
+      },
+      {
+        "name": "hpo_ontology_2024",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-04-26/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584048,
+        "bytes": 20839330,
+        "sha256": "247e3f6a836e7e1f64c2ea03ef324abd6e00a15aa223315a4dc2d7a0f2321bf9",
+        "rows": 18989
+      },
+      {
+        "name": "mondo_sssom",
+        "url": "https://purl.obolibrary.org/obo/mondo/mappings/mondo.sssom.tsv",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823562,
+        "bytes": 13129302,
+        "sha256": "0a9e732f7f8c8f9c6a67c2493370b794fedf073b2056c000dd1ec1ce44cf25f0",
+        "rows": 109738
+      },
+      {
+        "name": "omim_mim2gene",
+        "url": "https://omim.org/static/omim/data/mim2gene.txt",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823962,
+        "bytes": 991752,
+        "sha256": "d291981f0cb235f4a0636b6944711d2f714459dc616b0d58f65ca96692f7ce5d",
+        "rows": 29775
+      },
+      {
+        "name": "orphanet_genes",
+        "url": "https://www.orphadata.com/data/xml/en_product6.xml",
+        "snapshot": "2026-11-16",
+        "downloaded_at": 1794823943,
+        "bytes": 22612034,
+        "sha256": "f1c039f78683beea7ca5b34d1c01c4ec98f80e8ca488eee69770074db1020e39",
+        "rows": 4245
+      }
+    ],
+    "PRAC-GRIN2B": [
+      {
+        "name": "clingen",
+        "url": "https://search.clinicalgenome.org/kb/gene-validity/download",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202899,
+        "bytes": 1138526,
+        "sha256": "69d3f239f319fc440a8192f35245b4a1e7b90fa8eaa39d69d1ed70df5cd4ac7a",
+        "rows": 3729
+      },
+      {
+        "name": "gencc",
+        "url": "https://search.thegencc.org/download/action/submissions-export-tsv",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202896,
+        "bytes": 26655303,
+        "sha256": "f14d4355f9d454c83729c2435437dd4e5ce20d90f541261bfd0c4a017ac21186",
+        "rows": 30376
+      },
+      {
+        "name": "genereviews",
+        "url": "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews/GRshortname_NBKid_genesymbol_dzname.txt",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585642,
+        "bytes": 132399,
+        "sha256": "e2737c4c9d40973bbc723e4d43a738669261e47eecb7a5fbf48c57c64c1f48d8",
+        "rows": 2361
+      },
+      {
+        "name": "hpo_annotations",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/phenotype.hpoa",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585640,
+        "bytes": 35816037,
+        "sha256": "e89aa39c8f97bf5a52c5d160f9250a603681d630ade8ec2679d84ac5aece1f72",
+        "rows": 286651
+      },
+      {
+        "name": "hpo_genes_to_disease",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/genes_to_disease.txt",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202929,
+        "bytes": 1492039,
+        "sha256": "7937a1b92779dc8614e39ace623b443c7c71dd15e4de11d5e52b14e331ab5978",
+        "rows": 16099
+      },
+      {
+        "name": "hpo_ontology",
+        "url": "https://purl.obolibrary.org/obo/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794583424,
+        "bytes": 21915519,
+        "sha256": "a7b3a012e7b4007a35a7cf8da35f2373b54cc16907f80d13d62470d31f833501",
+        "rows": 20532
+      },
+      {
+        "name": "hpo_ontology_2022",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2022-10-05/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584023,
+        "bytes": 22620236,
+        "sha256": "493d4d00f40f016d9a1d0e4144215b61b2db411fe2b05cb32dd7ccc2793259d5",
+        "rows": 17091
+      },
+      {
+        "name": "hpo_ontology_2024",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-04-26/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584048,
+        "bytes": 20839330,
+        "sha256": "247e3f6a836e7e1f64c2ea03ef324abd6e00a15aa223315a4dc2d7a0f2321bf9",
+        "rows": 18989
+      },
+      {
+        "name": "mondo_sssom",
+        "url": "https://purl.obolibrary.org/obo/mondo/mappings/mondo.sssom.tsv",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202934,
+        "bytes": 13129302,
+        "sha256": "0a9e732f7f8c8f9c6a67c2493370b794fedf073b2056c000dd1ec1ce44cf25f0",
+        "rows": 109738
+      },
+      {
+        "name": "omim_mim2gene",
+        "url": "https://omim.org/static/omim/data/mim2gene.txt",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202956,
+        "bytes": 991496,
+        "sha256": "16a5ba64e3152ed608e3e9ae7e526f571785d3bc8fd79d8724ad7b1df637e17e",
+        "rows": 29765
+      },
+      {
+        "name": "orphanet_genes",
+        "url": "https://www.orphadata.com/data/xml/en_product6.xml",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202954,
+        "bytes": 22612034,
+        "sha256": "f1c039f78683beea7ca5b34d1c01c4ec98f80e8ca488eee69770074db1020e39",
+        "rows": 4245
+      }
+    ],
+    "PRAC-SLC35A2-ex8": [
+      {
+        "name": "clingen",
+        "url": "https://search.clinicalgenome.org/kb/gene-validity/download",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202899,
+        "bytes": 1138526,
+        "sha256": "69d3f239f319fc440a8192f35245b4a1e7b90fa8eaa39d69d1ed70df5cd4ac7a",
+        "rows": 3729
+      },
+      {
+        "name": "gencc",
+        "url": "https://search.thegencc.org/download/action/submissions-export-tsv",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202896,
+        "bytes": 26655303,
+        "sha256": "f14d4355f9d454c83729c2435437dd4e5ce20d90f541261bfd0c4a017ac21186",
+        "rows": 30376
+      },
+      {
+        "name": "genereviews",
+        "url": "https://ftp.ncbi.nlm.nih.gov/pub/GeneReviews/GRshortname_NBKid_genesymbol_dzname.txt",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585642,
+        "bytes": 132399,
+        "sha256": "e2737c4c9d40973bbc723e4d43a738669261e47eecb7a5fbf48c57c64c1f48d8",
+        "rows": 2361
+      },
+      {
+        "name": "hpo_annotations",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/phenotype.hpoa",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794585640,
+        "bytes": 35816037,
+        "sha256": "e89aa39c8f97bf5a52c5d160f9250a603681d630ade8ec2679d84ac5aece1f72",
+        "rows": 286651
+      },
+      {
+        "name": "hpo_genes_to_disease",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/genes_to_disease.txt",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202929,
+        "bytes": 1492039,
+        "sha256": "7937a1b92779dc8614e39ace623b443c7c71dd15e4de11d5e52b14e331ab5978",
+        "rows": 16099
+      },
+      {
+        "name": "hpo_ontology",
+        "url": "https://purl.obolibrary.org/obo/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794583424,
+        "bytes": 21915519,
+        "sha256": "a7b3a012e7b4007a35a7cf8da35f2373b54cc16907f80d13d62470d31f833501",
+        "rows": 20532
+      },
+      {
+        "name": "hpo_ontology_2022",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2022-10-05/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584023,
+        "bytes": 22620236,
+        "sha256": "493d4d00f40f016d9a1d0e4144215b61b2db411fe2b05cb32dd7ccc2793259d5",
+        "rows": 17091
+      },
+      {
+        "name": "hpo_ontology_2024",
+        "url": "https://github.com/obophenotype/human-phenotype-ontology/releases/download/v2024-04-26/hp.json",
+        "snapshot": "2026-11-13",
+        "downloaded_at": 1794584048,
+        "bytes": 20839330,
+        "sha256": "247e3f6a836e7e1f64c2ea03ef324abd6e00a15aa223315a4dc2d7a0f2321bf9",
+        "rows": 18989
+      },
+      {
+        "name": "mondo_sssom",
+        "url": "https://purl.obolibrary.org/obo/mondo/mappings/mondo.sssom.tsv",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202934,
+        "bytes": 13129302,
+        "sha256": "0a9e732f7f8c8f9c6a67c2493370b794fedf073b2056c000dd1ec1ce44cf25f0",
+        "rows": 109738
+      },
+      {
+        "name": "omim_mim2gene",
+        "url": "https://omim.org/static/omim/data/mim2gene.txt",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202956,
+        "bytes": 991496,
+        "sha256": "16a5ba64e3152ed608e3e9ae7e526f571785d3bc8fd79d8724ad7b1df637e17e",
+        "rows": 29765
+      },
+      {
+        "name": "orphanet_genes",
+        "url": "https://www.orphadata.com/data/xml/en_product6.xml",
+        "snapshot": "2026-11-08",
+        "downloaded_at": 1794202954,
+        "bytes": 22612034,
+        "sha256": "f1c039f78683beea7ca5b34d1c01c4ec98f80e8ca488eee69770074db1020e39",
+        "rows": 4245
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "PRAC-CFTR-F508del",
+      "patient": {
+        "genotype": [
+          {
+            "gene": "CFTR",
+            "transcript": "NM_000492.4",
+            "variant_cdna": "c.1521_1523del",
+            "variant_protein": "p.Phe508del",
+            "zygosity": "homozygous"
+          }
+        ],
+        "clinical_context": "A 15-year-old male with a diagnosis of cystic fibrosis presents with chronic sinopulmonary disease characterized by persistent respiratory symptoms and recurrent infections. He also has exocrine pancreatic insufficiency requiring enzyme replacement therapy and exhibits features of male infertility consistent with congenital bilateral absence of the vas deferens (CBAVD)."
+      }
+    },
+    {
+      "id": "PRAC-COL1A1",
+      "patient": {
+        "genotype": [
+          {
+            "gene": "COL1A1",
+            "transcript": "NM_000088.4",
+            "variant_cdna": "c.1678G>A",
+            "variant_protein": "p.(Gly560Ser)",
+            "zygosity": "heterozygous"
+          }
+        ],
+        "clinical_context": "Joint hypermobility, skin hyperextensibility, and easy bruising."
+      }
+    },
+    {
+      "id": "PRAC-GRIN2B",
+      "patient": {
+        "genotype": [
+          {
+            "gene": "GRIN2B",
+            "transcript": "NM_000834.5",
+            "variant_cdna": "c.2755C>T",
+            "variant_protein": "p.Gln919Ter",
+            "zygosity": "heterozygous"
+          }
+        ],
+        "clinical_context": "intellectual disability, seizures, and developmental delays"
+      }
+    },
+    {
+      "id": "PRAC-SLC35A2-ex8",
+      "patient": {
+        "genotype": [
+          {
+            "gene": "SLC35A2",
+            "transcript": "NM_005660.3",
+            "variant_cdna": "c.3G>A",
+            "variant_protein": "p.Met1Ile",
+            "zygosity": "heterozygous"
+          }
+        ],
+        "clinical_context": "seizures and global developmental delay. Age 2 months, Hemoglobin 5, Normal liver labs, Not enrolled in other trials"
+      }
+    }
+  ],
+  "step1_sha256": {
+    "PRAC-CFTR-F508del": "c815bc291470ec2dd7e90fcd830741b77a342c8b0e539fb69c8d0945b651bfee",
+    "PRAC-COL1A1": "cc070ef067a1aefad814f1eb38ff7a0eadb9b2d202f003da58dc2c02ca564708",
+    "PRAC-GRIN2B": "156ebcb087ea7c0e6295559d0fed16f3e27bcfe6131280b3eba11f821a53af88",
+    "PRAC-SLC35A2-ex8": "eec8818f30e226aa2faa2e99fdcd3e56429b80eeeb1d8ef7fe3330ed498300bf"
+  },
+  "http_responses": [
+    {
+      "url": "https://rest.genenames.org/fetch/symbol/CFTR",
+      "accessed_at": 1793238067,
+      "text_sha256": "0cb12982fdf5dfc8a33ab6732e674fc2f878b966e954e71d11907c08467daeee"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=NM_000492.4%3Ac.1521_1523del",
+      "accessed_at": 1793237421,
+      "text_sha256": "d013401ae3df11c5e0c496d5c57a609a413e48391ce5e6eb183860130747fa94"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=clinvar&retmode=json&id=2573430,1705126,634837,550500,517253,495928,54058,54030,53940,53854,53565,53246,53174,35816,7159,7105",
+      "accessed_at": 1793237422,
+      "text_sha256": "b3596b2520fab554de55d981e0240ed5b7e92dab7da880b17b4d760219ccfa2f"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NM_000492.4&rettype=gb&retmode=text&tool=aitx",
+      "accessed_at": 1793197316,
+      "text_sha256": "77092e44bcbf9c23702a4e8174f37b550fe55b9926ea4c9c3981522cf5b3ad11"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=NM_000492.3&rettype=gb&retmode=text&tool=aitx",
+      "accessed_at": 1793237469,
+      "text_sha256": "1a5564f11b7224c317fb795853efeb6d81fda9b8ca6665973974861dc50d8f06"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0008185",
+      "accessed_at": 1793238069,
+      "text_sha256": "eda5f67dcd7702181fb503b60d5e525a564e93b5b442cd4121e04faa1c0f4aa8"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0008185/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238452,
+      "text_sha256": "74c50361496255ff9ccbb78a75245f2a7be041253365a3b1fc0197a9e74dc56e"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0009061",
+      "accessed_at": 1793237432,
+      "text_sha256": "8f36b15e9c72263fa540737762b8d96f53127178275efcaf8e49ef6a55965339"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0009061/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238455,
+      "text_sha256": "7e01a4f41e9359549405ab8e556cfeefe61ebed72a00c6c2a0c9255d24b92ffd"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0018801",
+      "accessed_at": 1793238072,
+      "text_sha256": "f7f8cc9afb8289a911f353b769ff974c4b628198bb10b987fa4af94b7d804c40"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0018801/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238458,
+      "text_sha256": "49e2341a68eaeca34c9d561d4a83e1bc1c3ac1b26dbafc9006a0a4559c969bb3"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0010178",
+      "accessed_at": 1793238074,
+      "text_sha256": "add453fe6d2c2a17cbf8a27850b574f0295c8dcc08095f054cb18a5ea2f585ba"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0010178/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238461,
+      "text_sha256": "c406bb4a3087586884ee82268eefb3dcf90fcf649b9a4cf6d6784865b4ef2d16"
+    },
+    {
+      "url": "https://rest.genenames.org/fetch/symbol/COL1A1",
+      "accessed_at": 1793238125,
+      "text_sha256": "e26db1d8acae3a8f17bc9642e4699f19a3098269e7dc4f357a112a3430a4e038"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=NM_000088.4%3Ac.1678G%3EA",
+      "accessed_at": 1793238127,
+      "text_sha256": "413541e7ad904bca984d5bd462d52061317d5bc31e8a6591d8a63a19bb9d130a"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=clinvar&retmode=json&id=265433",
+      "accessed_at": 1793238130,
+      "text_sha256": "cf7846ac2f31099b41c71af03f57c032c7d616384fbb9fe492c2fe14c1a821ad"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0030854",
+      "accessed_at": 1793238131,
+      "text_sha256": "d6d77160fe73bdd973e62c5eeda5b9aa3701b4d773853cfbde8a016cc5034cc8"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0030854/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238489,
+      "text_sha256": "fc3286f6ee27307cdb730fca6dbaf0ab4abe16dee1d4355ab15552b90eeb008c"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0007244",
+      "accessed_at": 1793238134,
+      "text_sha256": "67f2e663d9640d0126ea6a2839429d4b4bcb9f021b1cb7bdc3f76d86118ea26e"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0007244/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238493,
+      "text_sha256": "871ec694fe4184b1dabf757022e15c765aa48d5295316d092098f950e26ee98d"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0019019",
+      "accessed_at": 1793238138,
+      "text_sha256": "9b0ed49e820e6ef37ad2eed18098db5ed17392a1380858e2bc1bbc4cc0bcff05"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0019019/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238496,
+      "text_sha256": "202959a6515310be1cc3e7c66a8db2e7532290cf4a88b38fbf2ac38a5259fb12"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0100599",
+      "accessed_at": 1793238139,
+      "text_sha256": "63e94dd3082d19d5079784b80a1b6993b478023467a779d21008a57f14cfa91d"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0100599/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238499,
+      "text_sha256": "1f44a939acc13f7070183482c24e2d40dc02a320c0cbcb1cee2f057c687cee2f"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0007525",
+      "accessed_at": 1793238142,
+      "text_sha256": "21daaedff2e65c114d4256c7e65d96f82b8862178aa16b9aa50bdb41ffb35618"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0007525/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238501,
+      "text_sha256": "4c17181c2335e507daff3e7cd586add15325186ad8b8f8a2e9de1d197b9d81f5"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0009804",
+      "accessed_at": 1793238145,
+      "text_sha256": "7244a394cda8f9a0d8e912a9edb6deb134c0319606be6f8a8457156cbb49fcd2"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0009804/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238503,
+      "text_sha256": "60da48e6e431716208a00894da8d23ed670a058355483ecfc34df130c23185e3"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0007522",
+      "accessed_at": 1793238148,
+      "text_sha256": "fcb2dd48fc4f5d953760fc94c98d9593544a2d25d4e67700d77b038028a40541"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0007522/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238506,
+      "text_sha256": "0adfe41fcd6d0c7d2c7fb99ef4331bf249d760e9e5e791f3d1e6935dd35f1af1"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0008146",
+      "accessed_at": 1793238151,
+      "text_sha256": "d44b6cfba07f378dcf4cc3eb888224c21e271b833aca75c90122e8de8fe5133c"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0008146/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238510,
+      "text_sha256": "32bb59739e7392297e407411ec93df0d922c0bda2776badf8a78376f1d5355de"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0008147",
+      "accessed_at": 1793238154,
+      "text_sha256": "c2aded71f75e5008da7bcca890c3ea5a6edb9ae3252f1fe58605aecf5d3079dd"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0008147/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238513,
+      "text_sha256": "30a070f5fd33850de0f70e3b5093ef6d31494caf47ebafd7ef2340b291d2169d"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0008148",
+      "accessed_at": 1793238157,
+      "text_sha256": "b823b94faede129ff5605179e572430c3294788935fa1cb3eef2b480f854c9f1"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0008148/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238517,
+      "text_sha256": "a938a1cadaaecdcf94d56ae286b3cc99e2544e95ee671035450ceebfec45dd30"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0016470",
+      "accessed_at": 1793238159,
+      "text_sha256": "622798baa94b17273286e4079262ebff95b622e4f4de661e3ddbe3c36e4111a4"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0016470/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238518,
+      "text_sha256": "5bf86cc73356ebca47e35b6b700605f3818630d04ecc2ce49844084deab471ec"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0017791",
+      "accessed_at": 1793238162,
+      "text_sha256": "46ff53bc9443a4bd697cba4eadae70fd0c3650adf815d2d7ce16eac36d70149c"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0017791/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238522,
+      "text_sha256": "fd4ee79ecb3c6ad5c7555fa34b173465c38995232d72d94320da1ff7fe9388dd"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0020521",
+      "accessed_at": 1793238164,
+      "text_sha256": "47ebaeff98e2ffdad6be3820b8df20072163019b3addf17edc3be0f2219e0c22"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0020521/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238526,
+      "text_sha256": "94649d1f2807fbde732b31a7963d0e530b654cb4ffcae7a524414cbfc92e56fd"
+    },
+    {
+      "url": "https://rest.genenames.org/fetch/symbol/GRIN2B",
+      "accessed_at": 1793238209,
+      "text_sha256": "94fb613008d2affc95b4e2dbe5bc0850b12095fe0ec874966783a97c29532f86"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=NM_000834.5%3Ac.2755C%3ET",
+      "accessed_at": 1793238211,
+      "text_sha256": "292b0a5ab0f711ef7b149b1df647a548aeac1b57bdf5729935c33eba355284a5"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=clinvar&retmode=json&id=956942",
+      "accessed_at": 1793238213,
+      "text_sha256": "157c4697d15e80102cacc09e6c9691f4541c754f513cd743a2a66424b692a33e"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0100038",
+      "accessed_at": 1793238217,
+      "text_sha256": "f2c2a575a0a1a94030a0ad566246bcf3932e7ff7a8c79cf2862f7581f1f5abff"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0100038/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238539,
+      "text_sha256": "65677266ed125f1f516af2193d42362c0f0206d98a891ef4f858d0fb0235cdda"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0013509",
+      "accessed_at": 1793238219,
+      "text_sha256": "a2060017aa44ec58a4c92e70d4e2ebfd669efabcd6bae48a4849eac0dc5a8e2e"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0013509/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238543,
+      "text_sha256": "54f4afe73d00b29b6581b0663dc1ae5bdf10ed351d59874be18295272a519b87"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0014505",
+      "accessed_at": 1793238221,
+      "text_sha256": "b5b46e64c7139f144355b54e420762029f3b9d2dfa7dd62980d6276f796b80a8"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0014505/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238546,
+      "text_sha256": "3e1eca5a08c67092c45499e2547fd2f5adaa6f37e83b6b69167c13cddacd7610"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0700350",
+      "accessed_at": 1793238224,
+      "text_sha256": "bdf81c25bceb50d191d313601979d655e93ce3eeb01db77cd08665e0315f27ed"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0700350/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238550,
+      "text_sha256": "2c7882545e03c26d46c3a2fd2b2fcf84892f8d1bc388982cf17a6692e5aeb371"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0018097",
+      "accessed_at": 1793238225,
+      "text_sha256": "1f7b2c4b17bbdb014817e36cf15434196377e4e8148ebc162ffcdf54d3cfc882"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0018097/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238553,
+      "text_sha256": "f10af8581d682cd784b5f046959531cbf22eac31ce7e280a0ee9dc0500e29589"
+    },
+    {
+      "url": "https://rest.genenames.org/fetch/symbol/SLC35A2",
+      "accessed_at": 1793238182,
+      "text_sha256": "d2e7cd31168e02ccacfe0dbc297b57ec607dd6ffc2b4b0a7c67172e98be0b317"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=NM_005660.3%3Ac.3G%3EA",
+      "accessed_at": 1793238183,
+      "text_sha256": "d720394f436a5c4a6e8dc979b5faf690594b7163df605b9a5a72f19b0bb847bd"
+    },
+    {
+      "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=clinvar&retmode=json&id=50365",
+      "accessed_at": 1793238185,
+      "text_sha256": "7405860a7f0fa1e36d824c26fdf0d00a1e4cf49af06422561062e6261c4086de"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0010478",
+      "accessed_at": 1793238188,
+      "text_sha256": "f54565e88fc98fa9372e6e8e2225716ad61bec899692ff426fb094d2016c10c6"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0010478/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238533,
+      "text_sha256": "1cf265ad4cec080464a926501521ad08c4db7e9d8d8ba53ad01aa7e702e9e764"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms?obo_id=MONDO%3A0100148",
+      "accessed_at": 1793238190,
+      "text_sha256": "e37ab0ad3b4e35858af88b8f80d679b39d27e551969787ef29507ae30959ce5c"
+    },
+    {
+      "url": "https://www.ebi.ac.uk/ols4/api/ontologies/mondo/terms/http%253A%252F%252Fpurl.obolibrary.org%252Fobo%252FMONDO_0100148/hierarchicalAncestors?size=1000",
+      "accessed_at": 1793238535,
+      "text_sha256": "45e0c3a1a92a2bdc3ad4b55cf15a383425b0e37b5a258b0817f79c3b2204320e"
+    }
+  ]
+}
