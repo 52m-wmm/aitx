@@ -50,7 +50,50 @@ def row_key(row: dict) -> tuple:
     return row["case_id"], row["section"], row["action_id"], row["branch"]
 
 
-def build_snapshot(ledgers: Path, ids: list[str], label: str, missing: tuple = ()) -> dict:
+DETAIL_FIELDS = ("classification", "conditions", "citations", "check_votes")
+
+
+def extract_votes(value):
+    """Unique question votes; repeated summaries of one call are counted once."""
+    found = {}
+    def walk(node, path=(), group=()):
+        if isinstance(node, dict):
+            if "call_ids" in node:
+                group = tuple(node["call_ids"])
+            if "answers" in node and isinstance(node["answers"], list) and "final" in node:
+                question = str(path[-1])
+                key = (group, question) if group else (group, path)
+                found[key] = {"question": question, "call_ids": list(group), "answers": node["answers"],
+                              "final": node["final"], "tested": bool(node["answers"]) and all(a is not None for a in node["answers"])}
+            if "judgements" in node:
+                question = node["item"]
+                key = (group, question) if group else (group, path)
+                found[key] = {"question": question, "call_ids": list(group), "answers": node["judgements"],
+                              "final": node["verdict"], "tested": bool(node["judgements"])}
+            for key, item in node.items():
+                walk(item, path + (str(key),), group)
+        elif isinstance(node, list):
+            for i, item in enumerate(node):
+                walk(item, path + (str(i),), group)
+    walk(value)
+    return sorted(found.values(), key=lambda v: json.dumps(v, sort_keys=True))
+
+
+def action_details(action, ledger, branch):
+    ev = {e["id"]: e for e in ledger["evidence"]}
+    lines = [r for r in action["requirements"] if branch in r["applies_to"]] if "requirements" in action else None
+    ids = set(action["evidence_ids"])
+    if lines is not None:
+        ids.update(r["requirement_evidence"] for r in lines)
+    if "presentation_evidence_ids" in action:
+        ids.update(action["presentation_evidence_ids"])
+    return {"classification": {k: action[k] for k in ("classification", "failed_criterion", "exceptions", "unassessable_reason") if k in action},
+            "conditions": lines,
+            "citations": [{k: ev[eid][k] for k in ("id", "source", "quote", "claim") if k in ev[eid]} for eid in sorted(ids)],
+            "check_votes": extract_votes(action)}
+
+
+def build_snapshot(ledgers: Path, ids: list[str], label: str, missing: tuple = (), detailed: bool = False) -> dict:
     """Missing current files fail. Only explicitly absent historical cases are marked unavailable."""
     cases, grouped = {}, {}
     for cid in ids:
@@ -97,6 +140,10 @@ def build_snapshot(ledgers: Path, ids: list[str], label: str, missing: tuple = (
                 target["evidence_ids"] += [r["requirement_evidence"] for r in a.get("requirements", [])
                                            if branch in r["applies_to"]]
                 target["records"] += 1
+                if detailed:
+                    details = action_details(a, led, branch)
+                    for field in DETAIL_FIELDS:
+                        target.setdefault(field, []).append(details[field])
     rows = []
     for key in sorted(grouped, key=str):
         row = grouped[key]
@@ -126,7 +173,7 @@ def compare(old: dict, new: dict) -> dict:
     for key in sorted(before.keys() | after.keys(), key=str):
         o, n = before.get(key), after.get(key)
         if o is not None and n is not None:
-            fields = [f for f in ("status", "reason", "evidence_ids", "records", "action") if o[f] != n[f]]
+            fields = [f for f in ("status", "reason", "evidence_ids", "records", "action") + tuple(f for f in DETAIL_FIELDS if f in o and f in n) if o[f] != n[f]]
             if not fields:
                 continue
             kind = "status_changed" if "status" in fields else "details_changed"
@@ -150,10 +197,14 @@ def compare(old: dict, new: dict) -> dict:
                         "old_evidence_ids": o["evidence_ids"] if o is not None else [],
                         "new_evidence_ids": n["evidence_ids"] if n is not None else [],
                         "review": "not_comparable" if kind == "baseline_missing" else "needs_review"})
+        if any(f in fields for f in DETAIL_FIELDS):
+            changes[-1]["old_details"] = {f: o[f] for f in DETAIL_FIELDS} if o is not None else None
+            changes[-1]["new_details"] = {f: n[f] for f in DETAIL_FIELDS} if n is not None else None
     return {"baseline": old["label"], "candidate": new["label"],
             "baseline_missing_cases": [cid for cid in new["cases"]
                                        if cid not in old["cases"] or not old["cases"][cid]["available"]],
-            "counts": dict(Counter(r["kind"] for r in changes)), "changes": changes}
+            "counts": dict(Counter(r["kind"] for r in changes)), "changes": changes,
+            "detailed_comparison": "available" if all(all(f in r for f in DETAIL_FIELDS) for r in old["rows"] + new["rows"]) else "unavailable: one or both snapshots lack detailed fields"}
 
 
 def cell(value) -> str:
@@ -175,6 +226,7 @@ def markdown(result: dict) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--detailed", action="store_true", help="also compare classification, conditions, citations and check votes when both snapshots include them")
     ap.add_argument("--compare", default="current", help="current (default), step3a.2-accepted, or a status snapshot JSON")
     ap.add_argument("--ledgers", type=Path, default=ROOT / "out/step3")
     ap.add_argument("--output-dir", type=Path, default=ROOT / "out/status_diff")
@@ -185,7 +237,7 @@ def main() -> int:
            "step3a.2-accepted": BASELINES / "historical/step3a.2-accepted/snapshot.json"}
     old_path = ref[args.compare] if args.compare in ref else Path(args.compare)
     old = load_snapshot(old_path)
-    new = build_snapshot(args.ledgers, case_ids(), "current ledger " + runmeta.code_commit())
+    new = build_snapshot(args.ledgers, case_ids(), "current ledger " + runmeta.code_commit(), detailed=args.detailed)
     result = compare(old, new)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     candidate = json.dumps(new, ensure_ascii=False, indent=1) + "\n"
