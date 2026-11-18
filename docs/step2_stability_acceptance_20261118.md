@@ -61,6 +61,8 @@ COL1A1 的所有并列 EDS/OI 分支和 GRIN2B 的 ID6/DEE27 分支均保留。�
 - `complete_comparisons.json`：40 对完整结果、原始抽取、选词及三票差异；`votes_and_reasons.json`、`difference_metrics.json` 分层统计。`summary.json` 旧字段 `hpo_changed` 比较的是完整 HPO 记录（含措辞），语义统计以 `difference_metrics.json` 的 `hpo_semantic_changed` 为准。
 - `fixed_inputs.json` / `fixed_http.json`：固定病例、Step 1、数据清单及实际检索响应；`reference_preflight_diff.json`：历史参照到规范化预检的完整 Diff。
 - `manifest.json` 记录实验文件哈希；正式 Step 2/3/4 与行动 current 共 **69** 个文件哈希全部不变。未修改 Evidence Ledger 或生产判定逻辑，故本次没有新的行动状态 Diff 或升级。
-- 离线 **1246 项通过**。没有运行全量 Step 3/4 验收，也未声称其过期问题已解决。旧 Step 2 自动任务仍暂停，KMT2B 未恢复。
+- 离线最终 **1247 项通过**。没有运行全量 Step 3/4 验收，也未声称其过期问题已解决。旧 Step 2 自动任务仍暂停，KMT2B 未恢复。
+
+执行时实验脚本副本在 `runs/step2-stability-20261118/executed_script.py`，对应提交 `3f7afea`。执行结束后仅将已有“重复实验拒绝”保护前移到预检写盘之前，并加反向测试，避免以后误运行覆盖冻结产物；未增加真实请求或修改生产逻辑。
 
 本次未偏离已批准的病例、轮次或预算。诊断稳定结论仅覆盖这四个练习病例；HPO 波动及服务端模型版本披露不足已明确保留，后续若修复需另开实验，不复用本轮结果宣称改后稳定。

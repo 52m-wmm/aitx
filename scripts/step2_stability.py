@@ -66,6 +66,8 @@ def main():
     args = ap.parse_args()
     out = ROOT / 'runs/step2-stability-20261118'
     proposal = json.loads((out / 'proposal.json').read_text())
+    if (out/'llm_calls.jsonl').exists() or (out/'attempts.jsonl').exists():
+        raise FileExistsError('experiment already started; do not overwrite or silently repeat')
     for p, expected in proposal['code_and_input_sha256'].items():
         if sha(ROOT / p) != expected:
             raise ValueError('proposed version changed: ' + p)
@@ -127,8 +129,6 @@ def main():
         return
     llm.chat = original_chat
     llm.LOG = out/'llm_calls.jsonl'
-    if llm.LOG.exists() or (out/'attempts.jsonl').exists():
-        raise FileExistsError('experiment already started; do not overwrite or silently repeat')
     llm.LOG.touch()
     journal = out/'attempts.jsonl'
     spent = 0.0
