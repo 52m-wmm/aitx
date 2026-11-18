@@ -64,3 +64,12 @@ def test_observational_only_summary_is_empty_of_studies_and_validator_rejects_in
     assert not V.check_report(md, led, "P")
     bad = md.replace("- **Tier 2:**", "- **Tier 2:**\n  - NCT00000001 (applicable). [E:e1]", 1)
     assert any("observational study in Summary Tier 2" in e for e in V.check_report(bad, led, "P"))
+
+
+def test_summary_trial_includes_drug_name_and_registration_id():
+    trial=act('trial:abo','clinical_trial_eligibility',
+              'Phase 1/2 Study of ABO-101 in Primary Hyperoxaluria Type 1 with a long descriptive title',
+              'conditional',study_type='interventional',nct='NCT06839235',interventions=['ABO-101'])
+    md,_=build(ledger([trial]))
+    summary=md.split('- **Tier 2:**',1)[1].split('- **Tier 3:**',1)[0]
+    assert 'ABO-101 (NCT06839235)' in summary

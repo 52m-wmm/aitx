@@ -155,3 +155,7 @@ SAIL AI-Tx Challenge 最终赛：Actionability Report Generation。
 第五轮明确批准的四项已用promote补升：此前误按投票分歧筛D组，漏掉ring splints及wrist/thumb braces两项HPO未知，现按braces×3批准补升；另删历史not_applicable的NCT01822834/NCT07513051。approvals.md记原因，current527行、累计157项已批diff，历史不动。原106新增/18删除/57细节的181项分类：病例级3b首接E同类25、3a来源/回退57、孕期删除16、本轮已批NCT删除2、证据内容/集合57、ID方案0、其他新增试验24。623个病例×旧ID重算一致。155项只形成未批准候选（593行），24项其他逐条待审；不升级提案或RETEST首个基线。完整分类与实际行见docs/status_diff_review5_20261117.md；新current完整diff在out/status_diff/review5-20261117/canonical/，KMT2B仅3a审阅在review/，155项提案在batch-proposal/；验收汇总out/acceptance/review5_20261117.json。
 
 报价未授权、未运行：KMT2B两篇旧请求仍命中，移除孕期独立行动改变3c选文集合，三篇首次抽取无缓存，不是旧缓存失效。至少3次文章请求，后续核查/下游次数待抽取后确定，估价$0.01–$0.03、建议独立硬上限$0.06。Step2按15状态快照病例（含4RETEST、不含DMD）+4评测×5轮完整三票Step2=95轮；必需285次初始抽取、可选0–285次HPO选词，未计重试正常范围285–570。19例只读缓存形状预计445次（285+160），同接口模型18条历史样本均价估算$0.4244，建议独立硬上限$0.60；须逐病例逐轮隔离LLM缓存、固定资源/Step1、不覆盖正式Step2/共享缓存、不跑评测Step3+。官方当前非高峰费率已核实与项目一致。详见docs/review5_quotes_20261117.md；两报价均未批准，不能沿用已结束的$0.17额度。此次所有尝试真实DeepSeek请求0次、费用$0。
+
+**2026-11-17 用户最新指示：LLM先停止**。暂停KMT2B $0.06刷新及Step2 $0.32稳定性真实调用；旧授权不代表可在明日自动恢复。已停用明日自动任务，当前无流水线/模型调用进程；等待用户明确恢复。$0代码与MONDO预审工作可继续。
+
+**本次审核及最新停止指示**：已通过promote升级155项候选与AGXT/CFTR试验6行，共161项，current599行；COL1A1 EDS18行仍待预审后决定，未实现亚型排除规则。18行预审见docs/COL1A1_subtype_review_20261117.md；vascular MONDO层级接口超时，未当空祖先判排除；hEDS/HSD或关系中的HSD未映射保持未知。Summary Tier2已加简称/干预药物名（ABO-101示例），离线1244项通过，两报告格式/Step5通过；未重跑模型或整例验收，15例正式账本文件逐字未动，Known exclusions无变化。用户原授权KMT上限$0.06、Step2缩减65轮上限$0.32（既有结果额外一次），随后明确“llm的话先停止”，该最新指示覆盖执行安排。Step2自动任务step-2已PAUSED，KMT未启动，不自动恢复；实际调用0次。仅继续$0代码/数据审核工作。

@@ -552,7 +552,12 @@ class Report:
         labels = [i for i in sources if self.ev[i].get("source", {}).get("type") == "spl_setid"]
         ids = (labels or sources)[:1]
         if a["section"] == "clinical_trial_eligibility":
-            text = f"{a.get('nct') or a['label']} ({status_of(a)}; {a.get('overall_status') or 'unknown'}; see trial criteria)"
+            nct=a.get('nct')
+            name=re.sub(r'\s*\(NCT\d{8}\)\s*$','',display_label(a['label']))
+            if (len(name)>60 or name==nct) and a.get('interventions'):
+                name=a['interventions'][0]
+            title=f"{clean(name,80)} ({nct})" if nct and name!=nct else name
+            text = f"{title} ({status_of(a)}; {a.get('overall_status') or 'unknown'}; see trial criteria)"
         elif status_of(a) == "conditional" and unk:
             ids += [r["requirement_evidence"] for r in unk if "requirement_evidence" in r]
             text = f"If {clean(unk[0]['requirement'], None)}: {a['label']}"
