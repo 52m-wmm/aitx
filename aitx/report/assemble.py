@@ -60,7 +60,8 @@ def unknown_lines(a: dict, branch: str | None = None) -> list[dict]:
 
 def trial_rank(a: dict) -> tuple:
     lines = trial_lines(a)
-    key_met = {r.get("fact") or (r.get("patient_fact") or {}).get("field") for r in lines if r["result"] == "pass"}
+    key_met = {r.get("fact") or (r.get("patient_fact") or {}).get("field") for r in lines
+               if r["result"] == "pass" and r["kind"] == "inclusion"}
     return ({"RECRUITING": 0, "ENROLLING_BY_INVITATION": 1, "NOT_YET_RECRUITING": 2,
              "ACTIVE_NOT_RECRUITING": 3}.get(a.get("overall_status"), 4),
             any(r["result"] == "fail" for r in lines), -len(key_met & {"diagnosis", "age"}),
@@ -291,7 +292,15 @@ class Report:
     # -------------------------------------------------------------- sections
     def actions(self, section: str) -> list[dict]:
         items=[a for a in self.led['actions'] if a['section']==section]
+        if section=='clinical_trial_eligibility':
+            return sorted(items,key=lambda a:({"interventional":0,"observational":1}.get(a.get('study_type'),2),trial_rank(a)))
+        if section=='off_label_expanded_access':
+            return sorted(items,key=lambda a:({"reported_improvement":0,"insufficient":1}.get(a.get('efficacy_direction'),2),-self.precedent_count(a)))
         return [a for _,a in sorted(enumerate(items),key=lambda pair:pair[1].get('source_order',[1000000,pair[0],0]))]
+
+    def precedent_count(self, a: dict) -> int:
+        return len({self.ev[i]['source']['id'] for i in self.action_ids(a)
+                    if self.ev[i]['kind']=='sourced' and self.ev[i]['source']['type']=='pmid'})
 
     def shown(self, section: str) -> list[dict]:
         items=[a for a in self.actions(section) if a.get('report') is not False]
@@ -487,7 +496,15 @@ class Report:
                 why = section.replace('_',' ')+'; '+readable(status_of(a))
                 if section=='off_label_expanded_access' and a.get('efficacy_direction'):
                     why += '; '+a['efficacy_direction'].replace('_',' ')
-                why += '; '+('source position not recorded; ledger/collection order' if a.get('source_order_note') or 'source_order' not in a else 'source order')
+                if section=='clinical_trial_eligibility':
+                    rank=trial_rank(a)
+                    why += (f"; {readable(a.get('study_type') or 'unknown')}; {a.get('overall_status') or 'unknown'}; "
+                            f"{'known exclusions present' if rank[1] else 'no known exclusions'}; "
+                            f"{-rank[2]} key inclusion fields met; {rank[3]} unknown criteria")
+                elif section=='off_label_expanded_access':
+                    why += f'; independent precedent reports: {self.precedent_count(a)}'
+                else:
+                    why += '; '+('source position not recorded; ledger/collection order' if a.get('source_order_note') or 'source_order' not in a else 'source order')
                 candidates.append((a,why))
         for n,(a,why) in enumerate(candidates,1):
             ids = self.action_ids(a) or bases
@@ -550,10 +567,11 @@ class Report:
         first = [a for section in ('existing_targeted_therapies','supportive_management')
                  for a in self.shown(section) if not self.preventative(a)]
         if not first:first=self.shown('contraindications_precautions')
+        first=sorted(first,key=lambda a:status_of(a)!='applicable')  # retain ranking order within each status
         out += ["  - "+self.summary_action(a) for a in first[:3]] or ["  - No priority treatment found in the recorded searches."]
         out += ["- **Tier 2:**"]
-        second=self.shown('clinical_trial_eligibility')+self.shown('off_label_expanded_access')
-        out += ["  - "+self.summary_action(a) for a in second[:3]] or ["  - No trial or off-label entry found in the recorded searches."]
+        second=[a for a in self.shown('clinical_trial_eligibility') if a.get('study_type')=='interventional']+self.shown('off_label_expanded_access')
+        out += ["  - "+self.summary_action(a) for a in second[:3]] or ["  - No interventional trial or off-label entry found in the recorded searches."]
         out += ["- **Tier 3:**"]
         research=[a for a in self.shown('bespoke_therapies') if a['classification']=='theoretically_possible']
         if research:
@@ -587,7 +605,7 @@ class Report:
         if diagnoses:
             out.append("- **Diagnosis**: " + "; ".join(f"{e['claim']} {self.refs([e['id']])}" for e in diagnoses))
         out += self.variant_provenance()
-        shown_names={a['label'] for section in ('existing_targeted_therapies','supportive_management','contraindications_precautions','clinical_trial_eligibility','off_label_expanded_access','bespoke_therapies','drug_repurposing') for a in self.shown(section)}
+        shown_names={a['label'] for section in ('existing_targeted_therapies','supportive_management','contraindications_precautions','clinical_trial_eligibility','off_label_expanded_access','bespoke_therapies','drug_repurposing') for a in self.shown(section) if a.get('study_type')!='observational'}
         variables = OrderedDict()
         for m in self.led.get("missing_information") or []:
             var = "kidney function" if m["variable"] == "eGFR" else m["variable"]

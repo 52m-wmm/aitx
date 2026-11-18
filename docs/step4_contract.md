@@ -1,6 +1,6 @@
-# Step 4 契约：报告组装（v2.0，2026-11-17）
+# Step 4 契约：报告组装（v3.0，2026-11-17）
 
-> 状态：**v2.0 当前有效契约**（2026-11-17，用户第四轮审阅及基线工具要求）。Ranking、Summary、Clinical Trial Table 以第 4、6.4、6.6 节为准；第 13–23 节保留历史记录，与本版同主题冲突时不再适用。其他未被覆盖的已批准规则继续有效。所有后续修改必须遵循本契约；本轮先固定契约与基线，不代表现有报告已完成第四轮实现。
+> 状态：**v3.0 当前有效契约**（2026-11-17，用户第五轮第 1 项更正）。Ranking、Summary、Clinical Trial Table 以第 4、6.4、6.6 节为准；第 13–24 节保留历史记录，与本版同主题冲突时不再适用。没有来源顺序的试验/超说明书节按本版专门规则排序。其他未被覆盖的已批准规则继续有效；所有后续修改必须遵循本契约。
 
 ## 0. 目标与边界
 
@@ -44,11 +44,11 @@
 ## 4. Summary
 
 1. **正文一致**：Summary 必须来自本次正文实际显示的行动或评估。某层正文已有条目时，不得称该层 not recorded；只有阴性 / 不适用评估时说明已记录的结果，不能把它推荐为可用治疗。检索无结果与未记录也必须区分。
-2. **三层要点**：Tier 1–3 各列 1–3 条。Tier 1 按 Ranking 的 targeted → supportive 及来源原文顺序取前三，不按状态、字母、未知项数重排。Tier 2 不能只从试验取：没有试验而有超说明书条目时必须覆盖后者（如 ANO10 coenzyme Q10）。Tier 3 优先列 theoretically possible 的个性化方法；没有理论可行方法但正文有评估时，概述其评估结论，不写没有记录。
+2. **三层要点**：Tier 1–3 各列 1–3 条。Tier 1 从 Ranking 的 targeted → supportive 候选中，先 applicable、再 conditional，各状态内保持原排名顺序，取前三。Tier 2 的试验候选只取干预性，依同节排名；观察性研究不进入 Summary（也不计入 Summary 缺失信息的影响项）。不能只从试验取：没有干预试验而有超说明书条目时必须覆盖后者（如 ANO10 coenzyme Q10）。Tier 3 优先列 theoretically possible 的个性化方法；没有理论可行方法但正文有评估时，概述其评估结论，不写没有记录。
 3. **诊断与变异事实**：以账本 Step 1 / 2 事实为准，保留 RefSeq 版本、ClinVar 与计算依据；多个待定诊断按分支写明，不补确定诊断。
 4. **Most important missing information**：只统计正文显示行动所依赖、医生能核实的具体变量，按影响数取前三；kidney function 与 eGFR 合并。other trial criteria、source scope、笼统 evidence 类别不列。只列条目名，不列行内 Evidence ID；不能把已知年龄列为缺失年龄。
 5. **Check before use**：只覆盖正文显示的行动 / 药物。未显示的账本行动不进入本块，也不进入缺失信息计数；这里的“显示”不是 Ranking 集合，不能因预防 / 禁忌不参与排名而删除正文已显示的安全事项。没做的检查写 not checked；空数组不等于没有相互作用。
-6. 与正文对照的确定性检查由 `validate_report.py` 承担，后续实现必须补正反测试。Summary 不改变账本状态或另做临床判断。
+6. 与正文对照的确定性检查由 `validate_report.py` 承担，包含 Summary Tier 2 不得出现账本标记的观察性研究；观察研究为本节唯一记录时也检查。后续实现必须补正反测试。Summary 不改变账本状态或另做临床判断。
 
 ## 5. 条件的写法：按缺失信息归组
 
@@ -76,12 +76,13 @@
 ### 6.4 Clinical Trial Eligibility
 - **列固定为**：Trial / Inclusion met / Exclusion ruled out / Unable to assess / Known exclusions / Status & verified date。排除条款通过只能进 Exclusion ruled out，不能进入 Inclusion met；未知 / 未评估如实保留。
 - **显示范围**：干预性试验全部列出，不用前五条上限隐藏；观察性研究（登记、生物样本库等）另列一行汇总，数目等于实际列出数。3b 每分支至多十项做逐条分析；未逐条分析的候选必须明确标注，不能声称已完成分析。禁止为压缩报告隐藏干预试验。
-- **表格排序**：招募状态 → 零已知排除优先 → 已满足的关键条件（诊断、年龄）→ 未知项数。这个筛选审查顺序独立于 Ranking，不套用 Ranking 的来源顺序。招募状态与核验日期来自账本已有来源，未知写 unknown，不把生成日期冒充核验日期。
+- **表格与 Ranking 排序**：干预性在前、观察性在后；类型内按招募状态 → 零已知排除优先 → 已满足的关键纳入条件（诊断、年龄）→ 未知项数少者在前。排除条件被排除不算满足关键纳入条件；表格与 Ranking 使用同一试验排序，不套用没有记录的来源顺序。招募状态与核验日期来自账本已有来源，未知写 unknown，不把生成日期冒充核验日期。观察性仍只在正文汇总，不进入 Summary。
 - **年龄**：只有结构化 minimumAge / maximumAge 总范围之外能产生年龄 Known exclusion。组内上下界同时满足才确认 Inclusion met；不能确认的分组为 Unable to assess，不得成为排除。已有分组识别只用于确认满足；年龄未知保持未知。
 - **逻辑组与例外**：诊断 / 条件满足其一后，不再把其他选项列为依赖条件。bilirubin/Gilbert、INR/warfarin 等放行例外随完整排除条款保留；不能可靠组合比较时整条 Unable to assess，不把例外单独当排除。恢复文本必须是登记原文的连续逐字子串，不拼接或改写。
 - **引用**：试验标题后只放注册页链接；每行至多三个 Evidence ID，完整对应放证据表。重复的 NCT 名称只显示一次；同来源同一句在本节只出现一次，不能为去重隐藏不同判定。
 
 ### 6.5 Off-label or Expanded-Access Therapies
+- **正文、Ranking 与 Summary 的同节顺序**：reported improvement → insufficient → 其他；同类按账本独立先例报告数降序（唯一 PMID 计数，同文多段引文不重复计数），并列保留账本顺序。不拿抓取/字母顺序冒充来源原文顺序；只改变显示排序，不重判疗效。已有阴性结果专门展示规则与有效上限仍保留，上限在排序后应用。
 - 带药物层面疗效方向（阳性 / 阴性 / 结果不一致 / 部分改善 / 未报告）与逐篇先例（设计、病例数、方向）（todo 2026-11-05）。
 - 只有阴性报告的药物的位置、是否同时在禁忌节提示：待定问题 Q4。
 - 结果不一致时并列写出阴性与阳性原文。
@@ -92,8 +93,8 @@
 - 3d 的 classification、failed_criterion、exceptions、unassessable_reason 是代码输出，必须忠实呈现；内部枚举显示为可读英文，不改变账本原值或等级。Summary Tier 3 与临床前验证只把 theoretically possible 方法当成待验证行动；负面评估仍在正文显示理由，不能误称没有记录。
 - **Ranking 范围**：只列正文显示的行动；预防 / 禁忌与注意事项不进入排名，不因其 applicable 就排到首位。个性化只列 theoretically possible 的方法。
 - **固定节顺序**：Existing Targeted Therapies → Supportive Management → Clinical Trial Eligibility → Off-label or Expanded-Access Therapies → Bespoke Therapies。不得按适用状态或字母重排各节。
-- **节内顺序**：按支持该行动的来源原文出现顺序（章节、段落、表格行）；多个来源保留账本的来源顺序。不能用状态、未知项数、字母、推测的疗效权重替代来源顺序；无法定位时明确记录顺序信息缺失，不捏造来源位置。
-- 每条排名附一句来自账本字段的理由，不由模型生成新的医学论证。Ranking 由 Step 4 统一呈现，不能回写子节点判定；临床试验表继续遵循第 6.4 节自己的排序。
+- **节内顺序**：有来源原文顺序的 targeted/supportive 依章节、段落、表格行，多个来源保留账本来源顺序，不按状态或字母重排；Summary Tier 1 的 applicable 优先另依第 4 节。没有来源顺序的临床试验依第 6.4 节，超说明书依第 6.5 节，不能写成原文顺序。其余无法定位时明确记录顺序信息缺失，不捏造来源位置。
+- 每条排名附一句来自账本字段的理由，不由模型生成新的医学论证。试验列类型/招募状态/有无已知排除/已满足关键纳入条件数/未知数；超说明书列疗效方向与独立 PMID 数。Ranking 由 Step 4 统一呈现，不能回写子节点判定。
 - Unassessed 与 Note 内容相同时只显示一次；显示清理不改变原始账本字段或判定。
 
 ## 7. 每节条目上限（todo 2026-11-11，架构原则 4）

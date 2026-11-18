@@ -138,10 +138,16 @@ def check_report(md: str, ledger: dict, case_id: str) -> list[str]:
         tier=next(h for h in HEADINGS if h.startswith(f'## Tier {number}:'))
         body=md.split(tier+'\n',1)[1] if tier+'\n' in md else ''
         body=re.split(r'^## Tier ',body,maxsplit=1,flags=re.M)[0].split('**Evidence table**',1)[0]
-        if not re.search(r'^- \*\*.+?\*\* —|^\| \*\*',body,re.M):continue
         marker=f'- **Tier {number}:**'
         block=summary.split(marker,1)[1] if marker in summary else ''
         block=re.split(r'^- \*\*Tier [123]:\*\*|^- \*\*Diagnosis\*\*',block,maxsplit=1,flags=re.M)[0]
+        if number==2:
+            for a in ledger['actions']:
+                if a['section']=='clinical_trial_eligibility' and a.get('study_type')=='observational':
+                    name=a.get('nct') or a['label']
+                    if re.search(r'(?<!\w)'+re.escape(name)+r'(?!\w)',block,re.I):
+                        bad.append(f'observational study in Summary Tier 2: {name}')
+        if not re.search(r'^- \*\*.+?\*\* —|^\| \*\*',body,re.M):continue
         if not REF.search(block) or re.search(r'(?:priority action|technical premises) not recorded',block,re.I):
             bad.append(f'Summary Tier {number} contradicts entries shown in the body')
     counts = Counter(e["id"] for e in records)

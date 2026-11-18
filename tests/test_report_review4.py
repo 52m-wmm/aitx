@@ -15,7 +15,7 @@ def test_ranking_uses_section_and_source_order_not_status_or_name():
     assert ranking.index('Z conditional')<ranking.index('A applicable')<ranking.index('Support')
     assert 'Avoid X' not in ranking
     summary=md.split('- **Tier 1:**',1)[1].split('- **Tier 2:**',1)[0]
-    assert summary.index('Z conditional')<summary.index('A applicable')<summary.index('Support')
+    assert summary.index('A applicable')<summary.index('Support')<summary.index('Z conditional')
 
 
 def test_summary_includes_off_label_entry_when_there_is_no_trial():

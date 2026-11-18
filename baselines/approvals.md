@@ -181,3 +181,17 @@
 | --- | --- | --- | --- | --- | --- | --- |
 | 6f96422a8c74556d | PRAC-COL1A1 | physiotherapist | MONDO:0007522 | applicable | conditional | 用户明确撤销此前 physiotherapist 只改文字不改状态的个案要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源核查 conditional 为准。批准两个诊断分支降为 conditional，reason 写明普通 NBK1295 段落对相应诊断分支的适用范围尚未确认。仅升级这两行，其他 C、61项证据细节与 RETEST 首个基线不在本次批准内。 |
 | 12bbbb9d9948ba97 | PRAC-COL1A1 | physiotherapist | MONDO:0030854 | applicable | conditional | 用户明确撤销此前 physiotherapist 只改文字不改状态的个案要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源核查 conditional 为准。批准两个诊断分支降为 conditional，reason 写明普通 NBK1295 段落对相应诊断分支的适用范围尚未确认。仅升级这两行，其他 C、61项证据细节与 RETEST 首个基线不在本次批准内。 |
+
+## 2026-11-17 — b0e3ef38584c82d00e62b3c43c8be9aa3012b055
+
+- Approver: 用户（本会话第五轮第2、4项）
+- Reason: 用户第五轮明确：D组已批准braces×3，补升此前错误按投票分歧筛选而漏掉的ring splints及wrist/thumb braces两项；同时明确批准删除历史已not_applicable的NCT01822834成人登记和NCT07513051新生儿试验。仅此四项，不批准其余噪音清单或RETEST首个基线。
+- Previous snapshot: 43f31989324640be76d7df8589b2592b90a4ffd698bbd1765429a789011fb4a3
+- Approved candidate: cf749076cd16224e7a6c25624b31604e47761d4e463cb71fea5590a44e6e727f
+
+| Change ID | Case ID | Action | Branch | Old status | New status | Approved rationale |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0c4515fea42d3927 | PRAC-CFTR-F508del | Bronchiectasis and NTM Research Registry (NCT01822834) | MONDO:0009061 | not_applicable | not recorded (absence, not a clinical status) | 用户批准删除：历史状态已为not_applicable，年龄不符且非CFTR召回缺口；不产生新排除。 |
+| c17368df08086084 | PRAC-CFTR-F508del | DIaphragmatic Swing According to Cpap Flow Output in NEOnates (DISCONEO) (NCT07513051) | MONDO:0009061 | not_applicable | not recorded (absence, not a clinical status) | 用户批准删除：历史状态已为not_applicable，年龄不符且非CFTR召回缺口；不产生新排除。 |
+| 4d9bbe81542ddc92 | PRAC-COL1A1 | ring splints | MONDO:0007522 | applicable | conditional | D组braces×3批准漏升补正；HPO未知保持conditional，不改判定代码或正式账本状态。 |
+| a4389c851d9c8674 | PRAC-COL1A1 | wrist or wrist & thumb braces | MONDO:0007522 | applicable | conditional | D组braces×3批准漏升补正；HPO未知保持conditional，不改判定代码或正式账本状态。 |

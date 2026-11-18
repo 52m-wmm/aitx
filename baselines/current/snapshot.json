@@ -1,7 +1,7 @@
 {
  "schema": "aitx-status-snapshot-v1",
- "label": "current: A/B/D/E + explicitly approved COL1A1 physiotherapist correction",
- "created_at": 1794975715,
+ "label": "current: prior approvals + D braces omissions + two unrelated trial removals",
+ "created_at": 1794976743,
  "cases": {
   "PRAC-AGXT-c33dup": {
    "available": true,
@@ -61,7 +61,17 @@
     "code_commit": "8e5ea29",
     "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a"
    },
-   "partial_approval": true
+   "partial_approval": true,
+   "approved_review5_component": {
+    "source": {
+     "available": true,
+     "ledger_path": "/Users/a00/aitx/out/step3/PRAC-CFTR-F508del.json",
+     "ledger_sha256": "64053829ba4b6f749d23ca0ff424b2bc5025fb4c670a0549e4e38883f2fea585",
+     "code_commit": "26a54c5+dirty",
+     "input_fingerprint": "8560aaa1d5683cd493c55ded7f22abab17d6ec75ced4e348dc1461db0db8d39a"
+    },
+    "scope": "Only two explicitly approved braces status rows / two explicitly approved trial removals; all other differences remain pending."
+   }
   },
   "PRAC-COL1A1": {
    "available": true,
@@ -90,6 +100,16 @@
      "MONDO:0030854"
     ],
     "scope": "Two physiotherapist rows only; no other COL1A1 changes approved by this promotion."
+   },
+   "approved_review5_component": {
+    "source": {
+     "available": true,
+     "ledger_path": "/Users/a00/aitx/out/step3/PRAC-COL1A1.json",
+     "ledger_sha256": "2fa9ecfe474532bbd3b4fb58c36f69bbc525e1489ed2a000366401a24ed2ca1f",
+     "code_commit": "26a54c5",
+     "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
+    },
+    "scope": "Only two explicitly approved braces status rows / two explicitly approved trial removals; all other differences remain pending."
    }
   },
   "PRAC-GRIN2B": {
@@ -1872,19 +1892,6 @@
   {
    "case_id": "PRAC-CFTR-F508del",
    "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT01822834",
-   "action": "Bronchiectasis and NTM Research Registry (NCT01822834)",
-   "branch": "MONDO:0009061",
-   "evidence_ids": [
-    "e0b7d154fbaf"
-   ],
-   "records": 1,
-   "status": "not_applicable",
-   "reason": "not met: minimumAge: 18 Years; maximumAge: 120 Years"
-  },
-  {
-   "case_id": "PRAC-CFTR-F508del",
-   "section": "clinical_trial_eligibility",
    "action_id": "trial:NCT01851642",
    "action": "Lung Disease and Its Affect on the Work of White Blood Cells in the Lungs (NCT01851642)",
    "branch": "MONDO:0009061",
@@ -3141,19 +3148,6 @@
    "records": 1,
    "status": "not_applicable",
    "reason": "not met: minimumAge: 18 Years; maximumAge: none"
-  },
-  {
-   "case_id": "PRAC-CFTR-F508del",
-   "section": "clinical_trial_eligibility",
-   "action_id": "trial:NCT07513051",
-   "action": "DIaphragmatic Swing According to Cpap Flow Output in NEOnates (DISCONEO) (NCT07513051)",
-   "branch": "MONDO:0009061",
-   "evidence_ids": [
-    "a23692dcb0cb"
-   ],
-   "records": 1,
-   "status": "not_applicable",
-   "reason": "not met: minimumAge: 72 Hours; maximumAge: 10 Weeks"
   },
   {
    "case_id": "PRAC-CFTR-F508del",
@@ -5585,8 +5579,8 @@
     "e8957dd5f4f4"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: small joint instability"
+   "status": "conditional",
+   "reason": "depends on: small joint instability"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -5681,8 +5675,8 @@
     "db50732bcf1b"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "met: small joint instability"
+   "status": "conditional",
+   "reason": "depends on: small joint instability"
   },
   {
    "case_id": "PRAC-COL1A1",
