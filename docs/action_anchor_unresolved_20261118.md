@@ -1,5 +1,7 @@
 # 原句锚点：暂无法唯一定位清单 — 2026-11-18
 
+> 历史审计：用户已补充文本单位与name_dependent规则；最新四类统计、319条新提案及仅2条保留旧key见 docs/action_anchor_supplement_20261118.md。本页数字保留作历史记录。
+
 共107条，旧key均保留，proposed_key为空；不进行同义改写或强行补编号。下列类别是本轮审计的限制/歧义，不等于来源不存在。完整原句候选、原始片段、偏移、章节及Evidence ID见runs/action-anchor-audit-spec-20261118/unable_to_locate.json。
 
 | 病例 | 行动 | 旧key | 原因 |
