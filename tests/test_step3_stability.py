@@ -75,3 +75,19 @@ def test_permitted_rxnav_miss_fetches_once_but_fda_stays_frozen(tmp_path,monkeyp
     with pytest.raises(S.FixedInputMissing):
         http.get('https://api.fda.gov/drug/label.json?search=unmapped+phrase')
     assert calls==[u]
+
+
+def test_vote_metrics_separate_within_run_disagreement_from_between_run_changes():
+    import copy
+    from scripts.analyze_step3_stability import measures
+    old={'evidence':[{'id':'E','source':{'type':'nbk','id':'NBK1'},'quote':'fixed quote'}],
+         'actions':[{'context_check':{'call_ids':['a','b','c'],'answers':{'scope':{'final':'split','answers':['yes','no','yes']}}}}]}
+    same=measures(old,copy.deepcopy(old),{'counts':{},'changes':[]})
+    assert same['old_disagreed_questions']==same['new_disagreed_questions']==1
+    assert same['same_prompt_vote_answers_changed']==0
+    new=copy.deepcopy(old)
+    new['actions'][0]['context_check']['answers']['scope']={'final':'yes','answers':['yes','yes','yes']}
+    changed=measures(old,new,{'counts':{},'changes':[]})
+    assert changed['new_disagreed_questions']==0
+    assert changed['same_prompt_vote_answers_changed']==changed['same_prompt_final_changed']==1
+    assert changed['evidence_ids_added']==changed['evidence_ids_removed']==[]

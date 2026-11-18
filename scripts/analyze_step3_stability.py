@@ -55,6 +55,16 @@ def main():
             diff=SD.compare(SD.load_snapshot(ROOT/'baselines/current/snapshot.json'),snap)
             target=d/'comparison-current';dump(target/'snapshot.json',snap);dump(target/'diff.json',diff)
             (target/'diff.md').write_text(SD.markdown(diff))
+            reference_dir=d/'reference-ledgers';reference_dir.mkdir(exist_ok=True)
+            for case_id in SD.case_ids():
+                src=root/'upstream/step3'/(case_id+'.json') if case_id==cid else ROOT/'out/step3'/(case_id+'.json')
+                shutil.copyfile(src,reference_dir/(case_id+'.json'))
+            reference_snapshot=SD.build_snapshot(reference_dir,SD.case_ids(),'fixed pre-experiment reference',detailed=True)
+            reference_diff=SD.compare(reference_snapshot,snap)
+            refout=d/'comparison-reference';dump(refout/'snapshot.json',reference_snapshot);dump(refout/'diff.json',reference_diff)
+            (refout/'diff.md').write_text(SD.markdown(reference_diff))
+            old_ledger=json.loads((root/'upstream/step3'/(cid+'.json')).read_text())
+            dump(refout/'metrics.json',measures(old_ledger,led,reference_diff))
             snapshots[cid,n]=snap;ledgers[cid,n]=led
             report['completed_runs'].setdefault(cid,[]).append(n)
     for cid in m['cases']:
