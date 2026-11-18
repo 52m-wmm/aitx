@@ -144,7 +144,10 @@ def main():
         inventory.append({'key':X.cache_key(messages,k,cfg,pv),'sample':k,'prompt_version':pv,
                           'messages':messages,'params':params,
                           'reservation':llm_cost.request_reservation(messages,params['max_tokens'],time.time())})
-        return cached(messages,k,False if args.mode=='independent' else use_cache,*a,**kw)
+        answer=cached(messages,k,False if args.mode=='independent' else use_cache,*a,**kw)
+        from scripts.step3_preflight import save_raw
+        save_raw(out,X.cache_key(messages,k,cfg,pv),messages,answer)
+        return answer
     X._cached_chat=traced
     unmeasured=[]
     if args.mode=='sensitivity':
@@ -174,6 +177,7 @@ def main():
                       ('3c',lambda:P.add_offlabel(led,case,s1,s2)),('3d',lambda:P.add_bespoke(led,case,s1,s2)),
                       ('3e',lambda:P.add_repurposing(led,case,s1,s2))]:
         t=session.step_started(args.case,3)
+        finished=False
         try:
             func()
         except llm.CacheOnly as e:
@@ -183,7 +187,11 @@ def main():
             stages.append({'stage':name,'status':'not_tested','reason':str(e)})
         else:
             stages.append({'stage':name,'status':'done'})
+            finished=True
         finally:
+            if not finished:
+                dump(out/'incomplete.json',{'complete':False,'stage':name,'safety_validation':'incomplete',
+                                         'reason':'stage did not complete; raw extractions and checkpoint are not a complete Step 3 result'})
             dump(out/'inventory.json',inventory)
             dump(out/'checkpoint.json',led.to_dict())
         session.step_finished(args.case,3,t,stages[-1]['status'])
