@@ -1,7 +1,7 @@
 {
  "schema": "aitx-status-snapshot-v1",
- "label": "current: user-approved A/B/D/E (2026-11-17)",
- "created_at": 1794927503,
+ "label": "current: A/B/D/E + explicitly approved COL1A1 physiotherapist correction",
+ "created_at": 1794975715,
  "cases": {
   "PRAC-AGXT-c33dup": {
    "available": true,
@@ -76,7 +76,21 @@
     "code_commit": "8e5ea29",
     "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
    },
-   "partial_approval": true
+   "partial_approval": true,
+   "approved_physiotherapist_component": {
+    "source": {
+     "available": true,
+     "ledger_path": "/Users/a00/aitx/out/step3/PRAC-COL1A1.json",
+     "ledger_sha256": "2fa9ecfe474532bbd3b4fb58c36f69bbc525e1489ed2a000366401a24ed2ca1f",
+     "code_commit": "26a54c5",
+     "input_fingerprint": "719140937a14debb34aa2d8c2bcde7f3c4afbff229c0d1ca4bcc1f9bc6592b38"
+    },
+    "approved_branches": [
+     "MONDO:0007522",
+     "MONDO:0030854"
+    ],
+    "scope": "Two physiotherapist rows only; no other COL1A1 changes approved by this promotion."
+   }
   },
   "PRAC-GRIN2B": {
    "available": true,
@@ -5695,8 +5709,8 @@
     "577414011ba7"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Pregnancy Management"
+   "status": "conditional",
+   "reason": "unconfirmed: whether GeneReviews NBK1295 (Management / Treatment of Manifestations) applies to Ehlers-Danlos syndrome, classic type; source-scope check unknown"
   },
   {
    "case_id": "PRAC-COL1A1",
@@ -5709,8 +5723,8 @@
     "577414011ba7"
    ],
    "records": 1,
-   "status": "applicable",
-   "reason": "Management / Pregnancy Management"
+   "status": "conditional",
+   "reason": "unconfirmed: whether GeneReviews NBK1295 (Management / Treatment of Manifestations) applies to combined osteogenesis imperfecta and Ehlers-Danlos syndrome 1; source-scope check unknown"
   },
   {
    "case_id": "PRAC-GRIN2B",

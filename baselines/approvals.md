@@ -169,3 +169,15 @@
 | 3d3568e31b169f66 | PRAC-SLC35A2-ex8 | RNA knockdown | MONDO:0010478 | not recorded (absence, not a clinical status) | unable_to_assess | User approval: E: later pipeline stages |
 | 023542a81ae116ac | PRAC-SLC35A2-ex8 | upregulation from the normal allele | MONDO:0010478 | not recorded (absence, not a clinical status) | unable_to_assess | User approval: E: later pipeline stages |
 | 10d478582ec38eb1 | PRAC-SLC35A2-ex8 | D-galactose | MONDO:0010478 | not recorded (absence, not a clinical status) | conditional | User approval: E: later pipeline stages |
+
+## 2026-11-17 — 26a54c580cdd5daea621463a71ba1828b367d02d
+
+- Approver: 用户（本会话 COL1A1 physiotherapist 两分支更正批准）
+- Reason: 用户明确撤销此前 physiotherapist 只改文字不改状态的个案要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源核查 conditional 为准。批准两个诊断分支降为 conditional，reason 写明普通 NBK1295 段落对相应诊断分支的适用范围尚未确认。仅升级这两行，其他 C、61项证据细节与 RETEST 首个基线不在本次批准内。
+- Previous snapshot: eecc4996b323d65a6ff6000e85f8a54b8c42f45aa196b3664bbbbf000518b157
+- Approved candidate: 43f31989324640be76d7df8589b2592b90a4ffd698bbd1765429a789011fb4a3
+
+| Change ID | Case ID | Action | Branch | Old status | New status | Approved rationale |
+| --- | --- | --- | --- | --- | --- | --- |
+| 6f96422a8c74556d | PRAC-COL1A1 | physiotherapist | MONDO:0007522 | applicable | conditional | 用户明确撤销此前 physiotherapist 只改文字不改状态的个案要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源核查 conditional 为准。批准两个诊断分支降为 conditional，reason 写明普通 NBK1295 段落对相应诊断分支的适用范围尚未确认。仅升级这两行，其他 C、61项证据细节与 RETEST 首个基线不在本次批准内。 |
+| 12bbbb9d9948ba97 | PRAC-COL1A1 | physiotherapist | MONDO:0030854 | applicable | conditional | 用户明确撤销此前 physiotherapist 只改文字不改状态的个案要求：旧 applicable 依赖孕期段落，对本病人无效；以普通来源核查 conditional 为准。批准两个诊断分支降为 conditional，reason 写明普通 NBK1295 段落对相应诊断分支的适用范围尚未确认。仅升级这两行，其他 C、61项证据细节与 RETEST 首个基线不在本次批准内。 |
