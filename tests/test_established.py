@@ -302,6 +302,41 @@ def test_pregnancy_passage_conditions_are_notes_for_a_drug_with_a_general_recomm
     assert a['pregnancy_note_evidence_ids']
 
 
+@pytest.mark.parametrize("subject,want", [("no", "conditional"), ("yes", "applicable")])
+def test_mixed_pregnancy_source_reason_identifies_the_ordinary_scope_uncertainty(monkeypatch, subject, want):
+    from aitx.evidence import context_check as CC
+    monkeypatch.setattr(CC, "ENABLED", True)
+    ordinary = "Physical and occupational therapy should be initiated."
+    pregnancy = "Physiotherapist referral should be made to address pelvic instability and pain."
+    src = {"type": "nbk", "id": "NBK1295", "url": "u", "section": "Management / Treatment of Manifestations"}
+    specs = [E._spec("Ordinary physical therapy", src, ordinary, ordinary, 1),
+             E._spec("Pregnancy note", dict(src, section="Management / Pregnancy Management"), pregnancy, pregnancy, 1)]
+    _patch_passage(monkeypatch, lambda spec: ("Ordinary source", ordinary))
+
+    def chat(messages, k, use_cache, **kwargs):
+        rec = "Does the passage recommend or advise" in messages[-1]["content"]
+        answers = [{"q": 1, "answer": "recommends", "quote": ""}] if rec else [
+            {"q": 1, "answer": subject, "quote": ""},
+            {"q": 2, "answer": "not_stated", "quote": ""}, {"q": 3, "answer": "no", "quote": ""}]
+        return {"content": json.dumps({"answers": answers}), "served_model": "fake", "call_id": f"c{k}"}
+
+    monkeypatch.setattr(CC.X, "_cached_chat", chat)
+    found = _found("supportive_management", specs=specs, label="physiotherapist", key="therapy:physical_therapy")
+    found["therapy:physical_therapy"]["branches"] = {"b1", "b2"}
+    branches = [dict(BR, id=bid, diagnosis={"label": label}) for bid, label in [("b1", "diagnosis A"), ("b2", "diagnosis B")]]
+    led = LG.Ledger("P", branches)
+    E._records(led, found, PF_FS, [])
+    a = next(a for a in led.actions if a["action_key"] == "therapy:physical_therapy")
+    for branch in branches:
+        state = a["status_by_branch"][branch["id"]]
+        assert state["status"] == want
+        if subject == "no":
+            assert "GeneReviews NBK1295 (Management / Treatment of Manifestations)" in state["reason"]
+            assert branch["diagnosis"]["label"] in state["reason"] and "source-scope check unknown" in state["reason"]
+            assert all(r["patient_fact"]["field"] == "source scope" for r in a["requirements"])
+        assert "Pregnancy Management" not in state["reason"]
+
+
 def test_unrecognized_variant_class_value_is_unknown_not_unmet():
     st, _, note = E.evaluate({"field": "variant_class", "op": "in", "value": ["pyridoxine responsive"],
                               "text": "known to be pyridoxine responsive"}, PF, BR)

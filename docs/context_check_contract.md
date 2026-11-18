@@ -249,4 +249,6 @@ COL1A1 交替体位的婴儿限定记为**上下文核查漏判**，加入 `data
 
 Pregnancy Management 在收集与同名合并后、账本判定前转为附注：纯孕期行动不生成；已有普通行动仅保留孕期原句与独立证据 ID，不参与条件、上下文核查或缺失信息。这样不重写提取 / 同义合并提示词，复用缓存；COL1A1 physiotherapist 的 reason 指向普通治疗来源。
 
+2026-11-17 用户更正：批准 COL1A1 physiotherapist 两个分支由 applicable 降为 conditional，撤销此前“只改文字不改状态”的个案要求。旧 applicable 依赖孕期段落，普通来源核查为 unknown，应以普通来源为准。混合普通/孕期来源的行动如因普通段落的 source scope 未确认而有条件，reason 明确列普通来源 NBK、章节、诊断分支和 source-scope check unknown；不将来源范围未知虚构成病人年龄、表现程度等临床条件不满足。只升级获批两行，其他 C / 证据 / RETEST 待审差异不混入。
+
 `meets` 的 split 仍保留 unknown / conditional，文字改为 `check votes disagreed; unknown`；不能说患者未达到程度。未改 KMT2B 四药等级，未给 KMT2B 或 ANO10 添加病例规则。观察集 `data/eval/context_check_stability.json` 只记录原始缓存的六项分歧，ANO10 riluzole / 经颅磁刺激的范围分类保持原样，供后续稳定性观察。KMT2B GPi-DBS 与 subthalamic DBS 加入 3a 验收，期望支持治疗 conditional，不能因非推荐措辞排除。

@@ -1622,6 +1622,13 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             split = any(l.get("check_votes_disagreed") for l in mine if l["result"] == "unknown")
             reasons[b] = (f"not met: {bad[0][:80]}" if bad else "check votes disagreed; unknown" if split else f"depends on: {unk[0][:80]}" if unk
                           else f"met: {'; '.join(met)[:80]}" if met else a["why"][:90])
+            if preg_notes and not bad and not split and unk:
+                unknown = next(l for l in mine if l["result"] == "unknown")
+                if unknown.get("context_check") == "scope":
+                    src = led.evidence[unknown["requirement_evidence"]]["source"]
+                    if src["type"] == "nbk":
+                        reasons[b] = (f"unconfirmed: whether GeneReviews {src['id']} ({src['section']}) applies to "
+                                      f"{by_id[b]['diagnosis']['label']}; source-scope check unknown")
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
         positions = [sp['source_order'] for sp in a['specs'] if 'source_order' in sp]
