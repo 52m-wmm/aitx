@@ -47,3 +47,31 @@ def test_detailed_condition_change_is_visible_but_legacy_baseline_is_unavailable
     diff=compare(legacy,new)
     assert diff['changes']==[]
     assert diff['detailed_comparison'].startswith('unavailable')
+
+
+def test_rxnav_permission_is_limited_to_identity_lookup():
+    from scripts.step3_stability import rxnav_lookup
+    assert rxnav_lookup('https://rxnav.nlm.nih.gov/REST/rxcui.json?name=vitamin+C&search=2')
+    assert rxnav_lookup('https://rxnav.nlm.nih.gov/REST/rxcui/2675287/related.json?tty=IN')
+    assert not rxnav_lookup('https://api.fda.gov/drug/label.json?search=vitamin+C')
+    assert not rxnav_lookup('https://rxnav.nlm.nih.gov/REST/interaction/list.json')
+
+
+def test_permitted_rxnav_miss_fetches_once_but_fda_stays_frozen(tmp_path,monkeypatch):
+    monkeypatch.setattr(http,'CACHE_DIR',tmp_path/'http');http.CACHE_DIR.mkdir()
+    calls=[]
+    def fetch(url,**kw):
+        calls.append(url)
+        data={'url':url,'text':'{"idGroup":{}}','accessed_at':123}
+        http._key(url).write_text(json.dumps(data))
+        return http.Fetched(url,data['text'],123,False)
+    monkeypatch.setattr(http,'get',fetch)
+    snapshot=tmp_path/'snapshot.json';snapshot.write_text('{}')
+    S.fixed_http(tmp_path,snapshot,allow_rxnav=True)
+    u='https://rxnav.nlm.nih.gov/REST/rxcui.json?name=unmapped+phrase&search=2'
+    assert json.loads(http.get(u).text)=={'idGroup':{}}
+    http.get(u)
+    assert calls==[u]
+    with pytest.raises(S.FixedInputMissing):
+        http.get('https://api.fda.gov/drug/label.json?search=unmapped+phrase')
+    assert calls==[u]

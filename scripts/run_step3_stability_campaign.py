@@ -47,7 +47,7 @@ def prepare(out):
         dirs[name]=str(meta.parent.resolve());fixed.extend([meta,item.path])
     fixed.extend(p for folder in ['data/rules','.cache/rxnorm','.cache/fda_gras'] for p in (ROOT/folder).rglob('*') if p.is_file())
     fixed.extend([ROOT/'scripts/step3_stability.py',ROOT/'scripts/run_step3_stability_campaign.py',ROOT/'scripts/step2_stability.py'])
-    manifest={'cases':cases,'rounds':2,'budget_usd':.50,'code_commit':runmeta.code_commit(),
+    manifest={'cases':cases,'rounds':2,'budget_usd':.50,'allow_rxnav':False,'code_commit':runmeta.code_commit(),
               'code_fingerprint':runmeta.code_fingerprint(),'model':'deepseek-flash','documented_version':'DeepSeek-V4.1-Flash-1017',
               'dataset_meta_dirs':dirs,'fixed_file_sha256':{str(p.resolve()):sha(p) for p in fixed},
               'http_sha256':{p.name:sha(p) for p in sorted((out/'http').iterdir()) if p.is_file()},

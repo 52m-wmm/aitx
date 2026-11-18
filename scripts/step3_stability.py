@@ -5,6 +5,8 @@ from collections import Counter
 import hashlib
 import json
 import os
+import re
+import urllib.parse
 from pathlib import Path
 import shutil
 import sys
@@ -24,14 +26,19 @@ class FixedInputMissing(LookupError):
     """A required frozen input is absent; never treat it as a network-negative result."""
 
 
-def fixed_http(out, snapshot=None):
+def rxnav_lookup(url):
+    u=urllib.parse.urlsplit(url)
+    return u.scheme=='https' and u.hostname=='rxnav.nlm.nih.gov' and (u.path=='/REST/rxcui.json' or re.fullmatch(r'/REST/rxcui/\d+/related.json',u.path) is not None)
+
+
+def fixed_http(out, snapshot=None, allow_rxnav=False):
     responses={str(http.CACHE_DIR/Path(k).name):v for k,v in json.loads(snapshot.read_text()).items()} if snapshot else {}
     original_get=http.get
     def get(url, *,headers=None,**kw):
         p=http._key(url,headers)
         if str(p) not in responses:
             if not p.exists():
-                if snapshot:
+                if snapshot and not (allow_rxnav and rxnav_lookup(url)):
                     raise FixedInputMissing('fixed database cache missing: '+url)
                 try:
                     original_get(url,headers=headers)
@@ -117,7 +124,17 @@ def main():
     else:
         os.environ['AITX_LLM_CACHE_ONLY']='1'
         spend=lambda:0.0
-    responses=fixed_http(out,args.http_snapshot)
+    version_get=http.get
+    allow_rxnav=args.mode=='independent' and frozen['allow_rxnav']
+    def record_rxnav_version(label):
+        fetched=version_get('https://rxnav.nlm.nih.gov/REST/version.json',use_cache=False)
+        data=json.loads(fetched.text)
+        dump(out/('rxnav_version_'+label+'.json'),{'data':data,'accessed_at':fetched.accessed_at,'url':fetched.url})
+        if data['version']!=frozen['rxnav_version']['version'] or data['apiVersion']!=frozen['rxnav_version']['apiVersion']:
+            raise ValueError('RxNav database/API version changed; experiment not comparable')
+    if allow_rxnav:
+        record_rxnav_version('before')
+    responses=fixed_http(out,args.http_snapshot,allow_rxnav=allow_rxnav)
     sid=session.start(['step3_stability',args.mode,args.case,str(out)],runmeta.code_fingerprint())
     dump(out/'session.json',{'id':sid,'path':str(session.base()/sid)})
     inventory=[];cached=X._cached_chat
@@ -188,6 +205,8 @@ def main():
         if not_tested(action):
             action['stability_provisional_status_by_branch']=action['status_by_branch']
             action['status_by_branch']={b:{'status':'not_tested','reason':'not tested: changed context lacks cached check; provisional deterministic result is stored separately'} for b in action['status_by_branch']}
+    if allow_rxnav:
+        record_rxnav_version('after')
     result['_meta']={'code_commit':runmeta.code_commit(),'input_fingerprint':runmeta.fingerprint(case),
                      'code_fingerprint':runmeta.code_fingerprint(),'created_at':int(time.time()),'experiment_only':True}
     dump(out/'result.json',result);dump(out/'fixed_http.json',responses);dump(out/'inventory.json',inventory)
