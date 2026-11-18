@@ -243,3 +243,24 @@ def same_action(a: dict, b: dict) -> bool:
     ka = {a.get("key")} | ({a["implements"]} if a.get("implements") else set())
     kb = {b.get("key")} | ({b["implements"]} if b.get("implements") else set())
     return bool(ka & kb - {None})
+
+
+def resolve_kind(name: str, kind: str) -> tuple[str, bool]:
+    """Retain out-of-vocabulary extractions; never mistake an unknown type for no action."""
+    if not isinstance(kind, str) or not kind or not isinstance(name, str) or not name:
+        raise ValueError('action name and kind must be nonempty strings')
+    if kind in ('drug', 'procedure', 'diet', 'device', 'avoid'):
+        return kind, False
+    if kind == 'therapy' and therapy_type(name):
+        return kind, False
+    if AIRWAY_CLEARANCE.search(name):
+        return 'procedure', False
+    if re.search(r'\b(?:intravenous|iv)\s+fluids?\b|\b(?:surgery|transplant(?:ation)?|dialysis|lithotripsy|ureteroscopy)\b', name, re.I):
+        return 'procedure', False
+    if re.search(r'\b(?:fluid|water|oral)\s+intake\b|\b(?:hydration|diet|dietary)\b', name, re.I):
+        return 'diet', False
+    if re.search(r'\b(?:orthoses|orthosis|braces?|splints?|walkers?|wheelchairs?)\b', name, re.I):
+        return 'device', False
+    if kind in ('medication', 'medicine', 'pharmacotherapy'):
+        return 'drug', False
+    return 'other', True

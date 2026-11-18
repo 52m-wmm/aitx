@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import sys
 import time
+import threading
 import re
 import urllib.parse
 from unittest.mock import patch
@@ -42,7 +43,7 @@ def run(cid,n,out,public_cache=None,offline=False):
     raw={p.stem:json.loads(p.read_text()) for p in source.glob('*.json')}
     if not raw:raise FileNotFoundError(str(source))
     responses={Path(k).name:v for k,v in json.loads((campaign/(cid+'.http.json')).read_text()).items()}
-    pending={};used=[];traffic=[]
+    pending={};used=[];traffic=[];trace_lock=threading.Lock()
     def no_model(*a,**kw):raise AssertionError('MODEL CALL FORBIDDEN')
     def get(url,*,headers=None,**kw):
         key=http._key(url,headers).name
@@ -85,12 +86,14 @@ def run(cid,n,out,public_cache=None,offline=False):
         else:
             entry=X.cache_lookup(messages,k,cfg,pv,params)
             if entry is None:
-                pending[key]={'key':key,'sample':k,'prompt_version':pv,'messages':messages,'params':params,
-                              'reservation_offpeak_usd':llm_cost.request_reservation(messages,params['max_tokens'],1795014000)}
-                dump(out/'pending.json',list(pending.values()))
+                with trace_lock:
+                    pending[key]={'key':key,'sample':k,'prompt_version':pv,'messages':messages,'params':params,
+                                  'reservation_offpeak_usd':llm_cost.request_reservation(messages,params['max_tokens'],1795014000)}
+                    dump(out/'pending.json',list(pending.values()))
                 raise llm.CacheOnly('pending '+key)
             answer=entry;origin='historical cache'
-        used.append({'key':key,'prompt_version':pv,'origin':origin});dump(out/'used.json',used)
+        with trace_lock:
+            used.append({'key':key,'prompt_version':pv,'origin':origin});dump(out/'used.json',used)
         return dict(answer,call_id=key)
     ask=CC.ask;decide=CC.decide_3a
     def partial_ask(header,passage,patient,questions,**kw):
@@ -139,7 +142,7 @@ def run(cid,n,out,public_cache=None,offline=False):
             result=led.to_dict()
             result['replay']={'assembly_reached_end':finished,'complete':False,'model_calls':0,'pending':list(pending.values()),'missing_assembly':missing_assembly}
             mark_pending(result,missing_assembly)
-            dump(out/'replay.json',result);dump(out/'pending.json',list(pending.values()));dump(out/'public_requests.json',traffic)
+            dump(out/'replay.json',result);dump(out/'pending.json',list(pending.values()));dump(out/'public_requests.json',traffic);dump(out/'used.json',used)
     print(cid,n,'actions',len(result['actions']),'pending',len(pending),'missing_assembly',len(missing_assembly),flush=True)
 
 if __name__=='__main__':

@@ -859,7 +859,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
             avoid, pregnancy = "avoid" in low, "pregnancy" in low
             for it in parsed.get("items") or []:
                 name = str(it.get("name") or "").strip()
-                kind = it.get("kind")
+                kind, kind_pending = A.resolve_kind(name, it["kind"])
                 if not name or name.lower() in NOT_A_THERAPY:
                     continue
                 if not LG.quote_in(str(it.get("quote") or ""), text):
@@ -867,7 +867,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                     if it is None:
                         continue
                     llm = it.pop("_llm")
-                if not avoid and kind not in ("drug", "procedure", "diet", "device", "therapy"):
+                if not avoid and kind not in ("drug", "procedure", "diet", "device", "therapy", "other"):
                     continue
                 if avoid:
                     section = "contraindications_precautions"
@@ -880,8 +880,6 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 if A.AIRWAY_CLEARANCE.search(name):
                     kind = "procedure"         # chest physiotherapy is airway clearance, not a rehabilitation program
                 ttype = A.therapy_type(name) if not avoid and kind in ("therapy", "procedure", "device") else None
-                if kind == "therapy" and ttype is None:
-                    continue
                 if ttype:
                     key = {"key": A.strategy_key("therapy", ttype), "normalized": True, "therapy_type": ttype}
                 else:
@@ -891,6 +889,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 src = {"type": "nbk", "id": nbk, "url": GR.BOOK_URL.format(nbk=nbk), "section": path, "credit": GR.CREDIT}
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
+                spec["extraction_kind"] = {"original": it["kind"], "resolved": kind, "pending": kind_pending}
                 position = LG._norm(text).find(LG._norm(name))
                 spec["source_order"] = [book_index,section_positions[path],position if position >= 0 else LG._norm(text).index(LG._norm(it['quote']))]
                 spec["presentation_quotes"] = management_quotes(shown.get(path, ""), name, it["quote"])
@@ -1235,13 +1234,14 @@ def _literature(led, b, rec, put, step2, use_cache) -> None:
             if sc["overall"] != "supported":
                 continue
             tt = A.therapy_type(name)
-            kind = it.get("kind")
+            kind, kind_pending = A.resolve_kind(name, it["kind"])
             key = {"key": A.strategy_key("therapy", tt), "normalized": True} if tt else \
                 A.drug_key(name) if kind == "drug" else \
                 {"key": A.strategy_key({"procedure": "procedure", "diet": "diet"}.get(kind, "supportive_measure"), name), "normalized": True}
             src = {"type": "pmid", "id": p["pmid"], "url": f"https://pubmed.ncbi.nlm.nih.gov/{p['pmid']}/"}
             spec = _spec(f"PMID {p['pmid']} ({', '.join(p['pub_types'][:2])}, {p['year']}) recommends {name}.", src, q, text,
                          rec["literature"]["queried_at"], llm, "3a literature")
+            spec["extraction_kind"] = {"original": it["kind"], "resolved": kind, "pending": kind_pending}
             spec.update(tier_source="literature", literature={"pub_types": p["pub_types"], "year": p["year"],
                                                               "open_access_full_text": bool(p["full_text"])})
             reqs = []
@@ -1629,6 +1629,15 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
                     if src["type"] == "nbk":
                         reasons[b] = (f"unconfirmed: whether GeneReviews {src['id']} ({src['section']}) applies to "
                                       f"{by_id[b]['diagnosis']['label']}; source-scope check unknown")
+        kinds = [sp["extraction_kind"] for sp in a["specs"] if "extraction_kind" in sp]
+        if any(kind["pending"] for kind in kinds):
+            pending_line = LG.requirement(f"r{len(lines) + 1}", "other", "intervention type requires verification",
+                                          next(e["id"] for e in evs if e["status"] == "verified"),
+                                          {"field": "source scope", "value": None, "quote": None, "step": None},
+                                          "unknown", branches, "context check: intervention type unresolved by code; not a model verdict")
+            pending_line["context_check"] = "scope"
+            pending_line["kind_resolution_pending"] = True
+            lines.append(pending_line)
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
         positions = [sp['source_order'] for sp in a['specs'] if 'source_order' in sp]
@@ -1672,6 +1681,10 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
         if a["pregnancy_only"] and all(v["status"] == "not_applicable" for v in rec["status_by_branch"].values()):
             rec["report"] = False            # kept in the ledger, not written to the report (Step 4 decides the rules)
             rec["report_note"] = "pregnancy-specific management; patient is male or under 12"
+        if kinds:
+            rec["extraction_kinds"] = kinds
+        if any(k["pending"] for k in kinds):
+            rec["kind_review_pending"] = True
         led.actions.append(rec)
         for b in branches:
             placed[section].add(b)

@@ -836,7 +836,7 @@ def test_unknown_zygosity_in_population_heading_does_not_satisfy():
         assert E.evaluate(req, pf, BR)[0] == "unknown"
 
 
-def test_therapy_referral_kept_evaluation_referral_dropped(monkeypatch):
+def test_therapy_referral_kept_unmapped_referral_retained_pending(monkeypatch):
     led = _gr_item(monkeypatch, [
         {"name": "early intervention program", "kind": "therapy", "quote": "Referral to an early intervention program is recommended.",
          "requirements": [{"text": "Ages 0-3 years", "field": "age", "op": "<=", "value": 3, "unit": "year"}]},
@@ -845,7 +845,9 @@ def test_therapy_referral_kept_evaluation_referral_dropped(monkeypatch):
         {"name": "chest physical therapy", "kind": "therapy", "quote": "Chest physical therapy daily."}])
     keys = {a["action_key"]: a for a in led.actions if a.get("action_key")}
     assert "therapy:early_intervention" in keys                         # treatment referral kept, keyed by the vocabulary
-    assert not any("pediatrician" in a["label"] for a in led.actions)  # evaluation referral excluded
+    referral = next(a for a in led.actions if "pediatrician" in a["label"])
+    assert referral["kind_review_pending"] is True
+    assert all(v["status"] == "conditional" for v in referral["status_by_branch"].values())
     assert "procedure:chest_physical_therapy" in keys                   # airway clearance stays a procedure
 
 
@@ -1596,3 +1598,14 @@ def test_reverse_a_long_list_quote_takes_only_the_entrys_own_item():
         assert E.situational_phrases({"src": {"type": "nbk"}, "quote": q}, "maintenance antibiotics") == ["during winter"]
     finally:
         EE.context_passages = orig
+
+
+def test_agxt_fluid_actions_survive_therapy_kind_on_production_path(monkeypatch):
+    monkeypatch.setattr(E.CC, "ENABLED", False)
+    text = "Maintain high oral fluid intake. Use intravenous fluids if needed."
+    led = _gr_item(monkeypatch, [
+        {"name": "high oral fluid intake", "kind": "therapy", "quote": "Maintain high oral fluid intake."},
+        {"name": "intravenous fluids", "kind": "therapy", "quote": "Use intravenous fluids if needed."}], text=text)
+    keys = {a["action_key"] for a in led.actions}
+    assert "diet:high_oral_fluid_intake" in keys
+    assert "procedure:intravenous_fluids" in keys

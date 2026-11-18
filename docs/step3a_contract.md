@@ -253,3 +253,12 @@ LLM 只做两件事：从代码给出的原文中摘出疗法 / 要求，以及�
 ## 推荐引文与表现条件分开（2026-11-16，AGXT 二次审阅）
 
 冲击波碎石的原始抽取 `manifestation` 为“Calcium oxalate monohydrate stones”，本来正确；错误在 `_records` 的推荐引文替换分支：它把未知表现行的 `requirement` 和 `requirement_evidence` 一并替换成推荐句。现只将推荐句提升为支持引文、原疗效局限句保留为 caution，表现条件及其独立证据保持原样。不用推荐句充当 manifestation，也不改 HPO 匹配规则。正反测试 `tests/test_established.py`。
+
+## 2026-11-18 已批准修订：kind 保留规则 v1.0
+
+- 模型输出的类型不可识别、或 therapy 不在受控词表中时，不得仅因此删除候选；先按名称中可明确识别的介入类型映射。
+- fluid intake / hydration 映射 diet，IV / intravenous fluids 等操作映射 procedure，明确器具名映射 device；既有受控康复类型不变。
+- 无法映射则保留 resolved kind=other，并记录原 kind、类型待核查标记及 unknown 的类型条件，不默认适用。该条件来自代码，不冒充已完成的模型核查。
+- 目标性语句、评估转诊、行政服务等误抽若落入 unknown kind，仍保留为待核查候选，不能据此认定新增已确立疗法。既有目的/章节/孕期/来源核查规则不因类型恢复而作废。
+- 缺少 kind 或空名称仍是输入错误，直接停止。
+- action_key 原句锚点与三票合并方案尚在审阅，未以本附录授权实施或真实调用。
