@@ -1,5 +1,6 @@
 """Report all pre-registered runs without choosing a favourable result."""
 from __future__ import annotations
+import argparse
 import itertools
 import json
 from pathlib import Path
@@ -38,12 +39,20 @@ def pick_answers(calls):
 
 
 def main():
+    global OUT
+    ap=argparse.ArgumentParser()
+    ap.add_argument('--experiment-dir',type=Path,default=OUT)
+    args=ap.parse_args()
+    OUT=args.experiment_dir.resolve()
     summary=json.loads((OUT/'summary.json').read_text())
     proposal=json.loads((OUT/'proposal.json').read_text())
-    sessions=[p.parent for p in (ROOT/'runs/sessions').glob('*/meta.json') if json.loads(p.read_text())['argv']==['step2_stability','--execute']]
-    if len(sessions)!=1:
-        raise ValueError('expected exactly one independent experiment session')
-    sess=sessions[0]
+    if (OUT/'session.json').exists():
+        sess=Path(json.loads((OUT/'session.json').read_text())['path'])
+    else:
+        sessions=[p.parent for p in (ROOT/'runs/sessions').glob('*/meta.json') if json.loads(p.read_text())['argv']==['step2_stability','--execute']]
+        if len(sessions)!=1:
+            raise ValueError('expected exactly one independent experiment session')
+        sess=sessions[0]
     logs=[json.loads(x) for x in (sess/'calls.jsonl').read_text().splitlines()]
     if any(x['cache_hit'] for x in logs):
         raise ValueError('response cache hit in independent execution')
@@ -70,7 +79,7 @@ def main():
     metrics={}
     votes=[]
     lines=['# Step 2 independent stability acceptance — 2026-11-18','',
-           'All 20 pre-registered executions are included. No diagnostic rule changes. No evaluation cases.', '',
+           'All 20 pre-registered executions are included. No diagnostic rule changes. Cases are exactly those registered in proposal.json.', '',
            '| Case | HPO semantic differences / 10 pairs | Raw extraction differences / 10 pairs | Diagnosis differences / 10 pairs |',
            '| --- | --- | --- | --- |']
     for cid in proposal['cases']:

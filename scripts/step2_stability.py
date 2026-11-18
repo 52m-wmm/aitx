@@ -60,11 +60,45 @@ def compare(old, new):
             'old_diagnosis': diagnostic(old), 'new_diagnosis': diagnostic(new)}
 
 
+def install_campaign_guard(out, limit):
+    original_chat = llm.chat
+    llm.LOG = out/'llm_calls.jsonl'
+    llm.LOG.touch()
+    journal = out/'attempts.jsonl'
+    spent = json.loads(journal.read_text().splitlines()[-1])['campaign_accounted'] if journal.exists() else 0.0
+    def guarded_chat(messages, *, max_tokens=8192, tools=None, **kwargs):
+        nonlocal spent
+        peak.check_before_call()
+        reserve = llm_cost.request_reservation(messages, max_tokens, time.time(), tools)
+        if spent + reserve > limit:
+            raise budget.OverBudget('campaign remaining funds below request reservation')
+        before = llm.LOG.stat().st_size
+        spent += reserve
+        with journal.open('a') as f:
+            f.write(json.dumps({'at':time.time(), 'event':'reserved', 'usd':reserve, 'campaign_accounted':spent})+'\n')
+        try:
+            return original_chat(messages, max_tokens=max_tokens, tools=tools, **kwargs)
+        finally:
+            with llm.LOG.open() as f:
+                f.seek(before)
+                rows = [json.loads(line) for line in f]
+            actual = sum(session.cost(r['usage'], r['ts'], r['reserved_usd']) for r in rows) if rows else reserve
+            spent += actual - reserve
+            with journal.open('a') as f:
+                f.write(json.dumps({'at':time.time(),'event':'settled','usd':actual,'usage_available':bool(rows and rows[0]['usage']), 'campaign_accounted':spent})+'\n')
+    llm.chat = guarded_chat
+    # The campaign guard above checks reservations and all attempts across calendar days.
+    budget.check_before_call = lambda **kw: None
+    return lambda: spent
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--execute', action='store_true')
+    ap.add_argument('--experiment-dir', type=Path, default=ROOT/'runs/step2-stability-20261118')
+    ap.add_argument('--cases-file', type=Path, default=ROOT/'data/cases/practice/official_examples.json')
     args = ap.parse_args()
-    out = ROOT / 'runs/step2-stability-20261118'
+    out = args.experiment_dir.resolve()
     proposal = json.loads((out / 'proposal.json').read_text())
     if (out/'llm_calls.jsonl').exists() or (out/'attempts.jsonl').exists():
         raise FileExistsError('experiment already started; do not overwrite or silently repeat')
@@ -73,7 +107,7 @@ def main():
             raise ValueError('proposed version changed: ' + p)
     if args.execute:
         peak.guard()
-    cases = {c['id']: c for c in json.loads((ROOT / 'data/cases/practice/official_examples.json').read_text())}
+    cases = {c['id']: c for c in json.loads(args.cases_file.read_text())}
     selected = [cases[cid] for cid in proposal['cases']]
     references = {c['id']: json.loads((out / (c['id']+'.reference.json')).read_text()) for c in selected}
     files_by_case = {}
@@ -128,34 +162,10 @@ def main():
     if not args.execute:
         return
     llm.chat = original_chat
-    llm.LOG = out/'llm_calls.jsonl'
-    llm.LOG.touch()
-    journal = out/'attempts.jsonl'
-    spent = 0.0
-    def guarded_chat(messages, *, max_tokens=8192, tools=None, **kwargs):
-        nonlocal spent
-        peak.check_before_call()
-        reserve = llm_cost.request_reservation(messages, max_tokens, time.time(), tools)
-        if spent + reserve > proposal['campaign_cap_usd']:
-            raise budget.OverBudget('campaign remaining funds below request reservation')
-        before = llm.LOG.stat().st_size
-        spent += reserve
-        with journal.open('a') as f:
-            f.write(json.dumps({'at':time.time(), 'event':'reserved', 'usd':reserve, 'campaign_accounted':spent})+'\n')
-        try:
-            return original_chat(messages, max_tokens=max_tokens, tools=tools, **kwargs)
-        finally:
-            with llm.LOG.open() as f:
-                f.seek(before)
-                rows = [json.loads(line) for line in f]
-            actual = sum(session.cost(r['usage'], r['ts'], r['reserved_usd']) for r in rows) if rows else reserve
-            spent += actual - reserve
-            with journal.open('a') as f:
-                f.write(json.dumps({'at':time.time(),'event':'settled','usd':actual,'usage_available':bool(rows and rows[0]['usage']), 'campaign_accounted':spent})+'\n')
-    llm.chat = guarded_chat
-    # The campaign guard above checks reservations and all attempts across calendar days.
-    budget.check_before_call = lambda **kw: None
-    session.start(['step2_stability', '--execute'], proposal['commit'])
+    campaign_spent = install_campaign_guard(out, proposal['campaign_cap_usd'])
+    argv = ['step2_stability', '--execute', str(out)]
+    sid = session.start(argv, proposal['commit'])
+    dump(out/'session.json', {'id':sid, 'path':str(session.base()/sid)})
     results = {cid: [] for cid in references}
     for n in range(1, proposal['rounds_per_case']+1):
         for case in selected:
@@ -172,13 +182,13 @@ def main():
             results[cid].append(r)
             diff = compare(fixed_results[cid], r)
             dump(d/'diff_reference.json', diff)
-            print(cid, n, diagnostic(r), 'critical_change', diff['diagnosis_changed'], 'accounted', spent, flush=True)
-            dump(out/'progress.json', {'completed':sum(map(len,results.values())), 'accounted_usd':spent})
+            print(cid, n, diagnostic(r), 'critical_change', diff['diagnosis_changed'], 'accounted', campaign_spent(), flush=True)
+            dump(out/'progress.json', {'completed':sum(map(len,results.values())), 'accounted_usd':campaign_spent()})
             if not r['ok']:
                 raise ValueError('execution self-check failed: '+cid)
     pairs = {cid: [{'rounds':[i+1,j+1], **compare(a,b)} for (i,a),(j,b) in itertools.combinations(enumerate(rs),2)] for cid,rs in results.items()}
     dump(out/'pairwise_diffs.json', pairs)
-    summary = {'completed':20, 'cost': llm_cost.summarize(0,llm.LOG), 'campaign_accounted_usd':spent,
+    summary = {'completed':sum(map(len,results.values())), 'cost': llm_cost.summarize(0,llm.LOG), 'campaign_accounted_usd':campaign_spent(),
                'critical_changes':{cid:[i+1 for i,r in enumerate(rs) if diagnostic(r)!=diagnostic(fixed_results[cid])] for cid,rs in results.items()},
                'pairwise':{cid:{'comparisons':len(ps),'hpo_changed':sum(bool(p['hpo_diff']) for p in ps),'facts_changed':sum(bool(p['facts_diff']) for p in ps),'candidates_changed':sum(p['candidate_set_changed'] for p in ps),'diagnosis_changed':sum(p['diagnosis_changed'] for p in ps)} for cid,ps in pairs.items()}}
     dump(out/'summary.json', summary)

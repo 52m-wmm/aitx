@@ -28,3 +28,25 @@ def test_completed_experiment_refuses_before_preflight_writes(tmp_path, monkeypa
     with pytest.raises(FileExistsError, match='already started'):
         step2_stability.main()
     assert not (out/'fixed_inputs.json').exists()
+
+
+def test_campaign_guard_reserves_before_call_and_retains_unknown_cost(tmp_path, monkeypatch):
+    from aitx import llm, budget
+    from scripts import llm_cost
+    monkeypatch.setattr(llm, 'LOG', llm.LOG)
+    monkeypatch.setattr(budget, 'check_before_call', budget.check_before_call)
+    monkeypatch.setattr(step2_stability.peak, 'check_before_call', lambda: None)
+    monkeypatch.setattr(llm_cost, 'request_reservation', lambda *a: .02)
+    def failed_call(*a, **kw):
+        raise OSError('transport interrupted; usage unavailable')
+    monkeypatch.setattr(llm, 'chat', failed_call)
+    spent = step2_stability.install_campaign_guard(tmp_path, .03)
+    with pytest.raises(OSError):
+        llm.chat([])
+    assert spent() == .02
+    with pytest.raises(budget.OverBudget):
+        llm.chat([])
+    # Restarting a campaign cannot reset the previous reservation.
+    step2_stability.install_campaign_guard(tmp_path, .03)
+    with pytest.raises(budget.OverBudget):
+        llm.chat([])
