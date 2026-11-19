@@ -262,3 +262,11 @@ examples-v1只对同原句明确X(e.g.A,B)/X such as A,B归并父项，examples�
 获批新增票2/3各独立$0.035，复用原7/7块第一票。本次非高峰余额核实后nohup+caffeinate，仅源抽取。两张新票计划请求顺序一致，将历史最大输出DD/ID第一块(0–3191)排最后，输入消息与第一票集合逐字相同，避免预留浪费，不改正文。票2六块完成，最后块16384全reasoning、内容0，截断；已花$0.031091418，余$0.003908582，32768重试预留$0.0209635不足，未发送。7真实请求、0实际重试、usage完整、peak0；无源输入缺失，缺完整raw块是截断所致，非FDA/RxNav缓存缺口。门禁已停父进程exit1，票3未started、无paid journal，conditional授权条件未满足，不可自动重试。母$0.50累计$0.330854937、余$0.169145063，未转用未执行票额度。
 
 完整三票/无截断标准不满足；其他三票医学标准未计分，部分可用回答仅作待审观察。两份核心响应仍有抗生素感染风险误抽，不因第三票缺失删除。Accepted部分投影17直接+7examples解释，1历史trihexyphenidyl与源trixhexyphenidyl拼写待审；不是最终三票覆盖结论。未执行/报价AGXT，未冻结、不自动改提示词。15正式及全部baseline SHA未改，since-before diff0，current-vs-Accepted既存差异保留，无新医学结论。报告docs/kmt2b_phase1_examples_review_20261119.md，限制及提交说明素材docs/known_limitations.md；实验runs/kmt2b-v6_1-phase1-20261119含plan/各票完整输入/预算/截断/partial shadow/25行Accepted覆盖/完整status_diff。付费已停止，等用户后续安排。
+
+**2026-11-19 KMT2B low单块诊断已完成但行动门槛失败，按用户条件停止，未切默认/未续跑**：仅DD/ID第一块3191字符、同3a-v6.1 Prompt/来源/模型/temperature0，一次真实reasoning_effort=low请求，无重试、无缓存复用、非高峰，先查余额17.23CNY。原16384请求预留超过$0.01，执行前披露本诊断上限14000；实际7401总输出=6832 reasoning+569内容，finish_reason stop，$0.004644600，usage完整。不得把14000参数差异或一次完成当成low稳定性证明。
+
+诊断前固定8个源内命名行动门槛；低档返回7条，预定8项仅6项在，IEP独立行动及其资格条件缺失（同Prompt原档第一票曾明确返回）；504 plan也未返回，只抽assistive devices。PT/OT/speech学业访问限定恢复，但不抵销IEP遗漏；另v5票2中的home-based services未抽。逐项对照覆盖v6.1完整第一票和两份v5完整参考，限定相同输入范围，DDA在另一块不算遗漏。IEP仅出现在PT等引文中不算行动召回，门禁已补反例测试。1305离线全过。
+
+未触发“完成且无明显遗漏”的后续授权：不改3a默认档位、不改重试策略、不补第二票、不跑第三票、不用后续$0.05（支出0）；诊断单独保存未补入票2，混档完整票0。第二票仍6/7原档，第三票未执行。母$0.50累计$0.335499537、余$0.164500463；本次$0.01未用部分不自动续用。15正式及全部baseline SHA不变、since-before diff0，Accepted不改，Prompt不改，无AGXT或工程冻结。
+
+用户要求“DD/ID块持续推理失控（3/3次）”已记known_limitations；注明三份记录reasoning/总输出为15931/16384（v5整节截断）、15549/16107（v6.1首块完成近限）、16384/16384（第二票同块截断），不是三次完全同输入或三次全截断。报告docs/kmt2b_low_diagnostic_20261119.md，实验runs/kmt2b-low-diagnostic-20261119含预定门槛、完整输入/参数/API响应/usage、逐项原文条件比较、failed gate及完整status_diff；compare_kmt2b_low.py离线可复算。付费已停止，不追加模型或自动调提示词。
