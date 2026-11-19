@@ -32,7 +32,7 @@ from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 from aitx.evidence.branches import sex_fact
 
-PROMPT_VERSION = "3a-v5"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
+PROMPT_VERSION = "3a-v6"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
@@ -71,9 +71,12 @@ Requirements describe the PATIENT: age, sex, variant / genotype, variant type, z
 weight - or the situation in which it is used ("situation": "as needed", "if needed", "during acute episodes", "in
 kidney failure", "after transplantation"). Copy their words exactly from the item's table row or sentence. A purpose or
 mechanism clause ("to reduce oxalate", "to inhibit ...", "which lowers ...") is never a requirement.
-Paragraphs are shown one per line with their context: "Paragraph 2 [context: Ages 0-3 years.]: ..." - the context
-(a subheading, or the paragraph's lead-in) applies to everything in that paragraph, so its words can be a requirement
-("Ages 0-3 years" -> age). Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
+Paragraphs may be annotated with chapter or subheading context. Do not infer requirements or manifestations
+from those annotations, section titles, or other paragraphs. Code adds population headings independently.
+Extract only patient restrictions explicitly stated in the complete sentence naming this action (or its own
+complete table row). A reason such as "because of the risk of X", or a purpose such as "to prevent X", does
+not mean the patient already has X. Do not copy a prevention target or risk rationale into manifestation.
+Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
 [Treatment: ...] [Considerations/Other: ...]". The requirements of an item may be in any cell of its row, including the
 row's first column (the manifestation or concern it treats); the quote is the text of the cell that names the item,
 copied without the bracket labels. Return only JSON: {"items": [...]}. Do not invent items or words."""

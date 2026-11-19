@@ -95,6 +95,21 @@ CALL_PARAMS = {"temperature": 0, "max_tokens": 16384, "response_format": {"type"
 LENGTH_RETRY_PARAMS = {**CALL_PARAMS, "max_tokens": 32768}
 
 
+def check_claim_key_messages(messages, prompt_version):
+    """Normalize only quoted action claims in checker questions; keep real prompts intact."""
+    if prompt_version != 'context-check-v3':return messages
+    pattern = re.compile(r"((?:advice about |recommend or advise |advises avoiding |advice about |advice concerning )')([^']*)(')")
+    result=[]
+    for m in messages:
+        content=m['content']
+        if m['role']=='user' and '\n\nQuestions:\n' in content:
+            prefix,questions=content.split('\n\nQuestions:\n',1)
+            questions=pattern.sub(lambda x:x[1]+' '.join(x[2].lower().split())+x[3],questions)
+            content=prefix+'\n\nQuestions:\n'+questions
+        result.append(dict(m,content=content))
+    return result
+
+
 def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_version: str | None = None) -> str:
     """Cache key: requested model, endpoint, prompt version, full prompt text, sample index.
 
@@ -103,7 +118,7 @@ def cache_key(messages: list[dict], k: int, cfg: dict | None = None, prompt_vers
     entry and checked on every hit (see _cache_usable).
     """
     cfg = cfg or llm.config()
-    return hashlib.sha256(json.dumps([cfg["model"], cfg["base_url"], prompt_version or PROMPT_VERSION, messages, k],
+    return hashlib.sha256(json.dumps([cfg["model"], cfg["base_url"], prompt_version or PROMPT_VERSION, check_claim_key_messages(messages, prompt_version), k],
                                      sort_keys=True).encode()).hexdigest()
 
 

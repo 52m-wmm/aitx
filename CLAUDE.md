@@ -234,3 +234,11 @@ DBS专项：GPi-DBS与subthalamic nucleus DBS仍为supportive/conditional，reas
 **2026-11-19 KMT2B第三票按新授权完成，仅shadow**：先$0审计11项条件（3项仅措辞，8项涉及新增/遗漏/范围，原文保存），后按新增$0.03且累计$0.08授权非高峰完成4次真实抽取，无重试、无缓存复用，$0.020626476；两次新增票合计$0.042632352。旧$0.50实验累计$0.258705195，剩余$0.241294805，最新指针runs/step3_remaining_budget.json。模型/Prompt/来源/医学规则固定。第三票25实际行动，81上下文+1合并缺缓存，均未调用，incomplete。
 
 GPi/subthalamic三票均抽到；GPi第三票首字母大小写改变claim/EID及核查键，旧R15未命中，暂存applicable不能当真实升级，最终not_tested；shadow保留旧describes_use条件。504及walkers/orthoses票1/3有、票2无，DDA只票1有，全部保留待审。原始41字面名称（含附注/缩写），23三票/12两票/6单票；86条件变体中54单票，全部保留。文字共识不自动生效，不删少数条件；总称/具体项不合并，无多数kind不强裁。influenza类型drug/procedure/drug分歧保留。正式15账本、历史/current全部SHA不变，1287离线测试通过，无AGXT或3b–3e、无Accepted更新。说明docs/kmt2b_three_vote_shadow_20261119.md和docs/kmt2b_two_vote_condition_audit_20261119.md；三票/联合对Accepted及两两diff在runs/kmt2b-third-vote-20261119/shadow/status_diff（vote4为联合视图，并非第四票）。临时比较副本逆转已批准别名消除Key噪音，不改正式Key或基线。不自动续跑。
+
+**2026-11-19 条件稳定性修复仅$0部分完成，真实新版Prompt待批准**：核查cache_key只规范化Questions中的action claim大小写/空白，实际原文、患者/来源和Evidence ID公式不变；有等价实际命中/错误碰撞测试。3a-v6 Prompt禁止LLM推断章节/跨段条件，原句/表行明确条件才抽；现有population_requirements继续处理小标题人群。风险理由/预防目标不代表现患，阅读规则v1.3。未真实调用，不称新版Prompt已验证；不把旧三票冒充新版本输出。
+
+旧KMT2B三票离线shadow原始86变体/54单票保留；保守归一后66条件/26单票，12表达冗余、8等价年龄表示折叠，42个跨票存在性分歧候选，35个潜在安全/资格关键分歧needs_review、阻止无条件适用。全部原文、字段、已有ID与少数票条件保留；17组历史从未分配ID（附注/被过滤/未匹配），明确标未分配并保留调用选择键，不造ID。非医生确认的42错误或35安全问题。正式15账本和全部baseline SHA不变，无AGXT、无81次核查、模型/新联网0、费用$0，无医学结论变更。重算scripts/kmt2b_condition_recount.py，产物runs/kmt2b-condition-recount-20261119，含current_semantic_diff/current-vs-accepted/shadow-vs-current及三票完整diff。详情docs/kmt2b_condition_recount_20261119.md。
+
+新版KMT2B仅源抽取单票报价：固定4来源、4首发，重试另计，历史同源两票均价$0.021316176，新Prompt未实测，预计约$0.022、建议新增硬上限$0.03，若沿用KMT2B累计$0.08也足够。仅报价未授权；现余额$0.241294805不动。需明确批准才非高峰先查余额执行；无3b–3e/新核查/AGXT，不自动续跑。
+
+本轮全量离线1293项通过；最终35关键待审组含3个多数票一致但原文是风险理由的条件，非只筛少数票。
