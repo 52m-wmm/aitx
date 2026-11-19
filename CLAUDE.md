@@ -270,3 +270,11 @@ examples-v1只对同原句明确X(e.g.A,B)/X such as A,B归并父项，examples�
 未触发“完成且无明显遗漏”的后续授权：不改3a默认档位、不改重试策略、不补第二票、不跑第三票、不用后续$0.05（支出0）；诊断单独保存未补入票2，混档完整票0。第二票仍6/7原档，第三票未执行。母$0.50累计$0.335499537、余$0.164500463；本次$0.01未用部分不自动续用。15正式及全部baseline SHA不变、since-before diff0，Accepted不改，Prompt不改，无AGXT或工程冻结。
 
 用户要求“DD/ID块持续推理失控（3/3次）”已记known_limitations；注明三份记录reasoning/总输出为15931/16384（v5整节截断）、15549/16107（v6.1首块完成近限）、16384/16384（第二票同块截断），不是三次完全同输入或三次全截断。报告docs/kmt2b_low_diagnostic_20261119.md，实验runs/kmt2b-low-diagnostic-20261119含预定门槛、完整输入/参数/API响应/usage、逐项原文条件比较、failed gate及完整status_diff；compare_kmt2b_low.py离线可复算。付费已停止，不追加模型或自动调提示词。
+
+**2026-11-19 GeneReviews Management结构观察（$0，未做优化）已完成**：按用户最新全范围，15例现有练习/复测（官方11例排除延期DMD+4复测）及12例盲测，从407份当前/历史账本及会话输出的实际NBK证据/已选章节收集，去重19章，均使用本地genereviews_book/2026-11-03 XML。10例现存产物未记录实际使用NBK，不推断该基因无章节，未把SFTPC等目录候选强行纳入。只分析正文Management树，排除abstract摘要同名小节。
+
+交付docs/structure_maps/：19章Markdown、index、KMT2B/AGXT/Hereditary Ataxia对比、unrecognized、带数据快照/源SHA/全部位置及来源链的manifest。逐小节列字数与形式，完整表头各级/行标签/单元格全文、粗体标签与段落、全部列表项及嵌套级；保留XPath/XML id/稳定锚点。按用户此前要求，三章HPO名称/同义词匹配仅作审阅附注，否→疑似不代表已确认治疗。指定Pregnancy/Evaluations/Surveillance/Relatives/Under Investigation标题及子节单独标记，未用于抽取或路由。
+
+统计：166层级标题、51表468数据行、250列表701项（表外61列表221项，表内480项单列）、377自由正文段/16980 words、32套话命中单元（22段+10列表项，42签名命中，不重复计自由正文）。全部Management正文40190 words。总体模式：汇总表+标签9、汇总表+正文/列表5、粗体标签段落无表3、列表+正文无表/标签2、无结构正文0；排除指定非治疗标题后的纯结构视图为6/6/5/2/0，防止把评估/监测表当治疗汇总（KMT2B此视图为粗体标签+段落）。不是优化建议或临床分类。
+
+XML解析失败0；记录4条呈现结构限制，涉及3表多级表头，其中AGXT Lumasiran Table8还嵌在list-item/p内，当前视图可能平铺。表内列表在行文本中不带原层级，地图另列原始项及位置。只观察未修生产解析器。6项必要解析测试通过，19章节/行/列表计数与唯一锚点/源SHA核对通过；生成时显式阻断LLM和网络入口仍完成，模型请求0/网络0/费用$0。aitx/config/data/流水线代码、15正式Ledger及全部baseline SHA均未改。未调默认、未生成治疗路由、未冻结/升级Accepted。遵守本轮不联网要求，仅本地提交，不push。
