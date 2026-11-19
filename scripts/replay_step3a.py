@@ -94,7 +94,7 @@ def run(cid,n,out,public_cache=None,offline=False,raw_dir=None):
             answer=entry;origin='historical cache'
         with trace_lock:
             used.append({'key':key,'prompt_version':pv,'origin':origin});dump(out/'used.json',used)
-        return dict(answer,call_id=key)
+        return dict(answer,call_id=answer['call_id'] if 'call_id' in answer else key)
     ask=CC.ask;decide=CC.decide_3a
     def partial_ask(header,passage,patient,questions,**kw):
         try:return ask(header,passage,patient,questions,**kw)
