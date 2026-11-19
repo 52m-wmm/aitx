@@ -30,6 +30,7 @@ from aitx.evidence import labels as LB
 from aitx.evidence import ledger as LG
 from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
+from aitx.evidence import examples as EX
 from aitx.evidence.branches import sex_fact
 
 PROMPT_VERSION = "3a-v6.1"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
@@ -886,7 +887,7 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
             low = path.lower()
             avoid, pregnancy = "avoid" in low, "pregnancy" in low
             section_llm = llm
-            for it in parsed.get("items") or []:
+            for it in EX.group_items(parsed.get("items") or []):
                 llm = it['_chunk_llm'] if '_chunk_llm' in it else section_llm
                 name = str(it.get("name") or "").strip()
                 kind, kind_pending = A.resolve_kind(name, it["kind"])
@@ -920,6 +921,10 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
                 claim = f"GeneReviews ({path}) lists {name}" + (f" for {it['manifestation']}" if it.get("manifestation") else "") + "."
                 spec = _spec(claim, src, it["quote"], text, acc_book, llm, f"3a genereviews {nbk}")
                 spec["extraction_kind"] = {"original": it["kind"], "resolved": kind, "pending": kind_pending}
+                if 'examples' in it:
+                    spec['examples']=it['examples']
+                    spec['example_member']=it['example_member']
+                    spec['example_review_pending']=it.get('example_review_pending',False)
                 position = LG._norm(text).find(LG._norm(name))
                 spec["source_order"] = [book_index,section_positions[path],position if position >= 0 else LG._norm(text).index(LG._norm(it['quote']))]
                 spec["presentation_quotes"] = management_quotes(shown.get(path, ""), name, it["quote"])
@@ -1668,8 +1673,20 @@ def _records(led: LG.Ledger, found: dict, pf: dict, searches: list[dict], use_ca
             pending_line["context_check"] = "scope"
             pending_line["kind_resolution_pending"] = True
             lines.append(pending_line)
+        if any(sp.get('example_review_pending') for sp in a['specs']):
+            lines.append(LG.requirement(f"r{len(lines)+1}","other","example member scope/type requires review",
+                         next(e['id'] for e in evs if e['status']=='verified'),
+                         {'field':'source scope','value':None,'quote':None,'step':None},'unknown',branches,
+                         'code: preserve member restrictions; do not inherit them as whole-class eligibility'))
         rec = LG.action_record(k, section, a["label"], branches, lines, [e["id"] for e in evs if e["status"] == "verified"],
                                reasons)
+        examples=list(dict.fromkeys(n for sp in a['specs'] for n in sp.get('examples',[])))
+        if examples:
+            rec['examples']=examples
+            rec['example_members']=[sp['example_member'] for sp in a['specs'] if sp.get('example_member') is not None]
+            rec['example_evidence_ids']=[e['id'] for e in evs if e['status']=='verified' and any(LG.quote_in(n,e['quote']) for n in examples)]
+            rec['examples_need_review']=any(sp.get('example_review_pending') for sp in a['specs'])
+
         positions = [sp['source_order'] for sp in a['specs'] if 'source_order' in sp]
         rec['source_order'] = min(positions) if positions else [1000000,collected_order[k],0]
         if not positions:

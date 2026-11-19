@@ -254,3 +254,11 @@ GPi/subthalamic三票均抽到；GPi第三票首字母大小写改变claim/EID�
 两DBS/DDA/IEP在；504计划独立项缺失（只抽assistive devices）、walkers/ankle-foot orthoses仍概括为adaptive aids。28原始/28规范化条件，对照旧单票38/50/45、并集86，不以减少作正确性证明。感染风险误抽胸部PT/流感免疫2项改善，抗生素仍把pulmonary infections当manifestation。anticholinergic同句确诊限制漏抽，PT/OT/speech局部IEP范围漏抽待审；IEP明确资格、feeding安全口服、冬季/呼吸受限等保留；章节范围返回既有代码，本次未组装不能称已补齐。孕期antiemetic警示未抽、affected mother被当性别条件均待审，只作附注，不自动医学结论。旧42逐项审阅保留全部原文/EID及新Call ID，不按多数定正确。
 
 只完成源抽取与离线审阅，未补81核查或同义模型，不跑其他Step/AGXT；15正式及所有baseline SHA不变、since-before diff0，Accepted未更新。报告docs/kmt2b_chunked_v6_result_20261119.md，诊断docs/kmt2b_chunking_diagnosis_20261119.md，实验runs/kmt2b-v6-chunked-20261119含7响应/块映射/费用/old42/status_diff，最新余额runs/step3_remaining_budget.json。付费已退出，不再自动执行；不称完整3a或稳定性通过。
+
+**2026-11-19 分阶段v6.1：$0 examples完成，新增第二票运行异常已停，第三票不执行**。用户确认仅运行异常阻断第三票，单票医学缺口在完整三票后评估。停止契约docs/step3a_v6_1_stop_criteria.md v1.0：三票完整无截断；Accepted行动并集覆盖或逐条解释；多数生效条件无风险理由当现患；AGXT另须高饮水/IV fluids。未达标记known_limitations，不自动改Prompt/Accepted；两例达标才冻结工程版本，非医学审核。
+
+examples-v1只对同原句明确X(e.g.A,B)/X such as A,B归并父项，examples保留成员原始名称/条件，不是化学同义词、不改RxCUI；不把成员资格当整个X资格。缺parent类型/范围时未知并待审，报告引用原句。适用adaptive aids/orthoses/walkers，也适用other agents下举例药物（levodopa独立），保留全部出处。生产已接入，正式Ledger不刷新。1303离线全过，覆盖结构、条件保留、报告原句、运行门禁。Prompt字节不改，仍3a-v6.1；旧第一票在shadow统一用相同后处理。
+
+获批新增票2/3各独立$0.035，复用原7/7块第一票。本次非高峰余额核实后nohup+caffeinate，仅源抽取。两张新票计划请求顺序一致，将历史最大输出DD/ID第一块(0–3191)排最后，输入消息与第一票集合逐字相同，避免预留浪费，不改正文。票2六块完成，最后块16384全reasoning、内容0，截断；已花$0.031091418，余$0.003908582，32768重试预留$0.0209635不足，未发送。7真实请求、0实际重试、usage完整、peak0；无源输入缺失，缺完整raw块是截断所致，非FDA/RxNav缓存缺口。门禁已停父进程exit1，票3未started、无paid journal，conditional授权条件未满足，不可自动重试。母$0.50累计$0.330854937、余$0.169145063，未转用未执行票额度。
+
+完整三票/无截断标准不满足；其他三票医学标准未计分，部分可用回答仅作待审观察。两份核心响应仍有抗生素感染风险误抽，不因第三票缺失删除。Accepted部分投影17直接+7examples解释，1历史trihexyphenidyl与源trixhexyphenidyl拼写待审；不是最终三票覆盖结论。未执行/报价AGXT，未冻结、不自动改提示词。15正式及全部baseline SHA未改，since-before diff0，current-vs-Accepted既存差异保留，无新医学结论。报告docs/kmt2b_phase1_examples_review_20261119.md，限制及提交说明素材docs/known_limitations.md；实验runs/kmt2b-v6_1-phase1-20261119含plan/各票完整输入/预算/截断/partial shadow/25行Accepted覆盖/完整status_diff。付费已停止，等用户后续安排。

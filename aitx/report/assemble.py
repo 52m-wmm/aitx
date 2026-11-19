@@ -250,6 +250,10 @@ class Report:
         self.trace.append({"section": section, "label": a["label"], "action_key": a.get("action_key"),
                            "evidence_ids": a.get("evidence_ids") or []})
         lines = [head] + self.sources(a)
+        if a.get('examples'):
+            ids=a['example_evidence_ids']
+            lines.append("  - Examples from source: "+'; '.join(a['examples'])+". "+self.refs(ids))
+            for eid in ids:lines+=self.quote_lines(self.ev[eid]['quote'],[eid])
         for eid in a.get("pregnancy_note_evidence_ids",[]):
             lines += self.quote_lines(self.ev[eid]['quote'],[eid],"  - Pregnancy management note: ")
         if section == "off_label_expanded_access":
