@@ -36,13 +36,14 @@ def execute(out,proposal):
     cfg=llm.config()
     if cfg['base_url']!=q['provider'] or cfg['model']!=q['model']:raise ValueError('provider/model differs from quote')
     inputs=json.loads((proposal.parent/'first_vote_source_records.json').read_text())
-    if len(inputs)!=4:raise ValueError('expected exactly four fixed source inputs')
+    expected=q['first_requests'] if 'first_requests' in q else 4
+    if len(inputs)!=expected:raise ValueError('fixed source request count differs from proposal')
     out.mkdir(parents=True,exist_ok=True)
     sample=q['sample'] if 'sample' in q else 1
     cap=min(q['incremental_cap_usd'],q['kmt_total_cap_usd']-q['kmt_prior_usd'],q['parent_remaining_usd']) if 'incremental_cap_usd' in q else .08
     if cap<=0:raise budget.OverBudget('no authorized funds remain')
     b=balance(out/'balance_before.json')
-    dump(out/'started.json',{'at':time.time(),'case':'PRAC-KMT2B','authorized_new_votes':1,'first_requests':4,'hard_cap_usd':cap,
+    dump(out/'started.json',{'at':time.time(),'case':'PRAC-KMT2B','authorized_new_votes':1,'first_requests':expected,'hard_cap_usd':cap,
                              'parent_spend_usd':q['parent_spend_usd'],'latest_instruction':'Run one new vote, report, then wait for approval'})
     dump(out/'frozen_inputs.json',inputs)
     os.environ.pop('AITX_LLM_CACHE_ONLY',None)
@@ -74,7 +75,7 @@ def execute(out,proposal):
         dump(out/'state.json',state)
     balance(out/'balance_after.json')
     print('STOPPED',state['status'],'sources',len(state['completed']),'accounted_usd',spend(),flush=True)
-    return 0 if len(state['completed'])==4 else 1
+    return 0 if len(state['completed'])==expected else 1
 
 
 if __name__=='__main__':

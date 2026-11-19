@@ -32,7 +32,7 @@ from aitx.evidence import support_check as SC
 from aitx.evidence import variants as V
 from aitx.evidence.branches import sex_fact
 
-PROMPT_VERSION = "3a-v6"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
+PROMPT_VERSION = "3a-v6.1"          # v3: table rows with headers, usage situations, purpose clauses; v4: therapy programs; v5: paragraph context, row coverage (2026-11-04)
 SECTIONS_3A = ("existing_targeted_therapies", "supportive_management", "contraindications_precautions")
 SKIP_SECTIONS = ("surveillance", "therapies under investigation", "evaluations following initial diagnosis",
                  "evaluation of relatives at risk")
@@ -71,11 +71,9 @@ Requirements describe the PATIENT: age, sex, variant / genotype, variant type, z
 weight - or the situation in which it is used ("situation": "as needed", "if needed", "during acute episodes", "in
 kidney failure", "after transplantation"). Copy their words exactly from the item's table row or sentence. A purpose or
 mechanism clause ("to reduce oxalate", "to inhibit ...", "which lowers ...") is never a requirement.
-Paragraphs may be annotated with chapter or subheading context. Do not infer requirements or manifestations
-from those annotations, section titles, or other paragraphs. Code adds population headings independently.
-Extract only patient restrictions explicitly stated in the complete sentence naming this action (or its own
-complete table row). A reason such as "because of the risk of X", or a purpose such as "to prevent X", does
-not mean the patient already has X. Do not copy a prevention target or risk rationale into manifestation.
+Extract conditions only from the action's own sentence or complete table row. Do not infer conditions or
+manifestations from headings, context annotations or other paragraphs; code handles population headings.
+Prevention targets and risk rationales are not existing patient findings ("to prevent X", "because of the risk of X").
 Tables are shown one row per line, each cell labelled with its column header: "Row 3: [Manifestation: Kidney stones]
 [Treatment: ...] [Considerations/Other: ...]". The requirements of an item may be in any cell of its row, including the
 row's first column (the manifestation or concern it treats); the quote is the text of the cell that names the item,
@@ -86,6 +84,33 @@ disease. Use only the label text given; copy each requirement's words exactly. R
 sex, required variants or genotypes, variant type, zygosity, kidney or liver function, or weight. "Pediatric and adult
 patients" with no number is not an age restriction; the disease itself is not a requirement. Return only JSON:
 {"requirements": [""" + _REQ_SHAPE + """]}"""
+
+
+EXTRACT_MAX_CHARS = 3500
+
+
+def extraction_chunks(text: str, limit: int = EXTRACT_MAX_CHARS) -> list[dict]:
+    """Lossless contiguous structural units: GR emits a paragraph or complete table row per line."""
+    if limit<=0:raise ValueError('chunk limit must be positive')
+    if not text:return [{'start':0,'end':0,'text':''}]
+    chunks=[];start=0;end=0
+    for line in text.splitlines(keepends=True):
+        if len(line)>limit:raise ValueError('source structural unit exceeds chunk limit; do not truncate a row/paragraph')
+        if end>start and (end-start+len(line)>limit or (line.startswith('Subheading:') and end-start>limit//2)):
+            chunks.append({'start':start,'end':end,'text':text[start:end]});start=end
+        end+=len(line)
+    chunks.append({'start':start,'end':end,'text':text[start:end]})
+    return chunks
+
+
+def extract_section(path: str, text: str, use_cache: bool, nbk: str) -> tuple[dict,dict]:
+    items=[];provenance=[]
+    for chunk in extraction_chunks(text):
+        parsed,pb=_llm(EXTRACT_SYSTEM,f"Section: {path}\n{chunk['text']}",use_cache,
+                       f"GeneReviews {nbk} '{path}' [{chunk['start']}:{chunk['end']}]")
+        items.extend(dict(it,_chunk_llm=pb) for it in parsed['items'])
+        provenance.append(pb)
+    return {'items':items},{'chunk_calls':provenance}
 
 
 def _llm(system: str, user: str, use_cache: bool, what: str = "") -> tuple[dict, dict]:
@@ -841,8 +866,8 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         has_targeted = any(any(t in p.lower() for t in TARGETED_TITLES) for p, _ in secs)
         shown = GR.sections_for_llm(nbk)      # tables row by row with their headers; quotes are checked on `secs`
         with ThreadPoolExecutor(max_workers=X.CONCURRENCY) as pool:
-            per_sec = list(pool.map(lambda pt: _llm(EXTRACT_SYSTEM, f"Section: {pt[0]}\n{shown.get(pt[0], pt[1])[:9000]}",
-                                                   use_cache, f"GeneReviews {nbk} '{pt[0]}'"), secs))
+            per_sec = list(pool.map(lambda pt: extract_section(pt[0],shown[pt[0]] if pt[0] in shown else pt[1],
+                                                               use_cache,nbk),secs))
         # row coverage (decision 2026-11-04): every table row of a Management section must yield at least one
         # action or be judged "no treatment content"; an uncovered row is extracted again on its own
         extra_secs, extra_res = [], []
@@ -860,7 +885,9 @@ def add_established(led: LG.Ledger, step1: dict, step2: dict, *, use_cache: bool
         for (path, text), (parsed, llm) in zip(secs + extra_secs, per_sec + extra_res):
             low = path.lower()
             avoid, pregnancy = "avoid" in low, "pregnancy" in low
+            section_llm = llm
             for it in parsed.get("items") or []:
+                llm = it['_chunk_llm'] if '_chunk_llm' in it else section_llm
                 name = str(it.get("name") or "").strip()
                 kind, kind_pending = A.resolve_kind(name, it["kind"])
                 if not name or name.lower() in NOT_A_THERAPY:

@@ -246,3 +246,11 @@ GPi/subthalamic三票均抽到；GPi第三票首字母大小写改变claim/EID�
 **2026-11-19 用户批准3a-v6单票$0.03；已执行但未完成，预算保护停止，不续费**。非高峰先核实余额17.71CNY可用，四份user来源逐字不变，只换v6系统Prompt。Management完成0条$0.000088302；Treatment of Manifestations在16384截断（usage输出全部16384 reasoning），$0.010076004，未得到可用完整抽取。32768必要重试预留$0.0215752大于本次剩余$0.019835694，请求前阻止，没有发送。2真实请求、0实际重试、usage完整、peak0，合计$0.010164306；sources_completed=1/4，后两源未运行。KMT2B累计$0.052796658<$0.08，旧$0.50实验累计$0.268869501、剩余$0.231130499，最新runs/step3_remaining_budget.json。上级余额不授权突破本次帽。
 
 42组分歧、3组风险误抽、DBS/504/DDA/器具均not_tested，不把没有响应当遗漏或修复，也不能说解决0项。仅空Management一致不足以验证新Prompt效果；不称初步/稳定性通过。没有核查/合并/其他Step/AGXT，无医学规则、正式Ledger、Accepted改动，15正式及所有baseline SHA不变，since-before diff0；对Accepted既有diff保留。报告docs/kmt2b_v6_initial_attempt_20261119.md；实验runs/kmt2b-v6-one-vote-20261119含全部输入/usage/停止及42+3逐项unknown。已停止付费，等待后续安排，不自行增额度或改参数。
+
+**2026-11-19 KMT2B截断诊断/精简分块及新授权$0.06单票已完成，付费已停**：v6原截断reason/content=16384/0；v5两次截断15237/1147（核心正文7115字符）、15931/453（DD/ID3677），成功重试13472/2045及13886/805，不全是核心段。3a-v6.1只精简v6新增规则（执行前展示），结构原子行分块3500上限，4源1/3/2/1共7块，覆盖全文无重叠/丢失、超大单元报错，不再[:9000]裁切；每块真实出处再进原有行动合并。1297全量离线通过。
+
+最新单次$0.06（新阶段，旧费保留）授权非高峰先查余额17.64CNY，以nohup+caffeinate完成7/7真实请求，响应复用0、截断0、重试0、usage完整，$0.030894018。KMT2B系列累计$0.083690676，原$0.50母实验累计$0.299763519、余$0.200236481；本次未用部分不自动续跑。单块DD/ID输出仍16107/16384，单次无截断不是稳定性保证。
+
+两DBS/DDA/IEP在；504计划独立项缺失（只抽assistive devices）、walkers/ankle-foot orthoses仍概括为adaptive aids。28原始/28规范化条件，对照旧单票38/50/45、并集86，不以减少作正确性证明。感染风险误抽胸部PT/流感免疫2项改善，抗生素仍把pulmonary infections当manifestation。anticholinergic同句确诊限制漏抽，PT/OT/speech局部IEP范围漏抽待审；IEP明确资格、feeding安全口服、冬季/呼吸受限等保留；章节范围返回既有代码，本次未组装不能称已补齐。孕期antiemetic警示未抽、affected mother被当性别条件均待审，只作附注，不自动医学结论。旧42逐项审阅保留全部原文/EID及新Call ID，不按多数定正确。
+
+只完成源抽取与离线审阅，未补81核查或同义模型，不跑其他Step/AGXT；15正式及所有baseline SHA不变、since-before diff0，Accepted未更新。报告docs/kmt2b_chunked_v6_result_20261119.md，诊断docs/kmt2b_chunking_diagnosis_20261119.md，实验runs/kmt2b-v6-chunked-20261119含7响应/块映射/费用/old42/status_diff，最新余额runs/step3_remaining_budget.json。付费已退出，不再自动执行；不称完整3a或稳定性通过。
