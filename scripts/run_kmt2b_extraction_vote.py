@@ -38,20 +38,23 @@ def execute(out,proposal):
     inputs=json.loads((proposal.parent/'first_vote_source_records.json').read_text())
     if len(inputs)!=4:raise ValueError('expected exactly four fixed source inputs')
     out.mkdir(parents=True,exist_ok=True)
+    sample=q['sample'] if 'sample' in q else 1
+    cap=min(q['incremental_cap_usd'],q['kmt_total_cap_usd']-q['kmt_prior_usd'],q['parent_remaining_usd']) if 'incremental_cap_usd' in q else .08
+    if cap<=0:raise budget.OverBudget('no authorized funds remain')
     b=balance(out/'balance_before.json')
-    dump(out/'started.json',{'at':time.time(),'case':'PRAC-KMT2B','authorized_new_votes':1,'first_requests':4,'hard_cap_usd':.08,
-                             'parent_spend_usd':.216072843,'latest_instruction':'Run one new vote, report, then wait for approval'})
+    dump(out/'started.json',{'at':time.time(),'case':'PRAC-KMT2B','authorized_new_votes':1,'first_requests':4,'hard_cap_usd':cap,
+                             'parent_spend_usd':q['parent_spend_usd'],'latest_instruction':'Run one new vote, report, then wait for approval'})
     dump(out/'frozen_inputs.json',inputs)
     os.environ.pop('AITX_LLM_CACHE_ONLY',None)
     X.CACHE_DIR=out/'responses';X.CACHE_DIR.mkdir(exist_ok=False)
-    spend=install_campaign_guard(out,.08)
+    spend=install_campaign_guard(out,cap)
     sid=session.start(['one KMT2B extraction vote',str(out)],runmeta.code_fingerprint());dump(out/'session.json',{'id':sid})
-    state={'status':'running','completed':[],'model':'deepseek-flash','new_vote':1,'second_vote_authorized':False}
+    state={'status':'running','completed':[],'model':'deepseek-flash','new_vote':sample,'second_vote_authorized':False}
     try:
         for item in inputs:
             print('START',item['messages'][1]['content'].splitlines()[0],flush=True)
-            # Force a real response, no response-cache reuse. k=1 is independent of the saved k=0 vote.
-            result=X._cached_chat(item['messages'],1,False,prompt_version=item['prompt_version'],call_params=X.CALL_PARAMS)
+            # Distinct sample identity and no response-cache reuse.
+            result=X._cached_chat(item['messages'],sample,False,prompt_version=item['prompt_version'],call_params=X.CALL_PARAMS)
             if result['served_model']!=q['model']:raise llm.ModelMismatch('server model alias differs from fixed model')
             path=out/'raw_extractions'/(item['call_id']+'.json')
             record={'complete':False,'safety_validation':'incomplete','source_selector_key':item['call_id'],
@@ -66,7 +69,7 @@ def execute(out,proposal):
         state.update(status='stopped incomplete',error=str(e));print('STOP',type(e).__name__,str(e),flush=True)
     finally:
         if state['status']=='running':state['status']='stopped incomplete: exception; see execution.log'
-        state.update(accounted_usd=spend(),remaining_parent_usd=.283927157-spend(),sources_completed=len(state['completed']),
+        state.update(accounted_usd=spend(),remaining_parent_usd=q['parent_remaining_usd']-spend(),sources_completed=len(state['completed']),
                      next_vote_not_run=True,complete_step3a=False)
         dump(out/'state.json',state)
     balance(out/'balance_after.json')

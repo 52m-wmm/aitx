@@ -95,12 +95,12 @@ def analyze(run,first):
             dump(ld/(cid+'.json'),canonical)
         snapshots.append(SD.build_snapshot(ld,SD.case_ids(),'KMT2B '+name+' extraction vote; partial cached assembly',detailed=True))
     for label,ref in [('first-vs-new',snapshots[0]),('accepted-current',SD.load_snapshot(ROOT/'baselines/current/snapshot.json'))]:
-        diff=SD.compare(ref,snapshots[1]);target=ROOT/'out/status_diff/kmt2b-one-vote-20261119'/label
+        diff=SD.compare(ref,snapshots[1]);target=ROOT/'out/status_diff'/('kmt2b-one-vote-20261119' if run.name=='kmt2b-new-vote1-20261119' else run.name)/label
         dump(target/'snapshot.json',snapshots[1]);dump(target/'diff.json',diff);(target/'diff.md').write_text(SD.markdown(diff))
     sid=json.loads((run/'session.json').read_text())['id'];calls=[json.loads(l) for l in (ROOT/'runs/sessions'/sid/'calls.jsonl').read_text().splitlines()]
     assert len(calls)==4 and all(not r['cache_hit'] for r in calls)
     finance=llm_cost.summarize(0,run/'llm_calls.jsonl')
-    result={'comparison':'historical first vote vs ONE new vote; third vote not run; no majority verdict',
+    result={'comparison':'historical first vote vs '+run.name+'; pairwise comparison only',
             'first_action_records':len(before),'new_action_records':len(after),'matched_action_records':len(rows),
             'removed_records':removed,'added_records':added,'matched_changes':rows,'dbs':dbs,
             'condition_changed_matched_actions':sum(r['condition_changed'] for r in rows),
@@ -115,7 +115,7 @@ def analyze(run,first):
             'new_pending_by_version':dict(Counter(r['prompt_version'] for r in new['replay']['pending'])),
             'source_sections_raw_json_different':sum(bool(d['full_diff']) for d in rawdiff),
             'actual_model':sorted({r['served_model'] for r in calls}),'cost':finance,
-            'second_new_vote_run':False,'full_step3a_complete':False,'accepted_baseline_updated':False}
+            'second_new_vote_run':run.name=='kmt2b-third-vote-20261119','full_step3a_complete':False,'accepted_baseline_updated':False}
     dump(out/'summary.json',result)
     print(json.dumps({k:v for k,v in result.items() if k not in ['matched_changes','removed_records','added_records','same_source_quote_changed_ids','all_assembly_evidence_ids_added','all_assembly_evidence_ids_removed','dbs']},indent=2))
 
