@@ -137,7 +137,7 @@ LIVE_JS = """<script>
 var T=%(texts)s, page=%(page)s, rr=document.getElementById('app-rerun');
 var caseId=rr?rr.dataset.case:null, watching=false;
 function relevant(paths){ if(!caseId) return true;
-  return paths.some(function(p){return p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0 || p.indexOf('step3a_view')>=0;}); }
+  return paths.some(function(p){return p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0 || p.indexOf('step3a_view')>=0 || p.indexOf('step3b_view')>=0;}); }
 var es=new EventSource('/events');
 es.onmessage=function(ev){ var d=JSON.parse(ev.data); if(watching || !relevant(d.paths)) return;
   location.reload(); };
@@ -264,7 +264,7 @@ class Watcher:
     def scan(self) -> dict[str, float]:
         files = list((self.root / "out").glob("step*/*.json")) \
             + list((self.root / "out" / "step3a-source-selection").glob("**/*.json")) \
-            + [self.root / "scripts" / "build_viewer.py", self.root / "scripts" / "step3a_view.py",
+            + [self.root / "scripts" / "build_viewer.py", self.root / "scripts" / "step3a_view.py", self.root / "scripts" / "step3b_view.py",
                self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}
 

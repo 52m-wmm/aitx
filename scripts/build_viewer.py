@@ -281,7 +281,7 @@ def link(url: str | None, text: str) -> str:
 # ------------------------------------------------------------------ case views
 
 def v_chain(c: dict) -> str:
-    targets = {1: "#variant", 2: "#disease", 3: "#board", 4: "#board", 5: "#board"}
+    targets = {1: "#variant", 2: "#disease", 3: "#step3", 4: "#step4", 5: "#step5"}
     nodes = []
     for k, name in step_names().items():
         cls, txt = c["status"][k]
@@ -859,21 +859,40 @@ def v_sources(s2: dict) -> str:
 
 # ------------------------------------------------------------ action board (ledger 1.4)
 
-def step_navigation() -> str:
-    return """<style>.step-nav{position:sticky;top:0;z-index:10;display:flex;gap:8px;flex-wrap:wrap;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line)}.step-nav a,.step3-tabs button{padding:7px 14px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none}.step3-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.step-nav a[aria-current=step]{background:var(--acc);color:white}.step3-tabs button[aria-selected=true]{background:var(--acc);color:white}#variant,#disease,#step3,#step4,#step5{scroll-margin-top:80px}</style>
-<nav class='step-nav' aria-label='流程导航'><a href='#variant'>Step 1 · 变异解析</a><a href='#disease'>Step 2 · 疾病归一化</a><a href='#step3'>Step 3 · 证据检索</a><a href='#step4'>Step 4 · 报告合成</a><a href='#step5'>Step 5 · 核查</a></nav>"""
+def patient_background(c: dict, context: str) -> str:
+    facts = c['steps'][2]['patient_facts']
+    months = facts['age']['months']
+    age = L('未知', 'Unknown') if months is None else (L(f'{months / 12:g} 岁', f'{months / 12:g} years') if months % 12 == 0 else L(f'{months:g} 个月', f'{months:g} months'))
+    sex = {'male': L('男', 'Male'), 'female': L('女', 'Female'), 'unknown': L('未知', 'Unknown')}[facts['sex']['value']]
+    variants = ' / '.join(f"{v['gene']} {v['variant_cdna']} {v['variant_protein']}" for v in c['steps'][1]['variants'])
+    return (f"<details id='patient-background' class='card'><summary><strong>{L('患者背景', 'Patient background')} · {e(c['id'])}</strong>"
+            f"<span class='patient-summary'>{L('年龄', 'Age')}：{e(age)} · {L('性别', 'Sex')}：{e(sex)} · {e(variants)}"
+            f"</span><span class='muted'>{L('展开完整病例原文', 'Expand full case background')}</span></summary>"
+            f"<div class='patient-original'>{e(context) if context else L('病例背景未知', 'Case background unknown')}</div></details>")
+
+
+def step_navigation(c: dict, context: str) -> str:
+    return """<style>.step-nav{position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line)}.step-nav .node{min-width:0;overflow-wrap:anywhere}.step-nav a[aria-current=step]{box-shadow:0 0 0 2px var(--acc);outline-offset:3px}.step3-tabs button{padding:7px 14px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer}.step3-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.step3-tabs button[aria-selected=true]{background:var(--acc);color:white}@media(max-width:700px){.step-nav{position:static}.step-nav .chain{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.step-nav .arrow{display:none}}#variant,#disease,#step3,#step4,#step5{scroll-margin-top:140px}</style>
+<nav class='step-nav' aria-label='""" + L('推理链 · 流程导航', 'Reasoning chain · Step navigation') + "'>" + v_chain(c) + """<style>#patient-background{margin:10px 0 0;padding:8px 12px}#patient-background summary{cursor:pointer;min-height:44px}.patient-summary{display:block;overflow-wrap:anywhere}.patient-original{white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow-y:auto;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}</style>""" + patient_background(c, context) + '</nav>'
 
 
 def step3_panel(case_id: str) -> str:
     import importlib
-    from scripts import step3a_view
+    from scripts import step3a_view, step3b_view
     # The live Viewer reloads this template; refresh its renderer dependency too.
     panel = importlib.reload(step3a_view).panel
+    trial_panel = importlib.reload(step3b_view).panel
     labels = {'a': '治疗原文筛选', 'b': '临床试验', 'c': '超说明书 / 扩大用药', 'd': '个体化疗法', 'e': '药物再利用'}
     buttons = ''.join(f"<button type='button' role='tab' id='tab-3{x}' aria-controls='panel-3{x}' aria-selected='{str(x == 'a').lower()}' data-step3='{x}'>3{x} · {labels[x]}</button>" for x in 'abcde')
     panels = "<section id='panel-3a' role='tabpanel' aria-labelledby='tab-3a'>"+panel(case_id)+"</section>"
-    panels += ''.join(f"<section id='panel-3{x}' role='tabpanel' aria-labelledby='tab-3{x}' hidden><p class='muted'>Step 3{x} 展示尚未接入；本轮仅实现 3a。</p></section>" for x in 'bcde')
-    js = """<script>document.querySelectorAll('[data-step3]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-step3]').forEach(t=>t.setAttribute('aria-selected',String(t===b)));document.querySelectorAll('[id^="panel-3"]').forEach(p=>p.hidden=p.id!=='panel-3'+b.dataset.step3)}));</script>"""
+    panels += "<section id='panel-3b' role='tabpanel' aria-labelledby='tab-3b' hidden>"+trial_panel(case_id)+"</section>"
+    panels += ''.join(f"<section id='panel-3{x}' role='tabpanel' aria-labelledby='tab-3{x}' hidden><p class='muted'>Step 3{x} 展示尚未接入。</p></section>" for x in 'cde')
+    js = """<script>(function(){
+function selectTab(x){document.querySelectorAll('[data-step3]').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.step3===x)));document.querySelectorAll('[id^="panel-3"]').forEach(p=>p.hidden=p.id!=='panel-3'+x)}
+document.querySelectorAll('[data-step3]').forEach(b=>b.addEventListener('click',()=>{selectTab(b.dataset.step3);location.hash='panel-3'+b.dataset.step3}));
+function fromHash(){if(/^#panel-3[a-e]$/.test(location.hash))selectTab(location.hash.slice(-1))}
+window.addEventListener('hashchange',fromHash);fromHash();
+})();</script>"""
     return "<div class='step3-tabs' role='tablist' aria-label='Step 3 子步骤'>"+buttons+"</div>"+panels+js
 
 def case_page(c: dict, context: str) -> str:
@@ -881,11 +900,10 @@ def case_page(c: dict, context: str) -> str:
     meta = s2.get("_meta", {})
     hpo = s2.get("hpo_version", "").split("/")[-2] if s2.get("hpo_version") else ""
     made = time.strftime("%Y-%m-%d %H:%M", time.localtime(meta.get("created_at", 0)))
-    body = f"""{step_navigation()}<h1>{e(c['id'])} <span class='muted' style='font-size:14px'>{e(group_label(c['group']))}</span></h1>
+    body = f"""{step_navigation(c, context)}<h1>{e(c['id'])} <span class='muted' style='font-size:14px'>{e(group_label(c['group']))}</span></h1>
 <p class='muted'>{L(f"结果文件：第 2 步代码版本 {meta.get('code_commit', '?')}，生成于 {made}；HPO {hpo}",
                     f"Result files: step 2 code {meta.get('code_commit', '?')}, generated {made}; HPO {hpo}")}</p>
-<div data-main-step='1'><h2>{L('推理链', 'Reasoning chain')}</h2>{v_chain(c)}
-<h2 id='variant'>{L('Step 1 变异事实', 'Step 1 variant facts')}</h2>{v_variant(s1)}
+<div data-main-step='1'><h2 id='variant'>{L('Step 1 变异事实', 'Step 1 variant facts')}</h2>{v_variant(s1)}
 </div><div data-main-step='2' hidden><h2 id='disease'>{L('Step 2 结论', 'Step 2 conclusion')}</h2>{v_decision(s2)}
 <h2>{L('症状从原文哪里来', 'Where each feature comes from in the text')}</h2>{v_highlight(s2, context)}
 <h2>{L('候选疾病怎么被筛掉的', 'How candidates were filtered')}</h2>{v_funnel(s2)}{v_candidates(s2)}
@@ -905,7 +923,7 @@ function activate(){
  else if(hash==='#step4')step='4';else if(hash==='#step5')step='5';
  document.querySelectorAll('[data-main-step]').forEach(p=>p.hidden=p.dataset.mainStep!==step);
  links.forEach((a,i)=>{if(String(i+1)===step)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current')});
- if(hash){requestAnimationFrame(()=>{const target=document.getElementById(hash.slice(1));if(target)target.scrollIntoView({block:'start'})})}
+ if(hash){requestAnimationFrame(()=>{const target=document.getElementById(/^#panel-3/.test(hash)?'step3':hash.slice(1));if(target){const nav=document.querySelector('.step-nav');target.style.scrollMarginTop=((getComputedStyle(nav).position==='sticky'?nav.getBoundingClientRect().height:0)+12)+'px';target.scrollIntoView({block:'start'})}})}
 }
 window.addEventListener('hashchange',activate);activate();
 })();</script>"""

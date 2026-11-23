@@ -181,6 +181,17 @@ def test_partial_parent_selection_does_not_select_separately_called_children():
 def test_integrated_case_keeps_steps_1_2_and_embeds_step3_tabs():
     from scripts import build_viewer as B
     html=B.render_page('cases/PRAC-OTC.html')
+    assert html.count("class='chain'") == 1
+    assert html.index("class='chain'") < html.index('<h1>')
+    assert html.index("class='chain'") < html.index("id='patient-background'") < html.index("data-main-step='1'")
+    background = B.patient_background({'id': 'TEST', 'steps': {
+        1: {'variants': [{'gene': 'G', 'variant_cdna': 'c.1A>G', 'variant_protein': 'p.X'}]},
+        2: {'patient_facts': {'age': {'months': None}, 'sex': {'value': 'unknown'}}}}}, '<patient original>')
+    assert '年龄：未知' in background and '性别：未知' in background
+    assert '&lt;patient original&gt;' in background
+    for target in ('variant', 'disease', 'step3', 'step4', 'step5'):
+        assert f"href='#{target}'" in html
+    assert "href='#board'" not in html
     assert 'Step 1 变异事实' in html and 'Step 2 结论' in html
     assert html.index("id='step3'") > html.index("id='disease'")
     for x in 'abcde':
