@@ -36,7 +36,6 @@ import threading
 import time
 import uuid
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
@@ -71,14 +70,14 @@ class Templates:
     def _src_mtime() -> float:
         return Path(build_viewer.__file__).stat().st_mtime
 
-    def render(self, rel: str, against: str | None = None) -> str | None:
+    def render(self, rel: str) -> str | None:
         with self.lock:
             m = self._src_mtime()
             if m != self.mtime:
                 importlib.reload(build_viewer)
                 self.mtime = m
             out = runs_page("en" if rel.endswith(".en.html") else "zh") if rel.startswith("runs.") \
-                else build_viewer.render_page(rel, against) if against else build_viewer.render_page(rel)
+                else build_viewer.render_page(rel)
         return None if out is None else inject(out, rel, "en" if rel.endswith(".en.html") else "zh")
 
 
@@ -138,13 +137,9 @@ LIVE_JS = """<script>
 var T=%(texts)s, page=%(page)s, rr=document.getElementById('app-rerun');
 var caseId=rr?rr.dataset.case:null, watching=false;
 function relevant(paths){ if(!caseId) return true;
-  return paths.some(function(p){return p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0;}); }
+  return paths.some(function(p){return p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0 || p.indexOf('step3a_view')>=0;}); }
 var es=new EventSource('/events');
-var blind=document.getElementById('blind-page');
 es.onmessage=function(ev){ var d=JSON.parse(ev.data); if(watching || !relevant(d.paths)) return;
-  // the blind-test page holds unsaved notes: a save there must not reload it; other changes only offer a reload
-  if(blind){ var own=d.paths.every(function(p){return p.indexOf('data/eval/blind/')===0;}); if(own) return;
-    var n=document.getElementById('blind-stale'); if(n) n.style.display='block'; return; }
   location.reload(); };
 function fmt(r){ var dur=r.duration_s==null?'…':r.duration_s.toFixed(1)+' s';
   var res=r.status==='running'?'<span class="tag warn">'+T.running+'</span>':
@@ -196,8 +191,6 @@ def inject(page_html: str, rel: str, lang: str) -> str:
         page_html = page_html.replace("</h1>", "</h1>" + rerun_panel(cid, lang), 1)
     elif rel.startswith("index"):
         page_html = page_html.replace("</h1>", "</h1>" + runs_panel(lang), 1)
-    nav = _t(lang, "版本对比", "Run comparison") + "</a>"
-    page_html = page_html.replace(nav, nav + f" · <a href='/{_runs_page(lang)}'>{_t(lang, '运行记录', 'Run records')}</a>", 1)
     if "class='mol3d'" in page_html:
         js += MOL_JS % {"texts": json.dumps(mol_texts(lang), ensure_ascii=False)}
     return page_html.replace("</body>", js + "</body>", 1)
@@ -269,10 +262,10 @@ class Watcher:
         self._stop = threading.Event()
 
     def scan(self) -> dict[str, float]:
-        files = list((self.root / "out").glob("step*/*.json")) + list((self.root / "out").glob("acceptance/*.json")) \
-            + list((self.root / "out").glob("blind/*/*.json")) + list((self.root / "data" / "eval" / "blind").glob("*.json")) \
-            + [self.root / "scripts" / "build_viewer.py",
-                                                                    self.root / "out" / "viewer_runs" / "history.jsonl"]
+        files = list((self.root / "out").glob("step*/*.json")) \
+            + list((self.root / "out" / "step3a-source-selection").glob("**/*.json")) \
+            + [self.root / "scripts" / "build_viewer.py", self.root / "scripts" / "step3a_view.py",
+               self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}
 
     def poll(self) -> None:
@@ -394,53 +387,6 @@ class RunRequest(BaseModel):
     confirm_no_cache: bool = False
 
 
-class JudgeRequest(BaseModel):
-    """One reviewer verdict on a blind-test entry; entry_id is empty for a newly added missed entry."""
-    entry_id: str = ""
-    case: str
-    section: str = ""
-    label: str = ""
-    verdict: str
-    note: str = ""
-
-
-BATCH_NAME = re.compile(r"^[0-9]{8}[A-Za-z0-9_-]{0,20}$")
-ENTRY_ID = re.compile(r"^[0-9a-f]{12}$")
-
-
-def save_judgement(batch: str, req: JudgeRequest, root: Path = ROOT) -> dict:
-    """Write one verdict to data/eval/blind/<batch>.json (atomic replace). The file keeps every verdict by entry
-    id; a missed entry (no id) gets its own id from its case and label. Returns the stored record."""
-    import hashlib
-    import tempfile
-    if not BATCH_NAME.match(batch):
-        raise HTTPException(400, "bad batch name")
-    if req.verdict not in build_viewer.VERDICTS:
-        raise HTTPException(400, f"verdict must be one of {list(build_viewer.VERDICTS)}")
-    if req.entry_id and not ENTRY_ID.match(req.entry_id):
-        raise HTTPException(400, "bad entry id")
-    if not req.entry_id and req.verdict != "missed":
-        raise HTTPException(400, "only a missed entry may come without an entry id")
-    if req.verdict == "missed" and not req.entry_id and not req.label.strip():
-        raise HTTPException(400, "a missed entry needs a label")
-    cases_file = root / "data" / "cases" / "blind" / f"{batch}.json"
-    if not cases_file.exists() or req.case not in {c["id"] for c in json.loads(cases_file.read_text())}:
-        raise HTTPException(404, f"{req.case} is not a case of blind batch {batch}")
-    eid = req.entry_id or "m" + hashlib.sha256(f"{req.case}|{req.label.strip()}".encode()).hexdigest()[:11]
-    path = root / "data" / "eval" / "blind" / f"{batch}.json"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    data = json.loads(path.read_text()) if path.exists() else {"schema": "blind-judged-v1", "batch": batch,
-                                                               "judgements": {}}
-    rec = {"case": req.case, "section": req.section, "label": req.label.strip()[:300], "verdict": req.verdict,
-           "note": req.note.strip()[:1000], "at": int(time.time())}
-    data["judgements"][eid] = rec
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
-    with os.fdopen(fd, "w") as f:
-        f.write(json.dumps(data, indent=1, ensure_ascii=False) + "\n")
-    os.replace(tmp, path)
-    return {"entry_id": eid, **rec}
-
-
 def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> FastAPI:
     templates, runner = Templates(), runner or Runner()
     watcher = watcher or Watcher()
@@ -454,8 +400,8 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
     app = FastAPI(title="AI-Tx review viewer", lifespan=lifespan)
     app.state.runner, app.state.watcher = runner, watcher
 
-    def page(rel: str, against: str | None = None) -> HTMLResponse:
-        out = templates.render(rel, against)
+    def page(rel: str) -> HTMLResponse:
+        out = templates.render(rel)
         if out is None:
             raise HTTPException(404, f"no page {rel}")
         return HTMLResponse(out)
@@ -469,12 +415,8 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
         return page(f"cases/{name}")
 
     @app.get("/{name}.html")
-    def top(name: str, against: Optional[str] = None, batch: Optional[str] = None):
-        return page(f"{name}.html", batch if name.startswith("blind") and batch else against)
-
-    @app.post("/api/blind/{batch}/judge")
-    def judge(batch: str, req: JudgeRequest):
-        return save_judgement(batch, req)
+    def top(name: str):
+        return page(f"{name}.html")
 
     @app.get("/events")
     async def events():

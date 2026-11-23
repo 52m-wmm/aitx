@@ -1,23 +1,7 @@
-"""Step 2.5 review viewer: static HTML pages from out/step<N>/ results (no server, no LLM).
+"""Case Viewer and static export for Steps 1–5, with Step 3a source selection.
 
-Usage:
-    python scripts/build_viewer.py                          # both languages; Chinese by default
-    python scripts/build_viewer.py --lang en                # both languages; English by default
-    python scripts/build_viewer.py --compare 20261030-1200  # compare with a named earlier snapshot
-
-This is the static export. For live pages (auto-refresh, rerun buttons) run scripts/viewer_app.py,
-which renders the same templates per request through render_page().
-
-Writes out/review/<timestamp>/ (index, cases/<id>, compare pages in Chinese `X.html` and English
-`X.en.html`, data/ copies of the step outputs it was built from, review.json) and
-out/review/index.html listing all snapshots. Every page has a 中文 / EN switch that opens the
-same page in the other language (keeping the section anchor) and remembers the choice in the
-browser's localStorage; --lang only sets the default when no choice is stored.
-Every number shown is read from the step outputs; the page computes nothing beyond counting
-and laying out. Views (design: Notion "Step 2.5", section 7.3.5):
-  1 overview table             2 reasoning chain            3 variant card
-  4 source-text highlight      5 candidate funnel           6 symptom x disease matrix
-  7 score bars + ambiguity line  8 evidence tree (Step 3+; structure reserved)  9 run comparison
+Run scripts/viewer_app.py for live pages, or this script for a static snapshot.
+Reads saved output only; does not run analysis or call a model.
 """
 from __future__ import annotations
 
@@ -37,6 +21,7 @@ from aitx import runmeta  # noqa: E402
 
 OUT = ROOT / "out"
 REVIEW = OUT / "review"
+BLIND_CASES = ROOT / "data" / "cases" / "blind"  # Case backgrounds remain available.
 CLEAN_VALIDATION = {"AITX-00007"}
 USED_VALIDATION = {"AITX-00011"}
 e = html.escape
@@ -281,10 +266,7 @@ def page(title: str, body: str, base: str, depth: int = 0) -> str:
             f"<meta name='viewport' content='width=device-width,initial-scale=1'><title>{e(title)}</title>"
             f"<style>{CSS}</style></head><body><main><p class='muted'>{switch}"
             f"<a href='{up}{fn('index')}'>{L('总表', 'Overview')}</a> · "
-            f"<a href='{up}{fn('compare')}'>{L('版本对比', 'Run comparison')}</a> · "
-            f"<a href='{up}{fn('acceptance')}'>{L('验收对照', 'Acceptance')}</a> "
-            + "".join(f"<a href='{up}{fn('acceptance_' + k)}'>{k}</a> " for k in ACCEPT_STEPS)
-            + f"· <a href='{up}{fn('blind')}'>{L('盲测', 'Blind test')}</a></p>{body}</main>"
+            f"<a href='{up}{fn('runs')}'>{L('运行记录', 'Run records')}</a></p>{body}</main>"
             f"{SWITCH_JS % DEFAULT_LANG}</body></html>")
 
 
@@ -858,110 +840,6 @@ def v_candidates(s2: dict) -> str:
             f"<th>{L('去向', 'Outcome')}</th></tr>{''.join(rows)}</table></div></details>")
 
 
-def role_label(r: str) -> str:
-    if r == "primary":
-        return L("首选", "Primary")
-    if r == "gene_level":
-        return L("基因级（诊断未定）", "Gene level (diagnosis unresolved)")
-    return L(f"歧义候选 {r.split('_')[1]}", f"Ambiguous candidate {r.split('_')[1]}")
-
-
-def tier_label(t: str) -> str:
-    return {"established": L("已确立", "Established"), "emerging": L("新兴", "Emerging"),
-            "hypothesized": L("假设性", "Hypothesized"), "background": L("背景事实", "Background")}.get(t, t)
-
-
-def section_label(sec: str) -> str:
-    return {"background": L("背景（诊断、变异、ClinVar、GeneReviews、规则）", "Background (diagnosis, variant, ClinVar, GeneReviews, rules)"),
-            "existing_targeted_therapies": "Existing Targeted Therapies", "supportive_management": "Supportive Management",
-            "contraindications_precautions": "Contraindications & Precautions",
-            "clinical_trial_eligibility": "Clinical Trial Eligibility", "off_label_expanded_access": "Off-label / Expanded Access",
-            "bespoke_therapies": "Bespoke Therapies", "drug_repurposing": "Drug Repurposing",
-            "outcome_measures_ranking": "Outcome Measures & Ranking"}.get(sec, sec)
-
-
-def _leaf(x: dict) -> str:
-    st = tag({"verified": "pass", "rejected": "fail"}.get(x["status"], "warn"), x["status"])
-    when = time.strftime("%Y-%m-%d", time.gmtime(x.get("accessed_at") or (x.get("search") or {}).get("queried_at") or 0))
-    if x["kind"] == "negative":
-        sr = x["search"]
-        body = (f"{L('查过但没找到', 'searched, nothing found')}: {e(sr['database'])} “{e(sr['query'])}” "
-                f"→ {sr['n_results']} {L('条', 'results')}, {L('排除', 'excluded')} {sr['n_excluded']} · {when}")
-    elif x["kind"] == "reasoning":
-        body = f"{L('推理，前提', 'reasoning from')}: {e(', '.join(x['premises']))}"
-    else:
-        src = x["source"]
-        up = src.get("upstream") or {}
-        q = str(x.get("quote", ""))
-        if src.get("type") == "pipeline_fact" and len(q) > 1 and q[0] == q[-1] == '"':
-            q = q[1:-1]                      # pipeline facts are quoted as JSON values; show the plain text
-        body = (f"<q>{e(q[:160])}</q> — {link(src.get('url'), src.get('id', ''))}"
-                + (f" ({e(up.get('type', ''))} {e(str(up.get('id', '')))})" if up else "") + f" · {when}")
-    why = f"<div class='muted'>{e('; '.join(x['reasons']))}</div>" if x.get("reasons") else ""
-    return f"<li>{st} {e(x['claim'])}<div class='muted'>{body}</div>{why}</li>"
-
-
-def v_tree(c: dict) -> str:
-    t = c["tree"]
-    if not t:
-        return ""
-    if t["status"] == "reserved":
-        items = "".join(f"<li><b>{e(role_label(b['role']))}</b>: {e(b['label'])} <span class='muted'>{e(b['diagnosis_id'])}</span></li>"
-                        for b in t["branches"])
-        return (f"<ul class='tree'>{items}</ul><p class='muted'>"
-                f"{L('Step 3 尚未运行（用 run_pipeline.py --from-step 3 生成证据账本）。', 'Step 3 has not run yet (run_pipeline.py --from-step 3).')}</p>")
-    out = []
-    for b in t["branches"]:
-        extra = ""
-        if b.get("expanded_from"):
-            extra += f" <span class='muted'>{L('由伞状概念展开', 'expanded from umbrella')} {e(b['expanded_from'])}</span>"
-        if b.get("not_expandable"):
-            extra += " " + tag("warn", L("伞状概念，无法展开", "umbrella, not expandable"))
-        if b.get("promoted_by"):
-            extra += " " + tag("pass", L("由规则提拔", "promoted by rule") + f" {b['promoted_by']}")
-        for a in b.get("assessment") or []:
-            extra += " " + tag("pass" if a["effect"] == "supports" else "warn",
-                               (L("规则支持", "rule supports") if a["effect"] == "supports" else L("规则不支持", "rule argues against"))
-                               + f" {a['rule_id']}")
-        layers = []
-        for layer in b["layers"]:
-            secs = []
-            for sec in layer["sections"]:
-                acts = []
-                for a in sec["actions"]:
-                    leaves = "".join(_leaf(x) for x in a["leaves"])
-                    if a["action_key"]:
-                        warn = (" " + tag("warn", L("未标准化", "not normalized"))) if a.get("normalized") is False else ""
-                        acts.append(f"<li><code>{e(a['action_key'])}</code>{warn}<ul class='tree'>{leaves}</ul></li>")
-                    else:
-                        acts.append(leaves)
-                secs.append(f"<li><b>{e(section_label(sec['section']))}</b> <span class='muted'>({len(sec['actions'])})</span>"
-                            f"<ul class='tree'>{''.join(acts)}</ul></li>")
-            layers.append(f"<li><details{' open' if layer['tier'] != 'background' else ''}><summary><b>{e(tier_label(layer['tier']))}</b></summary>"
-                          f"<ul class='tree'>{''.join(secs)}</ul></details></li>")
-        out.append(f"<li><b>{e(role_label(b['role']))}</b>: {e(b['label'])} <span class='muted'>{e(b['diagnosis_id'])} "
-                   f"{e(' '.join(b.get('omim') or []))}</span>{extra}<ul class='tree'>{''.join(layers)}</ul></li>")
-    notes = []
-    if t.get("dropped"):
-        notes.append(f"<li>{L('超过 3 个分支而舍弃（按 Step 2 分数）', 'Dropped (more than 3 branches, by step 2 score)')}: "
-                     + e(", ".join(f"{d['diagnosis']['label']} ({d['step2_score']})" for d in t["dropped"])) + "</li>")
-    for r in t.get("rules_applied") or []:
-        miss = f" · {L('规则涉及但不是分支的诊断', 'diagnoses named by the rule but not a branch')}: {', '.join(r['branches_not_present'])}" if r.get("branches_not_present") else ""
-        blocked = "; ".join(f"{p['omim']}: {p['reason']}" for p in r.get("promotions") or [] if not p["promoted"])
-        blocked = f" · {L('未提拔', 'not promoted')}: {blocked}" if blocked else ""
-        notes.append(f"<li>{L('生效规则', 'Rule applied')} <code>{e(r['rule_id'])}</code> ({e(r['variant'])}): {e(r['statement'])}{e(miss)}{e(blocked)}</li>")
-    for r in t.get("rules_skipped") or []:
-        notes.append(f"<li>{L('未加载的规则', 'Rule not loaded')} <code>{e(str(r['rule_id']))}</code>: {e('; '.join(r['reasons']))}</li>")
-    if t.get("missing"):
-        notes.append(f"<li>{L('缺失信息', 'Missing information')}: "
-                     + e("; ".join(f"{m['variable']} — {m['why_it_matters']}" for m in t["missing"])) + "</li>")
-    pending = [s for s, st in (t.get("sections_status") or {}).items() if st != "searched"]
-    if pending:
-        notes.append(f"<li class='muted'>{L('尚未检索的章节（3a–3e 完成后填入）', 'Sections not searched yet (filled by 3a–3e)')}: "
-                     + e(", ".join(section_label(x) for x in pending)) + "</li>")
-    return f"<ul class='tree'>{''.join(out)}</ul><ul>{''.join(notes)}</ul>"
-
-
 def v_sources(s2: dict) -> str:
     links = []
     for g, info in s2["gene_aliases"].items():
@@ -981,622 +859,56 @@ def v_sources(s2: dict) -> str:
 
 # ------------------------------------------------------------ action board (ledger 1.4)
 
-ACT_ORDER = ["applicable", "conditional", "not_applicable", "searched_none"]
-ACT_CLS = {"applicable": "pass", "conditional": "warn", "not_applicable": "fail", "searched_none": "not_run", "mixed": "mixed"}
-ACCEPTANCE = OUT / "acceptance" / "step3a.json"      # written by scripts/acceptance_step3a.py
-ACCEPT_STEPS = ("3b", "3c", "3d", "3e")               # the other acceptance pages, one generic layout
-BLIND_OUT = OUT / "blind"                             # out/blind/<batch>/{sample,machine,recall}.json
-BLIND_CASES = ROOT / "data" / "cases" / "blind"       # data/cases/blind/<batch>.json
-BLIND_JUDGED = ROOT / "data" / "eval" / "blind"       # data/eval/blind/<batch>.json (the reviewer's verdicts)
-VERDICTS = ("correct", "wrong", "missed", "unsure")
-# blind-test groups (B1 split 2026-11-11: single-gene chapter vs overview only)
-BLIND_GROUP_ORDER = ["A", "B1-L1", "B1-L2", "B1", "B2", "not_counted"]
-BLIND_GROUP_LABEL = {"A": "A（Validator）", "B1-L1": "B1-L1 有专章", "B1-L2": "B1-L2 只有总论",
-                     "B1": "B1（未分）", "B2": "B2 无章节", "not_counted": "不计入盲测率（已用于修复）"}
+def step_navigation() -> str:
+    return """<style>.step-nav{position:sticky;top:0;z-index:10;display:flex;gap:8px;flex-wrap:wrap;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line)}.step-nav a,.step3-tabs button{padding:7px 14px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer;text-decoration:none}.step3-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.step-nav a[aria-current=step]{background:var(--acc);color:white}.step3-tabs button[aria-selected=true]{background:var(--acc);color:white}#variant,#disease,#step3,#step4,#step5{scroll-margin-top:80px}</style>
+<nav class='step-nav' aria-label='流程导航'><a href='#variant'>Step 1 · 变异解析</a><a href='#disease'>Step 2 · 疾病归一化</a><a href='#step3'>Step 3 · 证据检索</a><a href='#step4'>Step 4 · 报告合成</a><a href='#step5'>Step 5 · 核查</a></nav>"""
 
 
-def act_label(s: str) -> str:
-    return {"applicable": L("适用", "Applicable"), "conditional": L("有条件", "Conditional"),
-            "not_applicable": L("不适用", "Not applicable"), "searched_none": L("查过无", "Searched, none found"),
-            "mixed": L("各分支不同", "Differs by branch")}.get(s, s)
-
-
-def result_label(r: str) -> str:
-    return {"pass": L("满足", "Met"), "fail": L("不满足", "Not met"), "unknown": L("未知", "Unknown"),
-            "not_assessed": L("筛选时评估", "Screening assessment")}.get(r, r)
-
-
-def kind_label(k: str) -> str:
-    return {"inclusion": L("入组", "Inclusion"), "exclusion": L("排除", "Exclusion"),
-            "label_condition": L("说明书 / 指南条件", "Label / guideline condition"), "other": L("其他", "Other")}.get(k, k)
-
-
-def pstatus_label(s: str) -> str:
-    return {"satisfies": L("符合", "satisfies"), "does_not_satisfy": L("不符合", "does not satisfy"),
-            "unknown": L("未知", "unknown"), "not_assessed": "—"}.get(s, s)
-
-
-def _branch_cols(s3: dict) -> list[dict]:
-    by_id = {b["id"]: b for b in s3["branches"]}
-    return [by_id[b] for b in (s3.get("branch_order") or list(by_id))]
-
-
-def _blabel(b: dict) -> str:
-    return (b.get("diagnosis") or {}).get("label") or b.get("gene") or b["id"]
-
-
-def _evidence_item(x: dict | None, eid: str) -> str:
-    if not x:
-        return f"<li class='fail'>{L('证据缺失', 'missing evidence')} <code>{e(eid)}</code></li>"
-    st = tag({"verified": "pass", "rejected": "fail"}.get(x["status"], "warn"), x["status"])
-    when = time.strftime("%Y-%m-%d", time.gmtime(x.get("accessed_at") or (x.get("search") or {}).get("queried_at") or 0))
-    meta = []
-    if x["kind"] == "negative":
-        sr = x["search"]
-        body = (f"{L('查过但没找到', 'searched, nothing found')}: {e(sr['database'])} “{e(sr['query'])}” → {sr['n_results']}, "
-                f"{L('排除', 'excluded')} {sr['n_excluded']}")
-    elif x["kind"] == "reasoning":
-        body = f"{L('推理，前提', 'reasoning from')}: {e(', '.join(x['premises']))}"
-    else:
-        src = x["source"]
-        body = f"<blockquote>{e(str(x.get('quote', '')))}</blockquote>"
-        meta.append(link(src.get("url"), f"{src.get('type')} {src.get('id', '')}"))
-        if src.get("brand"):
-            meta.append(e(src["brand"]))
-        if src.get("version"):
-            meta.append(L(f"说明书版本 {src['version']}", f"label version {src['version']}"))
-        if src.get("effective_date"):
-            meta.append(L(f"生效 {src['effective_date']}", f"effective {src['effective_date']}"))
-        if src.get("section"):
-            meta.append(e(src["section"]))
-    meta.append(L(f"获取 {when}", f"retrieved {when}"))
-    pb = x.get("produced_by")
-    if isinstance(pb, dict) and pb.get("prompt_version"):
-        meta.append(e(f"{pb.get('served_model')} · {pb['prompt_version']}"))
-    why = f"<div class='fail'>{e('; '.join(x['reasons']))}</div>" if x.get("reasons") else ""
-    if x.get("quote_repaired"):
-        qr = x["quote_repaired"]
-        why += (f"<div class='warn'>{L('引用经代码修复', 'quote repaired by code')} ({e(qr.get('check', ''))})："
-                f"{L('LLM 原抄写', 'LLM copy')} “{e(str(qr.get('llm_quote', '')))}”</div>")
-    return (f"<li>{st} {e(x['claim'])}{body}<div class='muted'>{' · '.join(meta)}</div>{why}</li>")
-
-
-def _req_table(a: dict, s3: dict, cols: list[dict]) -> str:
-    if not a["requirements"]:
-        return f"<p class='muted'>{L('没有需要核对的条件。', 'No conditions to check.')}</p>"
-    multi = len(cols) > 1
-    idx = {b["id"]: i + 1 for i, b in enumerate(cols)}
-    rows = []
-    alts = list(dict.fromkeys(r["alternative"] for r in a["requirements"] if r.get("alternative")))
-    last = object()
-    for r in sorted(a["requirements"], key=lambda r: (r.get("alternative") is not None, alts.index(r["alternative"]) if r.get("alternative") in alts else -1)):
-        if alts and r.get("alternative") != last:          # rows of the source table: any one met is enough
-            last = r.get("alternative")
-            head_txt = (L("所有情况都需满足", "Applies in every case") if last is None
-                        else L(f"情况 {alts.index(last) + 1}（满足其一即可）：", f"Alternative {alts.index(last) + 1} (any one is enough): ") + last)
-            rows.append(f"<tr><td colspan='{6 if multi else 5}' class='muted'><b>{e(head_txt)}</b></td></tr>")
-        pf = r.get("patient_fact") or {}
-        fact = (f"{e(str(pf.get('value')))}<div class='muted'>“{e(str(pf['quote']))}” (step {pf.get('step')})</div>"
-                if pf.get("quote") else f"<span class='muted'>{e(str(pf.get('field') or L('病例未提供', 'not in the case')))}</span>")
-        cls = {"pass": "pass", "fail": "fail", "unknown": "warn", "not_assessed": "not_run"}.get(r["result"], "")
-        br = f"<td>{e(', '.join(str(idx.get(b, b)) for b in r['applies_to']))}</td>" if multi else ""
-        rows.append(f"<tr><td>{e(kind_label(r['kind']))}</td><td><q>{e(r['requirement'])}</q></td><td>{fact}</td>"
-                    f"<td class='nw'>{e(pstatus_label(r['patient_status']))}</td><td class='nw'>{tag(cls, result_label(r['result']))}"
-                    f"{('<div class=muted>' + e(r['note']) + '</div>') if r.get('note') else ''}</td>{br}</tr>")
-    head = [L("类型", "Kind"), L("要求原文", "Requirement (verbatim)"), L("病人事实与原文引用", "Patient fact and quote"),
-            L("病人", "Patient"), L("结果", "Result")] + ([L("分支", "Branch")] if multi else [])
-    return "<div class='wrap'><table>" + "<tr>" + "".join(f"<th>{h}</th>" for h in head) + "</tr>" + "".join(rows) + "</table></div>"
-
-
-_MODALITY_CLASS = {"eligible": "ok", "likely_eligible": "ok", "unlikely_eligible": "cond", "not_eligible": "no",
-                   "theoretically_possible": "ok", "not_applicable": "no", "unable_to_assess": "cond",
-                   "not_graded": "cond"}
-
-
-def _modality_card(a: dict, cols: list[dict], span: str = "") -> str:
-    cls = _MODALITY_CLASS.get(a.get("classification"), "cond")
-    bits = [f"<div class='muted'>{e(a['conclusion'])}</div>"]
-    if a.get("criteria_met"):
-        bits.append("<ul>" + "".join(f"<li>{e(x)}</li>" for x in a["criteria_met"]) + "</ul>")
-    if a.get("unassessable_reason"):
-        bits.append(f"<div class='muted'>{L('缺', 'missing')}: "
-                    + "; ".join(e(x) for x in a["unassessable_reason"]) + "</div>")
-    if a.get("exceptions"):
-        bits.append("<div class='muted'>" + "<br>".join(e(x) for x in a["exceptions"]) + "</div>")
-    return (f"<div class='card {span}'><div class='row'><b>{e(a['label'])}</b>"
-            f"{tag(cls, e((a.get('classification') or '').replace('_', ' ')))}</div>" + "".join(bits) + "</div>")
-
-
-def _card(a: dict, s3: dict, cols: list[dict], span: str = "") -> str:
-    if a.get("modality"):                       # 3d: a modality judgement, not a per-patient action (2026-11-06)
-        return _modality_card(a, cols, span)
-    sts = {b: v["status"] for b, v in a["status_by_branch"].items()}
-    overall = next(iter(set(sts.values()))) if len(set(sts.values())) == 1 else "mixed"
-    reasons = {v["reason"] for v in a["status_by_branch"].values()}
-    if len(cols) > 1 and (overall == "mixed" or len(reasons) > 1):
-        idx = {b["id"]: i + 1 for i, b in enumerate(cols)}
-        lines = "".join(f"<div>{tag(ACT_CLS[v['status']], f'{idx.get(b, b)} · ' + act_label(v['status']))} {e(v['reason'])}</div>"
-                        for b, v in a["status_by_branch"].items())
-    else:
-        lines = f"<div>{tag(ACT_CLS[overall], act_label(overall))} {e(next(iter(reasons)) if reasons else '')}</div>"
-    ev = {x["id"]: x for x in s3["evidence"]}
-    note = f"<p class='muted'>{L('不写入报告', 'Not written to the report')}: {e(a.get('report_note', ''))}</p>" if a.get("report") is False else ""
-    key = f"<code>{e(a['action_key'])}</code>" if a.get("action_key") else ""
-    for fld, title in (("genereviews_notes", L("备注：GeneReviews 条件（以 FDA 说明书条件为准，不参与判定）",
-                                               "Notes: GeneReviews conditions (the FDA label decides; not evaluated)")),
-                       ("precautions", L("注意事项（说明书适应证以外章节的条件，不改变适用状态）",
-                                         "Precautions (label conditions outside Indications and Usage; no effect on the status)")),
-                       ("pregnancy_notes", L("备注：孕期条件（只用于孕期措施，不参与判定）",
-                                             "Notes: pregnancy conditions (pregnancy measures only; not evaluated)"))):
-        if a.get(fld):
-            note += f"<p class='muted'>{title}</p><ul>" + "".join(f"<li>{e(t)}</li>" for t in a[fld]) + "</ul>"
-    return (f"<details class='acard st-{ACT_CLS[overall]}'{span}><summary><b>{e(a['label'])}</b>{lines}</summary>"
-            f"<div class='abody'>{note}<p class='muted'>{key}</p><h4>{L('条件核对', 'Condition check')}</h4>{_req_table(a, s3, cols)}"
-            f"<h4>{L('证据', 'Evidence')}</h4><ul class='evl'>{''.join(_evidence_item(ev.get(i), i) for i in a['evidence_ids'])}</ul>"
-            f"</div></details>")
-
-
-def _span(a: dict, cols: list[dict]) -> str:
-    if len(cols) == 1:
-        return ""
-    pos = [i for i, b in enumerate(cols) if b["id"] in a["applies_to"]]
-    return f" style='grid-column:{min(pos) + 1} / {max(pos) + 2}'" if pos else ""
-
-
-def v_board(s3: dict | None) -> str:
-    """Action board: counts and missing information, then tier -> section rows of action cards, branches side by side.
-    Shows the ledger's action records as they are; nothing is evaluated here."""
-    if not s3:
-        return f"<p class='muted'>{L('Step 3 尚未运行。', 'Step 3 has not run yet.')}</p>"
-    cols = _branch_cols(s3)
-    acts = s3.get("actions") or []
-    shown = [a for a in acts if a.get("report") is not False]
-    # 3d rows carry a modality verdict instead of a per-branch status, so they are counted separately
-    counts = {s: sum(1 for a in shown for v in (a.get("status_by_branch") or {}).values() if v["status"] == s)
-              for s in ACT_ORDER}
-    n_modality = sum(1 for a in shown if a.get("modality"))
-    hidden = len(acts) - len(shown)
-    unit = L("（按 行动 × 分支 计）", " (action × branch)") if len(cols) > 1 else ""
-    top = " ".join(f"{tag(ACT_CLS[s], act_label(s))} <b>{counts[s]}</b>" for s in ACT_ORDER)
-    if n_modality:
-        top += f" {tag('cond', L('手段判定', 'modality verdicts'))} <b>{n_modality}</b>"
-    top += f" <span class='muted'>{unit}{L(f' · 不写入报告 {hidden}', f' · not reported {hidden}')}</span>"
-    miss = s3.get("missing_information") or []
-    miss_html = ("<details class='miss'><summary>" + L(f"缺失信息 {len(miss)} 项", f"Missing information: {len(miss)}") + "</summary><ul>"
-                 + "".join(f"<li><b>{e(m['variable'])}</b> — {e(m['why_it_matters'])}</li>" for m in miss) + "</ul></details>") if miss else ""
-    n = len(cols)
-    # one branch: cards flow in as many columns as fit; several branches: one column per branch
-    grid = ("display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px" if n == 1
-            else f"display:grid;grid-template-columns:repeat({n},minmax(0,1fr));grid-auto-flow:row dense;gap:8px")
-    head = "" if n == 1 else (f"<div class='bhead' style='{grid}'>" + "".join(
-        f"<div><b>{i + 1} · {e(role_label(b['role']))}</b><br>{e(_blabel(b))}</div>" for i, b in enumerate(cols)) + "</div>")
-    order = {s: i for i, s in enumerate(ACT_ORDER)}
-    tiers, not_searched = [], []
-    from aitx.evidence.ledger import SECTIONS
-    for tier in ("established", "emerging", "hypothesized"):
-        rows = []
-        for sec in [s for s, t in SECTIONS.items() if t == tier]:
-            here = [a for a in acts if a["section"] == sec]
-            if (s3.get("sections_status") or {}).get(sec) != "searched" and not here:
-                not_searched.append(sec)
-                continue
-            vis = sorted([a for a in here if a.get("report") is not False],
-                         key=lambda a: (min([order.get(v["status"], 9) for v in
-                                             (a.get("status_by_branch") or {}).values()] or [9]), a["label"].lower()))
-            hid = [a for a in here if a.get("report") is False]
-            cards = "".join(_card(a, s3, cols, _span(a, cols)) for a in vis) or f"<p class='muted'>{L('（无行动）', '(no actions)')}</p>"
-            fold = (f"<details class='hidden-acts'><summary class='muted'>{L(f'不写入报告的条目 {len(hid)} 个', f'{len(hid)} items not written to the report')}</summary>"
-                    f"<div style='{grid}'>{''.join(_card(a, s3, cols, _span(a, cols)) for a in hid)}</div></details>") if hid else ""
-            rows.append(f"<h4 class='sec'>{e(section_label(sec))} <span class='muted'>({len(vis)})</span></h4>"
-                        f"<div style='{grid}'>{cards}</div>{fold}")
-        if rows:
-            tiers.append(f"<h3 class='tier'>{e(tier_label(tier))}</h3>{''.join(rows)}")
-    pend = (f"<p class='muted'>{L('尚未检索的章节', 'Sections not searched yet')}: "
-            + e(", ".join(section_label(s) for s in not_searched)) + "</p>") if not_searched else ""
-    return (f"<div class='card'>{top}{miss_html}</div>{head}{''.join(tiers)}{pend}")
-
-
-def acceptance_page(res: dict | None) -> str:
-    """Verified expectations next to the ledger results (scripts/acceptance_step3a.py output, shown as is)."""
-    title = L("Step 3a 验收对照", "Step 3a acceptance")
-    if not res:
-        body = (f"<h1>{title}</h1><p class='muted'>{L('还没有验收结果。运行', 'No acceptance result yet. Run')} "
-                f"<code>python3 scripts/acceptance_step3a.py</code>.</p>")
-        return page(title, body, "acceptance")
-    made = time.strftime("%Y-%m-%d %H:%M", time.localtime(res["created_at"]))
-    overall = tag("pass" if res["ok"] else "fail", "PASS" if res["ok"] else "FAIL")
-    crow = []
-    for cid, m in res["cases"].items():
-        lm = time.strftime("%Y-%m-%d %H:%M", time.localtime(m["created_at"] or 0)) if m["created_at"] else "—"
-        chk = tag("pass", L("通过", "pass")) if m["ledger_ok"] else tag("fail", L("未通过", "failed") + ": " + ", ".join(m["failed_checks"]))
-        crow.append(f"<tr><td><a href='cases/{e(fn(cid))}#board'>{e(cid)}</a></td><td>{e(lm)}</td><td>{e(str(m.get('code_commit')))}</td>"
-                    f"<td>{e(', '.join(m['prompt_versions']) or '—')}</td><td>{e(str(m.get('schema_version')))}</td><td>{chk}</td></tr>")
-    rows = []
-    for r in res["rows"]:
-        names = res["cases"].get(r["case"], {}).get("branches", {})
-        acts = []
-        if isinstance(r["actual"], dict) and r["actual"] and all(isinstance(v, dict) and "tier" in v for v in r["actual"].values()):
-            for b, v in r["actual"].items():               # supportive fallback-chain record of a branch
-                acts.append(f"<div><b>{e(names.get(b, b))}</b>: {L('层级', 'tier')} {e(str(v.get('tier')))} · "
-                            f"{L('文献', 'literature')} {e(str(v.get('literature_count')))}"
-                            + (f" · {L('停用', 'disabled')} {e(', '.join(v.get('disabled') or []))}" if v.get("disabled") else "")
-                            + (f" · <span class='fail'>{e(str(v.get('literature_error')))}</span>" if v.get("literature_error") else "")
-                            + "</div>")
-        for a in (r["actual"] if isinstance(r["actual"], list) else []):
-            if "status_by_branch" not in a:                 # an "absent" expectation lists what was found instead
-                acts.append(f"<div><b>{e(a['label'])}</b> ({e(str(a.get('tier_source')))})</div>")
-                continue
-            sts = "; ".join(f"{act_label(v['status'])}" + (f" ({e(names.get(b, b))})" if len(names) > 1 else "")
-                            + f" — {e(v['reason'])}" for b, v in a["status_by_branch"].items())
-            unk = (f"<div class='muted'>{L('未知条件', 'unknown')}: " + e(" | ".join(a["unknown_requirements"])) + "</div>") if a["unknown_requirements"] else ""
-            nr = f" {tag('not_run', L('不写入报告', 'not reported'))}" if a.get("report") is False else ""
-            acts.append(f"<div><b>{e(a['label'])}</b>{nr}: {sts}{unk}</div>")
-        actual = "".join(acts) or f"<span class='muted'>{L('未找到', 'not found')}</span>"
-        mark = "<b class='pass'>✓</b>" if r["ok"] else f"<b class='fail'>✗</b> <span class='fail'>{e(r['problem'] or '')}</span>"
-        s = r["source"]
-        ver = " · ".join(x for x in (L(f"版本 {s['version']}", f"version {s['version']}") if s.get("version") else "",
-                                     L(f"生效 {s['date']}", f"effective {s['date']}") if s.get("date") else "") if x)
-        src = f"{link(s.get('url') or None, s['doc'])}<div class='muted'>{e(ver)}</div><q>{e(s['quote'])}</q>"
-        sec = section_label(r["section"]) if r.get("section") else L("支持治疗兜底链", "supportive fallback chain")
-        prov = (f"<div>{tag('warn', L('临时期望', 'provisional'))} <span class='muted'>{e(r['provisional'].get('reason', ''))} "
-                f"{L('解除条件', 'lift when')}: {e(r['provisional'].get('lift_when', ''))}</span></div>") if r.get("provisional") else ""
-        rows.append(f"<tr class='{'' if r['ok'] else 'badrow'}'><td>{e(r['what']['en' if LANG == 'en' else 'zh'])}"
-                    f"<div class='muted'>{e(sec)}</div>{prov}</td><td>{actual}</td><td>{mark}</td><td>{src}</td></tr>")
-    body = (f"<h1>{title} {overall}</h1><p class='muted'>"
-            + L(f"{res['n_ok']}/{res['n']} 条期望成立 · 结果生成于 {made}（代码 {res['code_commit']}）· 期望核实于 {res['expectations_verified_on']}。"
-                "本页只显示 scripts/acceptance_step3a.py 的输出，不做计算。",
-                f"{res['n_ok']}/{res['n']} expectations hold · result made {made} (code {res['code_commit']}) · expectations verified "
-                f"{res['expectations_verified_on']}. This page only shows the output of scripts/acceptance_step3a.py.")
-            + f"</p><h2>{L('账本', 'Ledgers')}</h2><div class='wrap'><table><tr><th>{L('病例', 'Case')}</th><th>{L('生成时间', 'Made')}</th>"
-            f"<th>{L('代码', 'Code')}</th><th>{L('提示词版本', 'Prompt')}</th><th>{L('账本结构', 'Schema')}</th><th>{L('账本校验', 'Ledger checks')}</th></tr>"
-            + "".join(crow) + f"</table></div><h2>{L('期望与实际', 'Expected vs actual')}</h2><div class='wrap'><table><tr>"
-            f"<th>{L('核实期望', 'Verified expectation')}</th><th>{L('账本实际', 'Ledger result')}</th><th></th><th>{L('期望出处', 'Source')}</th></tr>"
-            + "".join(rows) + "</table></div>")
-    return page(title, body, "acceptance")
-
-
-def _compact(v, depth: int = 0) -> str:
-    """A readable rendering of an acceptance row's `actual` value, whatever its shape."""
-    if v is None or v == [] or v == {}:
-        return f"<span class='muted'>{L('无', 'none')}</span>"
-    if isinstance(v, dict):
-        if depth > 1:
-            return e(json.dumps(v, ensure_ascii=False)[:300])
-        return "".join(f"<div><b>{e(str(k))}</b>: {_compact(x, depth + 1)}</div>" for k, x in v.items())
-    if isinstance(v, list):
-        if all(not isinstance(x, (dict, list)) for x in v):
-            return e(", ".join(str(x) for x in v)[:400])
-        return "".join(f"<div>{_compact(x, depth + 1)}</div>" for x in v[:12]) + (
-            f"<div class='muted'>{L(f'另有 {len(v) - 12} 项', f'{len(v) - 12} more')}</div>" if len(v) > 12 else "")
-    return e(str(v)[:400])
-
-
-def acceptance_generic(step: str, res: dict | None) -> str:
-    """Verified expectations next to the ledger results for step 3b-3e (scripts/acceptance_step<step>.py output,
-    shown as is). One layout for all four, because their row shapes differ but every row has what / actual /
-    ok / problem / source."""
-    title = L(f"Step {step} 验收对照", f"Step {step} acceptance")
-    if not res:
-        body = (f"<h1>{title}</h1><p class='muted'>{L('还没有验收结果。运行', 'No acceptance result yet. Run')} "
-                f"<code>python3 scripts/acceptance_step{step}.py</code>.</p>")
-        return page(title, body, f"acceptance_{step}")
-    made = time.strftime("%Y-%m-%d %H:%M", time.localtime(res.get("created_at", 0)))
-    overall = tag("pass" if res.get("ok") else "fail", "PASS" if res.get("ok") else "FAIL")
-    cases = res.get("cases") or {c: {"ledger_ok": ok} for c, ok in (res.get("ledgers_ok") or {}).items()}
-    crow = []
-    for cid, m in cases.items():
-        fr = m.get("fresh") if isinstance(m, dict) else None
-        fresh = "" if fr is None else (tag("pass", L("新鲜", "fresh")) if fr.get("fresh") else
-                                       tag("warn", L("过期", "stale") + ": " + "; ".join(fr.get("reasons") or [])))
-        ok = (m or {}).get("ledger_ok")
-        chk = tag("pass", L("通过", "pass")) if ok else tag("fail", L("未通过", "failed"))
-        crow.append(f"<tr><td><a href='cases/{e(fn(cid))}#board'>{e(cid)}</a></td><td>{chk}</td><td>{fresh}</td></tr>")
-    rows = []
-    for r in res.get("rows") or []:
-        mark = ("<b class='pass'>✓</b>" if r.get("ok") else
-                f"<b class='fail'>✗</b> <span class='{'warn' if r.get('stale') else 'fail'}'>{e(r.get('problem') or '')}</span>")
-        src = r.get("source") or {}
-        quote = f"<q>{e(src['quote'])}</q>" if src.get("quote") else ""
-        what = (r.get("what") or {}).get("en" if LANG == "en" else "zh") or r.get("id")
-        rows.append(f"<tr class='{'' if r.get('ok') else 'badrow'}'><td>{e(what)}<div class='muted'>{e(r.get('case', ''))}"
-                    f" · {e(r.get('id', ''))}</div></td><td>{_compact(r.get('actual'))}</td><td>{mark}</td>"
-                    f"<td>{link(src.get('url') or None, src.get('doc') or '')}{quote}</td></tr>")
-    extra = ""
-    if res.get("unassessable_summary"):
-        u = res["unassessable_summary"]
-        extra = (f"<h2>{L('无法评估统计', 'Unable-to-assess tally')}</h2><p>"
-                 + L(f"{u.get('unassessable_rows')} / {u.get('judgements')} 条判定无法评估（{u.get('share_of_judgements')}）",
-                     f"{u.get('unassessable_rows')} of {u.get('judgements')} judgements unassessable "
-                     f"({u.get('share_of_judgements')})")
-                 + "</p><ul>" + "".join(f"<li>{n} — {e(w)}</li>" for w, n in (u.get("by_reason") or {}).items()) + "</ul>")
-    body = (f"<h1>{title} {overall}</h1><p class='muted'>"
-            + L(f"{res.get('n_ok')}/{res.get('n')} 条期望成立 · 结果生成于 {made}（代码 {res.get('code_commit')}）。"
-                f"本页只显示 scripts/acceptance_step{step}.py 的输出，不做计算。",
-                f"{res.get('n_ok')}/{res.get('n')} expectations hold · result made {made} (code {res.get('code_commit')}). "
-                f"This page only shows the output of scripts/acceptance_step{step}.py.")
-            + f"</p><h2>{L('账本', 'Ledgers')}</h2><div class='wrap'><table><tr><th>{L('病例', 'Case')}</th>"
-            f"<th>{L('账本校验', 'Ledger checks')}</th><th>{L('新鲜度', 'Freshness')}</th></tr>" + "".join(crow)
-            + f"</table></div><h2>{L('期望与实际', 'Expected vs actual')}</h2><div class='wrap'><table><tr>"
-            f"<th>{L('核实期望', 'Verified expectation')}</th><th>{L('账本实际', 'Ledger result')}</th><th></th>"
-            f"<th>{L('期望出处', 'Source')}</th></tr>" + "".join(rows) + "</table></div>" + extra)
-    return page(title, body, f"acceptance_{step}")
-
-
-def load_acceptance_step(step: str) -> dict | None:
-    p = OUT / "acceptance" / f"step{step}.json"
-    return json.loads(p.read_text()) if p.exists() else None
-
-
-# ------------------------------------------------------------------ blind test page
-
-def blind_batches() -> list[str]:
-    return sorted((p.name for p in BLIND_OUT.iterdir() if (p / "machine.json").exists()), reverse=True) \
-        if BLIND_OUT.exists() else []
-
-
-def entry_id(r: dict) -> str:
-    """A stable id for one written entry: the same case, section, label and conclusion give the same id."""
-    import hashlib
-    key = "|".join([r.get("case", ""), r.get("section", ""), str(r.get("label") or ""), r.get("conclusion") or ""])
-    return hashlib.sha256(key.encode()).hexdigest()[:12]
-
-
-def load_judged(batch: str) -> dict:
-    p = BLIND_JUDGED / f"{batch}.json"
-    d = json.loads(p.read_text()) if p.exists() else {"schema": "blind-judged-v1", "batch": batch, "judgements": {}}
-    if isinstance(d.get("judgements"), list):       # retest file (2026-11-12): one row per group of labels
-        rows = {}
-        for j in d["judgements"]:
-            for lab in j.get("labels") or []:
-                r = {"case": j.get("case"), "section": j.get("section"), "label": lab,
-                     "verdict": j.get("verdict"), "note": j.get("note", "")}
-                rows[entry_id(r)] = r
-        d = dict(d, judgements=rows)
-    return d
-
-
-VERDICT_LABEL = {"correct": ("正确", "Correct"), "wrong": ("写错", "Wrong"), "missed": ("漏写", "Missed"),
-                 "unsure": ("不确定", "Unsure")}
-
-
-def _status_text(st) -> str:
-    if isinstance(st, dict):
-        return " / ".join(sorted({act_label(v) for v in st.values()}))
-    return act_label(st) if st else ""
-
-
-def blind_page(batch: str | None = None, live: bool = False) -> str:
-    """Overview, entry-by-entry judging and recall detail for one blind-test batch.
-
-    The verdicts are saved by scripts/viewer_app.py (POST /api/blind/<batch>/judge) to data/eval/blind/<batch>.json;
-    the static export shows them read-only."""
-    title = L("盲测", "Blind test")
-    batches = blind_batches()
-    batch = batch or (batches[0] if batches else None)
-    if not batch:
-        none = L("还没有盲测批次（out/blind/<批次>/machine.json）。", "No blind batch yet.")
-        return page(title, f"<h1>{title}</h1><p class='muted'>{none}</p>", "blind")
-    d = BLIND_OUT / batch
-    machine = json.loads((d / "machine.json").read_text())
-    recall = json.loads((d / "recall.json").read_text()) if (d / "recall.json").exists() else None
-    sample = json.loads((d / "sample.json").read_text()) if (d / "sample.json").exists() else {}
-    judged = load_judged(batch)["judgements"]
-    cases_file = BLIND_CASES / f"{batch}.json"
-    groups = {c["id"]: (c.get("blind") or {}).get("group", "?") for c in json.loads(cases_file.read_text())} \
-        if cases_file.exists() else {}
-    # B1 is split into L1 (single-gene chapter) and L2 (overview only), from sample.json (decision 2026-11-11)
-    for c in sample.get("cases") or []:
-        if c.get("subgroup"):
-            groups[f"BLIND-{c['gene']}"] = c["subgroup"]
-    wrong_by_case: dict[str, list[dict]] = {}
-    for w in machine.get("machine_wrong") or []:
-        wrong_by_case.setdefault(w["case"], []).append(w)
-    rows_by_case: dict[str, list[dict]] = {}
-    for r in machine.get("for_review") or []:
-        rows_by_case.setdefault(r["case"], []).append(r)
-
-    pending = L("待算", "pending")
-
-    def recall_cell(cid: str, key: str) -> str:
-        v = ((recall or {}).get("cases") or {}).get(cid, {}).get(key)
-        if v is None:
-            return f"<span class='muted'>{pending}</span>"
-        if isinstance(v, dict) and v.get("rate") is not None:
-            return e(f"{v['rate']:.0%}") + f" <span class='muted'>({v.get('hit')}/{v.get('of')})</span>"
-        return e(str(v))
-
-    not_counted = load_judged(batch).get("not_counted") or {}
-
-    def health(cid: str) -> str:
-        """Upstream health (decision 2026-11-11, after group B ran without its description): phenotypes present,
-        patient facts stated, diagnosis status from step 2. A zero (or no diagnosis) is shown in red."""
-        p = OUT / "step2" / f"{cid}.json"
-        if not p.exists():
-            return "<td colspan='3' class='muted'>—</td>"
-        s2 = json.loads(p.read_text())
-        n_ph = sum(1 for x in s2.get("phenotypes") or [] if x.get("status") == "present")
-        n_facts = sum(1 for f in (s2.get("patient_facts") or {}).values()
-                      if isinstance(f, dict) and f.get("quote"))
-        dx = (s2.get("primary") or {}).get("status") or ""
-
-        def cell(text, bad):
-            return f"<td class='fail'><b>{e(str(text))}</b></td>" if bad else f"<td>{e(str(text))}</td>"
-        return cell(n_ph, n_ph == 0) + cell(n_facts, n_facts == 0) + cell(dx or L("无", "none"), not dx)
-
-    ov = []
-    per_group: dict[str, dict] = {}
-    for cid, m in (machine.get("cases") or {}).items():
-        ran = m.get("ran")
-        mine = [judged[entry_id(r)] for r in rows_by_case.get(cid, []) if entry_id(r) in judged]
-        n_wrong = sum(1 for j in mine if j["verdict"] == "wrong")
-        n_missed = sum(1 for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed")
-        g = groups.get(cid, "?")
-        if cid in not_counted:      # used for fixing during the freeze: shown, never counted in the blind rates
-            g_key = "not_counted"
-        else:
-            g_key = g
-        t = per_group.setdefault(g_key, {"cases": 0, "ran": 0, "entries": 0, "machine": 0, "judged": 0, "wrong": 0,
-                                     "missed": 0})
-        t["cases"] += 1
-        if ran:
-            t["ran"] += 1
-            t["entries"] += m.get("entries") or 0
-            t["machine"] += m.get("machine_wrong") or 0
-            t["judged"] += len(mine)
-            t["wrong"] += n_wrong
-            t["missed"] += n_missed
-        link_case = f"<a href='cases/{e(fn(cid))}#board'>{e(cid)}</a>" if ran else e(cid)
-        if cid in not_counted:
-            link_case += (f"<br><span class='warn' style='font-size:12px'>"
-                          f"{e(not_counted[cid].get('why') or L('不计入盲测率', 'not counted'))}</span>")
-        ov.append(f"<tr><td>{link_case}</td><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td>" + health(cid)
-                  + (f"<td>{m.get('entries')}</td><td>{m.get('machine_wrong')}</td>"
-                     f"<td>{n_wrong} <span class='muted'>({len(mine)}/{m.get('entries')} {L('已判', 'judged')})</span></td>"
-                     f"<td>{n_missed}</td>" if ran else f"<td colspan='4' class='muted'>{L('未跑', 'not run')}</td>")
-                  + "".join(f"<td>{recall_cell(cid, k)}</td>" for k in ("genereviews", "trials", "fda")) + "</tr>")
-    overview = (f"<div class='wrap'><table><tr><th>{L('病例', 'Case')}</th><th>{L('组', 'Group')}</th>"
-                f"<th>{L('表型数', 'Phenotypes')}</th><th>{L('病人事实数', 'Patient facts')}</th>"
-                f"<th>{L('诊断状态', 'Diagnosis')}</th>"
-                f"<th>{L('写出条数', 'Entries')}</th><th>{L('机器写错', 'Machine wrong')}</th><th>{L('人工写错', 'Human wrong')}</th>"
-                f"<th>{L('漏写', 'Missed')}</th><th>{L('GeneReviews 覆盖率', 'GeneReviews coverage')}</th>"
-                f"<th>{L('试验召回率', 'Trial recall')}</th><th>{L('FDA 靶向召回率', 'FDA targeted recall')}</th></tr>"
-                + "".join(ov) + "</table></div>")
-    by_group_rows = "".join(
-        f"<tr><td>{e(BLIND_GROUP_LABEL.get(g, g))}</td><td>{t['ran']}/{t['cases']}</td><td>{t['entries']}</td>"
-        f"<td>{t['machine']}</td><td>{t['wrong']} <span class='muted'>({t['judged']}/{t['entries']})</span></td>"
-        f"<td>{t['missed']}</td></tr>"
-        for g, t in sorted(per_group.items(), key=lambda kv: BLIND_GROUP_ORDER.index(kv[0])
-                           if kv[0] in BLIND_GROUP_ORDER else 99))
-    overview += (f"<h3>{L('按组统计（各组分开，不合并成总率）', 'By group (kept apart, never pooled)')}</h3>"
-                 f"<div class='wrap'><table><tr><th>{L('组', 'Group')}</th><th>{L('已跑', 'Run')}</th>"
-                 f"<th>{L('写出条数', 'Entries')}</th><th>{L('机器写错', 'Machine wrong')}</th>"
-                 f"<th>{L('人工写错', 'Human wrong')}</th><th>{L('漏写', 'Missed')}</th></tr>{by_group_rows}</table></div>")
-
-    can_save = live
-    ro = L("这是静态快照，判定只能查看。要保存判定，请用实时查看页：python3 scripts/viewer_app.py",
-           "Static snapshot: verdicts are read-only. To save them, use the live app: python3 scripts/viewer_app.py")
-    note = "" if can_save else f"<p class='warn'>{ro}</p>"
-    blocks = []
-    for cid, rows in rows_by_case.items():
-        mw = wrong_by_case.get(cid, [])
-        by_sec: dict[str, list[dict]] = {}
-        for r in rows:
-            by_sec.setdefault(r["section"], []).append(r)
-        secs = []
-        for sec in sorted(by_sec, key=lambda x: (x == "supportive_management", x)):
-            items = []
-            for r in sorted(by_sec[sec], key=lambda r: r.get("label") or ""):
-                eid = entry_id(r)
-                j = judged.get(eid, {})
-                hits = [w for w in mw if (w.get("action") or "").lower() in (str(r.get("label") or "").lower(),)]
-                mcheck = (tag("fail", L("机器判定：写错", "machine: wrong")) + "".join(
-                    f"<div class='fail'>[{e(w['check'])}] {e(w['detail'][:200])}</div>" for w in hits)) if hits \
-                    else tag("pass", L("机器检查通过", "machine checks pass"))
-                cites = "".join(
-                    f"<div class='muted'>{e(c.get('type') or '')} {link(c.get('url') or None, c.get('id') or '')}"
-                    f"{': <q>' + e(c['quote']) + '</q>' if c.get('quote') else ''}</div>" for c in r.get("cites") or [])
-                radios = "".join(
-                    f"<label><input type='radio' name='v-{eid}' value='{v}'{' checked' if j.get('verdict') == v else ''}"
-                    f"{'' if can_save else ' disabled'}> {L(*VERDICT_LABEL[v])}</label> " for v in VERDICTS)
-                form = (f"<div class='judge' data-eid='{eid}' data-case='{e(cid)}' data-section='{e(sec)}' "
-                        f"data-label='{e(str(r.get('label') or ''))}'>{radios}"
-                        f"<input class='note' type='text' placeholder='{L('备注', 'note')}' value='{e(j.get('note', ''))}'"
-                        f"{'' if can_save else ' disabled'}>"
-                        + (f" <button{'' if can_save else ' disabled'}>{L('保存', 'Save')}</button>" if can_save else "")
-                        + (f" <span class='muted'>{L('已判', 'judged')} {e(time.strftime('%m-%d %H:%M', time.localtime(j['at'])))}</span>"
-                           if j.get("at") else "") + "<span class='saved'></span></div>")
-                items.append(f"<div class='card{' judged' if j else ''}'><div class='row'><b>{e(str(r.get('label') or ''))}</b> "
-                             f"{tag('cond', _status_text(r.get('status')))} {mcheck}</div>"
-                             + (f"<div>{e(r['conclusion'])}</div>" if r.get("conclusion") else "")
-                             + cites + form + "</div>")
-            secs.append(f"<details{' open' if sec != 'supportive_management' else ''}><summary>"
-                        f"{e(section_label(sec))} ({len(by_sec[sec])})</summary>{''.join(items)}</details>")
-        missed_here = [j for j in judged.values() if j.get("case") == cid and j["verdict"] == "missed"]
-        ph = L("漏写条目（如：MAOI 与多巴胺激动剂相互作用）", "missed entry")
-        add_missed = (f"<div class='judge missed-add' data-case='{e(cid)}' data-section='' data-label=''>"
-                      f"<input class='label' type='text' placeholder='{ph}'>"
-                      f"<input class='note' type='text' placeholder='{L('出处 / 备注', 'source / note')}'>"
-                      f"<button>{L('记一条漏写', 'Add a missed entry')}</button><span class='saved'></span></div>") if can_save else ""
-        listed = "".join(f"<li>{e(j.get('label', ''))} <span class='muted'>{e(j.get('note', ''))}</span></li>" for j in missed_here)
-        blocks.append(f"<h3 id='case-{e(cid)}'>{e(cid)} <span class='muted'>{e(groups.get(cid, ''))}</span></h3>"
-                      + "".join(secs) + f"<p><b>{L('漏写', 'Missed')}</b></p><ul>{listed or '<li class=muted>' + L('无', 'none') + '</li>'}</ul>"
-                      + add_missed)
-
-    if recall:
-        rec = []
-        for cid, m in (recall.get("cases") or {}).items():
-            miss = "".join(f"<li>{e(x.get('item', ''))} <span class='muted'>— {e(x.get('cause', ''))}</span>"
-                           f"{' ' + link(x.get('url'), L('来源', 'source')) if x.get('url') else ''}</li>"
-                           for x in m.get("missed") or [])
-            excl = "".join(f"<li>{e(x.get('item', ''))} <span class='muted'>— {e(x.get('rule', ''))}</span></li>"
-                           for x in m.get("rule_excluded") or [])
-            rec.append(f"<h3>{e(cid)}</h3><p><b>{L('漏掉的条目', 'Missed items')}</b></p><ul>{miss or '<li class=muted>—</li>'}</ul>"
-                       f"<p><b>{L('规则有意排除', 'Excluded by a rule')}</b></p><ul>{excl or '<li class=muted>—</li>'}</ul>")
-        recall_html = "".join(rec)
-    else:
-        nr = L("召回尚未计算（B 组全部跑完后统一计算，方案 docs/blind_recall_plan.md）。", "Recall not computed yet.")
-        recall_html = f"<p class='muted'>{nr}</p>"
-
-    frozen = sample.get("code_fingerprint", "")[:12]
-    others = " ".join(f"<a href='?batch={e(b)}'>{e(b)}</a>" for b in batches if b != batch)
-    stale = L("结果文件有更新。保存好正在写的备注后，点此刷新。", "Results changed. Save your notes, then click to reload.")
-    body = (f"<div id='blind-page'></div><p id='blind-stale' class='warn' style='display:none;cursor:pointer' "
-            f"onclick='location.reload()'>{stale}</p><h1>{title} · {e(batch)}</h1><p class='muted'>"
-            + L(f"冻结指纹 {frozen} · 判定保存在 data/eval/blind/{batch}.json · 结论句保留报告原文（英文），"
-                f"中文只用于界面与状态。", f"frozen fingerprint {frozen} · verdicts in data/eval/blind/{batch}.json")
-            + (f" · {L('其他批次', 'other batches')}: {others}" if others else "") + "</p>"
-            + f"<h2>{L('总览', 'Overview')}</h2>{overview}<h2>{L('逐条判定', 'Entry by entry')}</h2>{note}"
-            + "".join(blocks) + f"<h2>{L('召回明细', 'Recall detail')}</h2>{recall_html}"
-            + (BLIND_JS % json.dumps(batch) if can_save else ""))
-    return page(title, body, "blind")
-
-
-BLIND_JS = """<script>(function(){
-var batch=%s;
-function save(box, extra){
-  var r=box.querySelector('input[type=radio]:checked');
-  var body=Object.assign({entry_id:box.dataset.eid||'', case:box.dataset.case, section:box.dataset.section,
-    label:box.dataset.label, verdict:r?r.value:'', note:(box.querySelector('.note')||{}).value||''}, extra||{});
-  var out=box.querySelector('.saved'); out.textContent=' …';
-  fetch('/api/blind/'+encodeURIComponent(batch)+'/judge',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body)}).then(function(x){return x.json().then(function(j){return [x.ok,j];});})
-    .then(function(p){out.textContent=p[0]?' ✓':' ✗ '+(p[1].detail||'');}).catch(function(){out.textContent=' ✗';});
-}
-document.querySelectorAll('.judge').forEach(function(box){
-  var b=box.querySelector('button'); if(!b) return;
-  b.addEventListener('click',function(ev){ev.preventDefault();
-    if(box.classList.contains('missed-add')){
-      var l=box.querySelector('.label').value; if(!l) return;
-      save(box,{entry_id:'', verdict:'missed', label:l});
-    } else save(box);
-  });
-});
-})();</script>"""
-
-
-def load_acceptance() -> dict | None:
-    return json.loads(ACCEPTANCE.read_text()) if ACCEPTANCE.exists() else None
-
+def step3_panel(case_id: str) -> str:
+    import importlib
+    from scripts import step3a_view
+    # The live Viewer reloads this template; refresh its renderer dependency too.
+    panel = importlib.reload(step3a_view).panel
+    labels = {'a': '治疗原文筛选', 'b': '临床试验', 'c': '超说明书 / 扩大用药', 'd': '个体化疗法', 'e': '药物再利用'}
+    buttons = ''.join(f"<button type='button' role='tab' id='tab-3{x}' aria-controls='panel-3{x}' aria-selected='{str(x == 'a').lower()}' data-step3='{x}'>3{x} · {labels[x]}</button>" for x in 'abcde')
+    panels = "<section id='panel-3a' role='tabpanel' aria-labelledby='tab-3a'>"+panel(case_id)+"</section>"
+    panels += ''.join(f"<section id='panel-3{x}' role='tabpanel' aria-labelledby='tab-3{x}' hidden><p class='muted'>Step 3{x} 展示尚未接入；本轮仅实现 3a。</p></section>" for x in 'bcde')
+    js = """<script>document.querySelectorAll('[data-step3]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-step3]').forEach(t=>t.setAttribute('aria-selected',String(t===b)));document.querySelectorAll('[id^="panel-3"]').forEach(p=>p.hidden=p.id!=='panel-3'+b.dataset.step3)}));</script>"""
+    return "<div class='step3-tabs' role='tablist' aria-label='Step 3 子步骤'>"+buttons+"</div>"+panels+js
 
 def case_page(c: dict, context: str) -> str:
     s1, s2 = c["steps"][1], c["steps"][2]
     meta = s2.get("_meta", {})
     hpo = s2.get("hpo_version", "").split("/")[-2] if s2.get("hpo_version") else ""
     made = time.strftime("%Y-%m-%d %H:%M", time.localtime(meta.get("created_at", 0)))
-    body = f"""<h1>{e(c['id'])} <span class='muted' style='font-size:14px'>{e(group_label(c['group']))}</span></h1>
+    body = f"""{step_navigation()}<h1>{e(c['id'])} <span class='muted' style='font-size:14px'>{e(group_label(c['group']))}</span></h1>
 <p class='muted'>{L(f"结果文件：第 2 步代码版本 {meta.get('code_commit', '?')}，生成于 {made}；HPO {hpo}",
                     f"Result files: step 2 code {meta.get('code_commit', '?')}, generated {made}; HPO {hpo}")}</p>
-<h2>{L('推理链', 'Reasoning chain')}</h2>{v_chain(c)}
+<div data-main-step='1'><h2>{L('推理链', 'Reasoning chain')}</h2>{v_chain(c)}
 <h2 id='variant'>{L('Step 1 变异事实', 'Step 1 variant facts')}</h2>{v_variant(s1)}
-<h2 id='disease'>{L('Step 2 结论', 'Step 2 conclusion')}</h2>{v_decision(s2)}
+</div><div data-main-step='2' hidden><h2 id='disease'>{L('Step 2 结论', 'Step 2 conclusion')}</h2>{v_decision(s2)}
 <h2>{L('症状从原文哪里来', 'Where each feature comes from in the text')}</h2>{v_highlight(s2, context)}
 <h2>{L('候选疾病怎么被筛掉的', 'How candidates were filtered')}</h2>{v_funnel(s2)}{v_candidates(s2)}
 <h2>{L('为什么这样判：症状 × 疾病', 'Why: features × diseases')}</h2>{v_matrix(s2)}
 <h2>{L('得分与歧义线', 'Scores and the ambiguity line')}</h2>{v_bars(s2)}
 <h2>{L('ClinVar 变异级证据', 'ClinVar variant-level evidence')}</h2>{v_clinvar(s2)}
-<h2 id='board'>{L('行动看板（Step 3 证据账本）', 'Action board (step 3 ledger)')}</h2>{v_board(c['steps'][3])}
-<h2 id='tree'>{L('全景目录（证据树）', 'Full catalogue (evidence tree)')}</h2><details><summary>{L('展开：诊断分支 → 证据层级 → 章节 → 行动 → 证据', 'Expand: branch → tier → section → action → evidence')}</summary>{v_tree(c)}</details>
-<h2>{L('来源链接', 'Source links')}</h2>{v_sources(s2)}"""
+<h2>{L('来源链接', 'Source links')}</h2>{v_sources(s2)}</div>
+<section id='step3' data-main-step='3' hidden><h2>Step 3 · 证据检索</h2>{step3_panel(c['id'])}</section>
+<section id='step4' data-main-step='4' hidden><h2>Step 4 · 报告合成</h2><p class='muted'>新 3a 原文筛选尚未转换为 Step 4 输入；现有报告文件未修改。</p></section>
+<section id='step5' data-main-step='5' hidden><h2>Step 5 · 核查</h2><p class='muted'>本轮未运行报告核查。</p></section>"""
+    body += """<script>(function(){
+const links=[...document.querySelectorAll('.step-nav a')];
+function activate(){
+ const hash=location.hash;let step='1';
+ if(hash==='#disease')step='2';
+ else if(hash==='#step3'||hash==='#overview'||hash==='#original'||/^#(block-|src-|panel-3)/.test(hash))step='3';
+ else if(hash==='#step4')step='4';else if(hash==='#step5')step='5';
+ document.querySelectorAll('[data-main-step]').forEach(p=>p.hidden=p.dataset.mainStep!==step);
+ links.forEach((a,i)=>{if(String(i+1)===step)a.setAttribute('aria-current','step');else a.removeAttribute('aria-current')});
+ if(hash){requestAnimationFrame(()=>{const target=document.getElementById(hash.slice(1));if(target)target.scrollIntoView({block:'start'})})}
+}
+window.addEventListener('hashchange',activate);activate();
+})();</script>"""
     return page(f"{c['id']} {L('审查', 'review')}", body, c["id"], depth=1)
 
 
@@ -1656,45 +968,9 @@ def index_page(rows: list[dict], snap: str, commit: str) -> str:
             L("置信度", "Confidence"), L("依据", "Basis"), L("并列数", "Tied"), L("报错/警告", "Errors / warnings")]
     intro = L(f"快照 {snap} · 代码 {commit} · {len(rows)} 个病例。点病例编号看详情。",
               f"Snapshot {snap} · code {commit} · {len(rows)} cases. Click a case for details.")
-    acc = load_acceptance()
-    acc_line = (f"<p class='card'>{L('Step 3a 验收对照', 'Step 3a acceptance')}: <a href='{fn('acceptance')}'>"
-                + (f"{acc['n_ok']}/{acc['n']} " + L('条期望成立', 'expectations hold') + f" · {'PASS' if acc['ok'] else 'FAIL'}" if acc else L('尚未运行', 'not run yet'))
-                + "</a></p>")
-    body = (f"<h1>{L('审查总表', 'Review overview')}</h1><p class='muted'>{e(intro)}</p>{acc_line}{legend()}<div class='wrap'><table><tr>"
+    body = (f"<h1>{L('审查总表', 'Review overview')}</h1><p class='muted'>{e(intro)}</p>{legend()}<div class='wrap'><table><tr>"
             + "".join(f"<th>{h}</th>" for h in head) + f"</tr>{''.join(trs)}</table></div>")
     return page(L("审查总表", "Review overview"), body, "index")
-
-
-def compare_page(cur: list[dict], prev: list[dict] | None, snap: str, prev_snap: str | None) -> str:
-    title = L("版本对比", "Run comparison")
-    if prev is None:
-        msg = L(f"快照 {snap} 是第一份快照，没有可对比的旧版本。下次生成时会自动和这一份对比，也可以用 --compare 指定。",
-                f"Snapshot {snap} is the first one in this language; nothing to compare yet. The next build compares "
-                "with it automatically, or pass --compare.")
-        return page(title, f"<h1>{title}</h1><p class='muted'>{e(msg)}</p>", "compare")
-    old = {r["id"]: r for r in prev}
-    names = {"primary": L("首选", "primary"), "status": L("状态", "status"), "confidence": L("置信度", "confidence"),
-             "basis": L("依据", "basis")}
-    trs = []
-    for r in cur:
-        o = old.get(r["id"])
-        if not o:
-            trs.append(f"<tr><td>{e(r['id'])}</td><td>{L('新病例', 'new case')}</td></tr>")
-            continue
-        diffs = [f"{names[k]}: {e(str(o.get(k)))} → <b>{e(str(r.get(k)))}</b>" for k in names if o.get(k) != r.get(k)]
-        po, pn = set(o["phenotypes"]), set(r["phenotypes"])
-        if po != pn:
-            none = L("无", "none")
-            diffs.append(L("症状", "features") + f": {L('去掉', 'removed')} {e(', '.join(sorted(po - pn)) or none)}; "
-                         f"{L('新增', 'added')} {e(', '.join(sorted(pn - po)) or none)}")
-        sc = [f"{k} {o['scores'].get(k)} → {v}" for k, v in r["scores"].items() if o["scores"].get(k) != v]
-        if sc:
-            diffs.append(L("得分", "scores") + ": " + e("; ".join(sc[:6])) + (" …" if len(sc) > 6 else ""))
-        same = f"<span class=muted>{L('无变化', 'no change')}</span>"
-        trs.append(f"<tr><td><a href='cases/{e(fn(r['id']))}'>{e(r['id'])}</a></td><td>{'<br>'.join(diffs) or same}</td></tr>")
-    body = (f"<h1>{title}</h1><p class='muted'>{e(prev_snap)} → {e(snap)}</p>"
-            f"<table><tr><th>{L('病例', 'Case')}</th><th>{L('变化', 'Changes')}</th></tr>{''.join(trs)}</table>")
-    return page(title, body, "compare")
 
 
 def snapshots_index() -> None:
@@ -1739,59 +1015,13 @@ def collect(out: Path | None = None) -> tuple[list[dict], list[str]]:
     return sorted(cases, key=lambda c: (GROUP_ORDER.index(c["group"]), c["id"])), problems
 
 
-SNAPSHOTS = ROOT / ".cache" / "snapshots"      # archives written by scripts/tag_accepted.py
-
-
-def accepted_archives() -> list[dict]:
-    """Manifests of the accepted-version archives, newest first."""
-    ms = [json.loads(p.read_text()) for p in SNAPSHOTS.glob("*/manifest.json")] if SNAPSHOTS.exists() else []
-    return sorted(ms, key=lambda m: -m["created_at"])
-
-
-def rows_from_archive(tag: str) -> list[dict] | None:
-    d = SNAPSHOTS / tag / "out"
-    if not d.exists():
-        return None
-    return [summary_row(c) for c in collect(d)[0]]
-
-
-def compare_rows(against: str | None) -> tuple[list[dict] | None, str | None]:
-    """(rows, label) to compare with: 'tag:<accepted tag>', a review snapshot name, or None = latest snapshot."""
-    if against and against.startswith("tag:"):
-        tag = against[4:]
-        return rows_from_archive(tag), (L(f"验收版本 {tag}", f"accepted version {tag}") if rows_from_archive(tag) is not None else None)
-    name = against or latest_snapshot()
-    if name and (REVIEW / name / "review.json").exists():
-        return json.loads((REVIEW / name / "review.json").read_text())["cases"], name
-    return None, None
-
-
-def compare_choices(current: str | None) -> str:
-    """Links to the comparison bases (live app only)."""
-    items = [(f"tag:{m['tag']}", L(f"验收 {m['tag']}", f"accepted {m['tag']}") + f" ({m['created'][:10]})")
-             for m in accepted_archives()]
-    snap = latest_snapshot()
-    if snap:
-        items.append((snap, L(f"最新快照 {snap}", f"latest snapshot {snap}")))
-    links = [f"<b>{e(t)}</b>" if k == current else f"<a href='{fn('compare')}?against={e(k)}'>{e(t)}</a>" for k, t in items]
-    return f"<p>{L('对比基准', 'Compare against')}: " + " · ".join(links) + "</p>" if links else ""
-
-
-def latest_snapshot(exclude: str | None = None) -> str | None:
-    if not REVIEW.exists():
-        return None
-    return next((p.name for p in sorted(REVIEW.iterdir(), reverse=True)
-                 if p.is_dir() and p.name != exclude and (p / "review.json").exists()), None)
-
-
-def render_page(rel: str, against: str | None = None) -> str | None:
-    """Render one page live from out/ (paths as in a snapshot: index.html, cases/<id>.en.html, ...).
-
-    against: comparison base for the compare page ('tag:<accepted tag>' or a review snapshot name).
-    Used by scripts/viewer_app.py; None if there is no such page. Not thread-safe (LANG is global)."""
+def render_page(rel: str) -> str | None:
+    """Render a saved case or overview; retired pages return None. Not thread-safe."""
     global LANG
     LANG = "en" if rel.endswith(".en.html") else "zh"
     base = rel[:-len(".en.html")] if LANG == "en" else rel[:-len(".html")]
+    if base in {"compare", "acceptance", "blind"} or base.startswith("acceptance_"):
+        return None
     ordered, _ = collect()
     if base.startswith("cases/"):
         c = next((c for c in ordered if c["id"] == base[len("cases/"):]), None)
@@ -1800,17 +1030,6 @@ def render_page(rel: str, against: str | None = None) -> str | None:
     live = L("实时（直接读取 out/）", "live (read from out/)")
     if base == "index":
         return index_page(rows, live, runmeta.code_commit())
-    if base == "acceptance":
-        return acceptance_page(load_acceptance())
-    if base.startswith("acceptance_") and base[len("acceptance_"):] in ACCEPT_STEPS:
-        step = base[len("acceptance_"):]
-        return acceptance_generic(step, load_acceptance_step(step))
-    if base == "blind":
-        return blind_page(against, live=True)
-    if base == "compare":
-        prev, prev_name = compare_rows(against)
-        out = compare_page(rows, prev, live, prev_name)
-        return out.replace("</h1>", "</h1>" + compare_choices(against or latest_snapshot()), 1)
     return None
 
 
@@ -1819,10 +1038,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--lang", choices=["zh", "en"], default="zh",
                     help="default UI language when the browser has no stored choice (both are always built)")
-    ap.add_argument("--compare", help="snapshot name under out/review/ to compare with (default: previous one, same language)")
     ap.add_argument("--review-dir", type=Path, default=REVIEW, help="where snapshots go (default out/review)")
-    ap.add_argument("--compare-accepted", metavar="TAG", help="compare with the archive of an accepted tag "
-                                                             "(.cache/snapshots/<TAG>, made by scripts/tag_accepted.py)")
     args = ap.parse_args()
     DEFAULT_LANG = args.lang
     REVIEW = args.review_dir
@@ -1844,25 +1060,12 @@ def main() -> int:
     (d / "review.json").write_text(json.dumps({"schema": "review-v1", "snapshot": snap, "code_commit": commit,
                                                "cases": rows, "trees": {c["id"]: c["tree"] for c in ordered}},
                                               indent=1, ensure_ascii=False))
-    if args.compare_accepted:
-        prev, prev_name = rows_from_archive(args.compare_accepted), f"accepted {args.compare_accepted}"
-        if prev is None:
-            print(f"no archive for {args.compare_accepted} under {SNAPSHOTS}")
-            return 2
-    else:
-        prev_name = args.compare or latest_snapshot(exclude=snap)
-        prev = json.loads((REVIEW / prev_name / "review.json").read_text())["cases"] if prev_name else None
     for lang in ("zh", "en"):
         LANG = lang
         for c in ordered:
             c["status"] = {k: step_status(k, c["steps"][k]) for k in STEPS}   # status text is language-dependent
             (d / "cases" / fn(c["id"])).write_text(case_page(c, ctx.get(c["id"], "")))
         (d / fn("index")).write_text(index_page(rows, snap, commit))
-        (d / fn("compare")).write_text(compare_page(rows, prev, snap, prev_name))
-        (d / fn("acceptance")).write_text(acceptance_page(load_acceptance()))
-        for step in ACCEPT_STEPS:
-            (d / fn(f"acceptance_{step}")).write_text(acceptance_generic(step, load_acceptance_step(step)))
-        (d / fn("blind")).write_text(blind_page(live=False))
     snapshots_index()
     print(f"{len(rows)} cases x 2 languages -> {d}/index.html")
     return 1 if problems else 0

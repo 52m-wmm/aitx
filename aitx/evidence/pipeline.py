@@ -12,7 +12,7 @@ import json
 from aitx import runmeta
 from aitx.evidence import ledger as LG
 from aitx.evidence.branches import build_branches, patient_context
-from aitx.evidence.established import add_established
+from aitx.evidence.step3a import add_established
 from aitx.evidence.trial_records import add_trials
 from aitx.evidence.bespoke import add_bespoke
 from aitx.evidence.offlabel import add_offlabel
