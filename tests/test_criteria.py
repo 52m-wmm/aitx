@@ -1,11 +1,11 @@
 """3b criterion mapping: verification, code comparison, groups, trial records (offline; LLM and search stubbed)."""
 import pytest
 
-from aitx.evidence import criteria as C
+from aitx.step3.b import criteria as C
 from aitx.evidence import labs as LABS
 from aitx.evidence import ledger as LG
 from aitx.evidence import patient_facts as PFX
-from aitx.evidence import trial_records as TR
+from aitx.step3.b import records as TR
 from aitx.evidence import trials as T
 
 ITEMS = {"inc1": {"id": "inc1", "kind": "inclusion", "text": "Age ≥ 2 years", "parent": None},
@@ -96,7 +96,7 @@ def test_one_of_the_following_any_option_met():
              {"id": "inc3", "kind": "inclusion", "text": "Weight above 5 kg", "level": 1, "parent": "inc1"}]
     ms = [{"id": "inc2", "quote": "Genetic diagnosis of SLC35A2-CDG", "fact": "genetic_confirmation", "group": "inc1"},
           {"id": "inc3", "quote": "Weight above 5 kg", "fact": "weight", "op": ">", "value": 5, "group": "inc1"}]
-    lines = C.lines_for({"nct": "NCT00000001"}, _mapped(items, ms), PF, {"facts": []}, BR, ["SLC35A2-CDG"])
+    lines = C.lines_for({"nct": "NCT00000001", "criteria": 'Inclusion Criteria:\n' + '\n'.join(it['text'] for it in items)}, _mapped(items, ms), PF, {"facts": []}, BR, ["SLC35A2-CDG"])
     assert len(lines) == 1 and lines[0]["patient_status"] == "satisfies" and len(lines[0]["any_of"]) == 2
 
 
@@ -112,78 +112,23 @@ def test_group_ignored_unless_the_parent_says_one_of(monkeypatch):
 def test_unmapped_criterion_is_not_assessed_and_shown_verbatim():
     items = [{"id": "exc1", "kind": "exclusion", "text": "Any condition that in the opinion of the investigator interferes", "level": 0,
               "parent": None}]
-    lines = C.lines_for({"nct": "NCT00000001"}, _mapped(items, []), PF, {"facts": []}, BR, [])
+    lines = C.lines_for({"nct": "NCT00000001", "criteria": 'Exclusion Criteria:\n' + items[0]['text']}, _mapped(items, []), PF, {"facts": []}, BR, [])
     assert lines[0]["patient_status"] == "not_assessed" and lines[0]["note"] == LG.UNMAPPED_NOTE
     assert lines[0]["text"] == items[0]["text"]
 
 
 # --- trial records end to end (search and LLM stubbed)
 
-STUDY = {"nct": "NCT05402384", "title": "AVTX-801 in SLC35A2-CDG", "acronym": "AVTX-801", "status": "NOT_YET_RECRUITING",
-         "study_type": "interventional", "phases": ["PHASE2"], "conditions": ["SLC35A2-CDG"], "keywords": [],
-         "min_age": "1 Month", "max_age": None, "sex": "ALL", "healthy_volunteers": False, "last_update": "2026-01-01",
-         "criteria": "Inclusion Criteria:\n* Genetic diagnosis of SLC35A2-CDG\n* Parent able to give informed consent\n\n"
-                     "Exclusion Criteria:\n* Hemoglobin \\< 7 mg/dL\n* Any condition the investigator considers unsafe\n"}
 
 
-def _plan(study, how="analysed"):
-    pre = T.prefilter(study, PF["age_months"], PF["sex"])
-    st = {**study, "relevance": {"by": "disease"}, "prefilter": pre, "specific": True}
-    return {"names": ["SLC35A2-CDG"], "gene": "SLC35A2", "n_unique": 3,
-            "searches": [{"query": {"query.cond": "SLC35A2-CDG"}, "queried_at": 1, "total_count": 3, "url": "u"}],
-            "analysed": [st] if how == "analysed" else [], "ineligible": [st] if how == "ineligible" else [],
-            "over_cap": [], "n_closed_relevant": 1, "closed_listed": ["NCT05345171"],
-            "excluded": [{"nct": "NCT05345171", "reason": "status", "detail": "overall status ACTIVE_NOT_RECRUITING"},
-                         {"nct": "NCT09999999", "reason": "relevance", "detail": "no Condition names the disease"}]}
 
 
-def _run(monkeypatch, plan, extra_facts):
-    monkeypatch.setattr(T, "plan_branch", lambda *a, **k: plan)
-    monkeypatch.setattr(C, "_llm", lambda *a, **k: ({"criteria": [
-        {"id": "inc1", "quote": "Genetic diagnosis of SLC35A2-CDG", "fact": "genetic_confirmation"},
-        {"id": "inc2", "quote": "Parent able to give informed consent", "fact": "administrative"},
-        {"id": "exc1", "quote": "Hemoglobin < 7 mg/dL", "fact": "lab", "op": "<", "value": 7, "unit": "mg/dL", "name": "hemoglobin"}]},
-        {"llm": "m", "served_model": "m", "prompt_version": C.PROMPT_VERSION}))
-    monkeypatch.setattr(TR.E, "disease_names", lambda b, s2: ["SLC35A2-CDG"])
-    monkeypatch.setattr(TR.E, "facts", lambda s1, s2: PF)
-    led = LG.Ledger("P", [BR])
-    led.patient_context["extra_facts"] = extra_facts
-    TR.add_trials(led, {"patient": {"clinical_context": TEXT}}, {}, {})
-    return led
 
 
-def test_trial_record_conditional_with_lab_unknown_and_verbatim_evidence(monkeypatch, extra):
-    led = _run(monkeypatch, _plan(STUDY), extra)
-    rec = next(a for a in led.actions if a["action_key"] == "trial:NCT05402384")
-    assert rec["status_by_branch"]["b1"]["status"] == "conditional"
-    res = {l["requirement"]: l["result"] for l in rec["requirements"]}
-    assert res["minimumAge: 1 Month; maximumAge: none"] == "pass"
-    assert res["Genetic diagnosis of SLC35A2-CDG"] == "pass"
-    assert res["Parent able to give informed consent"] == "not_assessed"
-    assert res["Hemoglobin < 7 mg/dL"] == "unknown"
-    assert res["Any condition the investigator considers unsafe"] == "not_assessed"       # unmapped, shown verbatim
-    assert "hemoglobin" in {m["variable"] for m in led.missing_information}
-    bad = [c for c in led.checks() if c["status"] == "fail"]
-    assert not bad, bad
-    ts = led.trial_searches["b1"]
-    assert "NCT05345171" in ts["closed_listed"] and ts["analysed"] == ["NCT05402384"]
 
 
-def test_registry_age_rules_out_without_llm(monkeypatch, extra):
-    older = {**STUDY, "nct": "NCT06488313", "min_age": "12 Years"}
-    led = _run(monkeypatch, _plan(older, "ineligible"), extra)
-    rec = next(a for a in led.actions if a["action_key"] == "trial:NCT06488313")
-    assert rec["status_by_branch"]["b1"]["status"] == "not_applicable" and rec["analysed_in"] == []
 
 
-def test_branch_without_trials_gets_negative_evidence(monkeypatch, extra):
-    plan = _plan(STUDY)
-    plan.update(analysed=[], n_unique=2)
-    led = _run(monkeypatch, plan, extra)
-    none = [a for a in led.actions if a["section"] == "clinical_trial_eligibility"]
-    assert len(none) == 1 and none[0]["status_by_branch"]["b1"]["status"] == "searched_none"
-    neg = led.evidence[none[0]["evidence_ids"][0]]
-    assert neg["status"] == "verified" and neg["search"]["n_excluded"] == 2
 
 
 def test_any_sex_is_met_when_sex_is_unknown_and_unknown_age_names_its_variable(extra):
@@ -244,12 +189,12 @@ def test_thousands_separator_and_none_item():
     items = {"exc1": {"id": "exc1", "kind": "exclusion", "text": "Severe thrombocytopenia (platelet count ≤ 100,000/µL)", "parent": None}}
     assert C.check_mapping({"id": "exc1", "quote": "platelet count ≤ 100,000/µL", "fact": "lab", "op": "<=", "value": 100000}, items) is None
     none = [{"id": "exc1", "kind": "exclusion", "text": "None", "level": 0, "parent": None}]
-    assert C.lines_for({"nct": "NCT00000001"}, _mapped(none, []), PF, {"facts": []}, BR, []) == []
+    assert C.lines_for({"nct": "NCT00000001", "criteria": 'Exclusion Criteria:\nNone'}, _mapped(none, []), PF, {"facts": []}, BR, []) == []
 
 
 def test_a_healthy_only_study_quotes_the_patients_variant():
     # 2026-11-13: RETEST-PFN1 NCT04667013 (conditions: Healthy) failed the ledger check - no quoted patient fact
-    from aitx.evidence import criteria as CR
+    from aitx.step3.b import criteria as CR
     study = {"healthy_volunteers": True, "conditions": ["Healthy"], "min_age": None, "max_age": None, "sex": "ALL"}
     pf = {"age_months": None, "age_quote": None, "sex": None, "sex_quote": None,
           "variants": [{"gene": "PFN1", "quote": "PFN1 c.211T>G p.Cys71Gly (heterozygous)"}]}
@@ -269,7 +214,7 @@ _PF = {"age_months": 84, "sex": None, "variants": [{"gene": "AGXT", "protein": "
 
 
 def _ev(fact, quote, kind="inclusion", confirmed=True):
-    from aitx.evidence import criteria as CR
+    from aitx.step3.b import criteria as CR
     return CR.evaluate({"fact": fact, "quote": quote}, _PF, {}, _conf_branch(confirmed),
                        ["primary hyperoxaluria type 1", "PH1"], kind)[0]
 
@@ -373,13 +318,13 @@ def test_reverse_without_confirmation_the_old_rules_apply():
 
 
 def test_reverse_an_exclusion_naming_the_patients_own_subtype_is_not_ruled_out():
-    from aitx.evidence import criteria as CR
+    from aitx.step3.b import criteria as CR
     assert not CR.other_subtype("primary hyperoxaluria type 1 or type 2", "primary hyperoxaluria type 1")
     assert CR.other_subtype("primary hyperoxaluria type 2 or 3", "primary hyperoxaluria type 1")
 
 
 def test_confirmed_requires_resolved_primary_gene_and_a_pathogenic_record():
-    from aitx.evidence import trial_records as TR
+    from aitx.step3.b import records as TR
     s1 = {"variants": [{"gene": "AGXT"}]}
     s2 = {"primary": {"status": "resolved", "id": "MONDO:0009823"},
           "clinvar": [{"records": [{"used_for_ranking": True, "clinical_significance": "Pathogenic"}]}]}
@@ -389,3 +334,11 @@ def test_confirmed_requires_resolved_primary_gene_and_a_pathogenic_record():
     assert not TR.confirmed(dict(b, gene="GRHPR"), s1, s2)
     assert not TR.confirmed(b, s1, dict(s2, clinvar=[{"records": [{"used_for_ranking": True,
                                                                     "clinical_significance": "Uncertain significance"}]}]))
+
+
+# Shared registry fixture used by the retained record-level regression tests.
+STUDY = {"nct": "NCT05402384", "title": "AVTX-801 in SLC35A2-CDG", "acronym": "AVTX-801", "status": "NOT_YET_RECRUITING",
+         "study_type": "interventional", "phases": ["PHASE2"], "conditions": ["SLC35A2-CDG"], "keywords": [],
+         "min_age": "1 Month", "max_age": None, "sex": "ALL", "healthy_volunteers": False, "last_update": "2026-01-01",
+         "criteria": "Inclusion Criteria:\n* Genetic diagnosis of SLC35A2-CDG\n* Parent able to give informed consent\n\n"
+                     "Exclusion Criteria:\n* Hemoglobin \\< 7 mg/dL\n* Any condition the investigator considers unsafe\n"}

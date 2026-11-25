@@ -20,7 +20,7 @@ sys.path.insert(0, str(ROOT))
 VALIDATION = ROOT / "data" / "cases" / "validation" / "phase1_hf_unseen_genes.json"
 # The field the pipeline reads (aitx/disease/pipeline.py, aitx/evidence/patient_facts.py) - the same one the official
 # and practice case files use. 2026-11-11: this script used to write "clinical_description", which the pipeline never
-# reads, so every group B case ran with an empty description (docs/blind_test_results.md).
+# reads, so every group B case ran with an empty description (docs/experiments/blind_test_results.md).
 DESCRIPTION_FIELD = "clinical_context"
 
 CAVEATS = {

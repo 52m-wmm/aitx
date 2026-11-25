@@ -38,7 +38,7 @@ print(int((t-now).total_seconds()))")
   echo "=== waiting ${WAIT}s until $AT Pacific (caffeinate -i)"
   sleep "$WAIT"
 fi
-export AITX_LLM_API_KEY="${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY not set}"
+export DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:?DEEPSEEK_API_KEY not set}"
 export AITX_EXPECT_MODEL_PREFIX="deepseek-flash"
 if [[ -n "$PER_BATCH" ]]; then
   BUDGET=$($P -c "import sys;sys.path.insert(0,'.');from aitx import budget;print(round(budget.spent_today()+$PER_BATCH,4))")

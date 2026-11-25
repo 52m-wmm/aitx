@@ -130,20 +130,28 @@ def display_quote(nbk: str, quote: str) -> str:
     return quote
 
 
-def sections(nbk: str) -> dict[str, str]:
-    """{section title path ('Molecular Genetics / Genotype-Phenotype Correlations'): plain text}."""
-    path = extract_chapters([nbk]).get(nbk)
-    if not path:
-        return {}
-    root = ET.parse(path).getroot()
-    out: dict[str, str] = {}
+def _section_entries(root: ET.Element) -> list[tuple[str, ET.Element, str]]:
+    """Keep abstract sections separate; body title paths retain their legacy names."""
+    locations = {}
+
+    def locate(node, xpath, abstract=False):
+        abstract = abstract or node.tag == "abstract"
+        locations[node] = (xpath, abstract)
+        counts = {}
+        for child in node:
+            counts[child.tag] = counts.get(child.tag, 0) + 1
+            locate(child, f"{xpath}/{child.tag}[{counts[child.tag]}]", abstract)
+
+    locate(root, f"/{root.tag}[1]")
+    entries = []
 
     def walk(sec: ET.Element, trail: list[str]) -> None:
         title = _text(sec.find("title")) if sec.find("title") is not None else ""
         here = trail + [title] if title else trail
-        body = "".join(_text(ch) + " " for ch in sec if ch.tag != "sec" and ch.tag != "title").strip()
-        if here and body:
-            out[" / ".join(here)] = body
+        if here:
+            xpath, abstract = locations[sec]
+            key = ("Abstract / " if abstract else "") + " / ".join(here)
+            entries.append((key, sec, xpath))
         for sub in sec.findall("sec"):
             walk(sub, here)
 
@@ -151,7 +159,31 @@ def sections(nbk: str) -> dict[str, str]:
     for sec in root.iter("sec"):
         if sec not in nested:                         # nested sections are walked from their top section
             walk(sec, [])
+    # Preserve first-match lookups of body sections when the abstract repeats a title.
+    return sorted(entries, key=lambda entry: locations[entry[1]][1])
+
+
+def section_sources(nbk: str) -> dict[str, dict]:
+    """Section text and source-node XPaths; abstract keys start with 'Abstract / '."""
+    path = extract_chapters([nbk]).get(nbk)
+    if not path:
+        return {}
+    out = {}
+    for key, sec, xpath in _section_entries(ET.parse(path).getroot()):
+        nodes, counts = [], {}
+        for child in sec:
+            counts[child.tag] = counts.get(child.tag, 0) + 1
+            if child.tag not in ("sec", "title"):
+                nodes.append({"xpath": f"{xpath}/{child.tag}[{counts[child.tag]}]", "text": _text(child)})
+        text = " ".join(node["text"] for node in nodes).strip()
+        if text:
+            out[key] = {"xpath": xpath, "text": text, "nodes": nodes}
     return out
+
+
+def sections(nbk: str) -> dict[str, str]:
+    """{section title path: plain text}; abstract sections have a separate namespace."""
+    return {key: source["text"] for key, source in section_sources(nbk).items()}
 
 
 def _table_rows(tw: ET.Element) -> str:
@@ -193,29 +225,8 @@ def _para(state: dict, ctx: list[str], text: str) -> str:
     return f"Paragraph {state['n']}" + (f" [context: {c}]" if c else "") + f": {text}"
 
 
-def paragraph_scope(shown: str, quote: str) -> str | None:
-    """The paragraph line (its context and its text) that holds `quote` in a sections_for_llm() text; None if the
-    quote is not in a paragraph line (e.g. a table row). A requirement of an item is checked only within this scope."""
-    from aitx.evidence.ledger import quote_in
-    for line in (shown or "").splitlines():
-        if line.startswith("Paragraph ") and quote_in(quote, line.split(": ", 1)[1] if "]: " not in line else line.split("]: ", 1)[1]):
-            return line
-    return None
 
 
-def heading_context(path: str, shown: str, quote: str) -> list[str]:
-    """Section ancestors and the item's own subheading / paragraph context, never a sibling's heading."""
-    from aitx.evidence.ledger import quote_in
-    headings = path.split(" / ")
-    sub = None
-    for line in shown.splitlines():
-        if line.startswith("Subheading: "):
-            sub = line.split(": ", 1)[1]
-        elif quote_in(quote, line):
-            ctx = re.search(r"^Paragraph \d+ \[context: (.*?)\]:", line)
-            headings += ctx.group(1).split("; ") if ctx else ([sub] if sub else [])
-            break
-    return list(dict.fromkeys(headings))
 
 
 def sections_for_llm(nbk: str) -> dict[str, str]:
@@ -282,19 +293,10 @@ def sections_for_llm(nbk: str) -> dict[str, str]:
     def body(ch: ET.Element) -> str:
         return "\n".join(render([ch], {"n": 0}, []))
 
-    def walk(sec: ET.Element, trail: list[str]) -> None:
-        title = _text(sec.find("title")) if sec.find("title") is not None else ""
-        here = trail + [title] if title else trail
+    for key, sec, _ in _section_entries(root):
         text = "\n".join(render(list(sec), {"n": 0}, [])).strip()
-        if here and text:
-            out[" / ".join(here)] = text
-        for sub in sec.findall("sec"):
-            walk(sub, here)
-
-    nested = {s for p in root.iter("sec") for s in p.findall("sec")}
-    for sec in root.iter("sec"):
-        if sec not in nested:
-            walk(sec, [])
+        if text:
+            out[key] = text
     return out
 
 
@@ -309,3 +311,5 @@ def find_section(nbk: str, *titles: str) -> tuple[str, str] | None:
 
 def section_text(nbk: str, section_path: str) -> str | None:
     return sections(nbk).get(section_path)
+
+

@@ -2,7 +2,7 @@
 reported genotype. Blind test: an MPZ patient was "conditional" for a trial requiring PMP22 duplication (CMT1A)."""
 import pytest
 
-from aitx.evidence import criteria as C
+from aitx.step3.b import criteria as C
 from aitx.evidence import genecontext as GC
 
 KNOWN = {"PMP22", "MPZ", "GJB1", "CFTR", "DMD", "AR"}

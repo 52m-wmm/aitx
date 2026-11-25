@@ -862,6 +862,7 @@ def test_socket_read_timeout_is_retried(tmp_path, monkeypatch):
 def test_http_get_retries_socket_timeout(monkeypatch, tmp_path):
     import socket
     from aitx import http as H
+    monkeypatch.setattr(H, "CACHE_DIR", tmp_path / "http")
     calls = []
 
     class Resp:

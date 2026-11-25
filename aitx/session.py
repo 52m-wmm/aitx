@@ -61,14 +61,12 @@ def _append(name: str, rec: dict) -> None:
 
 
 def cost(usage: dict | None, ts: float, reserved_usd: float | None = None) -> float:
-    """USD for one live call, priced by scripts/llm_cost.py (the single pricing table)."""
+    """USD for one live call, priced by aitx/llm_cost.py (the single pricing table)."""
     if not usage:
         if reserved_usd is None:
             raise ValueError("missing LLM usage and request reservation; cost is unknown")
         return reserved_usd
-    import sys
-    sys.path.insert(0, str(ROOT / "scripts"))
-    import llm_cost
+    from aitx import llm_cost
     hit = usage.get("prompt_cache_hit_tokens", 0)
     miss = (usage["prompt_cache_miss_tokens"] if "prompt_cache_miss_tokens" in usage
             else usage["prompt_tokens"] - hit)

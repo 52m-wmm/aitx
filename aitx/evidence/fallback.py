@@ -10,7 +10,6 @@ Code decides every tier, coverage and check; the LLM only lifts verbatim recomme
 """
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 import time
@@ -22,7 +21,6 @@ from aitx.evidence import ledger as LG
 
 ROOT = Path(__file__).resolve().parents[2]
 TIERS = ("chapter", "overview", "literature", "symptomatic")
-GUIDELINES = ROOT / "config" / "symptom_guidelines.json"
 EUTILS = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 N_PAPERS = 10                                    # decision 2026-11-04
 PUB_TYPES = ("Review", "Systematic Review", "Practice Guideline", "Guideline", "Consensus Development Conference",
@@ -271,31 +269,10 @@ Return only JSON: {"items": [...]}"""
 
 # ------------------------------------------------------------------ L4: symptom guidelines (manually verified)
 
-def load_guidelines(path: Path = GUIDELINES) -> dict:
-    """The approved symptom guideline table; absent until the list is reviewed (decision 2026-11-04)."""
-    return json.loads(path.read_text()) if path.exists() else {"categories": {}}
 
 
-def verified_text(entry: dict) -> str | None:
-    """The manually verified passages of a guideline whose site refuses automated fetching: the local record must
-    exist and match the sha256 in the table (contract L4). None otherwise - such a guideline is not used."""
-    v = entry.get("verified") or {}
-    f = ROOT / v.get("file", "")
-    if not v.get("file") or not f.exists() or hashlib.sha256(f.read_bytes()).hexdigest() != v.get("sha256"):
-        return None
-    rec = json.loads(f.read_text())
-    return " ".join(p["text"] for p in rec.get("passages") or [])
 
 
-def symptom_categories(present: list[dict], table: dict, ancestors) -> dict[str, list[dict]]:
-    """category -> present symptoms (Step 2 present HPO terms) under one of its HPO roots."""
-    out: dict[str, list[dict]] = {}
-    for cat, c in (table.get("categories") or {}).items():
-        roots = set(c.get("hpo") or [])
-        for x in present:
-            if x["hpo_id"] in roots or roots & set(ancestors(x["hpo_id"])):
-                out.setdefault(cat, []).append(x)
-    return out
 
 
 def names_symptom(text: str, names: list[str]) -> str | None:
@@ -311,10 +288,6 @@ def names_symptom(text: str, names: list[str]) -> str | None:
     return None
 
 
-def uncovered_symptoms(present: list[dict], manifestation_texts: list[str], matches) -> list[dict]:
-    """Present symptoms no higher-tier action covers. matches(text, symptom) -> bool is the same HPO matching that
-    decides a supportive action's manifestation condition (same term or an ancestor)."""
-    return [x for x in present if not any(matches(t, x) for t in manifestation_texts)]
 
 
 # ------------------------------------------------------------------ checks

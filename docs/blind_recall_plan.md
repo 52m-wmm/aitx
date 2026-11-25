@@ -2,7 +2,7 @@
 
 > 目的：人工判定只能看"写出来的条目对不对"，看不出"该写没写"。这一项用**不调用 LLM 的确定性脚本**，对每个盲测病例从三个结构化来源列出"应该出现的条目"，再和报告比对，量出漏写。
 > 范围：GeneReviews 管理章节（3a 覆盖率）、ClinicalTrials.gov（3b 召回率）、FDA 说明书（3a 靶向节召回率）。**文献类（3c、L3）不做机械召回**，继续人工审查。
-> 脚本 `scripts/blind_mechanical_recall.py`，**不在冻结范围**；只读调用冻结模块里的现成函数（相关性规则、行解析等），不改它们。B 组全部跑完后，对 12 个病例一起算，结果写进 `docs/blind_test_results.md`。
+> 脚本 `scripts/blind_mechanical_recall.py`，**不在冻结范围**；只读调用冻结模块里的现成函数（相关性规则、行解析等），不改它们。B 组全部跑完后，对 12 个病例一起算，结果写进 `docs/experiments/blind_test_results.md`。
 > 和评测病例完全隔离：脚本开头调用 `runmeta.refuse_eval_cases`。
 
 ## 1. GeneReviews → 3a 覆盖率
@@ -75,7 +75,7 @@
 ## 4. 产出
 
 - `out/blind/<批次>/recall.json`：每个病例三项的参考集、命中、漏写清单（含原因标注和原文链接）。
-- `docs/blind_test_results.md` 新增一节：12 个病例的三项召回率表（按 A / B1-L1 / B1-L2 / B2 分栏，因为 B2 没有 GeneReviews 章节，第 1 项对 B2 不适用），以及漏写清单的汇总（按原因分类计数）。
+- `docs/experiments/blind_test_results.md` 新增一节：12 个病例的三项召回率表（按 A / B1-L1 / B1-L2 / B2 分栏，因为 B2 没有 GeneReviews 章节，第 1 项对 B2 不适用），以及漏写清单的汇总（按原因分类计数）。
 - 费用：**0 LLM 调用**。CT.gov 与 openFDA 是免费接口，走现有缓存。
 
 ## 5. 决定（2026-11-10 全部定稿）

@@ -15,7 +15,8 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from aitx import http,llm,peak,runmeta,session
 from aitx.disease import extract as X, datasets as D
-from aitx.evidence import pipeline as P, ledger as LG, context_check as CC
+from aitx.evidence import ledger as LG, context_check as CC
+from aitx.step3 import pipeline as P
 from aitx.evidence.branches import build_branches,patient_context
 from aitx.evidence.rules import apply_rules,load_rules
 from scripts.step2_stability import dump,install_campaign_guard

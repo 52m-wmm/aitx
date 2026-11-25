@@ -414,7 +414,7 @@ def add_bespoke(led, case: dict, step1: dict, step2: dict, *, use_cache: bool = 
     """3d for every diagnosis branch: six modalities, each with a verdict, its reason and its evidence."""
     import time
 
-    from aitx.evidence import established as E
+    from aitx.evidence import patient_matching as E
     from aitx.evidence import ledger as LG
     from aitx.variant.transcript import fetch_transcript
 

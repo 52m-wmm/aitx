@@ -1,0 +1,65 @@
+[
+  {
+    "review_id": "stop-peds-cohorts-20261123",
+    "nct": "NCT06654752",
+    "cohorts": [
+      "main",
+      "non-HEMT",
+      "preschool"
+    ],
+    "clauses": [
+      {
+        "item": "inc2",
+        "text": "For main cohort and non-HEMT cohort: age 6 to <19 years",
+        "comparison": "age",
+        "cohorts": [
+          "main",
+          "non-HEMT"
+        ]
+      },
+      {
+        "item": "inc3",
+        "text": "For preschool cohort: age 3 to <6 years",
+        "comparison": "age",
+        "cohorts": [
+          "preschool"
+        ]
+      },
+      {
+        "item": "inc9",
+        "text": "For main cohort and preschool cohort: Taking HEMT for at least 3 months at enrollment",
+        "comparison": "duration_unknown",
+        "cohorts": [
+          "main",
+          "preschool"
+        ]
+      },
+      {
+        "item": "inc10",
+        "text": "For non-HEMT cohort: not eligible for HEMT based on CFTR genotype or eligible but not taking for at least 3 months and no plans to start HEMT in the next year, and also not taking tezacaftor-ivacaftor or lumacaftor-ivacaftor for at least 3 months",
+        "comparison": "eligibility_unknown",
+        "cohorts": [
+          "non-HEMT"
+        ]
+      },
+      {
+        "item": "inc11",
+        "text": "For main cohort and non-HEMT cohort: able to perform acceptable and reproducible spirometry",
+        "comparison": "existing",
+        "cohorts": [
+          "main",
+          "non-HEMT"
+        ]
+      },
+      {
+        "item": "inc12",
+        "text": "For main cohort and non-HEMT cohort: ppFEV1 ≥ 50% predicted at enrollment based on the Global lung Initiative (GLI) reference equations",
+        "comparison": "existing",
+        "cohorts": [
+          "main",
+          "non-HEMT"
+        ]
+      }
+    ]
+  }
+]

@@ -1,7 +1,7 @@
 import copy
 import pytest
 from aitx.evidence import action_identity as I
-from scripts.switch_action_keys import validate
+from scripts.experiments.switch_action_keys import validate
 
 
 def test_key_rewrite_preserves_evidence_and_inverts_all_machine_references():
@@ -35,7 +35,7 @@ def test_anchored_drug_class_still_enters_safety_and_export_does_not_mutate_runt
 
 def test_rollback_restores_exact_bytes_and_can_handle_partial_apply(tmp_path,monkeypatch):
     import json
-    from scripts import switch_action_keys as S
+    from scripts.experiments import switch_action_keys as S
     monkeypatch.setattr(S,'ROOT',tmp_path)
     monkeypatch.setattr(I,'REGISTRY',tmp_path/'data/registry.json')
     before=b'{"original": true}\n';after=b'{"new":true}\n'

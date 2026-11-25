@@ -1,6 +1,6 @@
 # 盲测后修复计划（v1.0，2026-11-11 定稿；费用估算待确认后开工）
 
-> 来源：盲测批次 20261108（A 组 2 个、B 组 10 个，含带描述重跑）审阅中记下的全部问题，见 `docs/blind_test_results.md`、`out/blind/20261108/found_during_freeze.md`、语义核查测试集 `data/eval/support_check_regression.json`。阅读规则见 `docs/clinical_reading_rules.md`。
+> 来源：盲测批次 20261108（A 组 2 个、B 组 10 个，含带描述重跑）审阅中记下的全部问题，见 `docs/experiments/blind_test_results.md`、`out/blind/20261108/found_during_freeze.md`、语义核查测试集 `data/eval/support_check_regression.json`。阅读规则见 `docs/clinical_reading_rules.md`。
 > 盲测已结束，进入修复阶段，不再走解冻程序（2026-11-11 决定）。
 > 按根因分四类：**语义核查 / 名称归一 / 诊断规则 / 其他**。每条写明：现象（病例）、根因、修法、审批类别、测试（正向 + 反向）、对评测病例的影响。
 > 审批类别沿用 2026-11-05 规则：**A = 只会把结果放宽成"有条件"（可先做后报）**；**B = 可能产生新的"不适用 / 不相关"，或把未知变成确定（先报批）**。本计划获批即视为 B 类已报批，改完逐条汇报差异。
@@ -18,7 +18,7 @@
 1. **宽进严出**：检索阶段只负责召回，代码规则只做粗筛；**判对错统一交给上下文核查**（完整上下文 + 病人信息 + 固定核查问题），状态由代码根据核查结果决定。
 2. **上下文核查完成后冻结新增的语义类代码规则**。之后新发现的语义错误只做两件事：必要时在核查问题清单里补一问；加入测试集。代码规则只保留确定性部分（解析、ID 核对、名称归一、去重）。
 3. **缩写命中的试验进入候选，由上下文核查判断相关性**——不再扩大代码的佐证查找范围（标题 / 摘要扩展已撤回）。召回与费用影响见第八节。
-4. **输出面收窄**：每节写进报告的条目设上限（如 3b、3c 各取证据最强的前 3–5 条），其余只留账本。在 Step 4 契约落实（已记 `docs/step4_contract_todo.md`）。
+4. **输出面收窄**：每节写进报告的条目设上限（如 3b、3c 各取证据最强的前 3–5 条），其余只留账本。在 Step 4 契约落实（已记 `docs/step4_contract.md`）。
 5. **停止标准**：复测中 **Tier 1 零写错、整体写错率 ≤ 1%**；修复阶段截止 **2026-11-20**，到期进入 Step 4。
 
 ## 进度
@@ -176,7 +176,7 @@
 - 机器检查加一项"上游健康"（表型数、病人事实数、诊断状态为 0 时报警，不判写错）。
 - **审批**：A。
 
-### O4. 留给 Step 4（已记 `docs/step4_contract_todo.md`，本计划不改）
+### O4. 留给 Step 4（已记 `docs/step4_contract.md`，本计划不改）
 孕期专属证据范围、同类多药呈现、已有靶向为"无"时的交叉说明、指向外部清单的禁忌、来源更新日期、状态类标签写成具体动作。
 
 ## 五、顺序
@@ -278,7 +278,7 @@
 样本：EIF2B1（专章 L1，隐性纯合）、PFN1（总论 L2，ALS 总论 NBK1450，显性杂合）、CNNM4（无章节，隐性纯合）、THPO（无章节，显性杂合）；抽样规则与调整见 `out/blind/retest-20261112/sample.json` 和 `scripts/sample_retest_cases.py`。ClinVar 标题里的短写移码 `p.Leu438fs` 第一次试跑在 Step 1 报错（解析不支持），抽样工具改为由 c. 推出完整 HGVS `p.(Leu438ProfsTer9)` 并与 ClinVar 残基核对后重跑。
 费用：CNNM4 \$0.0029、EIF2B1 \$0.0567、THPO \$0.0018、PFN1 \$0.0916，合计 \$0.153；连同补盐修复 \$0.059，本次例外共 \$0.212（上限 \$0.60）。
 机器检查：113 条全部待人工判定，机器判写错 0（原报 4 条是检查工具把上下文核查的"限定"行当缺失信息，工具已修，见 `tests/test_blind_machine_check.py`）。THPO / PFN1 的 Step 2 标"失败"只因一条 warn（候选病缺 MONDO），无失败检查项。
-审阅表：`docs/retest_20261112_review.md`（由 `scripts/retest_report.py` 生成）。
+审阅表：`docs/experiments/retest_20261112_review.md`（由 `scripts/experiments/retest_report.py` 生成）。
 
 **我的初步观察（待用户判定，不算判定）**：
 - PFN1 支持治疗里 13 条"适用"的补充剂 / 抗氧化剂（维生素 E / C / B、硒、锌、辅酶 Q10、人参、银杏、Maharishi Amrit Kalesh、β-胡萝卜素、N-乙酰半胱氨酸、L-蛋氨酸、司来吉兰）来自原文"Individuals with ALS commonly supplement their diets with …"和 Cochrane 综述"significant differences … were not identified"——是描述常见用法和无效试验，不是推荐；核查器 3 票都答"针对本病、证据来自本病病人、无限定"，没有问"这是推荐吗"。疑似 Tier 1 写错，新类型（描述用法 / 报告无效 ≠ 推荐）。

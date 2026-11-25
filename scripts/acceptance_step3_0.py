@@ -29,7 +29,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from aitx import http, runmeta  # noqa: E402
-from aitx.evidence import pipeline  # noqa: E402
+from aitx.step3 import pipeline as pipeline
 from aitx.peak import PeakHours  # noqa: E402
 from aitx.evidence.rules import load_rules  # noqa: E402
 from run_pipeline import load_cases  # noqa: E402

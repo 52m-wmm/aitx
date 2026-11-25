@@ -344,19 +344,6 @@ def target_facts(gene: str, use_cache: bool = True) -> dict:
             "pathways": t.get("pathways") or [], "candidates": cands, "accessed_at": got["accessed_at"]}
 
 
-def pathway_members(stid: str, use_cache: bool = True) -> list[str]:
-    """Gene symbols taking part in a Reactome pathway (its own participant records)."""
-    from aitx import http
-    import json as _json
-    r = http.get(f"{REACTOME}/data/participants/{stid}/referenceEntities", use_cache=use_cache, timeout=60)
-    out: set[str] = set()
-    for x in _json.loads(r.text):
-        for g in x.get("geneName") or []:
-            if re.fullmatch(r"[A-Z][A-Z0-9-]{1,14}", g or ""):
-                out.add(g)
-    return sorted(out)
-
-
 def chembl_targets(uniprot: str, use_cache: bool = True) -> list[dict]:
     """ChEMBL target records for one protein, each with the level its mechanisms would be recorded at."""
     from aitx import http
@@ -404,7 +391,7 @@ def add_repurposing(led, case: dict, step1: dict, step2: dict, *, use_cache: boo
     """
     import time
 
-    from aitx.evidence import established as E
+    from aitx.evidence import patient_matching as E
     from aitx.evidence import ledger as LG
 
     earlier = {a.get("action_key"): a for a in led.actions

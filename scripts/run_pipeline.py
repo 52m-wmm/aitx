@@ -101,7 +101,7 @@ def step2(case: dict, prior: dict, ctx: Context) -> dict:
 
 
 def step3(case: dict, prior: dict, ctx: Context) -> dict:
-    from aitx.evidence import pipeline
+    from aitx.step3 import pipeline as pipeline
     return pipeline.run_case(case, prior[1], prior[2])
 
 

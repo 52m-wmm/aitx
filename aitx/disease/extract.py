@@ -260,12 +260,6 @@ def _messages(context: str) -> list[dict]:
     return [{"role": "system", "content": SYSTEM}, {"role": "user", "content": f"Clinical description:\n{context}"}]
 
 
-def llm_samples(context: str, *, use_cache: bool = True, n: int = N_SAMPLES) -> list[dict]:
-    """The n stage-1 samples, requested in parallel, returned in sample order."""
-    with ThreadPoolExecutor(max_workers=n) as pool:
-        return list(pool.map(lambda k: _parse(_cached_chat(_messages(context), k, use_cache)), range(n)))
-
-
 # ------------------------------------------------------------- verification
 
 # "normal" negates only when something is said to BE normal; comparisons ("further than normal",

@@ -1,0 +1,876 @@
+"""Step 3b: trial criteria, one by one (contract docs/step3b_contract.md, step 5).
+
+  code  splits EligibilityCriteria into items (trials.split_criteria; inclusion / exclusion comes from the headings)
+  LLM   maps each item to {fact, op, value, unit} with an exact quote from that item; never judges the patient
+  code  verifies every mapping (quote verbatim in its item, every threshold number in the quote, comparison sign as
+        written: >= vs >), compares it with the patient facts, and groups "one of the following" items
+
+Results (decision 2026-11-04): inclusion not met -> not applicable; exclusion met -> not applicable; any unknown ->
+conditional, with what is missing; administrative -> not_assessed ("screening assessment", no effect); a criterion
+that cannot be mapped and verified -> not_assessed ("not mapped; shown verbatim"), shown as written.
+"""
+from __future__ import annotations
+
+import json
+import re
+import time
+from itertools import groupby
+from pathlib import Path
+
+from aitx.disease import extract as X
+from aitx.evidence import derived as DV
+from aitx.evidence import genecontext as GC
+from aitx.evidence import patient_matching as E
+from aitx.evidence import labs as LABS
+from aitx.evidence import ledger as LG
+from aitx.evidence import patient_facts as PFX
+from aitx.evidence import trials as T
+
+PROMPT_VERSION = "3b-criteria-v1"
+FACTS = ("age", "sex", "diagnosis", "genetic_confirmation", "variant", "variant_class", "zygosity", "lab", "egfr",
+         "organ_function", "weight", "gestational_age", "current_medication", "prior_therapy", "other_trial",
+         "pregnancy", "administrative", "header", "other")
+OPS = (">=", ">", "<=", "<", "==", "")
+
+SYSTEM = """You map the eligibility criteria of one clinical trial to structured fields. Each criterion has an id.
+Do not judge any patient. For each criterion return one or more items (one per separate condition in it):
+{"id": "<criterion id>", "quote": "<the exact words of this condition, copied character for character from that criterion>",
+ "fact": "age" | "sex" | "diagnosis" | "genetic_confirmation" | "variant" | "variant_class" | "zygosity" | "lab" | "egfr" |
+         "organ_function" | "weight" | "gestational_age" | "current_medication" | "prior_therapy" | "other_trial" |
+         "pregnancy" | "administrative" | "header" | "other",
+ "op": ">=" | ">" | "<=" | "<" | "==" | "",
+ "value": <the threshold number exactly as written, a list of strings, or "">,
+ "unit": "<unit exactly as written, or empty>",
+ "name": "<lab analyte, organ, drug or therapy, gene, or 'normal' / 'abnormal' for organ function; or empty>",
+ "group": "<id of the criterion that says 'one of the following' when this condition is one of its options; else empty>"}
+fact: lab = a lab value with a threshold; egfr = estimated GFR or creatinine clearance; organ_function = adequate or
+impaired liver / kidney / heart function without a number (name "normal" or "abnormal"); other_trial = participation
+in another clinical trial; pregnancy = pregnancy, breastfeeding or contraception (name "contraception" when it asks
+for contraception); administrative = consent, assent, willingness or ability to comply, travel or attend visits;
+header = a line that only introduces the items below it. Keep the comparison exactly as written (">=" only for
+"greater than or equal", "at least", "or older"; ">" for "greater than", "more than", "older than"). Return only JSON:
+{"criteria": [...]}"""
+
+
+# ------------------------------------------------------------------ LLM mapping and its verification
+
+def _llm(user: str, use_cache: bool, what: str) -> tuple[dict, dict]:
+    t = time.time()
+    r = X._cached_chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}], 0, use_cache,
+                       prompt_version=PROMPT_VERSION)
+    if time.time() - t > 1:
+        print(f"[3b] LLM criteria {what}: {time.time() - t:.0f}s, prompt {len(user)} chars", flush=True)
+    return X._parse(r)["parsed"], {"llm": X.llm.config()["model"], "served_model": r.get("served_model"), "call_id": r.get("call_id"),
+                                   "prompt_version": PROMPT_VERSION}
+
+
+def items_for_llm(items: list[dict]) -> str:
+    # Notes are compared separately by enrollment_note_lines, including with old body caches.
+    return "\n".join(f"[{it['id']}] ({it['kind']}) {T.unescape(it['text'])}" for it in items if not it.get("preamble"))
+
+
+_RANGE = re.compile(r"\d\s*(?:-|–|—|to|through)\s*\d", re.I)       # "10 to 17", "0-90": inclusive on both ends
+_GE = re.compile(r"≥|>=|\bat least\b|\b(?:or|and)\s+(?:older|above|over)\b|\bor more\b|\bor greater\b|\bminimum\b|\binclusive\b", re.I)
+_LE = re.compile(r"≤|<=|\bat most\b|\b(?:or|and)\s+(?:younger|under|below)\b|\bor less\b|\bup to\b|\bmaximum\b|\bno more than\b|\bnot exceeding\b|\binclusive\b", re.I)
+_GT = re.compile(r"(?<![<≤])>(?!=)|\bgreater than\b|\bmore than\b|\bover\b|\babove\b|\bolder than\b|\bexceed", re.I)
+_LT = re.compile(r"(?<![>≥])<(?!=)|\bless than\b|\bunder\b|\bbelow\b|\byounger than\b|\blower than\b", re.I)
+
+
+def sign_ok(op: str, quote: str) -> bool:
+    """The comparison sign must be the one written (>= vs >): a sign is accepted when the quote has its cue and
+    no cue of a different strictness in the same direction."""
+    if op in ("", "=="):
+        return True
+    rng = bool(_RANGE.search(quote))
+    ge, le = bool(_GE.search(quote)) or rng, bool(_LE.search(quote)) or rng
+    gt = bool(_GT.search(_GE.sub(" ", quote)))
+    lt = bool(_LT.search(_LE.sub(" ", quote)))
+    return {">=": ge, ">": gt and not ge, "<=": le, "<": lt and not le}[op]
+
+
+def _numbers(value) -> list[float]:
+    vals = value if isinstance(value, list) else [value]
+    out = []
+    for v in vals:
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            out.append(float(v))
+        elif isinstance(v, str) and re.fullmatch(r"\s*-?\d+(?:\.\d+)?\s*", v):
+            out.append(float(v))
+    return out
+
+
+def check_mapping(m: dict, items: dict[str, dict]) -> str | None:
+    """Why a mapping is rejected, or None. Code only."""
+    it = items.get(str(m.get("id")))
+    if not it:
+        return "unknown criterion id"
+    fact, quote = m.get("fact"), str(m.get("quote") or "")
+    if fact not in FACTS:
+        return f"unknown fact type {fact!r}"
+    if m.get("op", "") not in OPS:
+        return f"unknown comparison {m.get('op')!r}"
+    if not LG.quote_in(quote, T.unescape(it["text"])):
+        return "quote not verbatim in the criterion"
+    in_quote = [float(n.replace(",", "")) for n in re.findall(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?", quote)]   # "100,000"
+    for n in _numbers(m.get("value")):
+        if not any(abs(n - q) < 1e-9 for q in in_quote):
+            return f"threshold {n:g} not in the quote"
+    if m.get("op") in ("<", "<=", ">", ">=") and not _numbers(m.get("value")) and fact not in ("variant", "variant_class", "zygosity"):
+        return "comparison without a threshold"
+    if not sign_ok(m.get("op", ""), quote):
+        return f"comparison {m.get('op')!r} not as written"
+    if m.get("unit") and not re.search(rf"(?<![A-Za-zµμ]){re.escape(str(m['unit']).strip())}(?![A-Za-z])", quote):
+        return "unit not in the quote"              # whole unit: "g/dL" is not in "mg/dL"
+    return None
+
+
+_ANY_OF = re.compile(r"\b(?:one|any|either|at least one|1)\s+(?:or more\s+)?of\s+the\s+following\b|\beither\b", re.I)
+_DIAGNOSIS_OPTION = re.compile(r"^(?:confirmed\s+)?diagnosis\s+of\b", re.I)
+
+
+def map_study(study: dict, *, use_cache: bool = True) -> dict:
+    """{items, mappings (verified), rejected, produced_by} for one study."""
+    items = T.split_criteria(study.get("criteria") or "")
+    by_id = {it["id"]: it for it in items}
+    if not [i for i in items if not i.get("preamble")]:
+        return {"items": items, "mappings": [], "rejected": [], "produced_by": "code"}
+    parsed, pb = _llm(f"Trial {study['nct']} eligibility criteria:\n{items_for_llm(items)}", use_cache, study["nct"])
+    ok, rejected = [], []
+    for m in parsed.get("criteria") or []:
+        if not isinstance(m, dict):
+            continue
+        why = check_mapping(m, by_id)
+        (rejected if why else ok).append({**m, **({"rejected": why} if why else {})})
+    for m in ok:                         # a group is kept only if the code's tree agrees and the parent says "one of"
+        g = str(m.get("group") or "")
+        it = by_id[str(m["id"])]
+        if g and not (g == it.get("parent") and g in by_id and _ANY_OF.search(T.unescape(by_id[g]["text"]))):
+            m["group_ignored"] = g
+            m["group"] = ""
+    return {"items": items, "mappings": ok, "rejected": rejected, "produced_by": pb}
+
+
+# ------------------------------------------------------------------ comparison (code only)
+
+def _cmp(a: float, op: str, b: float) -> bool:
+    return {">=": a >= b, ">": a > b, "<=": a <= b, "<": a < b, "==": abs(a - b) < 1e-9}[op]
+
+
+def _unk(var: str, note: str) -> tuple[str, dict, str, dict]:
+    return "unknown", {"field": var, "value": None, "quote": None, "step": None}, note, {}
+
+
+AGE_BY_REGISTRY = LG.AGE_BY_REGISTRY_NOTE
+GENOTYPE_FACTS = ("genetic_confirmation", "variant", "variant_class", "zygosity")
+_GENE_WORDS = re.compile(r"\b(?:genes?|variants?|mutations?|mutated|duplications?|deletions?|pathogenic|alleles?|"
+                         r"genetic(?:ally)?|genotyp\w*|carriers?)\b", re.I)
+
+
+# "there will not be a requirement for confirmed CDKN2A/B deletion" asks for nothing; a tumour's mutation is somatic,
+# not the patient's reported (germline) genotype (offline scan of the existing ledgers, 2026-11-11)
+_NOT_REQUIRED = re.compile(r"\b(?:not|no|without|regardless|irrespective|need\s+not)\b", re.I)
+_SOMATIC = re.compile(r"\b(?:tumou?rs?|somatic|cancer|carcinoma|neoplas\w*|malignan\w*)\b", re.I)
+ALTERNATIVE_GENE_NOTE = LG.ALTERNATIVE_GENE_NOTE
+
+
+def other_gene_required(quote: str, branch: dict, pf: dict) -> list[str]:
+    """Genes a genotype criterion requires that are not the patient's (fix plan D2, decision 2026-11-11): the
+    patient's reported genotype is a known fact, so "genetic testing showing duplication of the PMP22 gene" is not met
+    by an MPZ patient. Only when the criterion speaks of genes and names known gene symbols, none of them the
+    patient's; a criterion that names no gene ("genetic confirmation of CMT") is left to the other rules."""
+    if not _GENE_WORDS.search(quote or "") or _NOT_REQUIRED.search(quote) or _SOMATIC.search(quote):
+        return []
+    named = GC.genes_named(quote)
+    mine = {branch.get("gene")} | {v["gene"] for v in pf.get("variants") or []}
+    if not named or any(g in mine for g in named):
+        return []
+    # "a confirmed diagnosis of CDG or NGLY1 deficiency": an alternative that names no gene (a disease group that may
+    # include the patient's) keeps the rule out; it decides only when every alternative names a gene
+    parts = [x for x in re.split(r"\bor\b|/|;", quote) if x.strip()]
+    if len(parts) > 1 and any(not GC.genes_named(x) and _names_disease(x) for x in parts):
+        return []
+    return named
+
+
+_DISEASE_WORD = re.compile(r"\b(?:deficiency|disease|disorders?|syndrome|dystroph\w*|neuropath\w*|"
+                           r"encephalopath\w*|ataxia|CDG)\b", re.I)
+
+
+def _names_disease(part: str) -> bool:
+    """An alternative that names a disease: a disease word, or an upper-case acronym that is not a gene symbol ("coding
+    or non-coding mutation" has neither - it is one condition, not two)."""
+    if _DISEASE_WORD.search(part):
+        return True
+    acr = re.findall(r"(?<![A-Za-z0-9])[A-Z]{2,6}(?![A-Za-z0-9])", part)
+    return any(a not in GC.known_genes() for a in acr)
+
+
+def single_target_conflict(study: dict, diagnosed_genes: list[str]) -> dict | None:
+    """A single mandatory therapy target differs from the confirmed disease genes.
+
+    This compares disease/therapy targets, not an unreported gene's test result.
+    Local cohort requirements, alternative gene paths and unclear scope cannot exclude.
+    """
+    if not diagnosed_genes or study['study_type'] != 'interventional':
+        return None
+    raw = study['criteria']
+    therapy = study['title'] + '\n' + raw
+    if not re.search(r'\bgene therap\w*|\bbase edit\w*|\bgene edit\w*|\bASO\b|\bsiRNA\b|\bantisense\b', therapy, re.I):
+        return None
+    if 'population_groups' not in study:
+        return None  # The caller has not supplied alternative-cohort context.
+    inclusion = [x for x in T.split_criteria(raw) if x['kind'] == 'inclusion']
+    text = '\n'.join(x['text'] for x in inclusion)
+    # A heading can restrict the following requirement to a local path. Do not flatten it to AND.
+    if re.search(r'\bcohort\b|\b(?:part|group)\s*[A-Z0-9]\b|\b(?:any|all|other)\s+(?:UCD|urea cycle disorders?)\b', text, re.I):
+        return None
+    pf = {'variants': [{'gene': gene} for gene in diagnosed_genes]}
+    required = [(x, other_gene_required(x['text'], {'gene': diagnosed_genes[0]}, pf))
+                for x in inclusion if not x['parent']]
+    targets = set(g for x in inclusion if _GENE_WORDS.search(x['text'])
+                  and not _NOT_REQUIRED.search(x['text']) for g in GC.genes_named(x['text']))
+    title_genes = GC.genes_named(study['title'])
+    if not targets and len(title_genes) == 1:
+        gene = title_genes[0]
+        if re.search(rf'\b{re.escape(gene)}(?:[- ]related)?[- ](?:deficiency|disease)\b', study['title'], re.I):
+            targets = {gene}
+            required.append(({'text': study['title'], 'source': 'title'}, [gene]))
+    if set(title_genes) - targets:
+        return None
+    if len(targets) != 1 or targets.intersection(diagnosed_genes):
+        return None
+    target = next(iter(targets))
+    groups = study['population_groups']
+    for group in groups:
+        context = group['label'] + '\n' + (group['description'] if 'description' in group else '')
+        named = set(GC.genes_named(context))
+        if named - {target} or re.search(r'\b(?:any|all|other)\s+(?:UCD|urea cycle disorders?)\b|regardless of genotype', context, re.I):
+            return None
+    if len(groups) > 1:
+        for group in groups:
+            context = group['label'] + '\n' + (group['description'] if 'description' in group else '')
+            if re.search(r'placebo|control', context, re.I):
+                continue
+            if GC.genes_named(context) != [target]:
+                return None
+    for item, genes in required:
+        if genes == [target] and not relative_subject(item['text']) and not re.search(r'\b(?:if|unless|for participants|for patients)\b', item['text'], re.I):
+            return {'axis': 'molecular', 'target_gene': target, 'patient_genes': diagnosed_genes,
+                    'trial_rule_quote': item['text'], 'other_cohort_applicable': False,
+                    'quote_source': item['source'] if 'source' in item else 'criteria',
+                    'reason': f"分子靶点互斥：试验针对 {target}，病例已确诊致病基因为 {'、'.join(diagnosed_genes)}；无其他适用基因队列。"}
+    return None
+
+
+_ANY_SEX = re.compile(r"\b(?:all|both|any)\s+(?:genders?|sexes)\b|\bmales?\s*(?:and|or|/|&)\s*females?\b|"
+                      r"\bfemales?\s*(?:and|or|/|&)\s*males?\b|\bregardless\s+of\s+(?:gender|sex)\b", re.I)
+
+
+def other_subtype(quote: str, diagnosis: str) -> bool:
+    """The criterion names subtype numbers of the parent disease and none is the patient's ("type 2 or type 3" for
+    "primary hyperoxaluria type 1")."""
+    own = re.search(r"(?:type\s*)?(\d+[A-Za-z]?)\s*$", diagnosis or "")
+    m = re.search(r"\btypes?\s*\d", quote, re.I)
+    if not own or not m:
+        return False
+    nums = {n.upper() for n in re.findall(r"\d+[A-Za-z]?", quote[m.start():m.start() + 40])}
+    return bool(nums) and own.group(1).upper() not in nums
+
+
+_RELATIVE_SUBJECT = re.compile(
+    r'^\s*(?:(?:a|an|the|biological|first.degree|second.degree)\s+)*'
+    r'(?:relatives?|family members?|siblings?|parents?|children|offspring)\s+of\b|'
+    r'^\s*(?:(?:individuals|participants|patients|subjects)\s+(?:have|has|with)\s+)?(?:a\s+)?family history\b', re.I)
+
+
+def relative_subject(text: str) -> bool:
+    return bool(_RELATIVE_SUBJECT.search(text))
+
+
+def subject_context(item: dict, items: dict) -> str:
+    """A nested diagnosis/genotype condition keeps the relative subject of its parent."""
+    text = T.unescape(item['text'])
+    while item['parent'] is not None:
+        item = items[item['parent']]
+        if relative_subject(T.unescape(item['text'])):
+            return T.unescape(item['text'])
+    return text
+
+
+def evaluate(m: dict, pf: dict, extra: dict, branch: dict, names: list[str], kind: str = "inclusion"
+             ) -> tuple[str, dict | None, str, dict]:
+    """(patient_status, patient_fact, note, details) for one verified mapping; kind = inclusion / exclusion."""
+    fact, op, quote = m["fact"], m.get("op", ""), m["quote"]
+    nums = _numbers(m.get("value"))
+    if fact == "administrative":
+        return "not_assessed", None, LG.NOT_ASSESSED_NOTE, {}
+    if fact == "sex" and _ANY_SEX.search(quote):
+        return "satisfies", {"field": "sex", "value": pf["sex"] or "any", "quote": quote, "step": "3b"}, "any sex", {}
+    if fact == "age":
+        if not nums or not op:
+            return _unk("age", "age threshold not comparable")
+        st, fct, note = E.evaluate({"field":"age", "op":op, "value":nums[0],
+                                  "unit":_age_unit(m.get("unit") or quote), "text":quote}, pf, branch)
+        return st, fct, note, {}
+    context = m.get('subject_context') or m.get('criterion_text') or quote
+    if fact in ('diagnosis', *GENOTYPE_FACTS) and relative_subject(context):
+        st, fct, why, details = _unk('family history', 'criterion concerns a relative or family history; own diagnosis/genotype is not evidence')
+        return st, fct, why, {'subject': 'relative', 'scope_quote': context}
+    if fact in GENOTYPE_FACTS:
+        other = other_gene_required(quote, branch, pf)
+        if other:
+            vs = [v for v in pf["variants"] if v["gene"] == branch.get("gene")] or pf["variants"]
+            return "does_not_satisfy", {"field": "variant", "value": vs[0]["protein"] if vs else None,
+                                        "quote": vs[0]["quote"] if vs else None, "step": 1}, \
+                f"the criterion requires {', '.join(other)}; the patient's reported variant is in {branch.get('gene')}", {}
+    if fact in ("sex", "variant", "variant_class", "zygosity"):
+        req = {"field": fact, "op": op, "value": nums[0] if fact == "age" and nums else m.get("value"),
+               "unit": _age_unit(m.get("unit") or quote), "text": quote}
+        st, fct, note = E.evaluate(req, pf, branch)
+        if st == "unknown" and not (fct or {}).get("field"):
+            fct = {"field": fact, "value": None, "quote": None, "step": None}     # the variable that is missing
+        return st, fct, note, {}
+    if fact == "diagnosis" and branch.get("confirmed"):
+        # the diagnosis is confirmed (step 2 resolved, gene and pathogenic variant match - user decision 2026-11-15):
+        # a criterion naming it or its parent disease is met; an exclusion naming another subtype of the parent is not
+        dx = (branch.get("diagnosis") or {}).get("label") or ""
+        vq = next((v["quote"] for v in pf["variants"] if v["gene"] == branch.get("gene")), None)
+        fct = {"field": "diagnosis", "value": dx, "quote": vq, "step": 2}
+        # the branch's own names, abbreviations included: the trial already passed relevance and the diagnosis is confirmed
+        own = next((n for n in names if n and re.search(rf"(?<![A-Za-z0-9]){re.escape(n)}(?![A-Za-z0-9])", quote, re.I)),
+                   None)
+        parent = next((p for p in branch.get("parent_names") or [] if E.name_in(p, quote) is not None), None)
+        context = m.get("criterion_text") or quote
+        subtype = re.search(r"(\d+[A-Za-z]?)\s*$", dx)
+        if kind == "inclusion" and subtype and re.search(r"\bsubtype\b.*\bor\b", quote, re.I) \
+                and subtype.group(1) in re.findall(r"\b\d+[A-Za-z]?\b", quote) \
+                and any(E.name_in(p, context) is not None for p in branch.get("parent_names") or []):
+            return "satisfies", fct, f"confirmed subtype {dx} is one of the listed options", {}
+        if kind == "exclusion" and parent and not own and other_subtype(quote, dx):
+            return "does_not_satisfy", fct, f"the confirmed diagnosis is {dx}, not the subtype the exclusion names", {}
+        if kind == "exclusion" and (own or parent) and re.search(r"\bdo(?:es)? not have\b", quote, re.I):
+            return "does_not_satisfy", fct, f"confirmed diagnosis {dx}; absence of all listed diagnoses is not met", {}
+        if kind == "inclusion" and (own or parent):
+            return "satisfies", fct, f"confirmed diagnosis {dx} (step 2, pathogenic {branch.get('gene')} variant)", {}
+    if fact == "genetic_confirmation" and branch.get("confirmed") and kind == "inclusion":
+        vs = [v for v in pf["variants"] if v["gene"] == branch.get("gene")]
+        if vs:                     # other_gene_required (above) already ruled out a criterion naming only other genes
+            return "satisfies", {"field": "variant", "value": vs[0]["protein"], "quote": vs[0]["quote"], "step": 1}, \
+                f"pathogenic {branch.get('gene')} variant reported; diagnosis confirmed", {}
+    if fact == "diagnosis":
+        hit = next((n for n in E.label_names(names) if E.name_in(n, quote) is not None), None)
+        if hit and kind == "exclusion":       # the branch disease named in an exclusion is context ("not related to CF",
+            return _unk("diagnosis", "exclusion mentions the branch disease as context; not compared")   # "CF exacerbation")
+        return ("satisfies", {"field": "diagnosis", "value": hit, "quote": hit, "step": 2}, "diagnosis named", {}) if hit \
+            else _unk("diagnosis", "the criterion names another diagnosis or none of the branch names")
+    if fact == "genetic_confirmation":
+        gene = branch.get("gene") or ""
+        vs = [v for v in pf["variants"] if v["gene"] == gene]
+        named = (gene and re.search(rf"(?<![A-Za-z0-9]){re.escape(gene)}(?![A-Za-z0-9])", quote)) or \
+            any(E.name_in(n, quote) is not None for n in names)
+        if vs and named:
+            return "satisfies", {"field": "variant", "value": vs[0]["protein"], "quote": vs[0]["quote"], "step": 1}, \
+                f"{gene} variant reported", {}
+        return _unk("genetic confirmation", "gene or diagnosis in the criterion not matched to the reported variants")
+    if fact == "lab":
+        return _lab(m, nums, extra)
+    if fact == "egfr":
+        return _egfr(m, nums, pf, extra)
+    if fact == "organ_function":
+        organ = next((o for o in ("liver", "hepatic", "kidney", "renal", "cardiac", "heart") if o in quote.lower()), None)
+        organ = {"hepatic": "liver", "renal": "kidney", "heart": "cardiac"}.get(organ, organ)
+        if not organ:
+            return _unk("organ function", "organ not named")
+        fs = [f for f in PFX.find(extra, "organ_function") if organ in (f["name"] + " " + f["quote"]).lower()
+              or (organ == "liver" and "hepat" in f["quote"].lower()) or (organ == "kidney" and "renal" in f["quote"].lower())]
+        want = (m.get("name") or "").lower()
+        if not fs or want not in ("normal", "abnormal") or fs[0]["status"] not in ("normal", "abnormal"):
+            return _unk(f"{organ} function", "not stated in the case" if not fs else "criterion not comparable")
+        f = fs[0]
+        return ("satisfies" if f["status"] == want else "does_not_satisfy"), \
+            {"field": f"{organ} function", "value": f["status"], "quote": f["quote"], "step": "3b"}, "", {}
+    if fact == "gestational_age":
+        fs = [f for f in PFX.find(extra, "gestational_age") if f["value"] is not None]
+        if not fs or not nums or not op:
+            return _unk("gestational age", "not stated in the case" if not fs else "criterion not comparable")
+        v = float(fs[0]["value"])
+        return ("satisfies" if _cmp(v, op, nums[0]) else "does_not_satisfy"), \
+            {"field": "gestational age", "value": f"{v:g} weeks", "quote": fs[0]["quote"], "step": "3b"}, "", {}
+    if fact in ("current_medication", "prior_therapy"):
+        name = (m.get("name") or "").strip()
+        fs = [f for f in PFX.find(extra, fact) if name and (name.lower() in f["name"].lower() or f["name"].lower() in name.lower())]
+        if not fs:
+            return _unk(fact.replace("_", " ") + (f": {name}" if name else ""), "not stated in the case")
+        f = fs[0]
+        return ("does_not_satisfy" if f["status"] == "absent" else "satisfies"), \
+            {"field": fact.replace("_", " "), "value": f"{f['name']} ({f['status'] or 'present'})", "quote": f["quote"], "step": "3b"}, "", {}
+    if fact == "other_trial":
+        fs = PFX.find(extra, "other_trial")
+        if not fs or fs[0]["status"] not in ("absent", "present"):
+            return _unk("participation in other trials", "not stated in the case")
+        f = fs[0]
+        return ("does_not_satisfy" if f["status"] == "absent" else "satisfies"), \
+            {"field": "other trials", "value": f["status"], "quote": f["quote"], "step": "3b"}, "", {}
+    if fact == "pregnancy":
+        # male or under 12: a pregnancy / contraception criterion does not apply - it never excludes the patient and
+        # never fails an inclusion (2026-11-04: "unwilling to use contraception" had excluded a 7-year-old boy)
+        st, fct = E.pregnancy_status(pf)
+        if st == "does_not_satisfy":
+            return ("does_not_satisfy" if kind == "exclusion" else "satisfies"), fct, \
+                "pregnancy / contraception criterion does not apply (male or under 12)", {}
+        return _unk("pregnancy status", "pregnancy status unknown")
+    if fact == "weight":
+        return _unk("weight", "not stated in the case")
+    return _unk(f"other: {quote[:60]}", "no patient fact of this kind")
+
+
+def _age_unit(text: str) -> str:
+    low = str(text).lower()
+    return "month" if "month" in low else "week" if "week" in low else "day" if "day" in low else "year"
+
+
+def _lab(m: dict, nums: list[float], extra: dict) -> tuple[str, dict | None, str, dict]:
+    table = LABS.load()
+    analyte = LABS.analyte_of(m.get("name") or "", table) or LABS.analyte_of(m["quote"], table)
+    if not analyte or not nums or not m.get("op"):
+        return _unk(f"lab: {m.get('name') or m['quote'][:40]}", "analyte or threshold not comparable")
+    fs = [f for f in PFX.find(extra, "lab") if f.get("analyte") == analyte and f["value"] is not None]
+    if not fs:
+        return _unk(analyte, "not stated in the case")
+    f = fs[0]
+    thr = LABS.interpret(analyte, nums[0], m.get("unit") or None, table=table, who="threshold")
+    pat = f["interpretation"]
+    st = LABS.compare(pat, m["op"], thr)
+    sc = LABS.scenarios(pat, m["op"], thr)
+    notes = [x for x in (thr.get("assumption"), pat.get("assumption"), thr.get("why") if thr["status"] == "unknown" else None,
+                         pat.get("why") if pat["status"] == "unknown" else None) if x]
+    fact = {"field": analyte, "value": f"{f['value']}{(' ' + f['unit']) if f['unit'] else ''}", "quote": f["quote"], "step": "3b"}
+    return st, fact, "; ".join(notes), {"lab": {"patient": pat, "threshold": thr, "scenarios": sc}}
+
+
+def _egfr(m: dict, nums: list[float], pf: dict, extra: dict) -> tuple[str, dict | None, str, dict]:
+    if not nums or not m.get("op"):
+        return _unk("eGFR", "threshold not comparable")
+    cr = [f for f in PFX.find(extra, "lab") if f.get("analyte") == "creatinine" and f["interpretation"]["status"] in ("ok", "assumed")]
+    if not cr:
+        return _unk("eGFR", "no creatinine stated in the case")
+    scr = cr[0]["interpretation"]["value"]                     # canonical mg/dL
+    age = pf["age_months"] / 12 if pf["age_months"] is not None else None
+    d = DV.egfr(scr, age, pf["sex"], None)                     # height is never assumed
+    if d["value"] is None:
+        return _unk("eGFR", "cannot be derived: missing " + ", ".join(d["missing"]))
+    st = "satisfies" if _cmp(d["value"], m["op"], nums[0]) else "does_not_satisfy"
+    return st, {"field": "eGFR (derived)", "value": f"{d['value']} {d['unit']}", "quote": cr[0]["quote"], "step": "3b"}, \
+        f"derived by {d['formula']}", {"derived": d}
+
+
+# ------------------------------------------------------------------ requirement lines
+
+def combine(statuses: list[str]) -> str:
+    """'One of the following': any option met -> met; else any unknown -> unknown; else not met."""
+    if "satisfies" in statuses:
+        return "satisfies"
+    if "unknown" in statuses:
+        return "unknown"
+    return "does_not_satisfy" if statuses else "unknown"
+
+
+_ENROLLMENT = re.compile(
+    r"(?:note:\s*)?(?:currently[, :]+)?"
+    r"(?:(?:(?:the|this)\s+)?(?:[\w-]+\s+)?(?:study|trial)\s+is\s+)?(?:currently\s+)?"
+    r"(?P<mode>only\s+(?:enrolling|recruiting|accepting)|(?:enrolling|recruiting|accepting)\s+only|open\s+only\s+to|closed\s+to)"
+    r"\s+(?P<population>.+?)\.?", re.I)
+_NOTE_AGE = re.compile(
+    r"(?:(?:aged?|ages)\s+)?(?:(?P<cue><=|>=|≤|≥|<|>|under|below|younger than|less than|"
+    r"over|above|older than|greater than|at least|at most|up to)\s*)?"
+    r"(?P<value>\d+(?:\.\d+)?)\s*(?P<unit>years?|months?)"
+    r"(?P<tail>\s+or\s+(?:older|younger))?(?:\s+(?:of age|old))?", re.I)
+_NOTE_RANGE = re.compile(r"(?:aged?\s+)?(?P<lo>\d+(?:\.\d+)?)\s*(?:to|[-–])\s*"
+                         r"(?P<hi>\d+(?:\.\d+)?)\s*(?P<unit>years?|months?)(?:\s+(?:of age|old))?", re.I)
+
+
+_PATIENT_OR_RELATIVE = re.compile(
+    r'(?:confirmed\s+)?diagnosis of (?P<disease>.+?),?\s+or\s+(?:a\s+)?(?:family member|relative) '
+    r'of (?:someone|a patient|an individual) with this diagnosis\.?', re.I)
+
+
+def population_alternatives(study: dict, lines: list[dict]) -> list[dict]:
+    """Use explicit group descriptions, never list order, to relate patient and relative cohorts."""
+    relations = []
+    items = T.split_criteria(study['criteria'])
+    parents = {it['id']: it['parent'] for it in items}
+    if any(it['kind']=='inclusion' and it['parent'] is None
+           and re.search(r'\b(?:all|both)\s+(?:of\s+)?(?:the\s+)?following\b', it['text'], re.I)
+           and re.search(r'\brequired\b|\bmust\b|\bmeet\b', it['text'], re.I) for it in items):
+        return lines  # Conflicting mandatory criteria cannot be silently converted to cohort OR.
+    for i, group in enumerate(study.get('population_groups') or []):
+        text = group.get('description')
+        match = _PATIENT_OR_RELATIVE.fullmatch(text.strip()) if text else None
+        if match:
+            relations.append((match['disease'].rstrip(','), {'quote': text,
+                              'field': f'/protocolSection/armsInterventionsModule/armGroups/{i}/description'}))
+    for relative in [l for l in lines if l['kind']=='inclusion' and relative_subject(l['text'])
+                     and re.match(r'\s*(?:relative|family member)\b', l['text'], re.I)]:
+        if relative['item'] not in parents or parents[relative['item']] is not None:
+            continue
+        for patient in [l for l in lines if l['kind']=='inclusion' and _DIAGNOSIS_OPTION.search(l['text'])
+                        and not relative_subject(l['text'])]:
+            if not patient['item'].startswith('diagnoses:') and (patient['item'] not in parents or parents[patient['item']] is not None):
+                continue
+            options = patient.get('any_of', [])
+            # A resolved diagnosis group is justified by its satisfied option, not unrelated diagnoses.
+            if patient['patient_status']=='satisfies' and options:
+                options = [o for o in options if o['patient_status']=='satisfies']
+            parts = [o['requirement'] for o in options] or [patient['text']]
+            evidence = [next((proof for disease, proof in relations
+                             if T.name_matches(disease, part) and T.name_matches(disease, relative['text'])), None)
+                        for part in parts]
+            if not all(evidence):
+                continue
+            for line, subject in ((patient, 'patient'), (relative, 'relative')):
+                line['alternative'] = f"population:{subject}:{line['item']}"
+                line['details'] = dict(line['details'], population_relation={'sources': evidence, 'relation': 'patient_or_relative'})
+    return lines
+
+
+def enrollment_note_lines(study: dict, pf: dict) -> list[dict]:
+    """Keep every preamble; decide only whole, explicit current population restrictions.
+
+    Unrecognised cohort labels, historical/conditional notes and compound alternatives remain unknown.
+    No LLM or prompt change: existing body mappings can be replayed without losing the notes.
+    """
+    out = []
+    scoped_context = False
+    for item in T.split_criteria(study['criteria']):
+        if not item.get('preamble'):
+            continue
+        text = T.unescape(item['text'])
+        kind, status, fact = 'inclusion', 'unknown', {'field': 'other', 'value': None, 'quote': None, 'step': None}
+        why, mappings = 'enrollment note: population restriction or scope not resolved', []
+        match = _ENROLLMENT.fullmatch(text.strip()) if not scoped_context and not item['parent'] else None
+        if match:
+            kind = 'exclusion' if re.sub(r'\s+', ' ', match['mode'].lower()) == 'closed to' else 'inclusion'
+            population = re.sub(r'^(?:(?:potential|new|eligible)\s+)?(?:participants?|patients?|subjects?|volunteers?)\s+(?:who are\s+)?',
+                                '', match['population'], flags=re.I)
+            age, span = _NOTE_AGE.fullmatch(population), _NOTE_RANGE.fullmatch(population)
+            if age:
+                cue, tail = (age['cue'] or '').lower(), (age['tail'] or '').lower().strip()
+                op = ('>=' if tail == 'or older' else '<=' if tail == 'or younger' else
+                      '<=' if cue in ('<=', '≤', 'at most', 'up to') else
+                      '>=' if cue in ('>=', '≥', 'at least') else
+                      '<' if cue in ('<', 'under', 'below', 'younger than', 'less than') else
+                      '>' if cue in ('>', 'over', 'above', 'older than', 'greater than') else '')
+                if op and not (cue and tail):
+                    mappings = [{'id': item['id'], 'fact': 'age', 'quote': population, 'op': op,
+                                 'value': float(age['value']), 'unit': age['unit']}]
+            elif span and float(span['lo']) <= float(span['hi']):
+                mappings = [{'id': item['id'], 'fact': 'age', 'quote': population, 'op': op,
+                             'value': float(span[key]), 'unit': span['unit']} for key, op in [('lo', '>='), ('hi', '<=')]]
+            if mappings:
+                errors = [check_mapping(m, {item['id']: item}) for m in mappings]
+                if any(errors):
+                    raise ValueError(f'invalid enrollment-note extraction: {errors}')
+                months = pf['age_months']
+                if months is not None:
+                    comparisons = []
+                    for m in mappings:
+                        threshold = T.age_months(f"{m['value']} {m['unit']}")
+                        comparisons.append({'<': months < threshold, '<=': months <= threshold,
+                                            '>': months > threshold, '>=': months >= threshold}[m['op']])
+                    status = 'satisfies' if all(comparisons) else 'does_not_satisfy'
+                    fact = {'field': 'age', 'value': f'{months / 12:g} years', 'quote': pf['age_quote'], 'step': 2}
+                    why = 'enrollment note: verified current age restriction'
+                else:
+                    fact = {'field': 'age', 'value': None, 'quote': None, 'step': None}
+                    why = 'enrollment note: patient age not stated'
+            elif population.lower() in ('male', 'males', 'female', 'females'):
+                wanted = population.lower().rstrip('s')
+                fact = {'field': 'sex', 'value': None, 'quote': None, 'step': None}
+                why = 'enrollment note: patient sex not stated'
+                if pf['sex'] in ('male', 'female'):
+                    status = 'satisfies' if pf['sex'] == wanted else 'does_not_satisfy'
+                    fact = E.sex_evidence(pf)
+                    why = 'enrollment note: verified current sex restriction'
+        # A following line cannot silently lose a cohort, arm, historical or conditional scope.
+        scoped_context = scoped_context or bool(re.search(r'\b(?:cohorts?|arms?|groups?|previously|historically|if|when)\b', text, re.I))
+        out.append({'kind': kind, 'text': text, 'patient_status': status, 'patient_fact': fact,
+                    'note': why, 'details': {'enrollment_note': True, 'mappings': mappings},
+                    'item': f"enrollment-note:{item['id']}"})
+    return out
+
+
+def reviewed_rejected_lines(study: dict, mapped: dict) -> list[dict]:
+    """Only human-reviewed, still-unresolved rejections retain a full-clause unknown."""
+    reviews = json.loads((Path(__file__).resolve().parents[3] / 'config/reviewed_trial_rejections.json').read_text())
+    out = []
+    for review in reviews:
+        for item in mapped['items']:
+            if T.unescape(item['text']) != review['criterion']:
+                continue
+            if study['nct'] != review['nct'] or item['id'] != review['item']:
+                continue
+            unresolved = [r for r in review['rejections']
+                          if any(m['id']==item['id'] and m['fact']==r['fact'] and m['quote']==r['quote']
+                                 and m['rejected']==r['reason'] for m in mapped['rejected'])
+                          and not any(m['id']==item['id'] and m['fact']==r['fact'] and m['quote']==r['quote']
+                                      for m in mapped['mappings'])]
+            if not unresolved:
+                continue
+            st, fact, _, _ = _unk('other trial criteria', 'reviewed partial mapping remains unresolved')
+            out.append({'kind':item['kind'], 'text':review['criterion'], 'patient_status':st, 'patient_fact':fact,
+                        'note':'reviewed partial mapping remains unresolved: ' + '; '.join(r['reason'] for r in unresolved),
+                        'details':{'review_id':review['review_id'], 'reviewed_rejections':unresolved},
+                        'item':item['id'] if review.get('replace') else f"reviewed-rejected:{item['id']}"})
+    return out
+
+
+def reviewed_cohort_lines(study: dict, mapped: dict, lines: list[dict], pf: dict) -> list[dict]:
+    """Bind only the reviewed STOP PEDS source clauses to the existing alternatives."""
+    reviews = json.loads((Path(__file__).resolve().parents[3] / 'config/reviewed_trial_cohorts.json').read_text())
+    for review in reviews:
+        if 'nct' not in study or study['nct'] != review['nct']:
+            continue
+        items = {it['id']: it for it in mapped['items']}
+        clauses = {c['item']: c for c in review['clauses']}
+        for iid, clause in clauses.items():
+            if T.unescape(items[iid]['text']) != clause['text']:
+                raise ValueError(f"reviewed cohort source changed: {study['nct']} {iid}")
+        age_matches = {}
+        for clause in clauses.values():
+            if clause['comparison'] != 'age':
+                continue
+            bounds = re.search(r'\bage (\d+) to <(\d+) years$', clause['text'])
+            if bounds is None:
+                raise ValueError(f"reviewed cohort age range changed: {clause['text']}")
+            matches = pf['age_months'] is not None and int(bounds[1])*12 <= pf['age_months'] < int(bounds[2])*12
+            age_matches.update({name: matches for name in clause['cohorts']})
+        active = [name for name in review['cohorts'] if age_matches[name]]
+        # No verified age path: retain unknown alternatives; only registry total age may exclude.
+        active = active or review['cohorts']
+        inactive = [{'cohort': name, 'clauses': [c for c in clauses.values() if name in c['cohorts']]}
+                    for name in review['cohorts'] if name not in active]
+        out, handled = [], set()
+        for line in lines:
+            iid = line['item']
+            if iid not in clauses:
+                out.append(line)
+                continue
+            clause = clauses[iid]
+            mode = clause['comparison']
+            if mode != 'existing' and iid in handled:
+                continue
+            handled.add(iid)
+            for name in clause['cohorts']:
+                if name not in active:
+                    continue
+                scoped = dict(line, text=clause['text'], alternative=f'cohort:{name}', details=dict(line['details']))
+                if mode == 'age':
+                    matches = age_matches[name]
+                    scoped.update(patient_status='satisfies' if matches else 'unknown', fact='age',
+                                  patient_fact={'field':'age', 'value':f"{pf['age_months']/12:g} years" if matches else None,
+                                                'quote':pf['age_quote'] if matches else None, 'step':2 if matches else None},
+                                  note='reviewed complete cohort age interval' if matches else 'no cohort age path confirmed')
+                elif mode in ('duration_unknown', 'eligibility_unknown'):
+                    field = 'current medication: HEMT duration' if mode == 'duration_unknown' else 'other trial criteria'
+                    note = ('HEMT presence alone does not establish at least 3 months at enrollment' if mode == 'duration_unknown'
+                            else 'whole non-HEMT eligibility, treatment history and future plan remain unresolved')
+                    st, fact, _, _ = _unk(field, note)
+                    scoped.update(patient_status=st, patient_fact=fact, note=note,
+                                  details={'replaced_mappings':[x for x in lines if x['item']==iid]})
+                scoped['details']['reviewed_cohort'] = {'review_id':review['review_id'], 'cohort':name,
+                                                        'source_item':iid, 'scope':clause['cohorts'],
+                                                        'inactive_cohorts':inactive}
+                out.append(scoped)
+        return out
+    return lines
+
+
+def lines_for(study: dict, mapped: dict, pf: dict, extra: dict, branch: dict, names: list[str]) -> list[dict]:
+    """Per-criterion results for one branch, before evidence ids are attached:
+    [{kind, text, patient_status, patient_fact, note, details, any_of?, item}]."""
+    items = {it["id"]: it for it in mapped["items"]}
+    by_item: dict[str, list[dict]] = {}
+    for m in mapped["mappings"]:
+        by_item.setdefault(str(m["id"]), []).append(m)
+    reviewed = reviewed_rejected_lines(study, mapped)
+    replacements = {line['item']: line for line in reviewed if not line['item'].startswith('reviewed-rejected:')}
+    out, groups = [], {}
+    for it in mapped["items"]:
+        if it.get("preamble") or it["kind"] not in ("inclusion", "exclusion"):
+            continue
+        if re.fullmatch(r"\W*(?:none|n/?a|not applicable)\W*", T.unescape(it["text"]), re.I):
+            continue                                             # "Exclusion Criteria: None" states no criterion
+        if it['id'] in replacements:
+            out.append(replacements[it['id']])
+            continue
+        full = T.unescape(it["text"])
+        # A permission inside an exclusion is part of the whole logical clause. Flat cached mappings cannot
+        # establish its polarity, so preserve the original substring and leave the whole clause unknown.
+        if it["kind"] == "exclusion" and re.search(r"\bis eligible\b|\bwill be allowed\b", full, re.I):
+            st, fct, note, det = _unk("other", "complete exclusion with a permitted exception; assess the whole clause at screening")
+            out.append({"kind":"exclusion", "text":full, "patient_status":st, "patient_fact":fct,
+                        "note":note, "details":{"complete_criterion":True}, "item":it["id"], "fact":"other"})
+            continue
+        ms = [m for m in by_item.get(it["id"], []) if m["fact"] != "header"]
+        if not ms:
+            has_children = any(x.get("parent") == it["id"] for x in mapped["items"])
+            if any(m["fact"] == "header" for m in by_item.get(it["id"], [])) or (has_children and not by_item.get(it["id"])
+                                                                                 and _ANY_OF.search(T.unescape(it["text"]))):
+                continue                                         # a heading; its sub-items carry the conditions
+            out.append({"kind": it["kind"], "text": T.unescape(it["text"]), "patient_status": "not_assessed",
+                        "patient_fact": None, "note": LG.UNMAPPED_NOTE, "details": {}, "item": it["id"]})
+            continue
+        for m in ms:
+            st, fct, note, det = evaluate(dict(m, criterion_text=T.unescape(it["text"]), subject_context=subject_context(it, items)),
+                                         pf, extra, branch, names, it["kind"])
+            text = full if m["fact"] in ("age", "prior_therapy", "current_medication", "pregnancy") else m["quote"]
+            line = {"kind": it["kind"], "text": text, "patient_status": st,
+                    "patient_fact": None if st == "not_assessed" else fct, "note": note, "details": det,
+                    "item": it["id"], "fact": m["fact"]}
+            if m.get("group"):
+                groups.setdefault(m["group"], []).append(line)
+            else:
+                out.append(line)
+    # An age-cohort list is OR across cohorts, AND across the lower/upper bounds within each cohort.
+    # The full group quote is one contiguous substring of the registry, not joined mapping fragments.
+    for parent in mapped["items"]:
+        if not re.search(r"\bage (?:groups?|cohorts?)\b", parent["text"], re.I):
+            continue
+        children = [it for it in mapped["items"] if it.get("parent") == parent["id"]]
+        cohort = [l for l in out if l["item"] in {it["id"] for it in children}]
+        if not cohort or any(l.get("fact") not in (None,"age") for l in cohort):
+            continue
+        opts = []
+        for child in children:
+            mine = [l for l in cohort if l["item"] == child["id"]]
+            results = [LG.requirement_result("inclusion", l["patient_status"]) for l in mine]
+            status = LG.status_from(results) if mine and all(r != "not_assessed" for r in results) else "conditional"
+            st = {"applicable":"satisfies", "conditional":"unknown", "not_applicable":"does_not_satisfy"}[status]
+            opts.append({"requirement":T.unescape(child["text"]), "patient_status":st, "note":"age cohort; all bounds", "all_of":mine})
+        st = combine([o["patient_status"] for o in opts])
+        fact = next((l["patient_fact"] for l in cohort if l["patient_status"] == st and l["patient_fact"]),
+                    {"field":"age","value":None,"quote":None,"step":None})
+        raw = T.unescape(study["criteria"])
+        start = raw.index(T.unescape(parent["text"]))
+        last = T.unescape(children[-1]["text"])
+        end = raw.index(last,start) + len(last)
+        out = [l for l in out if l not in cohort]
+        out.append({"kind":"inclusion", "text":raw[start:end], "patient_status":st, "patient_fact":fact,
+                    "note":"one of the age cohorts", "details":{}, "item":f"age-cohorts:{parent['id']}",
+                    "fact":"age", "any_of":opts})
+    # A flat list of diagnosis choices is one disease-eligibility requirement, not every disease at once.
+    # Keep its full registry span as the quote, and use the existing any-of comparison below.
+    choices = {l["item"]: l for l in out if l["kind"] == "inclusion" and l.get("fact") == "diagnosis"
+               and items[l["item"]]["parent"] is None and len(by_item[l["item"]]) == 1
+               and _DIAGNOSIS_OPTION.search(l["text"]) and not re.search(r"\b(?:and|both)\b", l["text"], re.I)}
+    for eligible, block in groupby(mapped["items"], key=lambda it: it["id"] in choices):
+        opts = [choices[it["id"]] for it in block] if eligible else []
+        if len(opts) < 2:
+            continue
+        raw = T.unescape(study["criteria"])
+        start = raw.index(opts[0]["text"])
+        end = raw.index(opts[-1]["text"], start) + len(opts[-1]["text"])
+        g = f"diagnoses:{opts[0]['item']}"
+        items[g] = {"kind": "inclusion", "text": raw[start:end]}
+        groups[g] = opts
+        out = [l for l in out if l not in opts]
+    # genotype criteria naming different genes, one of them the patient's: alternatives a registry lists one per line
+    # (DEEPTYPE: "mutation in SLC16A2" / "mutation in THRA" / "abnormal fT3/fT4 ratio") - the other-gene lines decide
+    # nothing for this patient (fix plan D2, 2026-11-11)
+    mine = {branch.get("gene")} | {v["gene"] for v in pf.get("variants") or []}
+    names_mine = any(l.get("fact") in GENOTYPE_FACTS and set(GC.genes_named(l["text"])) & mine for l in out)
+    if names_mine:
+        for l in out:
+            if str(l.get("note") or "").startswith("the criterion requires "):
+                l.update(patient_status="not_assessed", patient_fact=None, note=ALTERNATIVE_GENE_NOTE)
+    for g, opts in groups.items():
+        parent = items[g]
+        sts = [o["patient_status"] for o in opts if o["patient_status"] != "not_assessed"]
+        st = combine(sts) if sts else "not_assessed"
+        unk = [o for o in opts if o["patient_status"] == "unknown"]
+        out.append({"kind": parent["kind"], "text": T.unescape(parent["text"]), "patient_status": st,
+                    "patient_fact": None if st == "not_assessed" else (unk[0]["patient_fact"] if st == "unknown" and unk else
+                                                                        next((o["patient_fact"] for o in opts if o["patient_status"] == st), None)),
+                    "note": LG.UNMAPPED_NOTE if st == "not_assessed" else f"one of {len(opts)} options",
+                    "details": {}, "item": g,
+                    "any_of": [{"requirement": o["text"], "patient_status": o["patient_status"], "note": o["note"]} for o in opts]})
+    # Diagnosis headings with their own one-of confirmation criteria are alternative cohorts.
+    roots = [it for it in mapped["items"] if it["kind"] == "inclusion"
+             and _DIAGNOSIS_OPTION.search(T.unescape(it["text"])) and _ANY_OF.search(T.unescape(it["text"]))
+             and it["parent"] is None
+             and any(l["item"] == it["id"] and l.get("fact") == "diagnosis" for l in out)
+             and any(child["parent"] == it["id"] for child in mapped["items"])]
+    if len(roots) > 1:
+        options, consumed, chosen = [], set(), []
+        for root in roots:
+            ids = {root["id"]}
+            for it in mapped["items"]:
+                if it["parent"] in ids:
+                    ids.add(it["id"])
+            cohort = [l for l in out if l["item"] in ids]
+            status = LG.status_from([LG.requirement_result(l["kind"], l["patient_status"]) for l in cohort])
+            st = {"applicable": "satisfies", "conditional": "unknown", "not_applicable": "does_not_satisfy"}[status]
+            options.append({"requirement": T.unescape(root["text"]), "patient_status": st,
+                            "note": "all conditions for this diagnosis option", "all_of": cohort})
+            consumed.update(ids)
+            chosen.extend(cohort)
+        st = combine([o["patient_status"] for o in options])
+        fact = next(l["patient_fact"] for l in chosen if l["patient_status"] == st)
+        raw = T.unescape(study["criteria"])
+        last = next(it for it in reversed(mapped["items"]) if it["id"] in consumed)
+        start = raw.index(T.unescape(roots[0]["text"]))
+        end = raw.index(T.unescape(last["text"]), start) + len(T.unescape(last["text"]))
+        out = [l for l in out if l["item"] not in consumed]
+        out.append({"kind": "inclusion", "text": raw[start:end], "patient_status": st, "patient_fact": fact,
+                    "note": f"one of {len(options)} diagnosis cohorts", "details": {},
+                    "item": f"diagnoses:{roots[0]['id']}", "any_of": options})
+    # Only minimumAge / maximumAge (registry_lines) may exclude on age. Textual cohort bounds can
+    # confirm inclusion only when every bound of that item is met; an unmatched cohort stays unknown.
+    age_items = {}
+    for line in out:
+        if line.get("fact") == "age":
+            age_items.setdefault(line["item"], []).append(line)
+    for lines in age_items.values():
+        if all(l["kind"] == "inclusion" and l["patient_status"] == "satisfies" for l in lines):
+            continue
+        for line in lines:
+            line.update(patient_status="unknown", note="cohort age not confirmed; only the registry total age range may exclude",
+                        patient_fact={"field":"age" if pf["age_months"] is None else "other trial criteria",
+                                      "value":None,"quote":None,"step":None})
+    out = population_alternatives(study, out) + enrollment_note_lines(study, pf) + [
+        line for line in reviewed if line['item'] not in replacements]
+    return reviewed_cohort_lines(study, mapped, out, pf)
+
+
+def registry_lines(study: dict, pf: dict) -> list[dict]:
+    """Registry age / sex / healthy-volunteer fields (structured) as inclusion lines."""
+    pre = study.get("prefilter") or T.prefilter(study, pf["age_months"], pf["sex"])
+    out = []
+    for c in pre["checks"]:
+        st = {"pass": "satisfies", "fail": "does_not_satisfy", "unknown": "unknown"}[c["result"]]
+        text = registry_text(study, c["field"])
+        fact = ({"field": "age", "value": f"{pf['age_months'] / 12:g} years", "quote": pf["age_quote"], "step": 2}
+                if c["field"] == "age" and pf["age_months"] is not None else
+                E.sex_evidence(pf)
+                if c["field"] == "sex" and pf["sex"] else
+                # a healthy-volunteers-only study: the patient is not a healthy volunteer - the reported variant says so
+                # (2026-11-13: the line had no quoted patient fact, which the ledger check rejects)
+                {"field": "healthy_volunteers", "value": "patient with a reported disease-causing variant",
+                 "quote": pf["variants"][0]["quote"], "step": 1}
+                if c["field"] == "healthy_volunteers" and pf.get("variants") else
+                {"field": c["field"], "value": None, "quote": None, "step": None})
+        out.append({"kind": "inclusion", "text": text, "patient_status": st, "patient_fact": fact,
+                    "note": "registry field", "details": {}, "item": f"registry:{c['field']}"})
+    return out
+
+
+def registry_source(study: dict) -> str:
+    return (f"minimumAge: {study.get('min_age') or 'none'}; maximumAge: {study.get('max_age') or 'none'}; "
+            f"sex: {study.get('sex') or 'ALL'}; healthyVolunteers: {json.dumps(study.get('healthy_volunteers'))}; "
+            f"conditions: {'; '.join(study.get('conditions') or [])}")
+
+
+def registry_text(study: dict, field: str) -> str:
+    return {"age": f"minimumAge: {study.get('min_age') or 'none'}; maximumAge: {study.get('max_age') or 'none'}",
+            "sex": f"sex: {study.get('sex') or 'ALL'}",
+            "healthy_volunteers": f"conditions: {'; '.join(study.get('conditions') or [])}"}[field]

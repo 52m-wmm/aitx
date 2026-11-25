@@ -63,10 +63,6 @@ class ClinVarRecord:
     def url(self) -> str:
         return f"https://www.ncbi.nlm.nih.gov/clinvar/variation/{int(self.vcv[3:])}/"
 
-    @property
-    def is_plp(self) -> bool:
-        return self.significance.strip().lower() in PLP
-
     def to_dict(self) -> dict:
         return {"vcv": self.vcv, "url": self.url, "title": self.title, "match": self.match,
                 "match_note": self.match_note,

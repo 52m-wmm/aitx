@@ -50,10 +50,7 @@ def day_start(now: dt.datetime | None = None) -> float:
 
 def spent_today(now: dt.datetime | None = None, log: Path | None = None) -> float:
     """Today's budget accounting: known usage plus the request reservation for missing usage."""
-    import sys
-    root = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(root / "scripts"))
-    import llm_cost
+    from aitx import llm_cost
     path = log or llm_cost.LOG
     if not Path(path).exists():
         return 0.0

@@ -59,6 +59,9 @@ def unknown_lines(a: dict, branch: str | None = None) -> list[dict]:
 
 
 def trial_rank(a: dict) -> tuple:
+    if 'pathway' in a:
+        from aitx.evidence.trials import clinical_priority_key
+        return clinical_priority_key({'pathway':a['pathway'], 'nct_id':a['nct']})
     lines = trial_lines(a)
     key_met = {r.get("fact") or (r.get("patient_fact") or {}).get("field") for r in lines
                if r["result"] == "pass" and r["kind"] == "inclusion"}
@@ -96,16 +99,6 @@ def readable(text: str) -> str:
 
 def display_label(text: str) -> str:
     return re.sub(r'\b(NCT\d{8})\s+\(\1\)',r'\1',text)
-
-
-UNREPORTED = ("manifestations not reported", "whether the patient has the manifestation it treats", "manifestation")
-
-
-def depends_on_unreported(a: dict) -> bool:
-    """The entry waits on a complication or manifestation the case does not report (user decision 2026-11-15: such
-    entries rank after every other entry)."""
-    return any(r.get("target_symptom") or (r.get("patient_fact") or {}).get("field") in UNREPORTED
-               for r in unknown_lines(a))
 
 
 class Report:
@@ -297,7 +290,7 @@ class Report:
     def actions(self, section: str) -> list[dict]:
         items=[a for a in self.led['actions'] if a['section']==section]
         if section=='clinical_trial_eligibility':
-            return sorted(items,key=lambda a:({"interventional":0,"observational":1}.get(a.get('study_type'),2),trial_rank(a)))
+            return sorted(items,key=trial_rank)
         if section=='off_label_expanded_access':
             return sorted(items,key=lambda a:({"reported_improvement":0,"insufficient":1}.get(a.get('efficacy_direction'),2),-self.precedent_count(a)))
         return [a for _,a in sorted(enumerate(items),key=lambda pair:pair[1].get('source_order',[1000000,pair[0],0]))]
@@ -579,7 +572,8 @@ class Report:
         first=sorted(first,key=lambda a:status_of(a)!='applicable')  # retain ranking order within each status
         out += ["  - "+self.summary_action(a) for a in first[:3]] or ["  - No priority treatment found in the recorded searches."]
         out += ["- **Tier 2:**"]
-        second=[a for a in self.shown('clinical_trial_eligibility') if a.get('study_type')=='interventional']+self.shown('off_label_expanded_access')
+        second=[a for a in self.shown('clinical_trial_eligibility') if written(a)
+                and (a['pathway']['therapeutic'] if 'pathway' in a else a.get('study_type')=='interventional')]+self.shown('off_label_expanded_access')
         out += ["  - "+self.summary_action(a) for a in second[:3]] or ["  - No interventional trial or off-label entry found in the recorded searches."]
         out += ["- **Tier 3:**"]
         research=[a for a in self.shown('bespoke_therapies') if a['classification']=='theoretically_possible']

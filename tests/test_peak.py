@@ -67,7 +67,7 @@ def test_streamed_response_is_assembled(monkeypatch, tmp_path):
         return R(body)
 
     monkeypatch.delenv("AITX_LLM_CACHE_ONLY", raising=False)
-    monkeypatch.setenv("AITX_LLM_API_KEY", "k")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "k")
     monkeypatch.setattr(llm, "LOG", tmp_path / "calls.jsonl")
     monkeypatch.setattr(llm.urllib.request, "urlopen", fake)
     r = llm.chat([{"role": "user", "content": "x"}])

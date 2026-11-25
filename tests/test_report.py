@@ -429,3 +429,15 @@ def test_a_caution_sentence_is_not_also_cited_as_support():
     led["evidence"].append(ev("e2", quote="Hard stones resist it."))
     md, _ = build(led)
     assert md.count("Hard stones resist it.") == 1 and "Caution (same source)" in md
+
+
+def test_report_quotes_source_examples_not_separate_actions():
+    from tests.test_report import ev,act,ledger,build
+    q='Adaptive aids (e.g., ankle-foot orthoses, walkers) can help.'
+    a=act('aids','supportive_management','Adaptive aids','conditional',examples=['ankle-foot orthoses','walkers'],example_evidence_ids=['e1'])
+    led=ledger([a]);led['evidence']=[ev('e1',q)]
+    report=build(led)
+    text=report[0] if isinstance(report,tuple) else report
+    if isinstance(text,dict):text=text['report_markdown']
+    assert q in text and 'Examples from source:' in text
+    assert '**walkers**' not in text and '**ankle-foot orthoses**' not in text

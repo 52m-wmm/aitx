@@ -1,0 +1,90 @@
+[
+  {
+    "review_id": "eti-inc1-partial-mapping-20261123",
+    "nct": "NCT07809867",
+    "item": "inc1",
+    "criterion": "Cystic Fibrosis patients with at least one F508del mutation treated with the combination elexacaftor/tezacaftor/ivacaftor for a time sufficient to reach steady-state (8 days)",
+    "rejections": [
+      {
+        "fact": "variant",
+        "quote": "at least one F508del mutation",
+        "reason": "threshold 1 not in the quote"
+      },
+      {
+        "fact": "current_medication",
+        "quote": "treated with the combination elexacaftor/tezacaftor/ivacaftor for a time sufficient to reach steady-state (8 days)",
+        "reason": "comparison '>=' not as written"
+      }
+    ]
+  },
+  {
+    "review_id": "enact-clinical-clauses-20261123",
+    "nct": "NCT07148739",
+    "item": "inc4",
+    "criterion": "on a stable dose of triple combination CFTR modulator therapy for at least two weeks prior to Visit 1",
+    "replace": true,
+    "rejections": [
+      {
+        "fact": "current_medication",
+        "quote": "on a stable dose of triple combination CFTR modulator therapy for at least two weeks prior to Visit 1",
+        "reason": "threshold 2 not in the quote"
+      }
+    ]
+  },
+  {
+    "review_id": "enact-clinical-clauses-20261123",
+    "nct": "NCT07148739",
+    "item": "inc5",
+    "criterion": "clinically stable lung disease, defined as no documented acute decrease in FEV1 > 10%, OR use of additional antibiotics (intravenous [IV] or oral [PO]) within 4 weeks prior to screening",
+    "replace": true,
+    "rejections": [
+      {
+        "fact": "current_medication",
+        "quote": "use of additional antibiotics (intravenous [IV] or oral [PO]) within 4 weeks prior to screening",
+        "reason": "comparison '<=' not as written"
+      }
+    ]
+  },
+  {
+    "review_id": "enact-clinical-clauses-20261123",
+    "nct": "NCT07148739",
+    "item": "exc1",
+    "criterion": "recent significant unintentional weight loss, as determined by the investigator, in the 4 weeks prior to screening",
+    "replace": true,
+    "rejections": [
+      {
+        "fact": "weight",
+        "quote": "recent significant unintentional weight loss, as determined by the investigator, in the 4 weeks prior to screening",
+        "reason": "comparison '<=' not as written"
+      }
+    ]
+  },
+  {
+    "review_id": "enact-clinical-clauses-20261123",
+    "nct": "NCT07148739",
+    "item": "exc3",
+    "criterion": "history of alcohol or substance abuse in the 6 months prior to screening",
+    "replace": true,
+    "rejections": [
+      {
+        "fact": "diagnosis",
+        "quote": "history of alcohol or substance abuse in the 6 months prior to screening",
+        "reason": "comparison '<=' not as written"
+      }
+    ]
+  },
+  {
+    "review_id": "enact-clinical-clauses-20261123",
+    "nct": "NCT07148739",
+    "item": "exc4",
+    "criterion": "participation in a study involving an investigational intervention within 28 days (or 5 half-lives, whichever is longer) prior to screening",
+    "replace": true,
+    "rejections": [
+      {
+        "fact": "other_trial",
+        "quote": "participation in a study involving an investigational intervention within 28 days (or 5 half-lives, whichever is longer) prior to screening",
+        "reason": "comparison '<=' not as written"
+      }
+    ]
+  }
+]

@@ -36,6 +36,7 @@ import threading
 import time
 import uuid
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
@@ -88,11 +89,11 @@ def _t(lang: str, zh: str, en: str) -> str:
 def rerun_panel(case_id: str, lang: str) -> str:
     steps, last = sorted(run_pipeline.STEPS), max(run_pipeline.STEPS)
     buttons = []
-    for k in steps:
+    for k in [s for s in steps if s < 3]:
         llm = any(j in run_pipeline.USES_LLM for j in range(k, last + 1))
         note = (f" <span class='tag warn'>{_t(lang, '会调用 LLM（默认用缓存）', 'calls the LLM (cache by default)')}</span>"
                 if llm else "")
-        buttons.append(f"<button type='button' class='rerun' data-step='{k}'>"
+        buttons.append(f"<button type='button' class='rerun' data-step='{k}' data-to-step='2'>"
                        f"{_t(lang, f'从第 {k} 步重跑', f'Rerun from step {k}')}</button>{note}")
     return (f"<div class='card' id='app-rerun' data-case='{build_viewer.e(case_id)}'><h3>{_t(lang, '重跑', 'Rerun')}</h3>"
             f"<p>{' &nbsp; '.join(buttons)}</p>"
@@ -137,7 +138,7 @@ LIVE_JS = """<script>
 var T=%(texts)s, page=%(page)s, rr=document.getElementById('app-rerun');
 var caseId=rr?rr.dataset.case:null, watching=false;
 function relevant(paths){ if(!caseId) return true;
-  return paths.some(function(p){return p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0 || p.indexOf('step3a_view')>=0 || p.indexOf('step3b_view')>=0;}); }
+  return paths.some(function(p){return p==='out/current.json' || p.indexOf(caseId)>=0 || p.indexOf('build_viewer')>=0 || p.indexOf('step3a_view')>=0 || p.indexOf('aitx/viewer/step3a.py')>=0 || p.indexOf('step3b_view')>=0;}); }
 var es=new EventSource('/events');
 es.onmessage=function(ev){ var d=JSON.parse(ev.data); if(watching || !relevant(d.paths)) return;
   location.reload(); };
@@ -145,7 +146,7 @@ function fmt(r){ var dur=r.duration_s==null?'…':r.duration_s.toFixed(1)+' s';
   var res=r.status==='running'?'<span class="tag warn">'+T.running+'</span>':
      (r.status==='ok'?'<span class="tag pass">'+T.ok+'</span>':'<span class="tag fail">'+T.failed+'</span>');
   return '<tr><td>'+new Date(r.started*1000).toLocaleString()+'</td><td><a href="/cases/'+r.case_id+page.suffix+'">'+r.case_id+
-    '</a></td><td>'+r.from_step+'–'+r.to_step+'</td><td>'+(r.no_cache?T.nocache:T.cache)+'</td><td>'+res+'</td><td>'+dur+'</td></tr>'; }
+    '</a></td><td>'+(r.kind==='step3a'?'3a':r.from_step+'–'+r.to_step)+'</td><td>'+(r.no_cache?T.nocache:T.cache)+'</td><td>'+res+'</td><td>'+dur+'</td></tr>'; }
 function loadRuns(){ var tb=document.getElementById('runrows');
   var lim=tb?+tb.dataset.limit:1;
   fetch('/api/runs?limit='+lim).then(function(x){return x.json();}).then(function(d){
@@ -158,6 +159,7 @@ function loadRuns(){ var tb=document.getElementById('runrows');
   if(rr){ var mine=d.active.filter(function(r){return r.case_id===caseId;}); if(mine.length) follow(mine[0].id); }
 });}
 function follow(id){ if(watching) return; watching=true;
+  var process=rr.closest('#trial-screening-process'); if(process) process.open=true;
   var log=document.getElementById('runlog'), st=document.getElementById('runstatus');
   log.style.display='block'; log.textContent=''; st.textContent=T.running+' …';
   var s=new EventSource('/api/runs/'+id+'/stream');
@@ -170,7 +172,7 @@ if(rr){ rr.querySelectorAll('button.rerun').forEach(function(b){ b.addEventListe
   var nc=document.getElementById('nocache').checked;
   if(nc && !confirm(T.confirm)) return;
   fetch('/api/runs',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({case_id:caseId,from_step:+b.dataset.step,no_cache:nc,confirm_no_cache:nc})})
+    body:JSON.stringify({case_id:caseId,from_step:+b.dataset.step,to_step:+b.dataset.toStep,no_cache:nc,confirm_no_cache:nc})})
   .then(function(x){return x.json().then(function(d){return [x.status,d];});})
   .then(function(a){ if(a[0]===201) follow(a[1].id); else alert(a[1].detail||('HTTP '+a[0])); });
 });});}
@@ -262,9 +264,10 @@ class Watcher:
         self._stop = threading.Event()
 
     def scan(self) -> dict[str, float]:
-        files = list((self.root / "out").glob("step*/*.json")) \
-            + list((self.root / "out" / "step3a-source-selection").glob("**/*.json")) \
-            + [self.root / "scripts" / "build_viewer.py", self.root / "scripts" / "step3a_view.py", self.root / "scripts" / "step3b_view.py",
+        files = [p for p in (self.root / "out").glob("step*/*") if p.suffix in (".json", ".md")] \
+            + list((self.root / "runs" / "step3a").glob("**/*.json")) + [self.root / "out/current.json"] \
+            + list((self.root / "out" / "3b").glob("**/*.json")) \
+            + [self.root / "scripts" / "build_viewer.py", self.root / "aitx" / "viewer" / "step3a.py", self.root / "scripts" / "step3b_view.py",
                self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}
 
@@ -301,7 +304,8 @@ class Run:
 
     def record(self) -> dict:
         return {"id": self.id, "case_id": self.case_id, "from_step": self.from_step, "to_step": self.to_step,
-                "no_cache": self.no_cache, "command": self.cmd, "started": self.started, "ended": self.ended,
+                "no_cache": self.no_cache, "command": self.cmd,
+                "kind": "step3a" if "run_step3a.py" in self.cmd[2] else "pipeline", "started": self.started, "ended": self.ended,
                 "duration_s": None if self.ended is None else round(self.ended - self.started, 2),
                 "status": self.status, "returncode": self.returncode, "log": str(self.log_path)}
 
@@ -320,13 +324,13 @@ class Runner:
                "--from-step", str(from_step), "--to-step", str(to_step)]
         return cmd + (["--no-cache"] if no_cache else [])
 
-    def start(self, case_id: str, from_step: int, to_step: int, no_cache: bool) -> Run:
+    def start(self, case_id: str, from_step: int, to_step: int, no_cache: bool, *, command: list[str] | None = None) -> Run:
         with self.lock:
             if case_id in self.active:
                 raise Busy(f"{case_id} is already running (run {self.active[case_id].id})")
             self.dir.mkdir(parents=True, exist_ok=True)
             run = Run(case_id, from_step, to_step, no_cache,
-                      self.command(case_id, from_step, to_step, no_cache), self.dir)
+                      command if command is not None else self.command(case_id, from_step, to_step, no_cache), self.dir)
             self.active[case_id] = self.runs[run.id] = run
         proc = subprocess.Popen(run.cmd, cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                 bufsize=1)
@@ -385,6 +389,30 @@ class RunRequest(BaseModel):
     to_step: Optional[int] = None          # pydantic evaluates this at runtime: no `int | None` on 3.9
     no_cache: bool = False
     confirm_no_cache: bool = False
+
+
+class Step3aRunRequest(BaseModel):
+    case_id: str
+    batch: str
+    action: str
+    max_cost_usd: Optional[float] = None
+
+
+def step3a_command(req: Step3aRunRequest) -> list[str]:
+    import math
+    if req.action not in ('run', 'resume', 'recover'):
+        raise ValueError('Expected run, resume or recover')
+    from aitx.step3.a.results import batch_folder
+    folder = batch_folder(ROOT, req.case_id, req.batch)
+    command = [sys.executable, '-u', str(SCRIPTS/'run_step3a.py'),
+               'recover' if req.action == 'recover' else 'run', '--output', str(folder)]
+    if req.action != 'recover':
+        if req.max_cost_usd is None or not math.isfinite(req.max_cost_usd) or req.max_cost_usd <= 0:
+            raise ValueError('Explicit positive finite run budget required')
+        command += ['--concurrency', '4', '--max-cost-usd', str(req.max_cost_usd)]
+        if req.action == 'resume':
+            command += ['--resume']
+    return command
 
 
 def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> FastAPI:
@@ -456,6 +484,17 @@ def create_app(runner: Runner | None = None, watcher: Watcher | None = None) -> 
             run = runner.start(req.case_id, req.from_step, to_step, req.no_cache)
         except Busy as e:
             raise HTTPException(409, str(e)) from e
+        return run.record()
+
+    @app.post('/api/step3a/runs', status_code=201)
+    def start_step3a(req: Step3aRunRequest):
+        try:
+            command = step3a_command(req)
+            run = runner.start(req.case_id, 3, 3, req.action != 'recover', command=command)
+        except Busy as error:
+            raise HTTPException(409, str(error)) from error
+        except (ValueError, FileNotFoundError) as error:
+            raise HTTPException(400, str(error)) from error
         return run.record()
 
     @app.get("/api/runs/{run_id}")

@@ -878,7 +878,8 @@ def step_navigation(c: dict, context: str) -> str:
 
 def step3_panel(case_id: str) -> str:
     import importlib
-    from scripts import step3a_view, step3b_view
+    from aitx.viewer import step3a as step3a_view
+    from scripts import step3b_view
     # The live Viewer reloads this template; refresh its renderer dependency too.
     panel = importlib.reload(step3a_view).panel
     trial_panel = importlib.reload(step3b_view).panel
@@ -886,7 +887,7 @@ def step3_panel(case_id: str) -> str:
     buttons = ''.join(f"<button type='button' role='tab' id='tab-3{x}' aria-controls='panel-3{x}' aria-selected='{str(x == 'a').lower()}' data-step3='{x}'>3{x} · {labels[x]}</button>" for x in 'abcde')
     panels = "<section id='panel-3a' role='tabpanel' aria-labelledby='tab-3a'>"+panel(case_id)+"</section>"
     panels += "<section id='panel-3b' role='tabpanel' aria-labelledby='tab-3b' hidden>"+trial_panel(case_id)+"</section>"
-    panels += ''.join(f"<section id='panel-3{x}' role='tabpanel' aria-labelledby='tab-3{x}' hidden><p class='muted'>Step 3{x} 展示尚未接入。</p></section>" for x in 'cde')
+    panels += ''.join(f"<section id='panel-3{x}' role='tabpanel' aria-labelledby='tab-3{x}' hidden>{saved_section(case_id, x)}</section>" for x in 'cde')
     js = """<script>(function(){
 function selectTab(x){document.querySelectorAll('[data-step3]').forEach(t=>t.setAttribute('aria-selected',String(t.dataset.step3===x)));document.querySelectorAll('[id^="panel-3"]').forEach(p=>p.hidden=p.id!=='panel-3'+x)}
 document.querySelectorAll('[data-step3]').forEach(b=>b.addEventListener('click',()=>{selectTab(b.dataset.step3);location.hash='panel-3'+b.dataset.step3}));
@@ -895,13 +896,33 @@ window.addEventListener('hashchange',fromHash);fromHash();
 })();</script>"""
     return "<div class='step3-tabs' role='tablist' aria-label='Step 3 子步骤'>"+buttons+"</div>"+panels+js
 
+
+def saved_section(case_id: str, section: str) -> str:
+    path = OUT/'step3'/f'{case_id}.json'
+    if not path.exists():
+        return '<p class="muted">尚无已保存的 Step 3 账本，结果未知。</p>'
+    ledger = json.loads(path.read_text())
+    names = {'c': 'off_label_expanded_access', 'd': 'bespoke_therapies', 'e': 'drug_repurposing'}
+    actions = [a for a in ledger['actions'] if a['section'] == names[section]]
+    return ('<p class="muted">当前已保存账本中的结果；新 3a 尚未接入，不能视为基于最新 3a 重新生成。</p>'
+            + ('<pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+e(json.dumps(actions, ensure_ascii=False, indent=2))+'</pre>'
+               if actions else '<p>账本未记录此节行动，结果未知。</p>'))
+
+
+def saved_output(case_id: str, step: int) -> str:
+    path = OUT/f'step{step}'/f'{case_id}{".md" if step == 4 else ".json"}'
+    if not path.exists():
+        return '<p class="muted">尚无已保存结果；核查是否通过未知。</p>' if step == 5 else '<p class="muted">尚无已保存报告。</p>'
+    note = '最新保存的报告；新 3a 尚未接入，此报告不代表已根据最新 3a 更新。' if step == 4 else '最新保存的核查结果；页面不重新执行核查。'
+    return '<p class="muted">'+note+'</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere">'+e(path.read_text())+'</pre>'
+
 def case_page(c: dict, context: str) -> str:
     s1, s2 = c["steps"][1], c["steps"][2]
     meta = s2.get("_meta", {})
     hpo = s2.get("hpo_version", "").split("/")[-2] if s2.get("hpo_version") else ""
     made = time.strftime("%Y-%m-%d %H:%M", time.localtime(meta.get("created_at", 0)))
     body = f"""{step_navigation(c, context)}<h1>{e(c['id'])} <span class='muted' style='font-size:14px'>{e(group_label(c['group']))}</span></h1>
-<p class='muted'>{L(f"结果文件：第 2 步代码版本 {meta.get('code_commit', '?')}，生成于 {made}；HPO {hpo}",
+<p class='muted' id='case-technical-info'>{L(f"结果文件：第 2 步代码版本 {meta.get('code_commit', '?')}，生成于 {made}；HPO {hpo}",
                     f"Result files: step 2 code {meta.get('code_commit', '?')}, generated {made}; HPO {hpo}")}</p>
 <div data-main-step='1'><h2 id='variant'>{L('Step 1 变异事实', 'Step 1 variant facts')}</h2>{v_variant(s1)}
 </div><div data-main-step='2' hidden><h2 id='disease'>{L('Step 2 结论', 'Step 2 conclusion')}</h2>{v_decision(s2)}
@@ -912,8 +933,8 @@ def case_page(c: dict, context: str) -> str:
 <h2>{L('ClinVar 变异级证据', 'ClinVar variant-level evidence')}</h2>{v_clinvar(s2)}
 <h2>{L('来源链接', 'Source links')}</h2>{v_sources(s2)}</div>
 <section id='step3' data-main-step='3' hidden><h2>Step 3 · 证据检索</h2>{step3_panel(c['id'])}</section>
-<section id='step4' data-main-step='4' hidden><h2>Step 4 · 报告合成</h2><p class='muted'>新 3a 原文筛选尚未转换为 Step 4 输入；现有报告文件未修改。</p></section>
-<section id='step5' data-main-step='5' hidden><h2>Step 5 · 核查</h2><p class='muted'>本轮未运行报告核查。</p></section>"""
+<section id='step4' data-main-step='4' hidden><h2>Step 4 · 报告合成</h2>{saved_output(c['id'], 4)}</section>
+<section id='step5' data-main-step='5' hidden><h2>Step 5 · 核查</h2>{saved_output(c['id'], 5)}</section>"""
     body += """<script>(function(){
 const links=[...document.querySelectorAll('.step-nav a')];
 function activate(){

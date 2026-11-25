@@ -1,7 +1,8 @@
-# Step 3d 契约：定制疗法（Tier 3 · Bespoke Therapies）——草案 v0.1（待审，只写契约，未实现）
+# Step 3d 契约：定制疗法（Tier 3 · Bespoke Therapies）——设计与历史修订
 
-> 2026-11-05 起草。本草案不改任何代码。下面的验收期望都是**提议**，要先人工核实原文才能写进 `data/eval/`。
-> "写错比不写更糟"：3d 写的都是假设性层（hypothetical）的内容，**只给分子层面的可行性判断**，不说"推荐"。病情、个人情况和伦理评估不在范围内，交给治疗评估小组（见第 6 节）。
+> 当前已有实现：`aitx/evidence/bespoke.py:add_bespoke`。下文包含历史提案、验收期望与修订，不能仅凭文件存在认定全部已批准、已实现或已验收。
+
+本节只给分子层面的可行性判断，不把假设性内容写成推荐；病情、个人情况和伦理评估交由治疗评估小组。验收提议需人工核实原文后才能写进评测数据。
 
 ## 1. 范围与边界
 
@@ -155,7 +156,7 @@ N1C 的判定对象是**外显子**，不是单个变异："While splicing asses
 | 2 | N1C 补充材料 | **已同意并取得**（Europe PMC 官方接口，存 `.cache/n1c/supp/`）。Data S1 细则已并入第 3 节；Table S2 留待 3.4 用 |
 | 5 | 碱基编辑的 PAM 与编辑窗口 | **暂不计算**，一律写"是否存在合适的 PAM 未评估"。只给"需要哪种编辑器"这一层确定性结论（只靠 HGVS 可判） |
 | 6 | 非 ASO 手段的分级用词 | **不套用 N1C 五级**。三种 ASO 手段用 N1C 五级；其余用三档："理论上可行（分子条件满足）/ 不适用（附理由）/ 无法评估（缺什么）"。上调正常拷贝按 N1C 自己的做法不分级 |
-| 7 | "Outcome Measures & Ranking" 小节 | **归 Step 4**。3d 只产出排序需要的字段：`classification`、`premises_complete`（前提是否齐全）、`human_precedent`（有无人体先例）、`approved_or_in_trial`（是否已有获批 / 在试产品）。已记进 `docs/step4_contract_todo.md` |
+| 7 | "Outcome Measures & Ranking" 小节 | **归 Step 4**。3d 只产出排序需要的字段：`classification`、`premises_complete`（前提是否齐全）、`human_precedent`（有无人体先例）、`approved_or_in_trial`（是否已有获批 / 在试产品）。已记进 `docs/step4_contract.md` |
 | 8 | 嵌合 / X 染色体失活 | 一律判"无法评估：取决于 X 失活（或嵌合比例），病例未提供"，并列进缺失信息。只有病例明确给出偏斜失活或嵌合比例的检测结果时才按结果判断 |
 | 9 | 3d 与 3e 的分界 | **按手段分，不按证据阶段分**：为该变异定制的手段（ASO / 基因替代 / 编辑）都在 3d，证据强度如实标注（体外 / 动物 / 个案）；3e 留给小分子或已上市药物的体外筛选结果 |
 

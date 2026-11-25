@@ -5,7 +5,7 @@ Switching models is configuration only — no code changes:
     AITX_LLM_BASE_URL   e.g. https://api.deepseek.com            (default)
                              https://openrouter.ai/api/v1
     AITX_LLM_MODEL      e.g. deepseek-flash, deepseek/deepseek-v4-flash-0423
-    AITX_LLM_API_KEY    your key
+    DEEPSEEK_API_KEY    your key
     AITX_LLM_STREAM=0      ask for a non-streamed response (default: streamed, assembled here)
     AITX_LLM_CACHE_ONLY=1  never call the server: callers' cached answers are used and any
                            uncached call raises CacheOnly (lets checks run during peak-price hours)
@@ -72,7 +72,7 @@ def config() -> dict:
     return {
         "base_url": os.environ.get("AITX_LLM_BASE_URL", "https://api.deepseek.com").rstrip("/"),
         "model": os.environ.get("AITX_LLM_MODEL", "deepseek-flash"),
-        "api_key": os.environ.get("AITX_LLM_API_KEY", ""),
+        "api_key": os.environ.get("DEEPSEEK_API_KEY", ""),
         "expect_model_prefix": os.environ.get("AITX_EXPECT_MODEL_PREFIX", ""),
     }
 
@@ -84,7 +84,7 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
         raise CacheOnly("AITX_LLM_CACHE_ONLY=1: this call is not cached; run it off-peak")
     cfg = config()
     if not cfg["api_key"]:
-        raise RuntimeError("set AITX_LLM_API_KEY")
+        raise RuntimeError("set DEEPSEEK_API_KEY")
     body = {"model": cfg["model"], "messages": messages, "temperature": temperature,
             "max_tokens": max_tokens, **extra}
     if tools:
@@ -100,7 +100,7 @@ def chat(messages: list[dict], *, tools: list[dict] | None = None, temperature: 
         headers={"Authorization": f"Bearer {cfg['api_key']}", "Content-Type": "application/json"},
     )
     t0 = time.time()
-    from scripts.llm_cost import request_reservation
+    from aitx.llm_cost import request_reservation
     reserved = request_reservation(messages, max_tokens, t0, tools)
     with urllib.request.urlopen(req, timeout=TIMEOUT_S) as r:
         resp = _read_stream(r) if body.get("stream") else json.loads(r.read().decode())

@@ -54,6 +54,13 @@ def _key(url: str, headers: dict | None = None) -> Path:
     return CACHE_DIR / (hashlib.sha256(k.encode()).hexdigest() + ".json")
 
 
+def cached_response(record: dict) -> Fetched:
+    """Replay an explicitly recorded HTTP error with the original transport semantics."""
+    if "http_status" in record and record["http_status"] >= 400:
+        raise RuntimeError(record["error"])
+    return Fetched(record["url"], record["text"], record["accessed_at"], True)
+
+
 def post_json(url: str, body: dict, *, use_cache: bool = True, timeout: int = 30, retries: int = 3,
               headers: dict | None = None) -> Fetched:
     """A cached POST of JSON (GraphQL endpoints only accept POST). The cache key includes the body, so two
@@ -63,7 +70,7 @@ def post_json(url: str, body: dict, *, use_cache: bool = True, timeout: int = 30
     if use_cache and path.exists():
         d = json.loads(path.read_text())
         if not _stale(url, d["accessed_at"]):
-            return Fetched(d["url"], d["text"], d["accessed_at"], True)
+            return cached_response(d)
     last_err: Exception | None = None
     for attempt in range(retries):
         try:
@@ -92,7 +99,7 @@ def get(url: str, *, use_cache: bool = True, timeout: int = 30, retries: int = 3
     if use_cache and path.exists():
         d = json.loads(path.read_text())
         if not _stale(url, d["accessed_at"]):
-            return Fetched(d["url"], d["text"], d["accessed_at"], True)
+            return cached_response(d)
 
     last_err: Exception | None = None
     for attempt in range(retries):

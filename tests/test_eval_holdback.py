@@ -62,13 +62,13 @@ def test_acceptance_refuses_evaluation_cases():
     runmeta.refuse_eval_cases(["PRAC-GRIN2B"])          # practice cases are fine
 
 
-@pytest.mark.parametrize("name", ["3a", "3b", "3c", "3d", "3e"])
+@pytest.mark.parametrize("name", ["3b", "3c", "3d", "3e"])
 def test_every_step3_acceptance_script_calls_the_guard(name):
     src = (ROOT / "scripts" / f"acceptance_step{name}.py").read_text()
     assert "refuse_eval_cases" in src, f"acceptance_step{name}.py does not guard the evaluation cases"
 
 
-@pytest.mark.parametrize("name", ["3a", "3b", "3c", "3d", "3e", "3_0"])
+@pytest.mark.parametrize("name", ["3b", "3c", "3d", "3e", "3_0"])
 def test_no_step3_expectation_or_script_names_an_evaluation_case(name):
     held = runmeta.eval_ids()
     src = (ROOT / "scripts" / f"acceptance_step{name}.py").read_text()

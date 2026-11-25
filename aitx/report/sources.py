@@ -57,17 +57,6 @@ def date_of(src: dict, evidence: dict | None = None) -> str | None:
 MEASURE = None
 
 
-def trial_primary_outcomes(nct: str) -> list[str]:
-    """The trial's registered primary outcome measures, verbatim (with their time frame)."""
-    from aitx import http
-    try:
-        d = json.loads(http.get(f"https://clinicaltrials.gov/api/v2/studies/{nct}?fields=OutcomesModule").text)
-    except (RuntimeError, ValueError):
-        return []
-    po = ((d.get("protocolSection") or {}).get("outcomesModule") or {}).get("primaryOutcomes") or []
-    return [p["measure"] + (f" ({p['timeFrame']})" if p.get("timeFrame") else "") for p in po if p.get("measure")]
-
-
 def genereviews_surveillance(nbk: str) -> list[str]:
     """Sentences of the chapter's Surveillance section that name something measured (code filter, verbatim)."""
     import re

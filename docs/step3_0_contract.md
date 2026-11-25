@@ -372,4 +372,4 @@ why: Step 2 的理由, step2_score, specific: bool, expanded_from}`。
 - reasoning：排序后的前提 ID、claim、章节、行动键、适用分支。
 - negative：数据库、查询、章节、适用分支。
 
-相同来源、相同原文及相同身份上下文重复获取时 ID 必须不变；获取时间、LLM/代码生产者或缓存传输信息不参与 sourced 身份。不得借“冻结”合并不同 claim / 行动 / 分支，也不把新增或改写证据冒充 ID 迁移。黄金向量与重复获取回归见 `tests/test_evidence_id_freeze.py`。本次 61 项差异审计见 `docs/evidence_id_audit_20261117.md`：历史 ID 全部能用现行算法重算，故不满足“仅 ID 生成方式改变”的批量批准条件，继续待审。
+相同来源、相同原文及相同身份上下文重复获取时 ID 必须不变；获取时间、LLM/代码生产者或缓存传输信息不参与 sourced 身份。不得借“冻结”合并不同 claim / 行动 / 分支，也不把新增或改写证据冒充 ID 迁移。黄金向量与重复获取回归见 `tests/test_evidence_id_freeze.py`。本次 61 项差异审计见 `docs/experiments/evidence_id_audit_20261117.md`：历史 ID 全部能用现行算法重算，故不满足“仅 ID 生成方式改变”的批量批准条件，继续待审。

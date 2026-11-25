@@ -1,13 +1,14 @@
-"""Step 3.0: branches (contract 2), patient context (3), rule layer (4)."""
 import json
 
 import pytest
 
 from aitx import http
-from aitx.evidence import ledger as LG
-from aitx.evidence import rules as RU
-from aitx.evidence.branches import build_branches, patient_context
 
+from aitx.evidence import ledger as LG
+
+from aitx.evidence import rules as RU
+
+from aitx.evidence.branches import build_branches, patient_context
 
 @pytest.mark.parametrize("location,zygosity,stated,want", [
     ("Xp21.2-p21.1", "hemizygous", "unknown", "male"),
@@ -30,11 +31,10 @@ def test_review_sex_inference_needs_x_and_hemizygosity_and_yields_to_the_text(mo
     elif want == "male":
         assert result["inferred"] and result["step"] == 3 and "hemizygous" in result["quote"]
 
-
 def test_review_inferred_sex_has_verified_reasoning_premises_and_is_not_missing(monkeypatch):
     from aitx.disease import live
-    from aitx.evidence.pipeline import record_sex_inference
-    from aitx.evidence import established as E
+    from aitx.step3.pipeline import record_sex_inference
+    from aitx.evidence import patient_matching as E
     monkeypatch.setattr(live, "hgnc_gene", lambda gene: {"found": True, "location": "Xp21.2-p21.1", "symbol": gene,
         "api_url": "https://rest.genenames.org/fetch/symbol/DMD", "accessed_at": 1})
     s1 = {"_meta": {"created_at": 1}, "variants": [{"gene": "DMD", "zygosity": "hemizygous", "variant_cdna": "c.1del",
@@ -53,23 +53,19 @@ def test_review_inferred_sex_has_verified_reasoning_premises_and_is_not_missing(
     assert st == "satisfies" and fact["step"] == 3 and fact["inferred"] and "inferred" in note
     assert s2["patient_facts"]["sex"]["value"] == "unknown"  # upstream text stays untouched
 
-
 def cand(key, label, omim=(), score=1.0, narrower=None, specific=True, excluded=False):
     return {"key": key, "label": label, "omim": [{"id": o} for o in omim], "specific": specific, "excluded": excluded,
             "phenotype": {"score": score}, "merge": {"narrower_competing": narrower} if narrower else {},
             "orphanet": [], "mondo_url": f"https://monarchinitiative.org/{key}"}
-
 
 def step2(status, primary, alts=(), cands=()):
     return {"primary": {"status": status, "id": primary, "reasons": ["why"], "alternatives": [{"id": a} for a in alts]},
             "candidates": list(cands), "not_supported": [],
             "inheritance_evidence": {"variants": [{"gene": "G1"}]}}
 
-
 def test_resolved_is_one_branch():
     b, d = build_branches(step2("resolved", "M:1", cands=[cand("M:1", "D1", ["OMIM:100001"])]))
     assert [(x["id"], x["role"]) for x in b] == [("M:1", "primary")] and d == []
-
 
 def test_umbrella_expanded_and_deduplicated():
     # like AITX-40003: HSAN1 (no OMIM) -> HSAN1A (already listed); juvenile ALS (no OMIM) -> ALS27
@@ -80,11 +76,9 @@ def test_umbrella_expanded_and_deduplicated():
     assert b[0]["expanded_from"] == "M:HSAN1" and b[1]["expanded_from"] == "M:JALS"
     assert [x["role"] for x in b] == ["ambiguous_1", "ambiguous_2"]
 
-
 def test_umbrella_without_children_kept_and_marked():
     b, _ = build_branches(step2("ambiguous", "M:1", ["M:2"], [cand("M:1", "D1", ["OMIM:100001"]), cand("M:2", "XLID")]))
     assert b[1]["umbrella"] and "no more specific disease" in b[1]["not_expandable"]
-
 
 def test_more_than_three_branches_keep_top_scores():
     cs = [cand("M:A", "A", ["OMIM:100001"], 4.0), cand("M:B", "B", ["OMIM:100002"], 4.0),
@@ -94,11 +88,9 @@ def test_more_than_three_branches_keep_top_scores():
     assert [x["id"] for x in b] == ["M:A", "M:B", "M:OI1"]
     assert [x["id"] for x in d] == ["M:OI2"] and "more than 3" in d[0]["dropped_reason"]
 
-
 def test_unresolved_gets_gene_level_branch():
     b, _ = build_branches(step2("unresolved", None))
     assert b[0]["id"] == "gene:G1" and b[0]["role"] == "gene_level" and b[0]["diagnosis"] is None
-
 
 def test_patient_context_registers_missing_age_and_sex():
     s2 = {"patient_facts": {"age": {"months": None}, "sex": {"value": "unknown", "quote": None}, "variant_origin": {"value": "unknown"},
@@ -106,17 +98,13 @@ def test_patient_context_registers_missing_age_and_sex():
     ctx, missing = patient_context({"variants": []}, s2)
     assert [m["variable"] for m in missing] == ["age", "sex"]
 
-
-# ------------------------------------------------------------------ rules
-
 ABSTRACT = "Most in-frame deletions in the DMD gene result in the milder Becker muscular dystrophy phenotype."
-TEXT_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=1&rettype=abstract&retmode=text"
 
+TEXT_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=1&rettype=abstract&retmode=text"
 
 @pytest.fixture
 def pubmed(monkeypatch):
     monkeypatch.setattr(http, "get", lambda url, **kw: http.Fetched(url, ABSTRACT, 1793700000, True))
-
 
 def rule(**over):
     r = {"id": "DMD-frame-1", "gene": "DMD", "version": 1, "applies_when": {"variant_class": ["inframe_deletion"]},
@@ -129,10 +117,8 @@ def rule(**over):
     r["content_sha256"] = RU.content_hash(r)
     return r
 
-
 def test_valid_rule_loads(pubmed):
     assert RU.validate(rule()) == []
-
 
 def test_vetoed_rule_not_loaded_and_reason_required(pubmed):
     r = rule()
@@ -141,21 +127,17 @@ def test_vetoed_rule_not_loaded_and_reason_required(pubmed):
     r["review"] = {"decision": "vetoed"}
     assert "NO REASON GIVEN" in RU.validate(r)[0]
 
-
 def test_hand_edited_rule_not_loaded(pubmed):
     r = rule()
     r["statement"] = "In-frame DMD deletions always cause Becker."          # edited after drafting
     assert any("hand edit" in x for x in RU.validate(r))
 
-
 def test_rule_conditions_only_from_step1(pubmed):
     assert any("non-step-1" in x for x in RU.validate(rule(applies_when={"patient_age": [0, 5]})))
-
 
 def test_rule_quote_must_be_in_fetched_source(pubmed):
     r = rule(sources=[{"type": "pmid", "id": "1", "text_url": TEXT_URL, "quote": "always Duchenne", "accessed_at": 1}])
     assert any("quote not verified" in x for x in RU.validate(r))
-
 
 def test_rule_application_reorders_but_keeps_branches(pubmed):
     branches = [{"id": "M:DMD", "diagnosis": {"omim": ["OMIM:310200"]}}, {"id": "M:BMD", "diagnosis": {"omim": ["OMIM:300376"]}},
@@ -168,20 +150,17 @@ def test_rule_application_reorders_but_keeps_branches(pubmed):
     ev = [e for e in led.evidence.values() if e["retrieved_by"] == "rule DMD-frame-1"]
     assert ev and ev[0]["status"] == "verified" and ev[0]["section"] == "background"
 
-
 def test_rule_for_a_diagnosis_that_is_not_a_branch_is_reported(pubmed):
     led = LG.Ledger("P", [{"id": "M:DMD", "diagnosis": {"omim": ["OMIM:310200"]}}])
     RU.apply_rules(led, {"loaded": [rule()], "skipped": []},
                    {"variants": [{"gene": "DMD", "variant_cdna": "c.1_3del", "variant_class": "inframe_deletion"}]})
     assert led.rules_applied[0]["branches_not_present"] == ["OMIM:300376"]   # Becker is not a step 2 branch
 
-
 def test_rule_not_matching_variant_is_ignored(pubmed):
     led = LG.Ledger("P", [{"id": "M:DMD", "diagnosis": {"omim": ["OMIM:310200"]}}])
     RU.apply_rules(led, {"loaded": [rule()], "skipped": []},
                    {"variants": [{"gene": "DMD", "variant_cdna": "c.1del", "variant_class": "frameshift"}]})
     assert led.rules_applied == [] and led.branch_order == ["M:DMD"]
-
 
 def test_load_rules_reads_files_and_reports_skipped(tmp_path, pubmed):
     vetoed = rule(id="DMD-frame-2")
@@ -191,20 +170,14 @@ def test_load_rules_reads_files_and_reports_skipped(tmp_path, pubmed):
     assert [r["id"] for r in got["loaded"]] == ["DMD-frame-1"]
     assert got["skipped"] == [{"rule_id": "DMD-frame-2", "file": "DMD.json", "reasons": ["vetoed: duplicate"]}]
 
-
-# ------------------------------------------------- rule promotion (contract section 2)
-
 def _s2(*cands):
     return {"candidates": [cand(*c) for c in cands]}
-
 
 def _dmd_branches():
     return [{"id": "M:DMD", "role": "ambiguous_1", "gene": "DMD", "diagnosis": {"omim": ["OMIM:310200"]}},
             {"id": "M:XLID", "role": "ambiguous_2", "gene": "DMD", "diagnosis": {"omim": []}}]
 
-
 INFRAME = {"variants": [{"gene": "DMD", "variant_cdna": "c.1_3del", "variant_class": "inframe_deletion"}]}
-
 
 def test_rule_promotes_step2_candidate_to_branch(pubmed):
     led = LG.Ledger("P", _dmd_branches())
@@ -218,7 +191,6 @@ def test_rule_promotes_step2_candidate_to_branch(pubmed):
     assert led.rules_applied[0]["promotions"] == [{"omim": "OMIM:300376", "candidate": "M:BMD", "promoted": True}]
     assert led.branch_order[0] == "M:BMD" and led.branch_order[-1] == "M:DMD"   # reordered, nothing removed
 
-
 def test_promotion_blocked_at_branch_limit(pubmed):
     led = LG.Ledger("P", _dmd_branches() + [{"id": "M:X", "role": "ambiguous_3", "gene": "DMD",
                                              "diagnosis": {"omim": ["OMIM:100001"]}}])
@@ -227,7 +199,6 @@ def test_promotion_blocked_at_branch_limit(pubmed):
     assert len(led.branches) == 3 and "M:BMD" not in [b["id"] for b in led.branches]
     p = led.rules_applied[0]["promotions"][0]
     assert not p["promoted"] and "branch limit" in p["reason"]
-
 
 def test_only_step2_candidates_can_be_promoted(pubmed):
     led = LG.Ledger("P", _dmd_branches())
@@ -240,19 +211,16 @@ def test_only_step2_candidates_can_be_promoted(pubmed):
     RU.apply_rules(led2, {"loaded": [rule()], "skipped": []}, INFRAME, s2)
     assert "M:BMD" not in [b["id"] for b in led2.branches]
 
-
 def test_matching_rule_without_promotion_keeps_resolved_role(pubmed):
     led = LG.Ledger("P", [{"id": "M:BMD", "role": "primary", "gene": "DMD", "diagnosis": {"omim": ["OMIM:300376"]}}])
     RU.apply_rules(led, {"loaded": [rule()], "skipped": []}, INFRAME, _s2(("M:BMD", "Becker", ["OMIM:300376"])))
     assert led.branches[0]["role"] == "primary"
-
 
 def test_unloaded_rule_promotes_nothing(pubmed):
     led = LG.Ledger("P", _dmd_branches())
     RU.apply_rules(led, {"loaded": [], "skipped": [{"rule_id": "x", "reasons": ["vetoed: y"]}]}, INFRAME,
                    _s2(("M:BMD", "Becker", ["OMIM:300376"])))
     assert [b["id"] for b in led.branches] == ["M:DMD", "M:XLID"]
-
 
 def test_weak_rule_is_background_only(pubmed):
     led = LG.Ledger("P", _dmd_branches())
@@ -264,7 +232,6 @@ def test_weak_rule_is_background_only(pubmed):
     assert applied["affects_branches"] is False and applied["promotions"] == []
     assert any(e["retrieved_by"] == "rule DMD-frame-1" for e in led.evidence.values())   # still background evidence
 
-
 def test_pending_rule_needs_reviewer_acceptance(pubmed):
     r = rule(status="pending_review", support_check={"overall": "partially_supported"})
     assert any("pending review" in x for x in RU.validate(r))
@@ -273,25 +240,19 @@ def test_pending_rule_needs_reviewer_acceptance(pubmed):
     r["review"]["reason"] = "quotes state the reading-frame rule"
     assert RU.validate(r) == []                                                          # accepted -> loads
 
-
 def test_verified_rule_must_have_passed_support_check(pubmed):
     r = rule(support_check={"overall": "not_supported"})                                 # status verified by hand
     assert any("did not find it supported" in x for x in RU.validate(r))
 
-
 def test_review_identity_ignores_status_and_checks():
     a, b = rule(), rule(status="pending_review", support_check={"overall": "partially_supported"})
     assert RU.identity(a) == RU.identity(b) and RU.content_hash(a) != RU.content_hash(b)
-
-
-# --- narrowing conditions added after the 2026-11-05 rule review
 
 def _v(**kw):
     base = {"gene": "COL1A1", "variant_class": "missense", "zygosity": "heterozygous",
             "variant_protein": "p.(Arg134Cys)", "first_affected_aa": 134}
     base.update(kw)
     return base
-
 
 def test_aa_substitution_needs_the_same_replacement():
     want = {"position": 134, "from": "Arg", "to": "Cys"}
@@ -302,7 +263,6 @@ def test_aa_substitution_needs_the_same_replacement():
     # the position-only condition it replaces would have fired on all of them
     assert RU.matches({"protein_position": [134, 134]}, _v(variant_protein="p.(Arg134His)"))
 
-
 def test_substitution_prefers_the_recomputed_residues():
     v = _v(variant_protein="p.(Arg134Cys)",
             retranslation={"first_changed_aa": {"position": 134, "reference": "Arg", "variant": "His"}})
@@ -310,7 +270,6 @@ def test_substitution_prefers_the_recomputed_residues():
     assert RU.substitution(_v(variant_protein="p.Gln919Ter")) == {"position": 919, "from": "Gln", "to": "Ter"}
     assert RU.substitution(_v(variant_protein="p.(Ile2694SerfsTer44)", retranslation={})) is None   # frameshift
     assert RU.substitution(_v(variant_protein="", retranslation={})) is None
-
 
 @pytest.mark.parametrize("v,want", [
     (_v(variant_class="splice", exon={"number": 6}), True),                         # splice at that exon's boundary

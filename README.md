@@ -58,7 +58,7 @@ export NCBI_API_KEY=你的key
 需要联网和 LLM key（症状提取用到 LLM，其余全部是确定性计算）：
 
 ```bash
-export AITX_LLM_API_KEY=你的key
+export DEEPSEEK_API_KEY=你的key
 
 # 1. 联网验收：练习病例的标准答案 + 评测病例人工核对项
 python3 scripts/acceptance_step2.py
@@ -131,7 +131,7 @@ python3 scripts/viewer_app.py             # 打开 http://127.0.0.1:8765/ （只
 - 病例页的 Step 1 部分有三张平面图（密码子对比、按比例的蛋白长度条、按真实长度的外显子图 + 拼接标记 + NMD 结论）
   和 3D 蛋白结构（AlphaFold 预测，3Dmol.js；错义变异标红并显示 8 Å 内邻居，截短丢失部分变灰，可切换按 pLDDT 着色）。
   3D 视图只在应用中可用，静态快照里显示结构事实表。
-- 界面只调用命令行能做的事，验收仍用命令行脚本。重跑若需要真正调用 LLM，启动应用前先设置 `AITX_LLM_API_KEY`。
+- 界面只调用命令行能做的事，验收仍用命令行脚本。重跑若需要真正调用 LLM，启动应用前先设置 `DEEPSEEK_API_KEY`。
 
 ### 静态快照导出
 
@@ -145,6 +145,8 @@ open out/review/index.html           # 快照列表，点最新的一份
 页面上的数字全部读自结果文件，不重新计算、不调用 LLM。病例结果需先用 `scripts/run_pipeline.py` 生成（带来源记录）。
 
 ## 目录结构
+
+Step 3 按开发子步骤组织：`aitx/step3/a/` 为来源选择，`aitx/step3/b/` 为临床试验，`aitx/step3/pipeline.py` 为总编排。共享模块及尚未迁移的 3c/3d/3e 保留在 `aitx/evidence/`。新 3a 尚未接入 Ledger，完整 Step 3 当前不可运行；使用 `scripts/run_step3a.py` 和 `scripts/refresh_step3b.py` 独立入口。
 
 ```
 aitx/
@@ -183,7 +185,7 @@ tests/                 离线测试（合成转录本、合成本体，不联网
 ```bash
 export AITX_LLM_BASE_URL=https://api.deepseek.com
 export AITX_LLM_MODEL=deepseek-flash
-export AITX_LLM_API_KEY=你的key
+export DEEPSEEK_API_KEY=你的key
 # 可选：服务端返回的模型名不以此开头就报错，防止别名被悄悄切换
 export AITX_EXPECT_MODEL_PREFIX=deepseek-v4.1-flash
 # 可选：同时在途的 LLM 请求数（默认 16，DeepSeek 上限 2500）；结果与串行完全相同，只影响速度
@@ -195,3 +197,14 @@ export AITX_LLM_CONCURRENCY=16
 并发：每个病例的 3 次抽样（各自带一次“从候选中选择”）同时进行；验收脚本和症状测试集评估还会让多个病例同时跑。
 所有线程共用一个上限 `AITX_LLM_CONCURRENCY`（只限真正发出的请求，缓存命中不受限）。缓存键和抽样序号与串行时相同，
 结果按病例和抽样序号的顺序汇总，所以输出与串行逐字节一致。`run_pipeline.py` 仍按病例依次运行，病例内部并发。
+
+### 3a 数据保存与当前批次
+
+- 批次原始资料与运行结果保存到 `runs/step3a/<病例ID>/<批次ID>/`。现有两份 OTC 批次已迁入，文件内容不变；内部历史路径作为当时运行记录保留。
+- 页面自动展示最新批次：已执行批次按首个请求时间排序，尚未执行的准备批次按 plan.json 修改时间排序。`out/current.json` 仅保留为命令行默认操作批次，不影响页面。
+- `prepare --case-id ... --cases ... --xml ...` 默认新建 UTC 时间戳批次，也可显式指定 `--output`。新准备批次自动出现在页面，明确标注尚未执行。
+- `python scripts/run_step3a.py select --case-id PRAC-OTC --batch PRAC-OTC-rerun-c4-20261125` 指定命令行默认操作批次；页面仍自动显示最新批次。
+- `recover --case-id ...`、`run --case-id ...` 使用当前索引；仍支持显式 `--output`。真实执行需要既有预算授权。完成批次的离线恢复直接返回，保留文件；重跑须创建新批次。
+- 本轮仅整理 3a。3b、正式账本、历史实验及 `.cache/datasets/` 暂留原位，不清理 HTTP/LLM 缓存。
+
+页面 Step 1/2 直接读取当前结果；3b 比较当前账本与导出结果的保存时间；3c–3e 展示当前账本的保存记录；Step 4 展示当前报告，Step 5 若无保存结果明确未知。页面文件监听包含报告 Markdown；最新保存不代表已按最新上游重算或审核通过。

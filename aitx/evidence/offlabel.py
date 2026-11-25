@@ -21,7 +21,7 @@ from pathlib import Path
 from aitx import http
 from aitx.evidence import context_check as CC
 from aitx.evidence import actions as A
-from aitx.evidence import established as E
+from aitx.evidence import patient_matching as E
 from aitx.evidence import fallback as F
 from aitx.evidence import genecontext as GC
 from aitx.evidence import labels as LB

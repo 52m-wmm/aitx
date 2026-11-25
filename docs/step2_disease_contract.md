@@ -370,7 +370,7 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 1. 难题测试集：完成（规则 21）。
 2. 起病年龄映射：完成（规则 24）。混合语义检索：暂不做，原因见上。
 3. CBAVD 漏提：根因是否定词规则误删（不是 LLM 漏提、也不是检索），已修复（规则 22），两个测试集都已召回。
-4. 基因特有规则（DMD 读码框、SPTLC1 表型与区域）：移到 Step 3.0，见 `docs/step3_contract_todo.md`。
+4. 基因特有规则（DMD 读码框、SPTLC1 表型与区域）：移到 Step 3.0，见 `docs/step3_0_contract.md`。
 
 ## Step 2 待办（2026-11-03 记录，不阻塞 3.0）
 
@@ -392,7 +392,7 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 ## 病人描述读不到时报错停止（2026-11-11，盲测后修复 O1）
 
 病人描述只从 `patient.clinical_context` 读，统一经过 `aitx/caseinput.py` 的 `clinical_context(case)`：字段缺失、不是文本或只有空白时抛 `MissingDescription`，不再默认空串继续。`run_pipeline.py` 在跑任何一步之前先检查所有选中的病例，有问题就逐条打印 `[INPUT]` 并以退出码 5 结束（3 = 高峰时段，4 = 当日预算）。
-**起因**：盲测 B 组的病例文件把描述写成了 `clinical_description`，流水线读到空串，10 个病例在没有描述的情况下跑完，没有任何警告（`docs/blind_test_results.md` 事故一节）。
+**起因**：盲测 B 组的病例文件把描述写成了 `clinical_description`，流水线读到空串，10 个病例在没有描述的情况下跑完，没有任何警告（`docs/experiments/blind_test_results.md` 事故一节）。
 测试：`tests/test_caseinput.py`（缺字段 / 错字段名 / 空串 / 空白 / None；`run_pipeline.py` 在第一步之前停下；仓库里所有病例文件都可读）。
 
 ## 原文点名的病种群让位给 ClinVar 指向的更具体疾病（2026-11-11，盲测后修复 D1，用户批准）

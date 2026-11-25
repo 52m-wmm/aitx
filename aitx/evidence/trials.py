@@ -16,8 +16,6 @@ import urllib.parse
 from aitx import http
 
 API = "https://clinicaltrials.gov/api/v2/studies"
-FIELDS = ("NCTId,BriefTitle,Acronym,OverallStatus,Phase,StudyType,Condition,Keyword,InterventionName,"
-          "MinimumAge,MaximumAge,Sex,HealthyVolunteers,EligibilityCriteria,LastUpdatePostDate")
 OPEN = ("RECRUITING", "NOT_YET_RECRUITING")
 K = 10                       # studies analysed criterion by criterion per branch (contract decision 4)
 MAX_LISTED_CLOSED = 50       # relevant studies with other statuses listed by name (most recently updated)
@@ -33,7 +31,7 @@ def study_url(nct: str) -> str:
 
 def search(params: dict, *, use_cache: bool = True) -> dict:
     """All pages of one query, no status filter. Returns the search record and the flattened studies."""
-    base = {**params, "pageSize": str(PAGE_SIZE), "countTotal": "true", "format": "json", "fields": FIELDS}
+    base = {**params, "pageSize": str(PAGE_SIZE), "countTotal": "true", "format": "json"}
     urls, studies, total, accessed, token = [], [], None, [], None
     while True:
         q = {**base, **({"pageToken": token} if token else {})}
@@ -57,13 +55,14 @@ def flat(study: dict) -> dict:
     p = study.get("protocolSection", {})
     idm, st, de = p.get("identificationModule", {}), p.get("statusModule", {}), p.get("designModule", {})
     cm, el = p.get("conditionsModule", {}), p.get("eligibilityModule", {})
-    return {"nct": idm.get("nctId"), "title": idm.get("briefTitle"), "acronym": idm.get("acronym"),
+    return {"protocolSection": p, "nct": idm.get("nctId"), "title": idm.get("briefTitle"), "acronym": idm.get("acronym"),
             "status": st.get("overallStatus"), "last_update": (st.get("lastUpdatePostDateStruct") or {}).get("date"),
             "study_type": (de.get("studyType") or "").lower() or None, "phases": de.get("phases") or [],
             "conditions": cm.get("conditions") or [], "keywords": cm.get("keywords") or [],
             "interventions": [i.get("name") for i in (p.get("armsInterventionsModule", {}).get("interventions") or [])],
             "min_age": el.get("minimumAge"), "max_age": el.get("maximumAge"), "sex": el.get("sex"),
-            "healthy_volunteers": el.get("healthyVolunteers"), "criteria": el.get("eligibilityCriteria") or ""}
+            "healthy_volunteers": el.get("healthyVolunteers"), "criteria": el.get("eligibilityCriteria") or "",
+            "population_groups": (p.get("armsInterventionsModule") or {}).get("armGroups") or []}
 
 
 # ------------------------------------------------------------------ relevance (contract step 2)
@@ -234,9 +233,45 @@ def prefilter(study: dict, patient_age_months: float | None, patient_sex: str | 
 _PHASE = {"PHASE4": 4, "PHASE3": 3, "PHASE2": 2, "PHASE1": 1, "EARLY_PHASE1": 0.5}
 
 
+CATEGORIES = ['基因/靶向治疗干预', '药物/对症治疗干预', '诊断性测定/生物标志物评估', '观察性/自然史登记', '研究性质待核实']
+
+
+def classify_pathway(protocol: dict) -> dict:
+    design = protocol['designModule']
+    arms = protocol['armsInterventionsModule'] if 'armsInterventionsModule' in protocol else {}
+    interventions = arms['interventions'] if 'interventions' in arms else []
+    info = design['designInfo']
+    purpose = info['primaryPurpose'] if 'primaryPurpose' in info else None
+    text = json.dumps(interventions, ensure_ascii=False) + ' ' + protocol['identificationModule']['briefTitle']
+    diagnostic = purpose == 'DIAGNOSTIC' or any(i['type'] == 'DIAGNOSTIC_TEST' for i in interventions)
+    measurement = bool(re.search(r'test system|biomarker|histopathology|measurement|validation|genetic testing', text, re.I))
+    therapeutic = design['studyType'] == 'INTERVENTIONAL' and purpose == 'TREATMENT'
+    targeted = any(i['type'] == 'GENETIC' for i in interventions) or bool(re.search(
+        r'gene[ -](?:therapy|editing)|base edit|\bsiRNA\b|\bRNAi\b|targeted therapy', text, re.I))
+    if therapeutic:
+        rank = 0 if targeted else 1
+    elif diagnostic or measurement:
+        rank = 2
+    elif design['studyType'] == 'OBSERVATIONAL':
+        rank = 3
+    else:
+        rank = 4
+    return {'category_rank': rank, 'category': CATEGORIES[rank], 'therapeutic': therapeutic,
+            'evidence': {'design': design, 'interventions': interventions, 'arm_groups': arms}}
+
+
+def clinical_priority_key(candidate):
+    p = candidate['pathway']
+    known, pending = p['known_conditions'], p['pending_prerequisites']
+    return (p['category_rank'], known is None, -len(known) if known is not None else 0,
+            pending is None, len(pending) if pending is not None else 0, candidate['nct_id'])
+
+
 def rank_key(study: dict, names: list[str], gene: str) -> tuple:
-    """Interventional first -> single-disease studies first -> higher phase -> more recently updated."""
-    return (study["study_type"] != "interventional", not specific(study, names, gene),
+    """Registry-derived pathway class, known checks, pending checks, then stable registry ties."""
+    category = classify_pathway(study["protocolSection"])["category_rank"] if "protocolSection" in study else (0 if study["study_type"] == "interventional" else 3)
+    checks = study["prefilter"]["checks"] if "prefilter" in study else []
+    return (category, -sum(c["result"] == "pass" for c in checks), sum(c["result"] == "unknown" for c in checks), not specific(study, names, gene),
             -max([_PHASE.get(p, 0) for p in study["phases"]] or [0]), _neg_date(study["last_update"]))
 
 
@@ -254,7 +289,7 @@ _BULLET = re.compile(r"^(\s*)(?:[*\-•·]|\d{1,3}[.)]|[a-zA-Z][.)]|\(\w{1,3}\))
 def split_criteria(text: str) -> list[dict]:
     """EligibilityCriteria -> one item per criterion, verbatim (registry markdown escapes kept so every
     item is a substring of the record). kind: inclusion / exclusion; lines before the first heading are
-    kind 'other' with preamble=True. Nested bullets keep a `parent` id and their indent level."""
+    kind 'enrollment_note' with preamble=True. Nested bullets keep a `parent` id and their indent level."""
     items, kind, n, stack = [], None, {"inclusion": 0, "exclusion": 0, "other": 0}, []
 
     def add(k: str, body: str, level: int) -> None:
@@ -265,7 +300,7 @@ def split_criteria(text: str) -> list[dict]:
         prefix = {"inclusion": "inc", "exclusion": "exc", "other": "pre"}[k]
         while stack and stack[-1][0] >= level:
             stack.pop()
-        item = {"id": f"{prefix}{n[k]}", "kind": k, "text": body, "level": level,
+        item = {"id": f"{prefix}{n[k]}", "kind": "enrollment_note" if k == "other" else k, "text": body, "level": level,
                 "parent": stack[-1][1] if stack else None}
         if k == "other":
             item["preamble"] = True
@@ -337,7 +372,7 @@ def ancestors_up(mondo_id: str, parents_of, levels: int = ANCESTOR_LEVELS) -> li
 
 
 def plan_branch(names: list[str], gene: str | None, patient_age_months: float | None, patient_sex: str | None,
-                *, use_cache: bool = True) -> dict:
+                *, use_cache: bool = True, diagnosed_genes: list[str] | None = None) -> dict:
     """Search by disease names (at most 3) and by gene, then sort every returned study into exactly one of:
     analysed (open, relevant, prefilter pass or unknown, within top K), over_cap (same, beyond K),
     ineligible (open, relevant, registry age / sex / healthy-only rules the patient out -> not_applicable
@@ -347,7 +382,7 @@ def plan_branch(names: list[str], gene: str | None, patient_age_months: float | 
     # an abbreviation is never a search term on its own (fix plan N1): search with the first full names, match with
     # those plus the abbreviations, which count only when the same record also carries a full name or the gene
     search_names = [n for n in names if not is_abbrev(n)][:MAX_NAMES]
-    names = search_names + [n for n in names if is_abbrev(n)]
+    # Limit queries, not the diagnosis synonyms used to interpret returned records.
     searches = [search({"query.cond": n}, use_cache=use_cache) for n in search_names]
     if gene:
         searches.append(search({"query.term": gene}, use_cache=use_cache))
@@ -358,12 +393,22 @@ def plan_branch(names: list[str], gene: str | None, patient_age_months: float | 
     open_rel, closed_rel, excluded, ineligible = [], [], [], []
     for st in seen.values():
         rel = relevance(st, names, gene or "")
+        from aitx.step3.b import criteria as C
+        molecular = C.single_target_conflict(st, diagnosed_genes or []) if st['status'] in OPEN else None
+        if rel is None and molecular is not None:
+            rel = {'by': 'retrieved_molecular_conflict', 'field': 'criteria',
+                   'entry': molecular['trial_rule_quote'], 'name': molecular['target_gene']}
         if not rel:
             excluded.append(_ex(st, "relevance", exclusion_reason(st, names, gene or "")))
         elif st["status"] not in OPEN:
             closed_rel.append(st)
         else:
             pre = prefilter(st, patient_age_months, patient_sex)
+            notes = C.enrollment_note_lines(st, {'age_months': patient_age_months, 'age_quote': None, 'sex': None})
+            note_failure = any((n['kind'] == 'inclusion' and n['patient_status'] == 'does_not_satisfy')
+                               or (n['kind'] == 'exclusion' and n['patient_status'] == 'satisfies') for n in notes)
+            if note_failure or molecular is not None:
+                pre['result'] = 'fail'
             st = {**st, "relevance": rel, "prefilter": pre, "specific": specific(st, names, gene or "")}
             if pre["result"] == "fail":
                 ineligible.append(st)        # open and relevant, but the registry limits rule the patient out

@@ -5,7 +5,8 @@ import re
 
 import pytest
 
-from aitx.evidence import criteria as C, trials as T, ledger as LG
+from aitx.evidence import trials as T, ledger as LG
+from aitx.step3.b import criteria as C
 from aitx.report import assemble as A, validate as V
 from tests.test_report import act, build, ev, ledger, unk, variant_evidence, CASE
 from tests.test_criteria import PF, BR
@@ -40,6 +41,9 @@ def test_mapping_fragments_regain_their_full_original_subject_and_object():
 @pytest.mark.parametrize('age,want',[(84,'satisfies'),(None,'unknown')])
 def test_cohort_age_is_an_or_of_complete_ranges(age,want):
     rows=criteria_rows('NCT04580420',dict(PATIENT,age_months=age,age_quote='7-year-old' if age is not None else None))
+    notes=[r for r in rows if r.get('details',{}).get('enrollment_note')]
+    assert len(notes)==1 and notes[0]['patient_status']==('does_not_satisfy' if age is not None else 'unknown')
+    rows=[r for r in rows if r not in notes]
     assert len(rows)==1 and rows[0]['patient_status']==want
     if age is not None:
         assert [o['requirement'] for o in rows[0]['any_of'] if o['patient_status']=='satisfies']==['children 6 to 11 years of age']
@@ -81,6 +85,8 @@ def test_recognized_age_group_cannot_turn_nonmatching_cohorts_into_exclusion():
     mapped={'items':[it for it in f['mapped']['items'] if it['id'] in ids],
             'mappings':[m for m in f['mapped']['mappings'] if m['id'] in ids]}
     rows=C.lines_for({'criteria':f['criteria']},mapped,dict(PATIENT,age_months=180),{'facts':[]},BR,[])
+    assert any(r['patient_status']=='does_not_satisfy' for r in rows if r.get('details',{}).get('enrollment_note'))
+    rows=[r for r in rows if not r.get('details',{}).get('enrollment_note')]
     assert len(rows)==1 and rows[0]['patient_status']=='unknown'
 
 

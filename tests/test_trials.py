@@ -85,7 +85,7 @@ Exclusion Criteria:
 def test_split_criteria_verbatim_with_parents():
     items = T.split_criteria(CRIT)
     assert all(i["text"] in CRIT for i in items)
-    assert [(i["id"], i["kind"]) for i in items] == [("pre1", "other"), ("inc1", "inclusion"), ("inc2", "inclusion"),
+    assert [(i["id"], i["kind"]) for i in items] == [("pre1", "enrollment_note"), ("inc1", "inclusion"), ("inc2", "inclusion"),
                                                     ("inc3", "inclusion"), ("inc4", "inclusion"), ("inc5", "inclusion"),
                                                     ("exc1", "exclusion"), ("exc2", "exclusion")]
     assert items[0]["preamble"] and items[3]["parent"] == "inc2" and items[4]["parent"] == "inc2" and items[5]["parent"] is None
