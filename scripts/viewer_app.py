@@ -267,6 +267,7 @@ class Watcher:
         files = [p for p in (self.root / "out").glob("step*/*") if p.suffix in (".json", ".md")] \
             + list((self.root / "runs" / "step3a").glob("**/*.json")) + [self.root / "out/current.json"] \
             + list((self.root / "out" / "3b").glob("**/*.json")) \
+            + list((self.root / ".cache" / "step3b").glob("*/*/*.json")) \
             + [self.root / "scripts" / "build_viewer.py", self.root / "aitx" / "viewer" / "step3a.py", self.root / "scripts" / "step3b_view.py",
                self.root / "out" / "viewer_runs" / "history.jsonl"]
         return {str(p.relative_to(self.root)): p.stat().st_mtime for p in files if p.exists()}

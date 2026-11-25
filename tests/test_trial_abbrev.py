@@ -60,15 +60,3 @@ def test_a_gene_used_as_a_cancer_marker_does_not_corroborate():
 def test_a_specific_study_needs_corroboration_too():
     assert not T.specific(_study("x", ["LS-SCLC"]), LEIGH, "LRPPRC")
     assert T.specific(_study("x", ["Leigh Syndrome"]), LEIGH, "LRPPRC")
-
-
-def test_abbreviations_are_never_search_terms(monkeypatch):
-    seen = []
-
-    def fake_search(params, use_cache=True):
-        seen.append(params)
-        return {"studies": [], "query": params}
-    monkeypatch.setattr(T, "search", fake_search)
-    T.plan_branch(["LS", "Leigh syndrome", "LSS", "subacute necrotizing encephalomyelopathy"], "LRPPRC", None, None)
-    conds = [p["query.cond"] for p in seen if "query.cond" in p]
-    assert conds == ["Leigh syndrome", "subacute necrotizing encephalomyelopathy"]

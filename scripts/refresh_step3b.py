@@ -1,10 +1,9 @@
 """Refresh formal Step 3b while preserving the saved outputs of the other Step 3 sections.
 
-Writes the checked v3 Ledger to out/step3. Build Step 4 and validate Step 5 separately.
+Archives each run and viewer cards in .cache/step3b/<case>/<batch>, then publishes
+the checked v3 Ledger to out/step3. Build Step 4 and validate Step 5 separately.
 """
 import argparse
-import hashlib
-import json
 import os
 from pathlib import Path
 import sys
@@ -12,7 +11,7 @@ import sys
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from aitx import runmeta,session
-from aitx.step3.b.records import refresh_trials
+from aitx.step3.b.results import run_case
 
 
 def main():
@@ -31,14 +30,8 @@ def main():
         case=runmeta.find_case(cid)
         one,h1=runmeta.load_output(1,case);two,h2=runmeta.load_output(2,case)
         runmeta.check_upstream(two,2,{1:h1})
-        path=runmeta.path(3,cid);previous=json.loads(path.read_text())
-        backup=ROOT/'out'/'3b'/cid/'history'/hashlib.sha256(path.read_bytes()).hexdigest()/'ledger.json'
-        backup.parent.mkdir(parents=True,exist_ok=True)
-        if not backup.exists():backup.write_bytes(path.read_bytes())
-        result=refresh_trials(previous,case,one,two)
-        if not result['ok']:raise RuntimeError(f'{cid}: Ledger checks failed; original output retained')
-        runmeta.write_output(3,case,result,upstream={1:h1,2:h2})
-        print(f'{cid}: evidence-ledger-v3 PASS; frozen other sections; {path}')
+        folder=run_case(ROOT,case,one,two,{1:h1,2:h2})
+        print(f'{cid}: evidence-ledger-v3 PASS; latest viewer result: {folder}')
 
 
 if __name__=='__main__':main()

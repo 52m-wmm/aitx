@@ -5,9 +5,10 @@ from pathlib import Path
 import pytest
 
 from aitx.evidence import genecontext as GC, trials as T, ledger as LG
-from aitx.step3.b import criteria as C
-from aitx.step3.b import records as TR
-from tests.test_criteria import PF
+from aitx.step3.b import rules as C
+from aitx.step3.b import rules as TR
+from tests.trial_fixtures import PF
+from aitx.step3.b import screening as S, records as R
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -63,15 +64,15 @@ def test_cached_cps1_unmapped_requirement_still_excludes_in_real_recorder():
     s = dict(T.flat(raw), _accessed_at=1, relevance={}, specific=True)
     branch = {'id': 'b1', 'gene': 'OTC', 'diagnosis': {'label': 'OTC deficiency'}, 'confirmed': True}
     pf = dict(PF, age_months=3, sex='male', variants=[{'gene':'OTC', 'protein':'p.Arg129His', 'quote':'OTC p.Arg129His (hemizygous)', 'zygosity':'hemizygous', 'class':'missense'}])
-    mapped = {'items': T.split_criteria(s['criteria']), 'mappings': [], 'rejected': [], 'produced_by':'code'}
     led = LG.Ledger('TEST', [branch])
-    TR._record(led, s, {'b1':'analysed'}, mapped, pf, {'facts':[]}, {'b1':branch}, {'candidates':[]})
+    s['prefilter'] = S.prefilter(s, pf['age_months'], pf['sex'])
+    s['code_molecular_conflict'] = C.single_target_conflict(s, ['OTC'])
+    R.record(led, s, 'b1', pf, {'id':'TEST'}, {'hard_conflicts':[]}, 'code', [])
     action = led.actions[0]
     assert action['status_by_branch']['b1']['status'] == 'not_applicable'
     assert 'CPS1' in action['status_by_branch']['b1']['reason'] and 'OTC' in action['status_by_branch']['b1']['reason']
-    req = next(r for r in action['requirements'] if r['item'] == 'code:molecular-target')
+    req = next(r for r in action['requirements'] if r['fact'] == 'molecular target')
     assert req['result'] == 'fail' and req['requirement'] in s['criteria']
-    assert req['details']['molecular_target_conflict']['target_gene'] == 'CPS1'
     assert not [check for check in led.checks() if check['status']=='fail']
 
 
@@ -108,7 +109,7 @@ def test_explicit_otc_diagnosis_can_confirm_target_without_clinvar_record():
     assert not TR.confirmed_target_gene(branch,case,one,{'primary':{'id':'b','status':'unresolved'}})
 
 
-def test_search_synonym_limit_does_not_hide_halt_and_target_gate_records_cps1(monkeypatch):
+def test_current_search_records_halt_and_cps1_target_gate(monkeypatch):
     data=json.loads((ROOT/'out/step3b-otc-e2e-20261124/studies.json').read_text())
     hits=[T.flat(data[n]) for n in ['NCT05092685','NCT07667387']]
     queries=[]
@@ -118,7 +119,8 @@ def test_search_synonym_limit_does_not_hide_halt_and_target_gate_records_cps1(mo
                 'total_count':2,'n_retrieved':2,'complete':True}
     monkeypatch.setattr(T,'search',search)
     names=['ornithine carbamoyltransferase deficiency','OCT deficiency','OTC deficiency','ornithine transcarbamylase deficiency']
-    plan=T.plan_branch(names,'OTC',3,'male',diagnosed_genes=['OTC'])
+    plan=S.plan(names,[],3,'male',['OTC'])
     assert {s['nct'] for s in plan['analysed']}=={'NCT05092685'}
     assert {s['nct'] for s in plan['ineligible']}=={'NCT07667387'}
-    assert len(queries)==4  # Three condition queries plus the gene query; matching keeps all synonyms.
+    assert len(queries)==1
+    assert queries[0]['query.cond']==names[0]

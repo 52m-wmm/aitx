@@ -1,3 +1,47 @@
+# Step 3b 当前架构（2026-11-25重构）
+
+**当前验收进度：3b架构整理完成，仅PRAC-OTC已完整缓存重跑并显示最新批次；尚未跑全病例。OTC为21项研究、7候选/14排除，15自检通过/1既有警告/0失败，新增模型调用0。不得将此次整理标为全病例验收完成。**
+
+当前只有一条生产链：**检索 → 完整上下文冲突初筛 → Python核验 → Ledger组装 → 缓存发布 → 页面读取**。
+没有另建legacy包，没有旧逐条条件映射入口。重构沿用原生产Conflict-Only行为，不宣称恢复旧映射器的全部条件解释能力。
+
+| 文件 | 职责 |
+|---|---|
+| `aitx/step3/b/pipeline.py` | 对外 `add_trials` / `refresh_trials`；上游事实、按分支检索、4并发模型请求、调用组装器；刷新冻结其他步骤 |
+| `aitx/step3/b/screening.py` | 检索计划、完整请求构造、原文/适用范围冲突核验；不写Ledger、不调用模型 |
+| `aitx/step3/b/rules.py` | 新流程实际使用的确定性规则；13个函数AST与改前一致，无模型调用 |
+| `aitx/step3/b/records.py` | 唯一试验落账实现；已核验冲突、未知项、证据与多分支合并 |
+| `aitx/step3/b/results.py` | 运行状态、改前快照、缓存归档和正式结果发布 |
+| `aitx/step3/b/presentation.py` | 已保存Ledger转页面卡片，不重新判断 |
+| `aitx/evidence/trials.py` | CT.gov传输/解析及共享匹配排序函数；旧plan_branch及祖先遍历入口已删 |
+
+依赖方向：results → pipeline → screening/rules/records；records → screening/rules；presentation只读取结果。生产模块不依赖scripts或旧实验。
+
+入口仍为 `scripts/refresh_step3b.py --case <病例> --cache-only`。
+`--cache-only`只禁止新LLM调用，沿用HTTP缓存行为，不代表严格断网。
+完整Step3调用改为`aitx.step3.b.pipeline.add_trials`；完整Step3仍受3a Ledger适配尚未完成限制。
+独立3b刷新仍需已有账本，不重跑其他步骤。
+
+结果存放：`.cache/step3b/<病例>/<UTC批次>/`，包括`execution.json`、`case-input.json`、`previous-ledger.json`、`ledger.json`、`result.json`。
+成功通过账本自检、生成卡片后才发布`out/step3/<病例>.json`。异常向调用方抛出，最新批次显示失败而不回退旧结果。
+页面按started_at读取最新缓存批次，文件监听自动刷新。原导入缓存、HTTP/模型缓存、正式结果及历史记录未改。
+
+保留的行为：原Prompt/版本/参数、模型请求序列化、缺失事实为未知、未证实冲突不排除、无冲突不等于完整资格满足。
+13个现役规则函数逐一AST相同；8组改前冻结账本对照完全一致；模型冲突引用/替代路径/未知、其他步骤冻结、失败保存有离线测试。
+本次没有真实模型调用、没有正式病例重跑，不构成医学准确率或全病例验收。
+
+旧实现退役：criteria的逐条映射/比较链、旧_record、旧限额检索/祖先遍历、依赖旧实现的5个历史实验/回放脚本。
+旧专属测试退出活动测试集；现役原文校验/前言/分子靶点测试移植保留，报告测试保留。
+原源码和专属测试保存在`out/step3b-rebuild-20261125/before/`，逐项清单`retired.json`。没有把旧测试退役称作旧缺陷修复。
+
+审计：`out/step3b-rebuild-20261125/`，含改前账本快照、冻结对照、完整current对比输出、测试、文件保护哈希。
+current基线开工前已缺失，无法完成该项对比，不重建/升级基线。
+
+## 历史契约（旧逐条映射实现，供已保存结果追溯）
+
+以下为旧版本的决策与验收记录，不能作为当前Conflict-Only实现已满足这些验收项的证明。
+
+
 # 第 3b 步：临床试验（Clinical Trial Eligibility）
 
 > 当前代码已有 `trial_records.add_trials → trial_screening.add_trials` 路径。以下“当前生产入口”说明与旧设计分开；早期草稿状态不表示现在尚无代码。代码存在不等于整体Step3已完成或本轮已验收。

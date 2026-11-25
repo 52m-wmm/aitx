@@ -153,11 +153,15 @@ def experiment_panel(case_id: str) -> str:
     path = ROOT / 'out' / '3b' / case_id / 'result.json'
     if not path.exists():
         return ''
+    return result_panel(case_id, path)
+
+
+def result_panel(case_id: str, path: Path) -> str:
     data = json.loads(path.read_text())
     if data['case_id'] != case_id or data['patient']['id'] != case_id:
         raise ValueError('Step 3b viewer data belongs to another case')
     candidates, excluded, counts = data['candidates'], data['excluded'], data['counts']
-    from scripts.build_step3b_experiment_view import priority_key, CATEGORIES
+    from aitx.evidence.trials import clinical_priority_key as priority_key, CATEGORIES
     candidates = sorted(candidates, key=priority_key)
     therapeutic_count = sum(c['pathway']['therapeutic'] for c in candidates)
     labels = {'confirmed': ('pass', 'confirmed · 已确认'), 'unknown': ('warn', 'unknown · 未知'),
@@ -267,8 +271,24 @@ window.addEventListener('hashchange',place);place();
 
 
 def panel(case_id: str) -> str:
+    from aitx.step3.b import results
+    cached = results.latest_folder(ROOT, case_id)
     ledger = ROOT/'out/step3'/f'{case_id}.json'
     exported = ROOT/'out/3b'/case_id/'result.json'
+    if cached is not None:
+        state = json.loads((cached/'execution.json').read_text())
+        # Older imported cards must not hide a later legacy publication.
+        saved_at = state['finished_at'] if 'finished_at' in state else state['started_at']
+        if any(p.exists() and p.stat().st_mtime > saved_at for p in (ledger, exported)):
+            cached = None
+    if cached is not None:
+        labels = {'running': '运行中', 'failed': '失败 / 未完成', 'complete': '执行完成，待内容审核', 'imported': '已保存结果导入'}
+        header = ('<div class="card"><strong>当前批次：'+e(cached.name)+'</strong><p>状态：'
+                  +e(labels[state['state']])+'</p><p>自动显示最新保存批次；完整资格仍需核实。</p></div>')
+        if state['state'] in ('running', 'failed'):
+            error = '<p class="unknown">'+e(state['error'])+'</p>' if 'error' in state else ''
+            return header + error + '<p class="unknown">本批次尚无完整结果，结果未知；不自动切回旧结果。</p>'
+        return header + result_panel(case_id, cached/'result.json')
     if ledger.exists() and (not exported.exists() or ledger.stat().st_mtime_ns > exported.stat().st_mtime_ns):
         return saved_panel(case_id)
     experimental = experiment_panel(case_id)

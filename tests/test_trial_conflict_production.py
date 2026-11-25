@@ -2,7 +2,7 @@
 import json
 from aitx.evidence import trials as T, ledger as LG
 from aitx.step3.b import screening as S
-from aitx.step3.b import records as R
+from aitx.step3.b import pipeline as R
 
 
 def study(criteria='Inclusion Criteria:\n* Age 18 to 70 years.\nExclusion Criteria:\n* Pregnancy.'):
@@ -13,13 +13,6 @@ def study(criteria='Inclusion Criteria:\n* Age 18 to 70 years.\nExclusion Criter
         'conditionsModule':{'conditions':['Example disease']},
         'eligibilityModule':{'minimumAge':'18 Years','maximumAge':'70 Years','sex':'ALL',
                              'healthyVolunteers':False,'eligibilityCriteria':criteria}}})
-
-
-def test_formal_entry_uses_new_screener(monkeypatch):
-    calls=[]
-    monkeypatch.setattr(S,'add_trials',lambda *a,**kw:calls.append((a,kw)))
-    R.add_trials('ledger','case','step1','step2',use_cache=True)
-    assert calls==[(('ledger','case','step1','step2'),{'use_cache':True})]
 
 
 def test_complete_input_and_conservative_registry_age():

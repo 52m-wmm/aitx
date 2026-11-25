@@ -1,49 +1,47 @@
-"""Current enrolment notes must survive cached mapping and decide real trial records."""
+"""Current enrollment notes decide records through the production assembler."""
 import json
 from pathlib import Path
 
 import pytest
 
 from aitx.evidence import ledger as LG, trials as T
-from aitx.step3.b import criteria as C
-from aitx.step3.b import records as TR
-from tests.test_criteria import PF, BR, STUDY
+from aitx.step3.b import rules as C
+from aitx.step3.b import records as TR, screening as S
+from tests.trial_fixtures import PF, BR, STUDY
 
 NOTE = 'Note: Currently, the DCR-PHXC-204 study is only enrolling potential participants under 6 years of age.'
 
 
-def record(text, months=84, mapped=None):
+def record(text, months=84):
     pf = dict(PF, age_months=months, age_quote=None if months is None else f'Age {months} months')
-    study = dict(STUDY, criteria=text, min_age=None, _accessed_at=1, relevance={}, specific=True)
-    # Deliberately model an old cache that contains no mapping for the preamble.
-    if mapped is None:
-        mapped = {'items': T.split_criteria(text), 'mappings': [], 'rejected': [], 'produced_by': 'code'}
-        mapped['mappings'] = [{'id': it['id'], 'fact': 'other', 'quote': it['text']}
-                              for it in mapped['items'] if it['text'] == 'Further screening required']
+    study = dict(STUDY, criteria=text, min_age=None, _accessed_at=1, relevance={}, specific=True, interventions=[])
+    study['protocolSection'] = {'identificationModule':{'briefTitle':study['title']},
+        'designModule':{'studyType':'INTERVENTIONAL','designInfo':{'primaryPurpose':'TREATMENT'}},
+        'eligibilityModule':{'eligibilityCriteria':text}}
+    study['prefilter'] = S.prefilter(study, pf['age_months'], pf['sex'])
+    study['code_molecular_conflict'] = None
     led = LG.Ledger('TEST', [BR])
-    TR._record(led, study, {'b1': 'analysed'}, mapped, pf, {'facts': []}, {'b1': BR}, {'candidates': []})
+    TR.record(led, study, 'b1', pf, {'id':'TEST'}, {'hard_conflicts':[]}, 'code', [])
     assert not [c for c in led.checks() if c['status'] == 'fail']
     return led, led.actions[0]
 
 
-def test_current_note_overrides_old_age_cohort_without_new_llm_mapping():
+def test_current_note_overrides_historical_age_cohort():
     fixture = json.loads((Path(__file__).parent / 'fixtures/agxt_trial_criteria_review.json').read_text())['NCT04580420']
     text = fixture['criteria']
     assert text.startswith(NOTE)
-    led, action = record(text, mapped=dict(fixture['mapped'], rejected=[], produced_by='code'))
+    led, action = record(text)
     line = next(r for r in action['requirements'] if r['requirement'] == NOTE)
     assert line['result'] == 'fail'
     assert action['status_by_branch']['b1']['status'] == 'not_applicable'
-    assert any(r['result']=='pass' for r in action['requirements'] if r.get('item','').startswith('age-cohorts:'))
     ev = led.evidence[line['requirement_evidence']]
     assert ev['quote'] == NOTE and ev['quote_verified'] and ev['status'] == 'verified'
-    assert 'not met:' in action['status_by_branch']['b1']['reason']
 
 
 @pytest.mark.parametrize('months,want', [(60, 'pass'), (72, 'fail'), (84, 'fail'), (None, 'unknown')])
 def test_open_age_boundary_and_missing_patient_age(months, want):
     _, a = record(NOTE + '\nInclusion Criteria:\n* Further screening required', months)
-    assert next(r for r in a['requirements'] if r.get('details', {}).get('enrollment_note'))['result'] == want
+    assert next(r for r in a['requirements'] if r['requirement'] == NOTE)['result'] == want
     assert a['status_by_branch']['b1']['status'] == ('not_applicable' if want == 'fail' else 'conditional')
 
 
@@ -63,7 +61,7 @@ def test_open_age_boundary_and_missing_patient_age(months, want):
 ])
 def test_explicit_restriction_or_unresolved_scope(note, want):
     _, a = record(note + '\nInclusion Criteria:\n* Further screening required')
-    assert next(r for r in a['requirements'] if r.get('details', {}).get('enrollment_note'))['result'] == want
+    assert next(r for r in a['requirements'] if r['requirement'] == note)['result'] == want
 
 
 def test_fail_priority_is_independent_of_unknowns_and_cohort_passes():
@@ -73,7 +71,7 @@ def test_fail_priority_is_independent_of_unknowns_and_cohort_passes():
 
 def test_multiline_cohort_context_is_not_applied_to_every_patient():
     _, action = record('Cohort A:\nCurrently only enrolling participants under 6 years of age.\nInclusion Criteria:\n* Further screening required')
-    assert all(r['result'] == 'unknown' for r in action['requirements'])
+    assert all(r['result'] == 'unknown' for r in action['requirements'] if r['fact'] not in ('age','sex'))
     assert action['status_by_branch']['b1']['status'] == 'conditional'
 
 

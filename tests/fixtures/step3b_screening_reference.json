@@ -1,0 +1,3446 @@
+[
+  {
+    "name": "unknown",
+    "pf": {
+      "age_months": null,
+      "age_quote": null,
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000001",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "1 Month",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000001",
+        "title": "Example study",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "1 Month",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [
+        {
+          "variable": "age",
+          "why_it_matters": "1 action depends on it: NCT00000001",
+          "affects": [
+            "NCT00000001"
+          ],
+          "details": [
+            "minimumAge: 1 Month; maximumAge: 70 Years"
+          ],
+          "asked_by": "3b"
+        },
+        {
+          "variable": "other trial criteria",
+          "why_it_matters": "1 action depends on it: NCT00000001",
+          "affects": [
+            "NCT00000001"
+          ],
+          "details": [
+            "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          ],
+          "asked_by": "3b"
+        }
+      ],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000001",
+          "section": "clinical_trial_eligibility",
+          "label": "Example study (NCT00000001)",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "conditional",
+              "reason": "未发现已证实硬冲突；仍有资格条件待核实"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 1 Month; maximumAge: 70 Years",
+              "requirement_evidence": "cceaa15dafee",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": null,
+                "quote": null,
+                "step": null
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "registry field",
+              "fact": "age"
+            },
+            {
+              "id": "r2",
+              "kind": "other",
+              "requirement": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+              "requirement_evidence": "23c69026e6d6",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "other trial criteria",
+                "value": null,
+                "quote": null,
+                "step": null
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "尚未证实完整入组资格，需研究团队逐项核实",
+              "fact": "other trial criteria"
+            }
+          ],
+          "evidence_ids": [
+            "cceaa15dafee",
+            "23c69026e6d6"
+          ],
+          "nct": "NCT00000001",
+          "title": "Example study",
+          "url": "https://clinicaltrials.gov/study/NCT00000001",
+          "study_type": "observational",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000001",
+              "briefTitle": "Example study"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "OBSERVATIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "1 Month",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": {
+              "llm": "fixture",
+              "served_model": "fixture",
+              "call_id": "fixture",
+              "prompt_version": "3b-conflict-screen-v1"
+            }
+          },
+          "pathway": {
+            "category_rank": 3,
+            "category": "观察性/自然史登记",
+            "therapeutic": false,
+            "evidence": {
+              "design": {
+                "studyType": "OBSERVATIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [],
+            "pending_prerequisites": [
+              "minimumAge: 1 Month; maximumAge: 70 Years",
+              "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            ],
+            "status": "测定或观察性研究；非治疗入组结论",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [
+            "NCT00000001"
+          ],
+          "ineligible": []
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "cceaa15dafee",
+          "23c69026e6d6"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000001: screening criterion Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000001"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000001",
+            "url": "https://clinicaltrials.gov/study/NCT00000001"
+          },
+          "quote": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "23c69026e6d6"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000001: screening criterion minimumAge: 1 Month; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000001"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000001",
+            "url": "https://clinicaltrials.gov/study/NCT00000001"
+          },
+          "quote": "minimumAge: 1 Month; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "cceaa15dafee"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "2 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "age",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000002",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "18 Years",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000002",
+        "title": "Example study",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "18 Years",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000002",
+          "section": "clinical_trial_eligibility",
+          "label": "Example study (NCT00000002)",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "not_applicable",
+              "reason": "年龄条件与病例不符"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 18 Years; maximumAge: 70 Years",
+              "requirement_evidence": "e34a91ed8831",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "does_not_satisfy",
+              "result": "fail",
+              "note": "registry field",
+              "fact": "age"
+            }
+          ],
+          "evidence_ids": [
+            "e34a91ed8831"
+          ],
+          "nct": "NCT00000002",
+          "title": "Example study",
+          "url": "https://clinicaltrials.gov/study/NCT00000002",
+          "study_type": "observational",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000002",
+              "briefTitle": "Example study"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "OBSERVATIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "18 Years",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": "code"
+          },
+          "pathway": {
+            "category_rank": 3,
+            "category": "观察性/自然史登记",
+            "therapeutic": false,
+            "evidence": {
+              "design": {
+                "studyType": "OBSERVATIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [],
+            "pending_prerequisites": [],
+            "status": "测定或观察性研究；非治疗入组结论",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [],
+          "ineligible": [
+            "NCT00000002"
+          ]
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "e34a91ed8831"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000002: screening criterion minimumAge: 18 Years; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000002"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000002",
+            "url": "https://clinicaltrials.gov/study/NCT00000002"
+          },
+          "quote": "minimumAge: 18 Years; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "e34a91ed8831"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "1 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "preamble",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000003",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "1 Month",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Currently only enrolling under 6 years.\nInclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000003",
+        "title": "Example study",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "1 Month",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Currently only enrolling under 6 years.\nInclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000003",
+          "section": "clinical_trial_eligibility",
+          "label": "Example study (NCT00000003)",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "not_applicable",
+              "reason": "年龄条件与病例不符"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 1 Month; maximumAge: 70 Years",
+              "requirement_evidence": "ae32308a6ec4",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "satisfies",
+              "result": "pass",
+              "note": "registry field",
+              "fact": "age"
+            },
+            {
+              "id": "r2",
+              "kind": "inclusion",
+              "requirement": "Currently only enrolling under 6 years.",
+              "requirement_evidence": "27d1194f28f8",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "does_not_satisfy",
+              "result": "fail",
+              "note": "enrollment note: verified current age restriction",
+              "fact": "age"
+            }
+          ],
+          "evidence_ids": [
+            "ae32308a6ec4",
+            "27d1194f28f8"
+          ],
+          "nct": "NCT00000003",
+          "title": "Example study",
+          "url": "https://clinicaltrials.gov/study/NCT00000003",
+          "study_type": "observational",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000003",
+              "briefTitle": "Example study"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "OBSERVATIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "1 Month",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Currently only enrolling under 6 years.\nInclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": "code"
+          },
+          "pathway": {
+            "category_rank": 3,
+            "category": "观察性/自然史登记",
+            "therapeutic": false,
+            "evidence": {
+              "design": {
+                "studyType": "OBSERVATIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [
+              "minimumAge: 1 Month; maximumAge: 70 Years"
+            ],
+            "pending_prerequisites": [],
+            "status": "测定或观察性研究；非治疗入组结论",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [],
+          "ineligible": [
+            "NCT00000003"
+          ]
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "ae32308a6ec4",
+          "27d1194f28f8"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000003: screening criterion Currently only enrolling under 6 years.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000003"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000003",
+            "url": "https://clinicaltrials.gov/study/NCT00000003"
+          },
+          "quote": "Currently only enrolling under 6 years.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "27d1194f28f8"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000003: screening criterion minimumAge: 1 Month; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000003"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000003",
+            "url": "https://clinicaltrials.gov/study/NCT00000003"
+          },
+          "quote": "minimumAge: 1 Month; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "ae32308a6ec4"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "2 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "alternative",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000004",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "18 Years",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000004",
+        "title": "Example study",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "18 Years",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [
+        {
+          "variable": "age",
+          "why_it_matters": "1 action depends on it: NCT00000004",
+          "affects": [
+            "NCT00000004"
+          ],
+          "details": [
+            "minimumAge: 18 Years; maximumAge: 70 Years"
+          ],
+          "asked_by": "3b"
+        },
+        {
+          "variable": "other trial criteria",
+          "why_it_matters": "1 action depends on it: NCT00000004",
+          "affects": [
+            "NCT00000004"
+          ],
+          "details": [
+            "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years."
+          ],
+          "asked_by": "3b"
+        }
+      ],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000004",
+          "section": "clinical_trial_eligibility",
+          "label": "Example study (NCT00000004)",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "conditional",
+              "reason": "未发现已证实硬冲突；仍有资格条件待核实"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 18 Years; maximumAge: 70 Years",
+              "requirement_evidence": "eea23984e266",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "API年龄范围与正文可能适用的年龄范围不一致，需核实队列",
+              "fact": "age"
+            },
+            {
+              "id": "r2",
+              "kind": "other",
+              "requirement": "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years.",
+              "requirement_evidence": "c333d243fa5a",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "other trial criteria",
+                "value": null,
+                "quote": null,
+                "step": null
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "尚未证实完整入组资格，需研究团队逐项核实",
+              "fact": "other trial criteria"
+            }
+          ],
+          "evidence_ids": [
+            "eea23984e266",
+            "c333d243fa5a"
+          ],
+          "nct": "NCT00000004",
+          "title": "Example study",
+          "url": "https://clinicaltrials.gov/study/NCT00000004",
+          "study_type": "observational",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000004",
+              "briefTitle": "Example study"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "OBSERVATIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "18 Years",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": {
+              "llm": "fixture",
+              "served_model": "fixture",
+              "call_id": "fixture",
+              "prompt_version": "3b-conflict-screen-v1"
+            }
+          },
+          "pathway": {
+            "category_rank": 3,
+            "category": "观察性/自然史登记",
+            "therapeutic": false,
+            "evidence": {
+              "design": {
+                "studyType": "OBSERVATIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [],
+            "pending_prerequisites": [
+              "minimumAge: 18 Years; maximumAge: 70 Years",
+              "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years."
+            ],
+            "status": "测定或观察性研究；非治疗入组结论",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [
+            "NCT00000004"
+          ],
+          "ineligible": []
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "eea23984e266",
+          "c333d243fa5a"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000004: screening criterion Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000004"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000004",
+            "url": "https://clinicaltrials.gov/study/NCT00000004"
+          },
+          "quote": "Inclusion Criteria:\n* Part A: 18 to 70 years.\n* Part B: 3 to 17 years.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "c333d243fa5a"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000004: screening criterion minimumAge: 18 Years; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000004"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000004",
+            "url": "https://clinicaltrials.gov/study/NCT00000004"
+          },
+          "quote": "minimumAge: 18 Years; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "eea23984e266"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "2 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "molecular",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000005",
+            "briefTitle": "CPS1 gene therapy"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "INTERVENTIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "1 Month",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Molecular testing showing a disease-causing mutation in CPS1."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000005",
+        "title": "CPS1 gene therapy",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "interventional",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "1 Month",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Molecular testing showing a disease-causing mutation in CPS1.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000005",
+          "section": "clinical_trial_eligibility",
+          "label": "CPS1 gene therapy (NCT00000005)",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "not_applicable",
+              "reason": "分子靶点互斥：试验针对 CPS1，病例已确诊致病基因为 OTC；无其他适用基因队列。"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 1 Month; maximumAge: 70 Years",
+              "requirement_evidence": "1e8d804e1cf9",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "satisfies",
+              "result": "pass",
+              "note": "registry field",
+              "fact": "age"
+            },
+            {
+              "id": "r2",
+              "kind": "inclusion",
+              "requirement": "Molecular testing showing a disease-causing mutation in CPS1.",
+              "requirement_evidence": "117eadb0e1ec",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "molecular target",
+                "value": "OTC",
+                "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)",
+                "step": 1
+              },
+              "patient_status": "does_not_satisfy",
+              "result": "fail",
+              "note": "分子靶点互斥：试验针对 CPS1，病例已确诊致病基因为 OTC；无其他适用基因队列。",
+              "fact": "molecular target"
+            }
+          ],
+          "evidence_ids": [
+            "1e8d804e1cf9",
+            "117eadb0e1ec"
+          ],
+          "nct": "NCT00000005",
+          "title": "CPS1 gene therapy",
+          "url": "https://clinicaltrials.gov/study/NCT00000005",
+          "study_type": "interventional",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000005",
+              "briefTitle": "CPS1 gene therapy"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "INTERVENTIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "1 Month",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Inclusion Criteria:\n* Molecular testing showing a disease-causing mutation in CPS1."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": "code"
+          },
+          "pathway": {
+            "category_rank": 0,
+            "category": "基因/靶向治疗干预",
+            "therapeutic": true,
+            "evidence": {
+              "design": {
+                "studyType": "INTERVENTIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [
+              "minimumAge: 1 Month; maximumAge: 70 Years"
+            ],
+            "pending_prerequisites": [],
+            "status": "治疗性干预研究；需核实队列和完整资格",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [],
+          "ineligible": [
+            "NCT00000005"
+          ]
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "1e8d804e1cf9",
+          "117eadb0e1ec"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000005: screening criterion Molecular testing showing a disease-causing mutation in CPS1.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000005"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000005",
+            "url": "https://clinicaltrials.gov/study/NCT00000005"
+          },
+          "quote": "Molecular testing showing a disease-causing mutation in CPS1.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "117eadb0e1ec"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000005: screening criterion minimumAge: 1 Month; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000005"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000005",
+            "url": "https://clinicaltrials.gov/study/NCT00000005"
+          },
+          "quote": "minimumAge: 1 Month; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "1e8d804e1cf9"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "2 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "two_branches",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000006",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "RECRUITING"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "1 Month",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000006",
+        "title": "Example study",
+        "acronym": null,
+        "status": "RECRUITING",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "1 Month",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      },
+      {
+        "id": "b1",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        },
+        {
+          "id": "b1",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0",
+        "b1"
+      ],
+      "patient_context": {},
+      "missing_information": [
+        {
+          "variable": "other trial criteria",
+          "why_it_matters": "1 action depends on it: NCT00000006",
+          "affects": [
+            "NCT00000006"
+          ],
+          "details": [
+            "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          ],
+          "asked_by": "3b"
+        }
+      ],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": "trial:NCT00000006",
+          "section": "clinical_trial_eligibility",
+          "label": "Example study (NCT00000006)",
+          "applies_to": [
+            "b0",
+            "b1"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "conditional",
+              "reason": "未发现已证实硬冲突；仍有资格条件待核实"
+            },
+            "b1": {
+              "status": "conditional",
+              "reason": "未发现已证实硬冲突；仍有资格条件待核实"
+            }
+          },
+          "requirements": [
+            {
+              "id": "r1",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 1 Month; maximumAge: 70 Years",
+              "requirement_evidence": "f1c49ff8d0f3",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "satisfies",
+              "result": "pass",
+              "note": "registry field",
+              "fact": "age"
+            },
+            {
+              "id": "r2",
+              "kind": "other",
+              "requirement": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+              "requirement_evidence": "6ae22a81dcf2",
+              "applies_to": [
+                "b0"
+              ],
+              "patient_fact": {
+                "field": "other trial criteria",
+                "value": null,
+                "quote": null,
+                "step": null
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "尚未证实完整入组资格，需研究团队逐项核实",
+              "fact": "other trial criteria"
+            },
+            {
+              "id": "r3",
+              "kind": "inclusion",
+              "requirement": "minimumAge: 1 Month; maximumAge: 70 Years",
+              "requirement_evidence": "47ca3d477f2d",
+              "applies_to": [
+                "b1"
+              ],
+              "patient_fact": {
+                "field": "age",
+                "value": "7 years",
+                "quote": "7-year-old",
+                "step": 2
+              },
+              "patient_status": "satisfies",
+              "result": "pass",
+              "note": "registry field",
+              "fact": "age"
+            },
+            {
+              "id": "r4",
+              "kind": "other",
+              "requirement": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+              "requirement_evidence": "8c78d308f238",
+              "applies_to": [
+                "b1"
+              ],
+              "patient_fact": {
+                "field": "other trial criteria",
+                "value": null,
+                "quote": null,
+                "step": null
+              },
+              "patient_status": "unknown",
+              "result": "unknown",
+              "note": "尚未证实完整入组资格，需研究团队逐项核实",
+              "fact": "other trial criteria"
+            }
+          ],
+          "evidence_ids": [
+            "47ca3d477f2d",
+            "6ae22a81dcf2",
+            "8c78d308f238",
+            "f1c49ff8d0f3"
+          ],
+          "nct": "NCT00000006",
+          "title": "Example study",
+          "url": "https://clinicaltrials.gov/study/NCT00000006",
+          "study_type": "observational",
+          "overall_status": "RECRUITING",
+          "phases": [],
+          "interventions": [],
+          "specific": true,
+          "relevance": {
+            "by": "disease_or_family_query",
+            "name": [
+              "Example disease"
+            ]
+          },
+          "protocolSection": {
+            "identificationModule": {
+              "nctId": "NCT00000006",
+              "briefTitle": "Example study"
+            },
+            "statusModule": {
+              "overallStatus": "RECRUITING"
+            },
+            "designModule": {
+              "studyType": "OBSERVATIONAL",
+              "designInfo": {
+                "primaryPurpose": "TREATMENT"
+              }
+            },
+            "conditionsModule": {
+              "conditions": [
+                "Example disease"
+              ]
+            },
+            "eligibilityModule": {
+              "minimumAge": "1 Month",
+              "maximumAge": "70 Years",
+              "sex": "ALL",
+              "healthyVolunteers": false,
+              "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            },
+            "armsInterventionsModule": {
+              "armGroups": []
+            }
+          },
+          "screening": {
+            "method": "3b-conflict-screen-v1",
+            "raw_answer": {
+              "hard_conflicts": []
+            },
+            "conflict_audits": [],
+            "provenance": {
+              "llm": "fixture",
+              "served_model": "fixture",
+              "call_id": "fixture",
+              "prompt_version": "3b-conflict-screen-v1"
+            },
+            "other_branch_audits": {
+              "b1": {
+                "method": "3b-conflict-screen-v1",
+                "raw_answer": {
+                  "hard_conflicts": []
+                },
+                "conflict_audits": [],
+                "provenance": {
+                  "llm": "fixture",
+                  "served_model": "fixture",
+                  "call_id": "fixture",
+                  "prompt_version": "3b-conflict-screen-v1"
+                }
+              }
+            }
+          },
+          "pathway": {
+            "category_rank": 3,
+            "category": "观察性/自然史登记",
+            "therapeutic": false,
+            "evidence": {
+              "design": {
+                "studyType": "OBSERVATIONAL",
+                "designInfo": {
+                  "primaryPurpose": "TREATMENT"
+                }
+              },
+              "interventions": [],
+              "arm_groups": {
+                "armGroups": []
+              }
+            },
+            "known_conditions": [
+              "minimumAge: 1 Month; maximumAge: 70 Years"
+            ],
+            "pending_prerequisites": [
+              "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+            ],
+            "status": "测定或观察性研究；非治疗入组结论",
+            "target_path_supported": false,
+            "cohort_note": "完整病例与招募原文已用于初筛，剩余条件须研究团队核实"
+          },
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "3b conflict-only screening"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [
+            "NCT00000006"
+          ],
+          "ineligible": []
+        },
+        "b1": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": null,
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [
+            "NCT00000006"
+          ],
+          "ineligible": []
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [
+          "f1c49ff8d0f3",
+          "6ae22a81dcf2",
+          "47ca3d477f2d",
+          "8c78d308f238"
+        ],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "sourced",
+          "claim": "NCT00000006: screening criterion minimumAge: 1 Month; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000006"
+          },
+          "applies_to": [
+            "b1"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000006",
+            "url": "https://clinicaltrials.gov/study/NCT00000006"
+          },
+          "quote": "minimumAge: 1 Month; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "47ca3d477f2d"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000006: screening criterion Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000006"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000006",
+            "url": "https://clinicaltrials.gov/study/NCT00000006"
+          },
+          "quote": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "6ae22a81dcf2"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000006: screening criterion Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000006"
+          },
+          "applies_to": [
+            "b1"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000006",
+            "url": "https://clinicaltrials.gov/study/NCT00000006"
+          },
+          "quote": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "8c78d308f238"
+        },
+        {
+          "kind": "sourced",
+          "claim": "NCT00000006: screening criterion minimumAge: 1 Month; maximumAge: 70 Years",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": {
+            "key": "trial:NCT00000006"
+          },
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "3b conflict-only screening",
+          "status": "verified",
+          "reasons": [],
+          "source": {
+            "type": "nct",
+            "id": "NCT00000006",
+            "url": "https://clinicaltrials.gov/study/NCT00000006"
+          },
+          "quote": "minimumAge: 1 Month; maximumAge: 70 Years",
+          "accessed_at": 1,
+          "quote_verified": true,
+          "id": "f1c49ff8d0f3"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "4 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "closed",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [
+      {
+        "protocolSection": {
+          "identificationModule": {
+            "nctId": "NCT00000007",
+            "briefTitle": "Example study"
+          },
+          "statusModule": {
+            "overallStatus": "COMPLETED"
+          },
+          "designModule": {
+            "studyType": "OBSERVATIONAL",
+            "designInfo": {
+              "primaryPurpose": "TREATMENT"
+            }
+          },
+          "conditionsModule": {
+            "conditions": [
+              "Example disease"
+            ]
+          },
+          "eligibilityModule": {
+            "minimumAge": "1 Month",
+            "maximumAge": "70 Years",
+            "sex": "ALL",
+            "healthyVolunteers": false,
+            "eligibilityCriteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy."
+          },
+          "armsInterventionsModule": {
+            "armGroups": []
+          }
+        },
+        "nct": "NCT00000007",
+        "title": "Example study",
+        "acronym": null,
+        "status": "COMPLETED",
+        "last_update": null,
+        "study_type": "observational",
+        "phases": [],
+        "conditions": [
+          "Example disease"
+        ],
+        "keywords": [],
+        "interventions": [],
+        "min_age": "1 Month",
+        "max_age": "70 Years",
+        "sex": "ALL",
+        "healthy_volunteers": false,
+        "criteria": "Inclusion Criteria:\n* Further screening required.\nExclusion Criteria:\n* Pregnancy.",
+        "population_groups": []
+      }
+    ],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": null,
+          "section": "clinical_trial_eligibility",
+          "label": "None found",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "searched_none",
+              "reason": "未检索到开放研究"
+            }
+          },
+          "requirements": [],
+          "evidence_ids": [
+            "3f5f6b635d4f"
+          ],
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "clinicaltrials.gov {'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 1,
+              "n_retrieved": 1,
+              "complete": true
+            }
+          ],
+          "n_unique": 1,
+          "excluded": [
+            {
+              "nct": "NCT00000007",
+              "title": "Example study",
+              "status": "COMPLETED",
+              "reason": "status",
+              "detail": "COMPLETED",
+              "last_update": null,
+              "url": "https://clinicaltrials.gov/study/NCT00000007"
+            }
+          ],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [],
+          "ineligible": []
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "negative",
+          "claim": "No applicable records were found in clinicaltrials.gov for \"{'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}\" (1 returned, 1 excluded).",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": null,
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "clinicaltrials.gov {'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}",
+          "status": "verified",
+          "reasons": [],
+          "search": {
+            "database": "clinicaltrials.gov",
+            "endpoint": "https://clinicaltrials.gov/api/v2/studies",
+            "query": "{'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}",
+            "filters": {},
+            "queried_at": 1,
+            "n_results": 1,
+            "n_excluded": 1,
+            "excluded": [
+              {
+                "id": "NCT00000007",
+                "reason": "status: COMPLETED"
+              }
+            ]
+          },
+          "id": "3f5f6b635d4f"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "1 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  },
+  {
+    "name": "empty",
+    "pf": {
+      "age_months": 84,
+      "age_quote": "7-year-old",
+      "sex": "male",
+      "sex_quote": "male",
+      "variants": [
+        {
+          "gene": "OTC",
+          "protein": "p.Arg1Gly",
+          "class": "missense",
+          "zygosity": "hemizygous",
+          "quote": "OTC c.1A>G p.Arg1Gly (hemizygous)"
+        }
+      ],
+      "present": [],
+      "excluded": []
+    },
+    "studies": [],
+    "branches": [
+      {
+        "id": "b0",
+        "gene": "OTC",
+        "diagnosis": {
+          "label": "SLC35A2-CDG"
+        }
+      }
+    ],
+    "case": {
+      "id": "TEST",
+      "patient": {
+        "clinical_context": "A 7-year-old male diagnosed with OTC deficiency."
+      }
+    },
+    "step1": {
+      "variants": [
+        {
+          "gene": "OTC"
+        }
+      ]
+    },
+    "step2": {
+      "primary": {
+        "id": "b0",
+        "status": "resolved"
+      },
+      "clinvar": []
+    },
+    "expected": {
+      "schema_version": "evidence-ledger-v3",
+      "patient_id": "TEST",
+      "branches": [
+        {
+          "id": "b0",
+          "gene": "OTC",
+          "diagnosis": {
+            "label": "SLC35A2-CDG"
+          }
+        }
+      ],
+      "branch_assessment": [],
+      "branch_order": [
+        "b0"
+      ],
+      "patient_context": {},
+      "missing_information": [],
+      "rules_applied": [],
+      "rules_skipped": [],
+      "sections_status": {
+        "existing_targeted_therapies": "not_searched",
+        "supportive_management": "not_searched",
+        "contraindications_precautions": "not_searched",
+        "clinical_trial_eligibility": "searched",
+        "off_label_expanded_access": "not_searched",
+        "bespoke_therapies": "not_searched",
+        "drug_repurposing": "not_searched",
+        "outcome_measures_ranking": "not_searched"
+      },
+      "actions": [
+        {
+          "action_key": null,
+          "section": "clinical_trial_eligibility",
+          "label": "None found",
+          "applies_to": [
+            "b0"
+          ],
+          "status_by_branch": {
+            "b0": {
+              "status": "searched_none",
+              "reason": "未检索到开放研究"
+            }
+          },
+          "requirements": [],
+          "evidence_ids": [
+            "3f5f6b635d4f"
+          ],
+          "provenance": {
+            "llm_calls": [],
+            "rules": [
+              "clinicaltrials.gov {'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}"
+            ],
+            "code_only": true,
+            "check_calls": []
+          }
+        }
+      ],
+      "trial_searches": {
+        "b0": {
+          "names": [
+            "Example disease"
+          ],
+          "gene": "OTC",
+          "searches": [
+            {
+              "query": {
+                "query.cond": "Example disease",
+                "filter.overallStatus": "RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION"
+              },
+              "url": "local",
+              "page_urls": [
+                "local"
+              ],
+              "queried_at": 1,
+              "total_count": 0,
+              "n_retrieved": 0,
+              "complete": true
+            }
+          ],
+          "n_unique": 0,
+          "excluded": [],
+          "over_cap": [],
+          "n_closed_relevant": 0,
+          "closed_listed": [],
+          "parent_names": [],
+          "screening_method": "3b-conflict-screen-v1",
+          "analysed": [],
+          "ineligible": []
+        }
+      },
+      "dropped_conditions": [],
+      "reextracted_rows": [],
+      "possible_duplicates": [],
+      "supportive_tiers": {},
+      "offlabel_searches": {},
+      "bespoke_mechanism": {},
+      "bespoke_unassessable": [],
+      "repurposing_searches": {},
+      "sections": {
+        "existing_targeted_therapies": [],
+        "supportive_management": [],
+        "contraindications_precautions": [],
+        "clinical_trial_eligibility": [],
+        "off_label_expanded_access": [],
+        "bespoke_therapies": [],
+        "drug_repurposing": [],
+        "outcome_measures_ranking": []
+      },
+      "evidence": [
+        {
+          "kind": "negative",
+          "claim": "No applicable records were found in clinicaltrials.gov for \"{'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}\" (0 returned, 0 excluded).",
+          "section": "clinical_trial_eligibility",
+          "tier": "emerging",
+          "action": null,
+          "applies_to": [
+            "b0"
+          ],
+          "conditions": [],
+          "produced_by": "code",
+          "retrieved_by": "clinicaltrials.gov {'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}",
+          "status": "verified",
+          "reasons": [],
+          "search": {
+            "database": "clinicaltrials.gov",
+            "endpoint": "https://clinicaltrials.gov/api/v2/studies",
+            "query": "{'query.cond': 'Example disease', 'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'}",
+            "filters": {},
+            "queried_at": 1,
+            "n_results": 0,
+            "n_excluded": 0,
+            "excluded": []
+          },
+          "id": "3f5f6b635d4f"
+        }
+      ],
+      "checks": [
+        {
+          "name": "schema",
+          "status": "pass",
+          "detail": "1 items well-formed"
+        },
+        {
+          "name": "applies_to_subset_of_branches",
+          "status": "pass",
+          "detail": "all items name existing branches"
+        },
+        {
+          "name": "verified_sourced_have_quote_and_source",
+          "status": "pass",
+          "detail": "every verified sourced item has a valid source id, a verbatim quote and an access time"
+        },
+        {
+          "name": "reasoning_premises_verified",
+          "status": "pass",
+          "detail": "every verified reasoning item rests on verified evidence"
+        },
+        {
+          "name": "llm_output_records_model",
+          "status": "pass",
+          "detail": "LLM-produced items record the served model and prompt version"
+        },
+        {
+          "name": "one_action_one_section",
+          "status": "pass",
+          "detail": "no action appears in two sections"
+        },
+        {
+          "name": "empty_section_has_negative_evidence",
+          "status": "pass",
+          "detail": "every searched section has an action or a verified negative search for each branch"
+        },
+        {
+          "name": "unknown_conditions_listed_as_missing",
+          "status": "pass",
+          "detail": "every unknown patient variable used in a condition is in missing_information"
+        },
+        {
+          "name": "umbrella_branches_expanded",
+          "status": "pass",
+          "detail": "no unexpanded umbrella branch"
+        },
+        {
+          "name": "action_records_consistent",
+          "status": "pass",
+          "detail": "every action record is traceable and consistent"
+        },
+        {
+          "name": "drug_keys_normalized",
+          "status": "pass",
+          "detail": "all drugs normalized to RxNorm / ChEMBL"
+        },
+        {
+          "name": "llm_calls_attributed",
+          "status": "pass",
+          "detail": "every LLM-produced item and context check names its call ids"
+        }
+      ]
+    }
+  }
+]

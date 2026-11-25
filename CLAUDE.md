@@ -1,3 +1,15 @@
+## 最新节点：2026-11-25 OTC新版3b完整缓存重跑通过
+
+用户要求只跑OTC验证全链并显示最新。refresh_step3b.py --case PRAC-OTC --cache-only，LLM预算0，退出码0；9份模型回答全部复用缓存，无新增模型请求/$0。检索保存记录33条含重复/21项去重，保留7、排除14；15自检pass/1既有名称归一化warn/0fail。新批次.cache/step3b/PRAC-OTC/20261125T154952.484174Z complete，正式账本发布，页面HTTP200且显示该最新批次。其他步骤行动不变；1361保护文件仅正式OTC账本更新。对改前15例788行status_diff0；原current仍缺失，完整报错保存且未promote。生产代码/提示词/医学规则不改、不跑其他病例；缓存重算不代表今日联网核实登记或新模型调用，也不等于临床资格验收。完整审计out/step3b-otc-run-20261125/README.txt、audit.json、run.log及diff。
+
+## 最新节点：2026-11-25 3b单链重构与旧实现退役
+
+按用户授权重写简洁架构并删旧实现。生产入口统一aitx/step3/b/pipeline.py；screening负责计划/请求/核验，rules保留13个现役规则（AST不变），records为唯一落账器，results/presentation继续负责.cache/step3b批次和最新页面。旧criteria逐条映射链、_record、plan_branch/祖先遍历、5个依赖旧实现的实验/回放脚本退役，专属测试连同原源码已快照在out/step3b-rebuild-20261125/before，retired.json逐项说明；现役规则与报告测试保留/移植。Prompt/版本/参数/完整输入不变，8组改前冻结账本逐字段相等。未调用模型、未重跑正式病例、未改医学结论或基线；原current仍缺失，完整报错保留。旧测试退役不等于旧缺陷修复；当前仍是Conflict-Only初筛，不恢复旧逐条条件解释能力。专项73通过，全量1136通过/1既有报告排序失败；原另外3失败随旧映射专属测试退役而非修复。正式15例788行对改前diff0，26861数据文件SHA不变，AGXT/OTC页面HTTP200。3b Python实现1377→861行。详细架构见docs/step3b_contract.md，验证在同审计目录。
+
+## 最新节点：2026-11-25 3b运行保存与最新页面接线整理
+
+3b生产筛选/提示词/判定不变。独立refresh CLI改调aitx/step3/b/results.py，批次保存在.cache/step3b/<病例>/<UTC批次>，包含执行状态、病例、改前账本、完成账本和页面卡片；正式卡片转换移至presentation.py，旧导出CLI复用。页面/监听读取最新批次，失败显示错误不退旧；保留旧账本/导出兼容。现有AGXT-c33dup实验卡片与OTC正式卡片逐字复制入缓存，保留来源性质/原保存时间，旧文件不删。无病例重跑/模型调用，不修医学规则。详情与测试、保护哈希、完整status_diff输出见out/step3b-wiring-20261125；基线current开工前已缺失，不重建或promote。旧逐条条件映射回放代码仍有引用而保留，完整Step3仍受3a适配未完成限制。专项14通过；全量1237通过/4既有失败（与改前历史日志一致）；26855旧文件SHA不变，两页面HTTP200。
+
 ## 最新节点：2026-11-25 COL1A1与NF1引用错误已离线修复
 
 用户明确批准第1项修复。复用现有显式hydrate_xml_references，仅恢复COL1A1 NBK1295块6与NF1 NBK1109-serial1块10；原选中ID/text/xml不变，5/6条引用均按提交XML的xref/rid恢复且在完整源XML中唯一定位。原response/parsed/成功结果保持字节不变，execution保留previous_error。两章节7/7和10/10完成待内容审核；40相关离线测试通过，页面HTTP200并展示最新完成状态。0模型调用/$0，最新预算仍按CFTR halves的0.319720769美元；未改生产代码/Ledger/判定/基线。1227文件保护核验仅两execution变化，新增两selection；快照/审计/引用目标/测试/page-check见out/step3a-col1a1-nf1-reference-fix-20261125。CFTR6行因条件适用范围争议暂不计确认漏选，筛选范围尚未统一，本次未改。

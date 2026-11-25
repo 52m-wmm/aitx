@@ -111,24 +111,3 @@ def test_search_pages_and_counts(monkeypatch):
     s = T.search({"query.cond": "x"})
     assert s["total_count"] == 3 and s["n_retrieved"] == 3 and s["complete"] and len(s["page_urls"]) == 2
     assert s["queried_at"] == 90 and "countTotal=true" in s["url"]
-
-
-def test_plan_branch_groups_every_study_once(monkeypatch):
-    studies = [study("NCT_A", min_age="2 Years"),                                   # analysed
-               study("NCT_B", min_age="12 Years"),                                  # ineligible (age)
-               study("NCT_C", status="ACTIVE_NOT_RECRUITING"),                      # excluded: status
-               study("NCT_D", conditions=("Esophageal Cancer",), keywords=("OTC",)),   # excluded: relevance
-               study("NCT_E", status="NOT_YET_RECRUITING", study_type="observational", phases=())]
-    studies += [study(f"NCT_K{i}", updated=f"2025-01-{i + 1:02d}") for i in range(T.K)]   # fill beyond the cap
-    monkeypatch.setattr(T, "search", lambda params, **k: {"query": params, "url": "u", "page_urls": ["u"], "queried_at": 1,
-                                                          "total_count": len(studies), "n_retrieved": len(studies),
-                                                          "studies": studies, "complete": True, "database": "d", "endpoint": "e"})
-    p = T.plan_branch(["primary hyperoxaluria type 1"], "AGXT", 84, "male")
-    groups = ([s["nct"] for s in p["analysed"]], [s["nct"] for s in p["over_cap"]], [s["nct"] for s in p["ineligible"]],
-              [x["nct"] for x in p["excluded"]])
-    flat = [n for g in groups for n in g]
-    assert sorted(flat) == sorted(s["nct"] for s in studies) and len(flat) == len(set(flat))
-    assert len(p["analysed"]) == T.K and "NCT_E" in groups[1]                      # observational ranks last -> over cap
-    assert groups[2] == ["NCT_B"]
-    assert {x["nct"]: x["reason"] for x in p["excluded"]} == {"NCT_C": "status", "NCT_D": "relevance"}
-    assert len(p["searches"]) == 2 and "studies" not in p["searches"][0]

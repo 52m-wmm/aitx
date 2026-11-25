@@ -1,9 +1,6 @@
-"""Step 3b, code-only parts: ClinicalTrials.gov retrieval, status grouping, relevance filter,
-structured prefilter, ranking with a cap, and criterion splitting (contract docs/step3b_contract.md, steps 1-5).
+"""ClinicalTrials.gov transport, source parsing and shared matching/ranking helpers.
 
-No LLM here. The per-criterion mapping to structured fields (LLM) and the ledger entries are added
-on top of `plan_branch`, whose result says, for one diagnosis branch, which studies are analysed and
-why every other returned study is not.
+The only production search plan lives in aitx.step3.b.screening.
 """
 from __future__ import annotations
 
@@ -16,10 +13,6 @@ import urllib.parse
 from aitx import http
 
 API = "https://clinicaltrials.gov/api/v2/studies"
-OPEN = ("RECRUITING", "NOT_YET_RECRUITING")
-K = 10                       # studies analysed criterion by criterion per branch (contract decision 4)
-MAX_LISTED_CLOSED = 50       # relevant studies with other statuses listed by name (most recently updated)
-MAX_NAMES = 3                # disease names searched per branch
 PAGE_SIZE = 100
 
 
@@ -335,97 +328,12 @@ def _words(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", (text or "").lower())
 
 
-def parent_names(label: str, parents: list[tuple[str, str]]) -> list[str]:
-    """Names of the disease one level up, used as extra search names when the diagnosis is a numbered or named subtype
-    of it (user decision 2026-11-12: ALS18 -> amyotrophic lateral sclerosis; the subtype name alone missed every
-    general ALS trial). Only a parent whose name is the start of the subtype's name counts ("amyotrophic lateral
-    sclerosis" for "amyotrophic lateral sclerosis type 18"), so a broad grouping ("motor neuron disease") never does.
-    Trials limited to other genes are then ruled out by the genotype rule (criteria.other_gene_required)."""
-    child = _words(label)
-    out = []
-    for _, plabel in parents:
-        pw = [w for w in _words(plabel) if w not in INHERITANCE_WORDS]
-        if pw and len(pw) < len(child) and child[:len(pw)] == pw and plabel not in out:
-            out.append(plabel)
-    return out
 
 
-# words that say how a disease is inherited, not which disease it is: MONDO puts "familial amyotrophic lateral
-# sclerosis" between ALS18 and ALS (2026-11-13), so they are ignored when matching a parent's name
-INHERITANCE_WORDS = {"familial", "hereditary", "inherited", "autosomal", "dominant", "recessive", "x", "linked"}
-ANCESTOR_LEVELS = 3
 
 
-def ancestors_up(mondo_id: str, parents_of, levels: int = ANCESTOR_LEVELS) -> list[tuple[str, str]]:
-    """MONDO ancestors (id, label), nearest first, up to `levels` steps: parents_of(id) -> [(id, label)]."""
-    out, frontier, seen = [], [mondo_id], {mondo_id}
-    for _ in range(levels):
-        nxt = []
-        for mid in frontier:
-            for pid, plabel in parents_of(mid):
-                if pid not in seen:
-                    seen.add(pid)
-                    out.append((pid, plabel))
-                    nxt.append(pid)
-        frontier = nxt
-    return out
 
 
-def plan_branch(names: list[str], gene: str | None, patient_age_months: float | None, patient_sex: str | None,
-                *, use_cache: bool = True, diagnosed_genes: list[str] | None = None) -> dict:
-    """Search by disease names (at most 3) and by gene, then sort every returned study into exactly one of:
-    analysed (open, relevant, prefilter pass or unknown, within top K), over_cap (same, beyond K),
-    ineligible (open, relevant, registry age / sex / healthy-only rules the patient out -> not_applicable
-    action with the registry field as the requirement; no LLM needed), excluded (not relevant, or
-    another status; with the reason)."""
-    names = [n for n in dict.fromkeys(names) if n]
-    # an abbreviation is never a search term on its own (fix plan N1): search with the first full names, match with
-    # those plus the abbreviations, which count only when the same record also carries a full name or the gene
-    search_names = [n for n in names if not is_abbrev(n)][:MAX_NAMES]
-    # Limit queries, not the diagnosis synonyms used to interpret returned records.
-    searches = [search({"query.cond": n}, use_cache=use_cache) for n in search_names]
-    if gene:
-        searches.append(search({"query.term": gene}, use_cache=use_cache))
-    seen: dict[str, dict] = {}
-    for s in searches:
-        for st in s["studies"]:
-            seen.setdefault(st["nct"], st)
-    open_rel, closed_rel, excluded, ineligible = [], [], [], []
-    for st in seen.values():
-        rel = relevance(st, names, gene or "")
-        from aitx.step3.b import criteria as C
-        molecular = C.single_target_conflict(st, diagnosed_genes or []) if st['status'] in OPEN else None
-        if rel is None and molecular is not None:
-            rel = {'by': 'retrieved_molecular_conflict', 'field': 'criteria',
-                   'entry': molecular['trial_rule_quote'], 'name': molecular['target_gene']}
-        if not rel:
-            excluded.append(_ex(st, "relevance", exclusion_reason(st, names, gene or "")))
-        elif st["status"] not in OPEN:
-            closed_rel.append(st)
-        else:
-            pre = prefilter(st, patient_age_months, patient_sex)
-            notes = C.enrollment_note_lines(st, {'age_months': patient_age_months, 'age_quote': None, 'sex': None})
-            note_failure = any((n['kind'] == 'inclusion' and n['patient_status'] == 'does_not_satisfy')
-                               or (n['kind'] == 'exclusion' and n['patient_status'] == 'satisfies') for n in notes)
-            if note_failure or molecular is not None:
-                pre['result'] = 'fail'
-            st = {**st, "relevance": rel, "prefilter": pre, "specific": specific(st, names, gene or "")}
-            if pre["result"] == "fail":
-                ineligible.append(st)        # open and relevant, but the registry limits rule the patient out
-            else:
-                open_rel.append(st)
-    closed_rel.sort(key=lambda s: _neg_date(s["last_update"]))
-    for st in closed_rel:
-        excluded.append(_ex(st, "status", f"overall status {st['status']}"))
-    open_rel.sort(key=lambda s: rank_key(s, names, gene or ""))
-    analysed, over_cap = open_rel[:K], open_rel[K:]
-    return {"names": names, "gene": gene, "searches": [{k: v for k, v in s.items() if k != "studies"} for s in searches],
-            "n_unique": len(seen), "analysed": analysed,
-            "over_cap": [{"nct": s["nct"], "title": s["title"], "study_type": s["study_type"],
-                          "prefilter": s["prefilter"]["result"], "url": study_url(s["nct"])} for s in over_cap],
-            "ineligible": sorted(ineligible, key=lambda s: rank_key(s, names, gene or "")),
-            "excluded": excluded, "n_closed_relevant": len(closed_rel),
-            "closed_listed": [e["nct"] for e in excluded if e["reason"] == "status"][:MAX_LISTED_CLOSED]}
 
 
 def _ex(st: dict, reason: str, detail: str) -> dict:

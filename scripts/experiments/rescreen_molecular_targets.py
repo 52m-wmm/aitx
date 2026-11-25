@@ -11,7 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from aitx.evidence import trials as T
-from aitx.step3.b import criteria as C
+from aitx.step3.b import rules as C
 from scripts.experiments import step3b_conflict_screening_mvp as E
 
 

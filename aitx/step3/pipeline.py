@@ -13,7 +13,7 @@ from aitx import runmeta
 from aitx.evidence import ledger as LG
 from aitx.evidence.branches import build_branches, patient_context
 from aitx.step3.a.ledger_adapter import add_established
-from aitx.step3.b.records import add_trials
+from aitx.step3.b.pipeline import add_trials
 from aitx.evidence.bespoke import add_bespoke
 from aitx.evidence.offlabel import add_offlabel
 from aitx.evidence.repurposing import add_repurposing
