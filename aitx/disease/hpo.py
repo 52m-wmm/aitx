@@ -294,11 +294,16 @@ def disease_terms(ont: Ontology, anns: list[Annotation]) -> tuple[dict[str, floa
 def score(ont: Ontology, patient_present: list[str], patient_absent: list[str],
           anns: list[Annotation]) -> dict:
     present, _neg = disease_terms(ont, anns)
+    # B1 applies to positive-match records only; negative penalties stay unchanged.
+    matchable, _ = disease_terms(ont, [a for a in anns if a.frequency != 0])
     if not present:
         return {"score": None, "note": "no annotation data in phenotype.hpoa", "matches": [], "penalties": []}
     matches = []
     for p in patient_present:
-        best = max(((d, *ont.mica(p, d)) for d in present), key=lambda x: (x[2], x[0]))
+        # B2: siblings sharing a general ancestor are not a supported patient match.
+        comparable = [d for d in matchable if p in ont.ancestors(d) or d in ont.ancestors(p)]
+        best = max(((d, *ont.mica(p, d)) for d in comparable),
+                   key=lambda x: (x[2], x[0]), default=(None, None, 0.0))
         d, anc, ic = best
         matches.append({"patient_term": p, "disease_term": d if ic > 0 else None,
                         "common_ancestor": anc if ic > 0 else None, "ic": round(ic, 3)})

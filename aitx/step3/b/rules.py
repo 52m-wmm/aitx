@@ -1,7 +1,7 @@
 """Deterministic rules used by conflict screening; no model calls or Ledger writes.
 
-Rules are preserved from the previously deployed implementation. Unknown scope
-and missing patient facts remain unknown; this module does not infer eligibility.
+Unknown scope and missing patient facts remain unknown. Disease-gene mismatch
+is independent of intervention type; this module does not infer full eligibility.
 """
 from __future__ import annotations
 import re
@@ -117,7 +117,9 @@ def other_gene_required(quote: str, branch: dict, pf: dict) -> list[str]:
         return []
     # "a confirmed diagnosis of CDG or NGLY1 deficiency": an alternative that names no gene (a disease group that may
     # include the patient's) keeps the rule out; it decides only when every alternative names a gene
-    parts = [x for x in re.split(r"\bor\b|/|;", quote) if x.strip()]
+    # A variant-classification standard is not an alternative disease/cohort.
+    alternatives = re.sub(r'\bACMG\s*/\s*AMP\b', 'classification standard', quote, flags=re.I)
+    parts = [x for x in re.split(r"\bor\b|/|;", alternatives) if x.strip()]
     if len(parts) > 1 and any(not GC.genes_named(x) and _names_disease(x) for x in parts):
         return []
     return named
@@ -139,18 +141,15 @@ def _names_disease(part: str) -> bool:
 
 
 
-def single_target_conflict(study: dict, diagnosed_genes: list[str]) -> dict | None:
-    """A single mandatory therapy target differs from the confirmed disease genes.
+def single_target_conflict(study: dict, patient_genes: list[str]) -> dict | None:
+    """A mandatory disease gene differs from all reported patient genes.
 
     This compares disease/therapy targets, not an unreported gene's test result.
     Local cohort requirements, alternative gene paths and unclear scope cannot exclude.
     """
-    if not diagnosed_genes or study['study_type'] != 'interventional':
+    if not patient_genes:
         return None
     raw = study['criteria']
-    therapy = study['title'] + '\n' + raw
-    if not re.search(r'\bgene therap\w*|\bbase edit\w*|\bgene edit\w*|\bASO\b|\bsiRNA\b|\bantisense\b', therapy, re.I):
-        return None
     if 'population_groups' not in study:
         return None  # The caller has not supplied alternative-cohort context.
     inclusion = [x for x in T.split_criteria(raw) if x['kind'] == 'inclusion']
@@ -158,9 +157,11 @@ def single_target_conflict(study: dict, diagnosed_genes: list[str]) -> dict | No
     # A heading can restrict the following requirement to a local path. Do not flatten it to AND.
     if re.search(r'\bcohort\b|\b(?:part|group)\s*[A-Z0-9]\b|\b(?:any|all|other)\s+(?:UCD|urea cycle disorders?)\b', text, re.I):
         return None
-    pf = {'variants': [{'gene': gene} for gene in diagnosed_genes]}
-    required = [(x, other_gene_required(x['text'], {'gene': diagnosed_genes[0]}, pf))
-                for x in inclusion if not x['parent']]
+    pf = {'variants': [{'gene': gene} for gene in patient_genes]}
+    required = [(x, other_gene_required(x['text'], {'gene': patient_genes[0]}, pf))
+                for x in inclusion if not x['parent']
+                and re.search(r'\b(?:mutations?|variants?|duplications?|deletions?|alleles?|carriers?|genotyp\w*|genetically confirmed)\b', x['text'], re.I)
+                and not re.search(r'\b(?:optional|testing for|samples? for|analysis of|measurement of)\b', x['text'], re.I)]
     targets = set(g for x in inclusion if _GENE_WORDS.search(x['text'])
                   and not _NOT_REQUIRED.search(x['text']) for g in GC.genes_named(x['text']))
     title_genes = GC.genes_named(study['title'])
@@ -171,7 +172,7 @@ def single_target_conflict(study: dict, diagnosed_genes: list[str]) -> dict | No
             required.append(({'text': study['title'], 'source': 'title'}, [gene]))
     if set(title_genes) - targets:
         return None
-    if len(targets) != 1 or targets.intersection(diagnosed_genes):
+    if len(targets) != 1 or targets.intersection(patient_genes):
         return None
     target = next(iter(targets))
     groups = study['population_groups']
@@ -180,19 +181,20 @@ def single_target_conflict(study: dict, diagnosed_genes: list[str]) -> dict | No
         named = set(GC.genes_named(context))
         if named - {target} or re.search(r'\b(?:any|all|other)\s+(?:UCD|urea cycle disorders?)\b|regardless of genotype', context, re.I):
             return None
-    if len(groups) > 1:
-        for group in groups:
-            context = group['label'] + '\n' + (group['description'] if 'description' in group else '')
-            if re.search(r'placebo|control', context, re.I):
-                continue
-            if GC.genes_named(context) != [target]:
-                return None
+        # Treatment/control arms share global inclusion criteria. A population
+        # alternative (including healthy controls) must not be flattened away.
+        if re.search(r'\bhealthy|\bunaffected|\bcaregivers?|\brelatives?|\bfamily members?|\bcohorts?\b', context, re.I):
+            return None
+        if (re.search(r'\bcontrols?\b', group['label'], re.I)
+                and group.get('type') not in ('PLACEBO_COMPARATOR', 'ACTIVE_COMPARATOR', 'SHAM_COMPARATOR')
+                and not re.search(r'\bplacebo|\bsham\b', context, re.I)):
+            return None  # Unspecified controls may have different genetic eligibility.
     for item, genes in required:
         if genes == [target] and not relative_subject(item['text']) and not re.search(r'\b(?:if|unless|for participants|for patients)\b', item['text'], re.I):
-            return {'axis': 'molecular', 'target_gene': target, 'patient_genes': diagnosed_genes,
+            return {'axis': 'molecular', 'target_gene': target, 'patient_genes': patient_genes,
                     'trial_rule_quote': item['text'], 'other_cohort_applicable': False,
                     'quote_source': item['source'] if 'source' in item else 'criteria',
-                    'reason': f"分子靶点互斥：试验针对 {target}，病例已确诊致病基因为 {'、'.join(diagnosed_genes)}；无其他适用基因队列。"}
+                    'reason': f"疾病基因不匹配：试验明确要求 {target}，病例已报告变异基因为 {'、'.join(patient_genes)}；无其他适用基因队列，不推断未报告基因检测阴性。"}
     return None
 
 

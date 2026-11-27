@@ -1,0 +1,124 @@
+[
+  {
+    "source_cache": "420ef42523d1b26532c0468cff69c410c8e5d9fa7d0fd562951963069db974f6",
+    "parsed": {
+      "phenotypes": [
+        {
+          "quote": "very thin",
+          "description": "Thin appearance",
+          "alternatives": [
+            "Emaciation",
+            "Underweight"
+          ],
+          "status": "present",
+          "presenting": false,
+          "onset": null
+        }
+      ],
+      "facts": {
+        "age": {
+          "value": 14,
+          "unit": "year",
+          "quote": "14 year old"
+        },
+        "onset": {
+          "quote": null
+        },
+        "sex": {
+          "value": "male",
+          "quote": "male"
+        },
+        "variant_origin": {
+          "value": "unknown",
+          "quote": null
+        },
+        "family_history": {
+          "statement": null,
+          "quote": null
+        }
+      }
+    }
+  },
+  {
+    "source_cache": "ba7a864b04068e9c11931db6fba2154e4cfcf8bcd33be0dbc49c0e76a31df74b",
+    "parsed": {
+      "phenotypes": [
+        {
+          "quote": "very thin",
+          "description": "Thin appearance",
+          "alternatives": [
+            "Underweight",
+            "Low body weight",
+            "Emaciation"
+          ],
+          "status": "present",
+          "presenting": false,
+          "onset": null
+        }
+      ],
+      "facts": {
+        "age": {
+          "value": 14,
+          "unit": "year",
+          "quote": "14 year old"
+        },
+        "onset": {
+          "quote": null
+        },
+        "sex": {
+          "value": "male",
+          "quote": "male"
+        },
+        "variant_origin": {
+          "value": "unknown",
+          "quote": null
+        },
+        "family_history": {
+          "statement": null,
+          "quote": null
+        }
+      }
+    }
+  },
+  {
+    "source_cache": "90dbcd8284361714938929176587db95188f614f02a50b82422705f03009dbe4",
+    "parsed": {
+      "phenotypes": [
+        {
+          "quote": "very thin",
+          "description": "Thin appearance",
+          "alternatives": [
+            "Thinness",
+            "Underweight",
+            "Emaciation"
+          ],
+          "status": "present",
+          "presenting": false,
+          "onset": null
+        }
+      ],
+      "facts": {
+        "age": {
+          "value": 14,
+          "unit": "year",
+          "quote": "14 year old"
+        },
+        "onset": {
+          "quote": null
+        },
+        "sex": {
+          "value": "male",
+          "quote": "male"
+        },
+        "variant_origin": {
+          "value": "unknown",
+          "quote": null
+        },
+        "family_history": {
+          "statement": null,
+          "quote": null
+        }
+      }
+    }
+  }
+]

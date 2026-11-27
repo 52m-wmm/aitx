@@ -29,10 +29,10 @@ def test_complete_input_and_conservative_registry_age():
 
 def test_quotes_do_not_prove_logic_and_or_keeps_candidate(tmp_path,monkeypatch):
     monkeypatch.setattr(S,'REVIEW_DIR',tmp_path)
-    s=study();p={'patient_text':'A male infant.','trial_text':s['criteria']}
+    s=study();p=S.sample({'id':'P','patient':{'clinical_context':'A male infant.','genotype':[]}},s)
     c={'axis':'clinical_history','patient_fact_quote':'male infant','trial_rule_quote':'Pregnancy.',
        'other_cohort_applicable':False,'reason':'unsupported'}
-    pf={'age_months':3,'sex':'male'}
+    pf={'age_months':3,'sex':'male','present':[],'variants':[]}
     assert not S.verify(p,c,s,pf,[])['accepted']
     c.update(axis='age_sex',trial_rule_quote='Age 18 to 70 years.',other_cohort_applicable=True)
     assert not S.verify(p,c,s,pf,[])['accepted']

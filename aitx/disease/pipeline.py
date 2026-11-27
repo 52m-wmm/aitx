@@ -6,6 +6,7 @@ from aitx.disease import extract as X
 from aitx.disease import live
 from aitx.disease import resolve as R
 from aitx.disease import sources as S
+from aitx.disease.output import build_layers
 from aitx.disease.hpo import onset_fit
 from aitx.disease.hpo import score as pheno_score
 
@@ -46,14 +47,37 @@ def _score(c: R.Candidate, res: R.Resources, present: list[str], excluded: list[
     return ph
 
 
-def _with_step1(v: dict, step1: dict | None) -> dict:
-    prof = next((p for p in (step1 or {}).get("variants", [])
-                 if p.get("gene") == v["gene"] and p.get("variant_cdna") == v["variant_cdna"]), None)
-    if prof:
-        v["variant_class"] = prof.get("variant_class")
-        v["nmd_prediction"] = (prof.get("nmd") or {}).get("prediction")
-        v["from_step1"] = True
-    return v
+def molecular_variants(genotype: list[dict], step1: dict | None, case_id: str) -> list[dict]:
+    """Join exact transcript identities; sequence checks are not pathogenicity evidence."""
+    if step1 is not None and step1["id"] != case_id:
+        raise ValueError("Step 1 case identity does not match Step 2")
+    out = []
+    for v in genotype:
+        identity = {k: v[k] for k in ("gene", "transcript", "variant_cdna", "variant_protein", "zygosity")}
+        if step1 is None:
+            out.append(dict(identity, from_step1=False, status="unknown", conflicts=[],
+                            effective_zygosity=v["zygosity"], reason="Step 1 output not supplied"))
+            continue
+        matches = [(i, p) for i, p in enumerate(step1["variants"])
+                   if all(p[k] == v[k] for k in ("gene", "transcript", "variant_cdna"))]
+        if len(matches) != 1:
+            raise ValueError(f"Expected one exact Step 1 profile for {identity}; found {len(matches)}")
+        i, prof = matches[0]
+        conflicts = [f"{k}: input={v[k]}, Step1={prof[k]}"
+                     for k in ("variant_protein", "zygosity") if prof[k] != v[k]]
+        usable = prof["ok"] and not conflicts
+        out.append(dict(identity, from_step1=True, status="usable" if usable else "conflicting",
+                        conflicts=conflicts, effective_zygosity=prof["zygosity"] if usable else "unknown",
+                        reported_zygosity=prof["zygosity"], variant_class=prof["variant_class"],
+                        nmd_prediction=prof["nmd"]["prediction"], nmd=prof["nmd"],
+                        mechanism_hypothesis=prof["mechanism_hypothesis"],
+                        checks=prof["checks"], sequence_checks_pass=prof["ok"],
+                        pathogenicity_prediction={"status": "unknown", "reason": "not produced by Step 1"},
+                        source={"step": 1, "case_id": case_id, "pointer": f"/variants/{i}",
+                                "evidence": prof["evidence"]},
+                        evidence_kind={"zygosity": "reported", "variant_class": "sequence_derived",
+                                       "nmd": "predicted", "mechanism_hypothesis": "predicted"}))
+    return out
 
 
 def _omim_entries(c: R.Candidate, res: R.Resources) -> list[dict]:
@@ -67,9 +91,38 @@ def _omim_entries(c: R.Candidate, res: R.Resources) -> list[dict]:
     return out
 
 
+def auxiliary_selection(sel: dict, cands: list[dict]) -> dict:
+    """Keep score ordering, but do not certify a diagnosis solely from a score gap."""
+    if sel["status"] != "resolved" or not (sel["basis"] == "phenotype" or
+                                           (sel["basis"] == "clinvar" and "lead" in sel)):
+        return sel
+    contenders = [c for c in cands if not c["excluded"] and c["compete"]]
+    chosen = next(c for c in contenders if c["key"] == sel["id"])
+    if sel["basis"] == "clinvar":
+        stars = max(link["stars"] for link in chosen["clinvar"])
+        contenders = [c for c in contenders if c["clinvar"]
+                      and max(link["stars"] for link in c["clinvar"]) == stars]
+    else:
+        contenders = [c for c in contenders if c["inheritance"]["result"] == chosen["inheritance"]["result"]]
+    if len(contenders) > 1:
+        sel = dict(sel, status="ambiguous", tied=[c["key"] for c in contenders],
+                   reasons=sel["reasons"] + ["MICA is auxiliary evidence; a phenotype score lead does not establish the diagnosis"])
+    return sel
+
+
+def patient_phenotype_terms(ext: dict) -> tuple[list[str], list[str]]:
+    """Only definite, attributed patient findings reach MICA and negative penalties."""
+    facts = ext["patient_facts"]
+    native = "clinical" in facts
+    terms = facts["clinical"]["phenotypes"] if native else ext["phenotypes"]
+    patient = [p for p in terms if (p["scope"] == "patient" if native else True) and p["valid"]]
+    return (sorted({p["hpo_id"] for p in patient if p["status"] == "present"}),
+            sorted({p["hpo_id"] for p in patient if p["status"] in ("absent", "excluded")}))
+
+
 def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction: dict | None = None,
              step1: dict | None = None) -> dict:
-    """step1: the case's step-1 VariantProfile output, if available (adds variant class / NMD to the evidence)."""
+    """step1: the case's step-1 VariantProfile output, if available (used for molecular screening with G2P requirements)."""
     pid = case["id"]
     genotype = case["patient"]["genotype"]
     context = caseinput.clinical_context(case)          # missing or empty: input error, never "" (fix plan O1)
@@ -79,20 +132,19 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     facts = ext["patient_facts"]
     sex = facts["sex"].get("value", "unknown")
     de_novo = facts["variant_origin"].get("value") == "de_novo"
-    # a feature stated only as possible still counts for ranking the diagnosis; treatment steps treat it as unknown
-    present = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] in ("present", "possible"))
-    excluded = sorted(p["hpo_id"] for p in ext["phenotypes"] if p["status"] == "excluded")
+    present, excluded = patient_phenotype_terms(ext)
     onset = patient_onset(facts)
 
     gene_info = {g: live.hgnc_gene(g, use_cache=use_cache) for g in genes}
     aliases = {a for g in gene_info.values() for a in g.get("aliases", []) + g.get("previous_symbols", [])}
     cv_results = []
     for v in genotype:
-        r = live.clinvar_lookup(v["transcript"], v["variant_cdna"], use_cache=use_cache)
-        cv_results.append({"gene": v["gene"], "query": r.query, "status": r.status, "search_url": r.search_url,
+        r = live.clinvar_lookup(v["transcript"], v["variant_cdna"], gene=v["gene"], use_cache=use_cache)
+        cv_results.append({"gene": v["gene"], "query": r.query, "status": r.status, "search_url": r.search_url, "searches": r.searches,
                            "records": [x.to_dict() for x in r.records], "rejected": r.rejected})
 
-    zyg = {g: [v["zygosity"] for v in genotype if v["gene"] == g] for g in genes}
+    molecular = molecular_variants(genotype, step1, pid)
+    zyg = {g: [v["effective_zygosity"] for v in molecular if v["gene"] == g] for g in genes}
     raw: list[R.Candidate] = [c for g in genes for c in R.build_candidates(g, res)]
     links = R.clinvar_links(cv_results, raw, res.mondo)
     explicit = R.explicit_diagnosis(context, raw, set(genes), aliases, res.ont)
@@ -114,6 +166,9 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
         if inh["result"] == "inconsistent":
             excl_reasons.append(f"inheritance inconsistent: {inh['reason']}")
         mech = sorted({a.mechanism for a in c.ratings if a.source == "orphanet" and a.mechanism})
+        g2p = [record for record in res.g2p if record["gene"] == c.gene
+               and c.ids.intersection(record["disease_ids"])]
+        mol = R.molecular_fit([v for v in molecular if v["gene"] == c.gene], g2p, sex)
         cands.append({
             "key": c.key, "gene": c.gene, "label": c.label,
             "mondo": c.key if c.key.startswith("MONDO:") else None,
@@ -129,6 +184,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
                              for r in cv_results for rec in r["records"]
                              if not rec["used_for_ranking"] and c.key in rec.get("mapped_candidates", [])],
             "phenotype": ph,
+            "g2p_evidence": g2p, "molecular_assessment": mol,
             "orphanet_mechanism_hint": [{"text": m, "source": "Orphanet product6 association type",
                                          "cite": next(a.cite.to_dict() for a in c.ratings if a.mechanism == m)} for m in mech],
             "synonyms": c.synonyms, "ols": {k: c.ols.get(k) for k in ("url", "accessed_at", "obsolete")} if c.ols else None,
@@ -149,14 +205,15 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
             return False
 
     sel = R.select(cands, present, excluded, explicit_keys, contains)
+    sel = R.molecular_selection(auxiliary_selection(sel, cands), cands)
 
     # stability: the same selection on each LLM sample's own terms
     per_sample = []
     for s in ext["samples"]:
-        sp = sorted(t for t, st in s["terms"] if st == "present")
-        sx = sorted(t for t, st in s["terms"] if st == "excluded")
+        sp = sorted(t for t, st in s["terms"] if st == "present" and t in present)
+        sx = sorted(t for t, st in s["terms"] if st in ("excluded", "absent") and t in excluded)
         sc = [dict(c, phenotype=_score(rc, res, sp, sx, onset)) for c, rc in zip(cands, raw)]
-        ss = R.select(sc, sp, sx, explicit_keys, contains)
+        ss = R.molecular_selection(auxiliary_selection(R.select(sc, sp, sx, explicit_keys, contains), sc), sc)
         per_sample.append({"status": ss["status"], "id": ss["id"]})
     distinct = {(p["status"], p["id"]) for p in per_sample}
     if len(distinct) > 1 and sel["status"] == "resolved":
@@ -196,11 +253,12 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
                                                     "phenotype_conflicts", "samples", "prompt_version")},
         "explicit_diagnosis": explicit,
         "patient_facts": facts,
+        "g2p_records": res.g2p,
+        "g2p_role": "molecular condition screening and diagnostic uncertainty; not patient variant mechanism confirmation",
+        "molecular_evidence": molecular,
         "patient_onset": onset or None,
         "inheritance_evidence": {"zygosity": zyg, "sex": sex, "variant_origin": facts["variant_origin"].get("value"),
-                                 "variants": [_with_step1({k: v.get(k) for k in ("gene", "transcript", "variant_cdna",
-                                                                                 "zygosity")}, step1)
-                                              for v in genotype]},
+                                 "variants": molecular},
         "clinvar": cv_results,
         "candidates": [c for c in cands if not c["excluded"]],
         "not_supported": [c for c in cands if c["excluded"]],
@@ -213,6 +271,7 @@ def run_case(case: dict, res: R.Resources, *, use_cache: bool = True, extraction
     out["checks"] = checks(out, case, res)
     out["evidence"] = evidence(out)
     out["ok"] = all(c["status"] == "pass" for c in out["checks"])
+    out["layers"] = build_layers(case, step1, out)
     return out
 
 

@@ -1,18 +1,8 @@
-"""Contract 4a + 7: LLM extracts phenotypes and patient facts; code assigns HPO ids.
+"""Single structured clinical extraction, with deterministic evidence and HPO mapping.
 
-Same principle as disease selection: the LLM never writes an identifier.
-  Stage 1  LLM returns each clinical feature as (verbatim quote, short medical
-           description, present/excluded, optional onset), plus patient facts.
-  Mapping  code matches the description, then the quote, against HPO labels,
-           synonyms and former names (older releases); a unique exact match is used.
-  Stage 2  otherwise code retrieves the closest candidate terms (up to 10) and the
-           LLM picks one of them by number, or none. Only code-listed ids can be chosen.
-Deterministic checks: quote verbatim in clinical_context; "excluded" needs a
-negation cue in or just before the quote.
-
-Each case is sampled N_SAMPLES times. Votes are merged along the HPO hierarchy:
-a term is kept when it or a more specific term below it appears in a majority
-of samples, at the most specific level the majority supports.
+Native four-state records retain patient/general/unknown attribution and source quotes.
+Only definite patient phenotypes are projected to the legacy scoring interface.
+The shared LLM transport remains available to other steps with their own prompts.
 """
 from __future__ import annotations
 
@@ -25,59 +15,80 @@ import threading
 import socket
 import time
 import urllib.error
-from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from aitx import budget, llm, peak, session
 from aitx.disease.hpo import Ontology
 
-N_SAMPLES = 3
+N_SAMPLES = 1
 # LLM requests in flight at once across all threads (cache hits are not limited). Results do not depend on it:
 # cache keys and sample numbers are the same as in a serial run.
 CONCURRENCY = max(1, int(os.environ.get("AITX_LLM_CONCURRENCY", "16")))   # provider limit is 2500
 _SLOTS = threading.BoundedSemaphore(CONCURRENCY)
 CACHE_DIR = Path(os.environ.get("AITX_LLM_CACHE_DIR", Path.cwd() / ".cache" / "llm"))
-PROMPT_VERSION = "step2-extract-v5"
+PROMPT_VERSION = "step2-clinical-v6"
 N_CANDIDATES = 10
 
-SYSTEM = """You extract structured facts from a short clinical description of a patient with a rare genetic disease.
-Return only a JSON object with this shape:
+SYSTEM = """Extract the clinical facts actually stated in the supplied text, once, as JSON.
+Do not infer missing facts, diagnoses, sex from genes, lab units, or trial eligibility.
+Distinguish an individual patient's observations from general disease descriptions, possibilities,
+recommendations and literature summaries. A disease overview is NOT a patient's history, even when
+supplied as a clinical description. In mixed text classify each item separately; uncertain attribution
+is scope unknown. Retain general statements as background, not patient findings.
+Return this complete shape (all keys required, empty lists/null mean unreported, never absent):
 {
-  "phenotypes": [
-    {"quote": "<shortest exact span from the text naming one clinical feature>",
-     "description": "<the feature as a standard English clinical term, e.g. 'Hypotonia', 'Weight loss',
-                     'Distal sensory impairment'; no onset, age or frequency words>",
-     "alternatives": ["<up to 3 other standard clinical names for the same feature, e.g. a broader or
-                      lay-to-medical rewording>"],
-     "status": "present" | "excluded",
-     "presenting": <true if the text describes this as the presenting / first symptom, e.g. "presented with">,
-     "onset": null | {"quote": <exact span saying when this feature began>}}
-  ],
-  "facts": {
-    "age": {"value": <number or null>, "unit": "day"|"week"|"month"|"year"|null, "quote": <exact span or null>},
-    "onset": {"quote": <exact span saying when the disease began, or null>},
-    "sex": {"value": "male"|"female"|"unknown", "quote": <exact span or null>},
-    "variant_origin": {"value": "de_novo"|"inherited"|"unknown", "quote": <exact span or null>},
-    "family_history": {"statement": <short paraphrase or null>, "quote": <exact span or null>}
-  }
+ "phenotypes": [{
+   "quote": "exact span naming the feature with its assertion/uncertainty context",
+   "description": "standard English clinical feature, no ontology identifiers",
+   "alternatives": ["up to 3 equivalent clinical names"],
+   "scope": "patient|general|unknown",
+   "status": "present|absent|possible|unknown",
+   "presenting": false,
+   "onset": null,
+   "severity": null,
+   "course": null
+ }],
+ "facts": {
+   "age": {"value": null, "unit": null, "quote": null, "scope": "unknown", "status": "unknown"},
+   "onset": {"quote": null, "scope": "unknown", "status": "unknown"},
+   "sex": {"value": "unknown", "quote": null, "scope": "unknown", "status": "unknown"},
+   "variant_origin": {"value": "unknown", "quote": null, "scope": "unknown", "status": "unknown"},
+   "family_history": {"statement": null, "quote": null, "scope": "unknown", "status": "unknown"}
+ },
+ "clinical_facts": [{
+   "kind": "diagnosis|demographic|history|treatment|lab|trial_status",
+   "name": "exact name from quote",
+   "quote": "exact statement with patient attribution and uncertainty/negation",
+   "scope": "patient|general|unknown",
+   "status": "present|absent|possible|unknown",
+   "value": null,
+   "unit": null,
+   "timing": null
+ }],
+ "background": [{"quote": "exact general disease description", "reason": "why this is not a patient observation"}]
 }
 Rules:
-- phenotypes: every sign, symptom, clinical finding, abnormal laboratory value or tumour mentioned, one entry per
-  feature. Do not list disease or syndrome names, genes, variants, test methods, ages or sex.
-  Do not add features that are not stated. Do not give any ontology identifiers.
-- "excluded" only when the text explicitly says the feature is absent (e.g. "without seizures", "never had a
-  fracture") or explicitly says a specific function, organ or test is normal: list the corresponding abnormality
-  as excluded (e.g. "hearing is normal" -> Hearing impairment, excluded; "normal liver labs" -> Abnormal liver
-  function tests, excluded). Do not list vague statements such as "otherwise well".
-- A feature that is itself an absence (e.g. "born without the vas deferens", "no speech") is "present".
-- Every quote must be copied character-for-character from the text.
-- facts.onset: only the exact words saying when the DISEASE as a whole began, filled ONLY when the text explicitly
-  dates the disease or its main presentation (e.g. "at 8 months of age" in "presented at 8 months of age",
-  "since birth"). Give the quote only; do not convert it to numbers.
-- If the text dates one particular symptom (e.g. "around 10 years of age began losing weight"), put that quote in
-  the "onset" of that phenotype entry; put it in facts.onset only if that symptom is the presenting one.
-- Anything the text does not state is null / "unknown". Never guess."""
+- Do not give any ontology identifiers.
+- Every quote is a contiguous character-for-character copy. Never fabricate or complete an unfinished sentence.
+- Extract all stated patient diagnoses separately from signs/symptoms. Include demographics, gestational age,
+  hospitalization, medical/family history, current and past treatments (including diet and supplements),
+  numeric lab results with original units, and actual clinical trial participation/status.
+- Keep history, severity, progression and symptom onset. onset/severity/course are null or {"quote": "exact span"}.
+  Current age is numeric with unit day/week/month/year; do not confuse it with gestational age or symptom onset.
+  facts.onset is filled ONLY when the text explicitly dates disease onset or main presentation;
+  do not extrapolate from another symptom. Give the quote only; do not convert it to numbers.
+  clinical_facts.timing is null or an exact span describing when the fact occurred.
+- present = explicitly observed/reported; absent = explicitly denied or specific function/test explicitly normal;
+  possible = suspected, uncertain, may occur, alternatives such as normal OR delayed;
+  unknown = explicitly undetermined/not assessed. Unmentioned fields are unknown, not absent.
+- A feature itself defined by absence (e.g. absent speech) can be present. Do not negate it twice.
+- Do not turn normal growth in the past into absence of current weight loss. Do not infer a lab value from a
+  symptom name. No conversion or unit completion. No clinical trial mention means no trial_status items.
+- Descriptions of what patients generally develop, sex-specific disease manifestations, and literature citations
+  belong in background. If listing their features, use scope general and the wording's actual assertion status.
+- Facts about a relative are history, not the patient's own phenotypes or demographics.
+- For missing age use value/unit/quote null; missing sex/origin use value unknown; missing history statement null.
+Return JSON only."""
 
 PICK_SYSTEM = """You map clinical features of a patient to Human Phenotype Ontology terms.
 For each numbered feature you get the exact text and a numbered list of candidate terms.
@@ -283,12 +294,12 @@ def check_item(item: dict, context: str) -> dict:
     if not quote or quote not in context:
         out["reasons"].append("quote not found verbatim in clinical_context")
         return out
-    if status not in ("present", "excluded"):
+    if status not in ("present", "absent", "possible", "unknown", "excluded"):
         out["reasons"].append(f"bad status {status!r}")
         return out
     start = context.find(quote)
     negated = bool(_NEG.search(context[max(0, start - 30):start] + quote))
-    if status == "excluded" and not negated:
+    if status in ("absent", "excluded") and not negated:
         out["reasons"].append("marked excluded but no negation cue in text")
         return out
     if status == "present" and _NEG.search(quote):
@@ -391,12 +402,22 @@ def map_items(items: list[dict], context: str, ont: Ontology, k: int, use_cache:
             lines.append(f"  {j}. {c['label']}" + (f" (also: {'; '.join(syn)})" if syn else ""))
     r = _parse(_cached_chat([{"role": "system", "content": PICK_SYSTEM},
                              {"role": "user", "content": "\n".join(lines)}], k, use_cache))
+    if r.get("error"):
+        raise ValueError(r["error"])
     picks = {}
-    for ch in (r["parsed"].get("choices") or []):
-        try:
-            picks[int(ch.get("feature"))] = ch.get("candidate")
-        except (TypeError, ValueError):
-            continue
+    choices = r["parsed"]["choices"]
+    if not isinstance(choices, list):
+        raise ValueError("HPO choices must be a list")
+    for ch in choices:
+        feature, candidate = ch["feature"], ch["candidate"]
+        if type(feature) is not int or not 1 <= feature <= len(pending) or feature in picks:
+            raise ValueError("invalid/duplicate HPO feature number")
+        if candidate is not None and (type(candidate) is not int or
+                                     not 1 <= candidate <= len(pending[feature - 1]["candidates"])):
+            raise ValueError("invalid HPO candidate number")
+        picks[feature] = candidate
+    if len(picks) != len(pending):
+        raise ValueError("missing HPO selection answer")
     for i, it in enumerate(pending, 1):
         j = picks.get(i)
         if isinstance(j, int) and 1 <= j <= len(it["candidates"]):
@@ -557,45 +578,6 @@ def verify_facts(f: dict, context: str) -> dict:
     return out
 
 
-# --------------------------------------------------------------- aggregation
-
-def _fact_key(name: str, f: dict):
-    if name == "age":
-        return f.get("months")
-    if name == "onset":
-        return (f.get("months_min"), f.get("months_max"))
-    if name == "family_history":
-        return f.get("statement") if f.get("statement") != "unknown" else "unknown"
-    return f.get("value")
-
-
-def vote_terms(per_sample: list[list[dict]], ont: Ontology, n: int) -> tuple[list[dict], list[dict]]:
-    """Majority vote merged along the HPO hierarchy.
-
-    support(t) = number of samples with t itself or a more specific term below t (same status).
-    Terms with support >= majority are kept, except those that have a more specific kept term
-    below them, so the result is the most specific level a majority of samples agrees on.
-    Returns (kept, unstable).
-    """
-    need = n // 2 + 1
-    kept, unstable = [], []
-    for status in ("present", "excluded"):
-        by_sample = [{it["hpo_id"]: it for it in items if it["valid"] and it["status"] == status} for items in per_sample]
-        terms = sorted({t for smp in by_sample for t in smp})
-        support = {t: sum(any(u == t or t in ont.ancestors(u) for u in smp) for smp in by_sample) for t in terms}
-        ok = [t for t in terms if support[t] >= need]
-        top = [t for t in ok if not any(u != t and t in ont.ancestors(u) for u in ok)]
-        for t in top:
-            src = next((smp[t] for smp in by_sample if t in smp), None)
-            kept.append(dict(src, votes=support[t],
-                             merged_from=sorted({u for smp in by_sample for u in smp if u != t and t in ont.ancestors(u)})))
-        covered = {u for t in top for u in terms if u == t or t in ont.ancestors(u) or u in ont.ancestors(t)}
-        for t in terms:
-            if t not in covered:
-                unstable.append(dict(next(smp[t] for smp in by_sample if t in smp), votes=support[t]))
-    return kept, unstable
-
-
 def presenting_onset(items: list[dict]) -> dict | None:
     """Rule v2.4: the onset of a verified presenting symptom counts as the overall onset."""
     ons = [it["onset"] for it in items if it.get("valid") and it.get("presenting")
@@ -608,56 +590,140 @@ def presenting_onset(items: list[dict]) -> dict | None:
             "quote": ons[0]["quote"], "verified": True, "source": "presenting symptom"}
 
 
-def _one_sample(context: str, ont: Ontology, k: int, use_cache: bool) -> dict:
-    """Sample k: stage-1 call, checks, code mapping and its own stage-2 pick call."""
-    s = _parse(_cached_chat(_messages(context), k, use_cache))
-    items = [check_item(p, context) for p in (s["parsed"].get("phenotypes") or [])]
-    items = map_items(items, context, ont, k, use_cache)
-    facts = verify_facts(s["parsed"].get("facts") or {}, context)
-    if facts["onset"].get("months_min") is None:
-        po = presenting_onset(items)
-        if po:
-            facts["onset"] = po
-    return {"phenotypes": items, "facts": facts, "served_model": s["served_model"], "error": s.get("error")}
+STATES = ("present", "absent", "possible", "unknown")
+SCOPES = ("patient", "general", "unknown")
+CLINICAL_KINDS = ("diagnosis", "demographic", "history", "treatment", "lab", "trial_status")
+
+
+def _source_item(item: dict, context: str, *, nullable: bool = False) -> None:
+    """Required extraction fields and verbatim evidence; malformed answers stop."""
+    if item["status"] not in STATES or item["scope"] not in SCOPES:
+        raise ValueError("invalid clinical status or scope")
+    quote = item["quote"]
+    if quote is None and nullable and item["status"] == "unknown":
+        return
+    if not isinstance(quote, str) or not quote or quote not in context:
+        raise ValueError("clinical quote not found verbatim")
+
+
+def structure_clinical(parsed: dict, context: str) -> tuple[list, dict, dict]:
+    """Check source evidence, retain native records, and project legacy scalar facts.
+
+    Attribution is the one semantic extraction decision. Code never promotes general or
+    uncertain observations to definite patient facts. No lab interpretation or unit inference.
+    """
+    from aitx.evidence.patient_facts import _number_in
+    phenotypes, scalars, extras, background = (parsed[k] for k in
+        ("phenotypes", "facts", "clinical_facts", "background"))
+    if not all(isinstance(v, list) for v in (phenotypes, extras, background)) or not isinstance(scalars, dict):
+        raise ValueError("invalid clinical extraction shape")
+    for p in phenotypes:
+        _source_item(p, context)
+        if not isinstance(p["description"], str) or not p["description"].strip():
+            raise ValueError("missing clinical feature description")
+        if not isinstance(p["alternatives"], list) or not isinstance(p["presenting"], bool):
+            raise ValueError("invalid feature alternatives/presenting")
+        for key in ("onset", "severity", "course"):
+            detail = p[key]
+            if detail is not None and (not detail["quote"] or detail["quote"] not in context):
+                raise ValueError(f"{key} quote not found verbatim")
+    for f in extras:
+        _source_item(f, context)
+        if f["kind"] not in CLINICAL_KINDS:
+            raise ValueError("unknown clinical fact kind")
+        if not f["name"] or f["name"] not in f["quote"]:
+            raise ValueError("clinical fact name not in quote")
+        value = f["value"]
+        if isinstance(value, str):
+            if not value or value not in f["quote"]:
+                raise ValueError("clinical fact text value not in quote")
+        elif not _number_in(value, f["quote"]):
+            raise ValueError("clinical fact number not in quote")
+        if f["unit"] is not None and (not f["unit"] or f["unit"] not in f["quote"]):
+            raise ValueError("clinical fact unit not in quote")
+        if f["timing"] is not None and (not f["timing"] or f["timing"] not in context):
+            raise ValueError("clinical fact timing not in source")
+    for b in background:
+        if not b["quote"] or b["quote"] not in context or not b["reason"]:
+            raise ValueError("background missing verbatim source/reason")
+    # Do not let a symptom-level date echoed into facts.onset become disease onset.
+    scalars = {name: dict(value) for name, value in scalars.items()}
+    onset = scalars["onset"]
+    symptom_dates = [p for p in phenotypes if p["onset"] is not None
+                     and p["onset"]["quote"] == onset["quote"]]
+    if symptom_dates and not any(p["scope"] == "patient" and p["status"] == "present"
+                                 and check_item(p, context)["presenting"] for p in symptom_dates):
+        onset.update(source_status=onset["status"], status="unknown",
+                     reason="date belongs to a symptom, not an explicit disease presentation")
+    origin = scalars["variant_origin"]
+    if origin["value"] == "de novo":
+        origin.update(source_value=origin["value"], value="de_novo")
+    if origin["value"] not in ("de_novo", "inherited", "unknown"):
+        raise ValueError("invalid variant origin")
+    if scalars["sex"]["value"] not in ("male", "female", "unknown"):
+        raise ValueError("invalid sex value")
+    projected = {}
+    for name in ("age", "onset", "sex", "variant_origin", "family_history"):
+        f = scalars[name]
+        _source_item(f, context, nullable=True)
+        required = {"age": ("value", "unit"), "sex": ("value",),
+                    "variant_origin": ("value",), "family_history": ("statement",), "onset": ()}[name]
+        for key in required:
+            if key not in f:
+                raise KeyError(f"facts.{name}.{key}")
+        projected[name] = f if f["scope"] == "patient" and f["status"] == "present" else {}
+    facts = verify_facts(projected, context)
+    clinical = {"phenotypes": phenotypes, "facts": scalars, "items": extras,
+                "background": background, "source_text": context}
+    return phenotypes, facts, clinical
 
 
 def extract(context: str, ont: Ontology, *, use_cache: bool = True, n: int = N_SAMPLES) -> dict:
-    # the n sample chains run in parallel; results are used in sample order, so the output is the same as serial
-    with ThreadPoolExecutor(max_workers=n) as pool:
-        per_sample = list(pool.map(lambda k: _one_sample(context, ont, k, use_cache), range(n)))
-
-    kept, unstable = vote_terms([ps["phenotypes"] for ps in per_sample], ont, n)
-    need = n // 2 + 1
-    ids_present = {p["hpo_id"] for p in kept if p["status"] == "present"}
-    conflicts = [p for p in kept if p["status"] == "excluded" and p["hpo_id"] in ids_present]
-    if conflicts:
-        bad = {p["hpo_id"] for p in conflicts}
-        kept = [p for p in kept if p["hpo_id"] not in bad]
-    for p in kept:                      # "normal or mildly delayed": possible, not present (2026-11-12)
-        if p["status"] == "present":
-            why = possible_phrase(context, p["quote"])
-            if why:
-                p["status"], p["possible_because"] = "possible", why
-    rejected = [p for ps in per_sample for p in ps["phenotypes"] if not p["valid"]]
-
-    facts, fact_notes = {}, []
-    for name in ("age", "onset", "sex", "variant_origin", "family_history"):
-        keys = Counter(repr(_fact_key(name, ps["facts"][name])) for ps in per_sample)
-        top, c = keys.most_common(1)[0]
-        if c >= need:
-            facts[name] = next(ps["facts"][name] for ps in per_sample if repr(_fact_key(name, ps["facts"][name])) == top)
-        else:
-            facts[name] = {"value": "unknown", "verified": True, "reasons": ["samples disagree"]}
-            fact_notes.append(f"{name}: samples disagree {dict(keys)}")
-    return {
-        "phenotypes": sorted(kept, key=lambda p: (p["status"], p["hpo_id"])),
-        "phenotype_conflicts": conflicts,
-        "unstable_phenotypes": unstable,
-        "rejected_phenotypes": rejected,
-        "patient_facts": facts,
-        "fact_notes": fact_notes,
-        "samples": [{"served_model": ps["served_model"], "error": ps["error"],
-                     "terms": sorted({(p["hpo_id"], p["status"]) for p in ps["phenotypes"] if p["valid"]})}
-                    for ps in per_sample],
-        "prompt_version": PROMPT_VERSION,
-    }
+    if not isinstance(context, str) or not context.strip():
+        raise ValueError("clinical_context must be nonempty")
+    if n != 1:
+        raise ValueError("clinical extraction requires one sample")
+    response = _parse(_cached_chat(_messages(context), 0, use_cache))
+    if response.get("error"):
+        raise ValueError(response["error"])
+    raw, facts, clinical = structure_clinical(response["parsed"], context)
+    items = []
+    for p in raw:
+        item = check_item(p, context)
+        item.update(scope=p["scope"], source_status=p["status"], severity=p["severity"], course=p["course"])
+        why = possible_phrase(context, p["quote"])
+        if why and item["status"] == "present":
+            item.update(status="possible", possible_because=why)
+            item.pop("negated_quote", None)
+        # Mapping a general/unknown-subject finding provides no patient evidence.
+        if p["scope"] != "patient":
+            item.update(checked=False)
+            item["reasons"].append("not an attributed patient observation")
+        items.append(item)
+    items = map_items(items, context, ont, 0, use_cache)
+    conflicts = []
+    by_id = {}
+    for p in items:
+        if p["valid"]:
+            by_id.setdefault(p["hpo_id"], []).append(p)
+    for group in by_id.values():
+        if {p["status"] for p in group} >= {"present", "absent"}:
+            conflicts.extend(dict(p) for p in group)
+            for p in group:
+                p.update(status="unknown", conflict=True)
+    # This adapter keeps scoring, disease recall, adjudication and Step 3 unchanged.
+    # The canonical records below retain absent/possible/unknown, unmapped findings,
+    # repetitions and all original quotes; no vote or hierarchy aggregation discards them.
+    kept = [dict(p, status="excluded" if p["status"] == "absent" else "present",
+                 votes=1, merged_from=[]) for p in items
+            if p["valid"] and p["scope"] == "patient" and p["status"] in ("present", "absent")]
+    clinical["phenotypes"] = items
+    clinical["produced_by"] = {"prompt_version": PROMPT_VERSION,
+                               "served_model": response["served_model"], "call_id": response.get("call_id")}
+    facts["clinical"] = clinical
+    return {"phenotypes": kept, "phenotype_conflicts": conflicts, "unstable_phenotypes": [],
+            "rejected_phenotypes": [p for p in items if not p["valid"]],
+            "patient_facts": facts, "fact_notes": [],
+            "samples": [{"served_model": response["served_model"], "error": None,
+                         "terms": sorted({(p["hpo_id"], p["status"]) for p in kept})}],
+            "prompt_version": PROMPT_VERSION}

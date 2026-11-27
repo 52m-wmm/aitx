@@ -27,6 +27,7 @@ STARS = {
 }
 GENERIC_TRAITS = {"not provided", "not specified", "inborn genetic diseases", "see cases"}
 PLP = {"pathogenic", "likely pathogenic", "pathogenic/likely pathogenic"}
+CLINVAR_EMPTY_TTL = 24 * 3600  # Only negative ClinVar ESearch results expire.
 
 
 def _polite_get(url: str, **kw) -> http.Fetched:
@@ -78,6 +79,7 @@ class ClinVarResult:
     records: list[ClinVarRecord] = field(default_factory=list)
     rejected: list[dict] = field(default_factory=list)   # search hits that are other variants
     search_url: str = ""
+    searches: list[dict] = field(default_factory=list)
 
 
 def _xref_curie(db: str, i: str) -> str | None:
@@ -107,13 +109,39 @@ def cds_equivalent(ours: str, theirs: str, cdna: str) -> tuple[bool, str]:
     return False, f"{ours} and {theirs} CDS differ ({len(a)} vs {len(b)} nt)"
 
 
-def clinvar_lookup(transcript: str, cdna: str, *, use_cache: bool = True) -> ClinVarResult:
+def clinvar_lookup(transcript: str, cdna: str, *, gene: str, use_cache: bool = True) -> ClinVarResult:
     acc, _, ver = transcript.partition(".")
     want = normalize_cdna(cdna)
     query = f"{transcript}:{cdna}"
-    surl = EUTILS + "esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=" + urllib.parse.quote(query)
-    ids = json.loads(_polite_get(surl, use_cache=use_cache).text)["esearchresult"]["idlist"]
-    res = ClinVarResult(query, "not_found", search_url=surl)
+    res = ClinVarResult(query, "not_found")
+    ids = []
+    seen = set()
+    for term in (query, f"{acc}:{cdna}", f"{gene} {cdna}"):
+        start = 0
+        while True:
+            url = EUTILS + "esearch.fcgi?db=clinvar&retmode=json&retmax=50&term=" + urllib.parse.quote(term)
+            if start:
+                url += f"&retstart={start}"
+            fetched = _polite_get(url, use_cache=use_cache)
+            search = json.loads(fetched.text)["esearchresult"]
+            if (fetched.from_cache and not search["idlist"]
+                    and time.time() - fetched.accessed_at >= CLINVAR_EMPTY_TTL):
+                fetched = _polite_get(url, use_cache=False)
+                search = json.loads(fetched.text)["esearchresult"]
+            res.searches.append({"query": term, "url": url, "count": int(search["count"]),
+                                 "retstart": start, "ids": search["idlist"],
+                                 "accessed_at": fetched.accessed_at, "from_cache": fetched.from_cache})
+            if not res.search_url:
+                res.search_url = url  # Preserve the original full-transcript query field.
+            for uid in search["idlist"]:
+                if uid not in seen:
+                    ids.append(uid)
+                    seen.add(uid)
+            start += len(search["idlist"])
+            if start >= int(search["count"]):
+                break
+            if not search["idlist"]:
+                raise ValueError(f"ClinVar ESearch returned an empty page before count was reached: {url}")
     if not ids:
         return res
     f = _polite_get(EUTILS + "esummary.fcgi?db=clinvar&retmode=json&id=" + ",".join(ids), use_cache=use_cache)

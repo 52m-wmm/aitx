@@ -6,7 +6,8 @@ Usage:
 
 Accepts a single case object or an array of cases. Writes one JSON per case
 plus sources_manifest.json, and prints a short summary per case. Exit code 1
-if any check fails.
+if any check fails. Requires a matching saved Step 1 output (out/step1),
+validated by the existing runmeta loader before Step 2 runs.
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from aitx.disease import pipeline, resolve  # noqa: E402
+from aitx import runmeta  # noqa: E402
 from aitx.disease.sources import dump  # noqa: E402
 
 
@@ -54,7 +56,8 @@ def main() -> int:
     failed = False
     for case in cases:
         try:
-            r = pipeline.run_case(case, res, use_cache=not args.no_cache)
+            step1, _ = runmeta.load_output(1, case)
+            r = pipeline.run_case(case, res, use_cache=not args.no_cache, step1=step1)
         except Exception as e:  # noqa: BLE001 - report and continue with other cases
             print(f"[ERROR] {case.get('id')}: {type(e).__name__}: {e}")
             failed = True

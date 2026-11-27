@@ -44,7 +44,6 @@ def test_alternatives_unknown_scope_and_nontherapy_do_not_exclude():
     s = copy.deepcopy(original);s['criteria'] = s['criteria'].replace('2. Molecular', 'Cohort A:\n2. Molecular');variants.append(s)
     s = copy.deepcopy(original);s['population_groups'] = [{'label': 'CPS1', 'description': 'CPS1 mutation'}, {'label': 'All UCD patients', 'description': 'Any UCD regardless of genotype'}];variants.append(s)
     s = copy.deepcopy(original);s['population_groups'] = [{'label': 'CPS1 or OTC patients'}];variants.append(s)
-    s = copy.deepcopy(original);s['study_type'] = 'observational';variants.append(s)
     s = copy.deepcopy(original);del s['population_groups'];variants.append(s)
     s = copy.deepcopy(original);s['criteria'] = s['criteria'].replace('Molecular testing showing', 'No requirement for molecular testing showing');variants.append(s)
     s = copy.deepcopy(original);s['criteria'] = s['criteria'].replace('2. Molecular', 'PartA:\n2. Molecular');variants.append(s)
@@ -122,5 +121,31 @@ def test_current_search_records_halt_and_cps1_target_gate(monkeypatch):
     plan=S.plan(names,[],3,'male',['OTC'])
     assert {s['nct'] for s in plan['analysed']}=={'NCT05092685'}
     assert {s['nct'] for s in plan['ineligible']}=={'NCT07667387'}
-    assert len(queries)==1
-    assert queries[0]['query.cond']==names[0]
+    assert len(queries)==5
+    assert [q['query.cond'] for q in queries[:-1]]==[json.dumps(n) for n in names]
+    assert '"OTC mutation"' in queries[-1]['query.term'].split(' OR ')
+    assert '"OTC"' not in queries[-1]['query.term'].split(' OR ')
+
+
+@pytest.mark.parametrize('kind,title', [('interventional', 'Medication trial'), ('interventional', 'Exercise trial'), ('observational', 'Natural history')])
+def test_gene_requirement_independent_of_intervention(kind, title):
+    s = study(); s.update(study_type=kind, title=title)
+    assert C.single_target_conflict(s, ['OTC'])['target_gene'] == 'CPS1'
+
+
+def test_alternative_controls_and_optional_testing_are_not_excluded():
+    s = study(); s['population_groups'].append({'label': 'Control group', 'description': 'Matched controls'})
+    assert C.single_target_conflict(s, ['OTC']) is None
+    s = study(); s['criteria'] = 'Inclusion Criteria:\n* Willing to provide samples for analysis of CPS1 variants.'
+    assert C.single_target_conflict(s, ['OTC']) is None
+
+
+def test_medication_arms_share_global_genetic_requirement():
+    s = study(); s['title'] = 'Medication trial'
+    s['population_groups'] = [{'label': 'Drug', 'type': 'EXPERIMENTAL'}, {'label': 'Placebo', 'type': 'PLACEBO_COMPARATOR'}]
+    assert C.single_target_conflict(s, ['OTC'])['target_gene'] == 'CPS1'
+
+
+def test_classification_standard_is_not_alternative_disease():
+    s = study(); s['criteria'] = 'Inclusion Criteria:\n* A genetic test confirming a CPS1 variant classified as likely pathogenic or pathogenic according to ACMG/AMP Guidelines.'
+    assert C.single_target_conflict(s, ['OTC'])['target_gene'] == 'CPS1'

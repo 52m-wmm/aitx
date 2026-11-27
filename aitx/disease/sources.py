@@ -305,3 +305,36 @@ def manifest(files: dict[str, LocalFile]) -> list[dict]:
 
 def dump(obj) -> str:
     return json.dumps(obj, indent=2, ensure_ascii=False)
+
+
+def load_g2p(lf: LocalFile, genes: set[str]) -> list[dict]:
+    """Supplementary disease-level evidence, not proof of the patient's variant mechanism.
+
+    Preserve allelic requirements verbatim: X hemizygosity is not interchangeable
+    with all X-linked inheritance. No confidence voting or candidate exclusion here.
+    """
+    out = []
+    with lf.path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            if row["gene symbol"] not in genes:
+                continue
+            ids = ([row["disease MONDO"]] if row["disease MONDO"] else [])
+            ids += ["OMIM:" + value.strip() for value in row["disease mim"].split(";") if value.strip()]
+            out.append({"id": row["g2p id"], "gene": row["gene symbol"],
+                        "disease": row["disease name"], "disease_ids": ids,
+                        "allelic_requirement": row["allelic requirement"] or "unknown",
+                        "confidence": row["confidence"] or "unknown",
+                        "mechanism": row["molecular mechanism"] or "unknown",
+                        "mechanism_support": row["molecular mechanism support"] or "unknown",
+                        "variant_consequence": row["variant consequence"] or "unknown",
+                        "variant_types": row["variant types"],
+                        "cross_cutting_modifier": row["cross cutting modifier"],
+                        "mechanism_evidence": row["molecular mechanism evidence"],
+                        "publications": row["publications"],
+                        "last_review": row["date of last review"],
+                        "url": "https://www.ebi.ac.uk/gene2phenotype/lgd/" + row["g2p id"],
+                        "cite": Cite("g2p", lf.snapshot, reader.line_num).to_dict(),
+                        "raw_record": row,
+                        "patient_variant_mechanism": "unknown"})
+    return out

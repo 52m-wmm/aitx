@@ -1,0 +1,3033 @@
+[
+ {
+  "nct": "NCT06092346",
+  "case": {
+   "id": "PRAC-GRIN2B",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "GRIN2B",
+      "transcript": "NM_000834.5",
+      "variant_cdna": "c.2755C>T",
+      "variant_protein": "p.Gln919Ter",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "intellectual disability, seizures, and developmental delays"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT06092346",
+    "orgStudyIdInfo": {
+     "id": "10001625"
+    },
+    "secondaryIdInfos": [
+     {
+      "id": "001625-HG"
+     }
+    ],
+    "organization": {
+     "fullName": "National Institutes of Health Clinical Center (CC)",
+     "class": "NIH"
+    },
+    "briefTitle": "A Natural History Study Seeks to Understand the Clinical, Genomic, Pharmacological, Laboratory, and Dietary Determinates of Pyrimidine and Purine Metabolism Disorders",
+    "officialTitle": "Prospective Study of the Clinical, Genomic, Pharmacological, Laboratory, and Dietary Determinates of Pyrimidine and Purine Metabolism Disorders"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-08-14",
+    "overallStatus": "RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2023-12-19",
+     "type": "ACTUAL"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2099-01-01",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2099-01-01",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2023-10-19",
+    "studyFirstSubmitQcDate": "2023-10-19",
+    "studyFirstPostDateStruct": {
+     "date": "2023-10-23",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-08-18",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-08-19",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "National Human Genome Research Institute (NHGRI)",
+     "class": "NIH"
+    }
+   },
+   "oversightModule": {
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "Background:\n\nPyrimidine and purine metabolism disorders (DPPMs) affect how the body metabolizes chemicals called pyrimidines and purines. DPPMs can cause dysfunctions throughout the body, especially in the brain, blood, kidneys, and immune system. People with DPPMs might have no symptoms, mild symptoms, or they may have severe, chronic symptoms, that can be fatal. DPPMs are not well understood, and researchers want to learn more about what causes them and how to treat them.\n\nObjective:\n\nTo learn more about factors that affect DPPMs by comparing test results from affected, uaffected family members, and healthy people.\n\nEligibility:\n\nThree types of participants are needed: people aged 1 month and older with DPPMs; their family members who do not have DPPMs; and healthy volunteers.\n\nDesign:\n\nParticipants with DPPMs will come to the clinic once a year; some may be asked to come more often. At each visit, all affected participants will have a physical exam and give samples of blood, urine, saliva, and stool. Depending on their symptoms, they may also have other procedures, such as:\n\nSwabs of their skin and inside the mouth.\n\nTests of their heart, kidney, brain, and nerve function.\n\nQuestionnaires about what they eat.\n\nDental exams, and exams of their hearing and vision.\n\nTests of their learning ability.\n\nMonitoring of their physical activity.\n\nImaging scans.\n\nPhotographs of their face and body.\n\nThese tests may be spread over up to 7 days. Affected participants may remain in the study indefinitely if they wish to.\n\nHealthy volunteers and family members will have 1 study visit. They will have a physical exam and may be asked to give blood, urine, saliva, and stool samples.",
+    "detailedDescription": "Study Description:\n\nThis study will explore the natural history and mechanisms of novel or known but incompletely characterized disorders of pyrimidine and purine metabolism (DPPMs). Eligible participants will be ascertained by identifying biochemical abnormalities in the levels of purines, pyrimidines and related compounds in body fluids, abnormal activity of enzymes, and/or identifying pathogenic variants in genes linked to purines and pyrimidine metabolism. We will collect participants DNA for genetic and genomic analyses, body fluids for biochemical analysis, blood and tissue samples for enzyme analysis, gastrointestinal samples for microbiome analysis. Some participants may undergo skin biopsy. Study subjects will be offered medical, laboratory, and imaging studies at the NIH Clinical Research Center consistent with the standards of care. Collected data will be analyzed to improve understanding of the natural history, develop statistical prediction models, identify and validate novel biomarkers.\n\nObjectives:\n\nPrimary Objective: To describe features of novel and poorly characterized DPPMs.\n\nSecondary Objectives: To identify genomic, clinical, pharmacological, laboratory, and dietary factors associated with variable outcomes in subjects affected by DPPMs.\n\nEndpoints:\n\nPrimary Endpoint: Identify genomic variants, laboratory parameters, image findings, microbiome variables, nutritional and medication history of DPPMs.\n\nSecondary Endpoints: Identify disease parameters associated with variable clinical outcomes (e.g., frequency of hospitalizations, survival, quality of life, function)."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "AMPD3, OMIM*102772, AMP Deaminase Deficiency",
+     "AK1, OMIM *103000, Adenylate Kinase Deficiency",
+     "AMPD1, OMIM *102770, Myopathy Due to Myoadenylate Deaminase Deficiency",
+     "TPMT, OMIM *187680, Thoipurines, Poor Metabolism of",
+     "IMPDH1, OMIM *146690, Retinitis Pigmentosa Type 10, Leber Congenital Amauriosis Type 11",
+     "APRT, OMIM *102600, Adenine Phosphoribosyltransferase Deficiency",
+     "HPRT1, OMIM *308000 Lesch-Nyhan Disease",
+     "XDH, OMIM *607633, Xanthinuria Type 1",
+     "SLC2A9, OMIM *606142 Hypouricemia",
+     "SLC22A12, OMIM *607096 Hypouricemia",
+     "PRPS1 Def, OMIM *311850, Arts Syndrome; Charcot-Marie-Tooth Disease",
+     "PRPS1 SA, OMIM *311850 Gout, PRPS-related Phosphoribosylpyrophosphate Synthetase Superactivity",
+     "AMPD2, OMIM *102771, Spastic Paraplegia 63; Pontocerebellar Hypoplasia",
+     "ITPA, OMIM *147520, Inosine Triphosphatase Deficiency; Developmental and Epileptic Encephalopathy 35",
+     "ADSL, OMIM *608222, Adenylosuccinate Lyase Deficiency",
+     "PNP, OMIM *164050, Nucleoside Phosphorylase Deficiency",
+     "ADA2, OMIM *607575,Sneddon Syndrome; VAIHS",
+     "CAD, *1140120, Developmental and Epileptic Encephalopathy",
+     "UPB1, OMIM *606673, Beta-ureidopropionase Deficiency",
+     "DPYS, OMIM *613326, Dihydropyrimidinase Deficiency",
+     "DPYD, OMIM *274270, Dihydropyrimidine Dehydrogenase Deficiency",
+     "DHODH, OMIM *126064, Miller Syndrome (Postaxial Acrofacial Dysostosis)",
+     "UMPS, OMIM *613891, Orotic Aciduria",
+     "NT5C3A<TAB>, OMIM *606224, Anemia, Hemolytic, Due to UMPH1 Deficiency",
+     "UNG, OMIM *191525, Hyper-IgM Syndrome 5",
+     "AICDA, OMIM *605257, Immunodeficiency With Hyper-IgM, Type 2; HIGM2",
+     "Purine-Pyrimidine Metabolism",
+     "Metabolic Disease"
+    ],
+    "keywords": [
+     "Pyrimidine and Purine Metabolism Disorders"
+    ]
+   },
+   "designModule": {
+    "studyType": "OBSERVATIONAL",
+    "designInfo": {
+     "observationalModel": "COHORT",
+     "timePerspective": "PROSPECTIVE"
+    },
+    "enrollmentInfo": {
+     "count": 999,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Family Member of a subject with known or suspected DPPM",
+      "description": "1\\. At least one month of age;2. Relationship either by blood or marriage, to an individual enrolled or about to be enrolled in the study with known or suspected DPPM;3. Likelihood, in the expert opinion of the study team, that analysis of a sample from the individual would advance genetic or functional analysis of the affected relative s possiblecondition; and4. Ability of the subject, parent/s (in the case of children), or an LAR to understand and the willingness to sign a written informed consent document.5. If during the consenting/assenting procedure, clinical suspicion arises that a family member has symptoms of the diagnosed DPPMs, additional review and/or studies may be requested to clarify the clinical status before enrolling a family member as an unaffected participant."
+     },
+     {
+      "label": "Healthy Volunteers",
+      "description": "1\\. No personal or family history of DPPMs;2. At least one month old;3. No symptoms of DPPMs;4. Likelihood, in the expert opinion of the study team, that a sample from the individual would advance the functional analysis of the DPPM under study; 5. And ability of the subject, parent/s (in the case of children), or an LAR to understand and the willingness to sign a written informed consent document."
+     },
+     {
+      "label": "Subjects with known or suspected or uncharacterized DPPMs",
+      "description": "1\\. Regardless of gender, at least one month of age;2. A medical history that, in the expert opinion of the study team, is consistent with the DPPM; 3. Have a primary metabolic or genetic physician, or primary care provider; and 4. Ability of the subject, parent/s (in the case of children), or a Legally Authorized Representative (LAR) to understand and the willingness to sign a written informed consent document."
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "TP describe features of poorly characterized and novel DPPMs.",
+      "description": "DPPMs demonstrate significant inter- and intra-familial variability. We hypothesize that differences in clinical outcomes are the result of differences in the genomic, laboratory, and nutritional determinates. A proportion of subjects with biochemical evidence of DPPMs do not have molecular confirmation, suggesting locus heterogeneity and the opportunity to identify novel DPPMs.",
+      "timeFrame": "indefinite"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "To identify genomic, clinical, pharmacological, laboratory, and dietary factors associated with variable outcomes in subjects affected by DPPMs.",
+      "description": "The vast majority of DPPMs lack effective and definitive treatments. Identification of response biomarkers and candidate surrogate endpoints associated with clinical meaningful outcomes will enable future clinical trials for novel genomic medicines.",
+      "timeFrame": "indefinite"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "* INCLUSION CRITERIA:\n\nThere are three populations that will be included in this study: subjects with known DPPM, family members of study subjects, and healthy controls.\n\nIn order to be eligible to participate in this study as a subject with a known DPPM an individual must meet all following criteria:\n\n* At least one month of age;\n\n  * A medical history that, based on the preponderance of clinical, laboratory, biochemical, and/or genomic evidence is consistent with DPPMs;\n  * Clinical findings that can be used to suspect disorders of purine and pyrimidine metabolism will include, but not be limited to the presence of congenital malformations, neurological, behavioral, immunological, rheumatological, hematological, renal involvement; gout; and recurrent rhabdomyolysis in one or more family members.\n  * Laboratory findings may include but not limited to elevated CPK (recurrent rhabdomyolysis); neutropenia, lymphopenia, anemia, thrombocytopenia; and immunodeficiency.\n  * Biochemical evidence may encompass but not limited to persistent laboratory abnormalities in blood and urinary urate (a terminal product of purine degradation); blood and urinary beta-alanine (a terminal product of pyrimidine degradation); characteristic findings on plasma amino acid profiles (elevated plasma aspartate and glycine); elevated orotic acid on the urine organic acid assay; presence of urate crystals in urine; abnormal findings on the purine and pyrimidine panels (e.g. plasma and urine purines \\& pyrimidines biochemical panels at Mayo, PUPYP and PUPYU).\n  * Genomic evidence may include the presence of pathogenic and likely pathogenic variants in genes known or plausibly linked to the pathways of the de novo synthesis, degradation, and salvage of purines \\& pyrimidines. Participants with variants of unknown significance in the said genes may be invited to participate in the protocol, if they have clinical, laboratory and biochemical evidence consistent with DPPMs.\n* Have a primary metabolic or genetic physician, or primary care provider; and\n* Ability of the subject, parent/s (in the case of children), or a Legally Authorized Representative (LAR) to understand and the willingness to sign a written informed consent document.\n\nIn order to be eligible to participate in this study as an unaffected family member of a subject with known DPPM, an individual must meet all the following criteria:\n\n* At least one month of age;\n* Relationship either by blood or marriage, to an individual enrolled or about to be enrolled in the study with known DPPM;\n* Likelihood, in the expert opinion of the study team, that analysis of a sample from the individual would advance genetic or functional analysis of the affected relative s possible condition; and\n* Ability of the subject, parent/s (in the case of children), or an LAR to understand and the willingness to sign a written informed consent document.\n* If during the consenting/assenting procedure, review of medical and family history and physical exam, clinical suspicion arises that a family member has symptoms of DPPMs, additional review and/or studies may be recommended to clarify the clinical status.\n* Participants must have a routine clinical care team outside of NIH to enroll in this study.\n\nIn order to be eligible to participate in this study as an unrelated healthy volunteer, an individual must meet all the following criteria:\n\n* No personal or family history of DPPMs;\n* At least one month old;\n* No symptoms of DPPMs;\n* Likelihood, in the expert opinion of the study team, that a sample from the individual would advance the functional analysis of the DPPM under study;\n* And ability of the subject, parent/s (in the case of children), or an LAR to understand and the willingness to sign a written informed consent document.\n* Participants must have a routine clinical care team outside of NIH to enroll in this study.\n\nEXCLUSION CRITERIA:\n\nIndividuals meeting the following exclusion criteria are not eligible for the study:\n\n* Unrelated volunteers who are unaffected with DPPM but have intellectual disability due to other causes, such that they cannot provide informed consent without a guardian/LAR, will not be enrolled in this study. Affected individuals and family member(s) of individuals with DPPM can participate in the study when appropriate informed consent is obtained (with aide of parents/guardian/LAR/bioethics review when necessary).\n* Intercurrent or chronic conditions which in the opinion of the investigators, can then interfere with the interpretation of research studies (e.g. ongoing cancer treatment resulting in bone marrow suppression in a patient with DPPM also presenting with bone marrow suppression).\n* Pregnant participants as unaffected family members or as unrelated healthy volunteers are not able to join the protocol during the pregnancy.\n* Individuals without a routine clinical care team outside of the NIH cannot enroll in this study. We will ask the participants for the name of clinical care team prior to enrollment.",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "1 Month",
+    "maximumAge": "100 Years",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ],
+    "studyPopulation": "There are three populations that will be included in this study: 1. Subjects with known, suspected or uncharacterized DPPMs; 2. Family members of study subjects; 3. Healthy Volunteers;",
+    "samplingMethod": "PROBABILITY_SAMPLE"
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Oleg A Shchelochkov, M.D.",
+      "role": "CONTACT",
+      "phone": "(301) 435-2944",
+      "email": "PurineandPyrimidine@mail.nih.gov"
+     }
+    ],
+    "overallOfficials": [
+     {
+      "name": "Oleg A Shchelochkov, M.D.",
+      "affiliation": "National Human Genome Research Institute (NHGRI)",
+      "role": "PRINCIPAL_INVESTIGATOR"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "National Institutes of Health Clinical Center",
+      "status": "RECRUITING",
+      "city": "Bethesda",
+      "state": "Maryland",
+      "zip": "20892",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Shannon Haines",
+        "role": "CONTACT",
+        "phone": "240-987-8298",
+        "email": "shannon.haines@nih.gov"
+       },
+       {
+        "name": "NIH Clinical Center Office of Patient Recruitment (OPR)",
+        "role": "CONTACT",
+        "phone": "(800) 411-1222",
+        "phoneExt": "TTY dial 711",
+        "email": "ccopr@nih.gov"
+       }
+      ],
+      "geoPoint": {
+       "lat": 38.98067,
+       "lon": -77.10026
+      }
+     }
+    ]
+   },
+   "referencesModule": {
+    "references": [
+     {
+      "pmid": "34007002",
+      "type": "BACKGROUND",
+      "citation": "Shchelochkov OA, Manoli I, Juneau P, Sloan JL, Ferry S, Myles J, Schoenfeld M, Pass A, McCoy S, Van Ryzin C, Wenger O, Levin M, Zein W, Huryn L, Snow J, Chlebowski C, Thurm A, Kopp JB, Chen KY, Venditti CP. Severity modeling of propionic acidemia using clinical and laboratory biomarkers. Genet Med. 2021 Aug;23(8):1534-1542. doi: 10.1038/s41436-021-01173-2. Epub 2021 May 18."
+     },
+     {
+      "pmid": "21841779",
+      "type": "BACKGROUND",
+      "citation": "Sloan JL, Johnston JJ, Manoli I, Chandler RJ, Krause C, Carrillo-Carrasco N, Chandrasekaran SD, Sysol JR, O'Brien K, Hauser NS, Sapp JC, Dorward HM, Huizing M; NIH Intramural Sequencing Center Group; Barshop BA, Berry SA, James PM, Champaigne NL, de Lonlay P, Valayannopoulos V, Geschwind MD, Gavrilov DK, Nyhan WL, Biesecker LG, Venditti CP. Exome sequencing identifies ACSF3 as a cause of combined malonic and methylmalonic aciduria. Nat Genet. 2011 Aug 14;43(9):883-6. doi: 10.1038/ng.908."
+     },
+     {
+      "pmid": "24972650",
+      "type": "BACKGROUND",
+      "citation": "Balasubramaniam S, Duley JA, Christodoulou J. Inborn errors of purine metabolism: clinical update and therapies. J Inherit Metab Dis. 2014 Sep;37(5):669-86. doi: 10.1007/s10545-014-9731-6. Epub 2014 Jun 28."
+     },
+     {
+      "pmid": "31249402",
+      "type": "BACKGROUND",
+      "citation": "Shchelochkov OA, Manoli I, Sloan JL, Ferry S, Pass A, Van Ryzin C, Myles J, Schoenfeld M, McGuire P, Rosing DR, Levin MD, Kopp JB, Venditti CP. Chronic kidney disease in propionic acidemia. Genet Med. 2019 Dec;21(12):2830-2835. doi: 10.1038/s41436-019-0593-z. Epub 2019 Jun 28."
+     },
+     {
+      "pmid": "25030255",
+      "type": "BACKGROUND",
+      "citation": "Balasubramaniam S, Duley JA, Christodoulou J. Inborn errors of pyrimidine metabolism: clinical update and therapy. J Inherit Metab Dis. 2014 Sep;37(5):687-98. doi: 10.1007/s10545-014-9742-3. Epub 2014 Jul 17."
+     },
+     {
+      "pmid": "34373464",
+      "type": "BACKGROUND",
+      "citation": "Chu Y, Sun S, Huang Y, Gao Q, Xie X, Wang P, Li J, Liang L, He X, Jiang Y, Wang M, Yang J, Chen X, Zhou C, Zhao Y, Ding F, Zhang Y, Wu X, Bai X, Wu J, Wei X, Chen X, Yue Z, Fang X, Huang Q, Wang Z, Huang R. Metagenomic analysis revealed the potential role of gut microbiome in gout. NPJ Biofilms Microbiomes. 2021 Aug 9;7(1):66. doi: 10.1038/s41522-021-00235-2."
+     },
+     {
+      "pmid": "35144859",
+      "type": "BACKGROUND",
+      "citation": "Han ST, Kim AC, Garcia K, Schimmenti LA, Macnamara E, Network UD, Gahl WA, Malicdan MC, Tifft CJ. PUS7 deficiency in human patients causes profound neurodevelopmental phenotype by dysregulating protein translation. Mol Genet Metab. 2022 Mar;135(3):221-229. doi: 10.1016/j.ymgme.2022.01.103. Epub 2022 Feb 1."
+     }
+    ],
+    "seeAlsoLinks": [
+     {
+      "label": "NIH Clinical Center Detailed Web Page",
+      "url": "https://clinicalstudies.info.nih.gov/cgi/detail.cgi?A_001625-HG.html"
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "UNDECIDED"
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "GRIN2B",
+     "protein": "p.Gln919Ter",
+     "class": "nonsense",
+     "zygosity": "heterozygous",
+     "quote": "GRIN2B c.2755C>T p.Gln919Ter (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "intellectual disability",
+     "description": "Intellectual disability",
+     "alternatives": [
+      "Intellectual developmental disorder",
+      "Cognitive impairment",
+      "Mental retardation"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0001249",
+     "label": "Intellectual disability",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "candidates": [
+      {
+       "hpo_id": "HP:0001249",
+       "label": "Intellectual disability"
+      },
+      {
+       "hpo_id": "HP:0001249",
+       "label": "Intellectual disability"
+      }
+     ],
+     "mapping": "LLM pick from retrieved candidates",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "seizures",
+     "description": "Seizures",
+     "alternatives": [
+      "Epileptic seizures",
+      "Convulsions",
+      "Seizure disorder"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0001250",
+     "label": "Seizure",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "developmental delays",
+     "description": "Developmental delay",
+     "alternatives": [
+      "Delayed development",
+      "Global developmental delay",
+      "Neurodevelopmental delay"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0001263",
+     "label": "Global developmental delay",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT07713745",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT07713745",
+    "orgStudyIdInfo": {
+     "id": "HX-A-2026016"
+    },
+    "organization": {
+     "fullName": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    },
+    "briefTitle": "Platform Research for Innovative Medicines in NF2-SWN (PRIME-NF2)",
+    "officialTitle": "Platform Research for Innovative Medicines in NF2-SWN (PRIME-NF2)",
+    "acronym": "PRIME-NF2"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-05",
+    "overallStatus": "NOT_YET_RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2026-07-18",
+     "type": "ESTIMATED"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2036-06-01",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2036-12-31",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2026-07-03",
+    "studyFirstSubmitQcDate": "2026-07-14",
+    "studyFirstPostDateStruct": {
+     "date": "2026-07-20",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-07-14",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-07-20",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    }
+   },
+   "oversightModule": {
+    "oversightHasDmc": true,
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false,
+    "isUsExport": false
+   },
+   "descriptionModule": {
+    "briefSummary": "This is an adaptive platform-basket trial that aims to evaluate the safety and efficacy of multiple novel agents and combination therapies in patients with NF2-related schwannomatosis (NF2-SWN). The study employs a basket design to assess treatment responses across four tumor types commonly associated with NF2-SWN: vestibular schwannomas, non-vestibular schwannomas, meningiomas, and ependymomas.\n\nA shared natural history observational cohort, receiving routine clinical follow-up without investigational treatment, serves as a common control for all substudies. The adaptive platform enables the dynamic addition or closure of substudies based on interim analyses, thereby optimizing trial efficiency.\n\nEligible patients who meet the master protocol criteria and satisfy substudy-specific safety requirements will be assigned to receive the corresponding intervention. Currently open substudies include:\n\n* Substudy A: Selumetinib\n* Substudy B: Luvometinib plus Serplulimab",
+    "detailedDescription": "This is an investigator-initiated, prospective, multicenter, adaptive platform-basket clinical trial designed to evaluate the safety and efficacy of multiple therapies in patients with NF2-related schwannomatosis (NF2-SWN). The study includes four tumor baskets: vestibular schwannoma, meningioma, non-vestibular schwannoma, and ependymoma.\n\nMASTER STUDY All patients with a confirmed diagnosis of NF2-SWN who provide written informed consent will be enrolled in the master study and enter the natural history observational cohort. Patients who meet eligibility criteria for one or more active substudies may be assigned to a corresponding treatment arm. When multiple treatment arms are open, allocation will follow a predefined randomization scheme. When only one treatment arm is available, eligible patients may be enrolled directly into that substudy. Patients not eligible for any active intervention will remain in the master study cohort for standardized follow-up.\n\nPatients who experience progression of the target tumor during substudy treatment may be considered for enrollment into another active treatment arm if eligibility criteria are met. Patients who are not eligible for any active substudy will return to the master study observational cohort. Data collected during follow-up may serve as shared control data across the platform.\n\nPatients in the observational cohort will undergo standardized follow-up assessments every 12 months until study completion or voluntary withdrawal. Patients receiving treatment within a substudy will undergo efficacy and safety assessments approximately every 3 months according to the corresponding substudy protocol. The master study plans to enroll at least 200 patients with NF2-SWN, with enrollment continuing over time as eligible patients are identified across participating centers.\n\nSUBSTUDY 1: Selumetinib\n\n* Selumetinib is a selective MEK1/2 inhibitor approved for the treatment of NF1-associated plexiform neurofibromas. It inhibits tumor growth through blockade of the RAS/RAF/MEK/ERK signaling pathway.\n* This substudy plans to enroll 20 patients, prioritizing those with vestibular schwannoma as the target tumor. Detailed eligibility criteria are provided in the substudy protocol.\n\nSUBSTUDY 2: Luvometinib + Serplulimab\n\n* Luvometinib is a selective oral MEK1/2 inhibitor. Serplulimab is a humanized anti-PD-1 monoclonal antibody that blocks PD-1 signaling and restores T-cell-mediated antitumor immune activity by preventing interaction with PD-L1 and PD-L2.\n* This substudy plans to enroll approximately 30 adult patients, prioritizing those with vestibular schwannoma or meningioma as the target tumor. Detailed inclusion and exclusion criteria are described in the substudy protocol.\n\nEach substudy protocol will be incorporated into the master protocol as an appendix. Addition of new substudies requires review and approval by the Data and Safety Monitoring Board (DSMB).\n\nEfficacy will be evaluated using tumor-specific endpoints. For vestibular schwannoma, the primary endpoint is Hearing Response Rate (HRR). For meningioma, non-vestibular schwannoma, and ependymoma, the primary endpoint is radiographic Objective Response Rate (ORR). All efficacy endpoints will undergo blinded central review by an Independent Review Committee (IRC).\n\nThe platform is expected to remain active for 5-10 years, or until all active substudies are completed and no additional treatment arms are planned."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis Type 2",
+     "Vestibular Schwannoma",
+     "Non-vestibular Schwannoma",
+     "Meningioma",
+     "Ependymoma",
+     "NF2-related Schwannomatosis",
+     "NF2"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "RANDOMIZED",
+     "interventionModel": "PARALLEL",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 200,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Substudy A (Selumetinib)",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects will receive selumetinib 25 mg/m² by mouth twice daily (single dose not to exceed 50 mg) for up to 12 cycles (28 days per cycle).",
+      "interventionNames": [
+       "Drug: Selumetinib 25mg/m2"
+      ]
+     },
+     {
+      "label": "Substudy B (Luvometinib + Serplulimab)",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects will receive luvometinib 8 mg by mouth once daily in combination with serplulimab 4.5 mg/kg intravenously every 3 weeks for up to 12 cycles (28 days per cycle).",
+      "interventionNames": [
+       "Drug: Luvometinib",
+       "Drug: Serplulimab"
+      ]
+     },
+     {
+      "label": "Natural History Cohort",
+      "type": "NO_INTERVENTION",
+      "description": "Participants who are not eligible for any active treatment substudy, or who choose not to receive investigational therapy, will remain in the Natural History Observation Arm. No study intervention will be administered. Participants will undergo standardized longitudinal clinical, imaging, and outcome assessments according to the master protocol. Data collected from this arm will be used to characterize the natural history of NF2-related schwannomatosis and will serve as a shared observational comparator for active treatment arms within the platform."
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "Selumetinib 25mg/m2",
+      "description": "Oral twice daily per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Substudy A (Selumetinib)"
+      ],
+      "otherNames": [
+       "Koselugo",
+       "AZD6244"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Luvometinib",
+      "description": "Oral once daily per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Substudy B (Luvometinib + Serplulimab)"
+      ],
+      "otherNames": [
+       "FCN-159"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Serplulimab",
+      "description": "Intravenous infusion per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Substudy B (Luvometinib + Serplulimab)"
+      ],
+      "otherNames": [
+       "HLX10"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Tumor-Type-Specific Response Rate in NF2-SWN Tumors",
+      "description": "Vestibular schwannoma: HRR is defined as WRS improvement exceeding the 95% critical difference from baseline; if baseline WRS is \\<20%, HRR is defined as a PTA decrease of at least 10 dB.\n\nMeningioma or non-vestibular schwannoma: ORR is defined as at least a 20% reduction in target tumor volume from baseline.\n\nEpendymoma: ORR is defined as at least a 30% reduction in maximum diameter from baseline according to RECIST v1.1.",
+      "timeFrame": "12 months"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Incidence of Adverse Events in Interventional Substudies",
+      "description": "Percentage of participants receiving active treatment who experience at least one adverse event. Adverse events will be coded and graded according to NCI CTCAE v5.0.",
+      "timeFrame": "From first dose through 30 days after last dose (or as specified by individual substudy protocols)"
+     },
+     {
+      "measure": "Maximum Severity Grade of Adverse Events in Interventional Substudies",
+      "description": "Maximum NCI CTCAE v5.0 grade of adverse events experienced by each participant during the reporting period.",
+      "timeFrame": "12 months"
+     },
+     {
+      "measure": "Incidence of Serious Adverse Events in Interventional Substudies",
+      "description": "Percentage of participants receiving active treatment who experience at least one serious adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     },
+     {
+      "measure": "Incidence of Dose Modifications Due to Adverse Events",
+      "description": "Percentage of participants receiving active treatment who require at least one dose modification due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     },
+     {
+      "measure": "Incidence of Treatment Interruptions Due to Adverse Events",
+      "description": "Percentage of participants receiving active treatment who require at least one treatment interruption due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     },
+     {
+      "measure": "Incidence of Treatment Discontinuations Due to Adverse Events",
+      "description": "Percentage of participants receiving active treatment who discontinue treatment due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     }
+    ],
+    "otherOutcomes": [
+     {
+      "measure": "Change From Baseline in MRI-Based Total Tumor Burden (TTB)",
+      "description": "TTB will be assessed using serial MRI. TTB is calculated as the sum of the volumes of all prespecified measurable NF2-SWN-related tumors included in the tumor-burden assessment. The outcome is the relative percentage change in TTB from baseline to 12 months, based on blinded central radiology review.",
+      "timeFrame": "12 months"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Eligibility Specific For MASTER STUDY\n\nInclusion Criteria:\n\nSubjects must satisfy all of the following criteria to be enrolled into the main study natural history observation cohort:\n\n(1) Must meet the 2022 International Consensus Criteria for NF2-SWN, defined by having at least one of the following:\n\n1. Bilateral vestibular schwannomas (VS)\n2. An identical NF2 pathogenic variant in at least 2 anatomically distinct NF2-related tumors (schwannoma, meningioma, and/or ependymoma). (Note: if the variant allele fraction (VAF) in unaffected tissues such as blood is clearly \\<50%, the diagnosis is mosaic NF2-related schwannomatosis)\n3. Either 2 major or 1 major and 2 minor criteria as described in the following:\n\nMajor criteria:\n\n* Unilateral VS\n* First-degree relative other than sibling with NF2-related schwannomatosis\n* 2 or more meningiomas (Note: single meningioma qualifies as minor criteria).\n* NF2 pathogenic variant in an unaffected tissue such as blood (Note: if the VAF is clearly \\<50%, the diagnosis is mosaic NF2-related schwannomatosis)\n\nMinor criteria:\n\nCan count \\>1 of a type (eg, 2 distinct schwannomas would count as 2 minor criteria)\n\n* Ependymoma, meningioma (Note: multiple meningiomas qualify as a major criteria), schwannoma (Note: if the major criterion is unilateral VS, at least 1 schwannoma must be dermal in location) Can count only once (eg, bilateral cortical cataracts count as a single minor criterion)\n* Juvenile subcapsular or cortical cataract, retinal hamartoma, epiretinal membrane in a person aged \\<40 years, meningioma\n\n  (2) Presence of at least one evaluable lesion: Vestibular schwannoma, meningioma, or non-vestibular schwannoma: clearly identifiable lesion on contrast-enhanced T1-weighted MRI; Ependymoma: clearly identifiable lesion on contrast-enhanced T1-weighted or T2/FLAIR sequences; (3) Expected ability to complete at least 12 months of follow-up assessments; (4) Ability to understand and voluntarily sign a written informed consent form, or a legally authorized guardian signs the informed consent form together ; (5) Sub-study-specific criteria (for intervention arms only): If the subject intends to enter an interventional sub-study, in addition to meeting the above main study criteria, the subject must also satisfy the specific inclusion criteria specified in that sub-study protocol (e.g., organ function, prior treatment restrictions, washout periods, etc.), as determined by the drug characteristics.\n\nExclusion Criteria:\n\nSubjects meeting any of the following criteria will not be permitted to enter the main study:\n\n1. Coexisting other genetic syndromes that may cause multiple intracranial tumors (e.g., SMARCB1/LZTR1-related schwannomatosis, Cowden syndrome);\n2. Expected survival \\<12 months;\n3. Presence of severe psychiatric disorders or cognitive impairment that precludes cooperation with imaging or hearing assessments;\n4. Extreme social or geographic factors that, in the investigator's judgment, may impede follow-up for more than 12 months;\n5. Sub-study-specific exclusion criteria (for intervention arms only): If the subject intends to enter an interventional sub-study, the subject must also satisfy the specific exclusion criteria specified in that sub-study protocol (e.g., specific organ dysfunction, active infection, pregnancy, etc.).",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   },
+   "contactsLocationsModule": {
+    "locations": [
+     {
+      "facility": "Xuanwu Hospital, Capital Medical University",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100053",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Hao Wu, PhD",
+        "role": "CONTACT",
+        "phone": "+86 10-83922345",
+        "email": "wuhaospine@xwh.ccmu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "Beijing Tiantan Hospital, Capital Medical University",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100070",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Pinan Liu, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 10-59976611",
+        "email": "pinanliu@ccmu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "Chinese PLA General Hospital",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100853",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Jun Zhang, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 10-68182255",
+        "email": "junzhang301@163.com"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "The First Hospital of Jilin University",
+      "city": "Changchun",
+      "state": "Jilin",
+      "zip": "130021",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Yunqian Li, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 431-88782222",
+        "email": "yunqian@jlu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 43.88,
+       "lon": 125.32278
+      }
+     },
+     {
+      "facility": "Shanghai General Hospital",
+      "city": "Shanghai",
+      "state": "Shanghai Municipality",
+      "zip": "200080",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Meiqing Lou, PhD",
+        "role": "CONTACT",
+        "phone": "+86 21-63846590",
+        "email": "loumq68128@hotmail.com"
+       }
+      ],
+      "geoPoint": {
+       "lat": 31.22222,
+       "lon": 121.45806
+      }
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "NO"
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT04374305",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT04374305",
+    "orgStudyIdInfo": {
+     "id": "19-828"
+    },
+    "organization": {
+     "fullName": "Massachusetts General Hospital",
+     "class": "OTHER"
+    },
+    "briefTitle": "Innovative Trial for Understanding the Impact of Targeted Therapies in NF2-Related Schwannomatosis (INTUITT-NF2)",
+    "officialTitle": "Innovative Trial for Understanding the Impact of Targeted Therapies in NF2-Related Schwannomatosis (INTUITT-NF2)",
+    "acronym": "INTUITT-NF2"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-11",
+    "overallStatus": "RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2020-06-20",
+     "type": "ACTUAL"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2029-12-01",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2030-12-01",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2020-04-30",
+    "studyFirstSubmitQcDate": "2020-05-04",
+    "studyFirstPostDateStruct": {
+     "date": "2020-05-05",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-11-09",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-11-12",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR_INVESTIGATOR",
+     "investigatorFullName": "Scott R. Plotkin, MD, PhD",
+     "investigatorTitle": "Sponsor Investigator",
+     "investigatorAffiliation": "Massachusetts General Hospital"
+    },
+    "leadSponsor": {
+     "name": "Scott R. Plotkin, MD, PhD",
+     "class": "OTHER"
+    },
+    "collaborators": [
+     {
+      "name": "Takeda",
+      "class": "INDUSTRY"
+     },
+     {
+      "name": "The Children's Tumor Foundation",
+      "class": "OTHER"
+     },
+     {
+      "name": "National Comprehensive Cancer Network",
+      "class": "NETWORK"
+     },
+     {
+      "name": "Incyte Corporation",
+      "class": "INDUSTRY"
+     }
+    ]
+   },
+   "oversightModule": {
+    "oversightHasDmc": true,
+    "isFdaRegulatedDrug": true,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "This is a multi-arm phase II platform-basket screening study designed to test multiple experimental therapies simultaneously in patients with NF2-related schwannomatosis (NF2-SWN, formerly known as neurofibromatosis type 2) with associated progressive tumors of vestibular schwannomas (VS), non-vestibular schwannomas (non-VS), meningiomas, and ependymomas.\n\nThis Master Study is being conducted as a \"basket\" study that may allow people with multiple tumor types associated with NF2-SWN to receive new drugs throughout this study. Embedded within the Master Study are individual drug substudies.\n\n* Investigational Drug Sub-study A: Brigatinib\n* Investigational Drug Sub-study B: Neratinib\n* Investigational Drug Sub-study C: Retifanlimab plus bevacizumab",
+    "detailedDescription": "This research study is a Phase II clinical trial. Phase II clinical trials test the safety and effectiveness of investigational drugs to learn whether the drug(s) works in treating a specific disease. As a basket study, the trial will enroll patients with NF2-SWN with associated progressive tumors of vestibular schwannomas (VS), non-vestibular schwannomas (non-VS), meningiomas, and ependymomas\n\nThe MASTER STUDY is intended to enroll participants who will be allocated into different treatment arms (SUB-STUDIES) which will each have an additional consent and enrollment processes.\n\nMASTER STUDY\n\n\\-- The research study procedures include screening for eligibility, randomization to an experimental treatment sub-study, if qualified, and observation for up to 10 years.\n\n* Participants who have tumors grow during a treatment sub-study will be permitted to enroll in a different experimental treatment sub-study if they are eligible.\n* Participants who are not eligible for enrollment in a different treatment sub-study will be permitted to remain under observation on the Master Study to understand the growth pattern of these tumors (natural history)\n\n  * Participants will be eligible to remain on this Master study for up to 10 years.\n  * It is expected that about 80 people will take part in the Master Study\n  * The study will randomize a maximum of 40 patients to each of the experimental arms. The overall size of the trial is not fixed by design because it include arm-dropping rules for futility and allow for the possibility of arm addition by amendment.\n\nSUB-STUDY A (brigatinib) Drug Sub-study A will test the activity of brigatinib for treatment of NF2-related tumors.\n\n* Brigatinib is approved for the treatment of people with anaplastic lymphoma kinase (ALK)- positive metastatic non-small cell lung cancer (NSCLC) who have progressed or are intolerant to crizotinib. In preclinical models, brigatinib has shown evidence of activity against models of NF2-deficient tumors.\n* Forty (40) people will take part in the Brigatinib Sub-study.\n* The sub-study with brigatinib includes two stages.\n* In Stage 1, 20 subjects with any allowable tumor type will be accrued to each arm. A minimum of 2 subjects per tumor type (vestibular schwannoma, non-vestibular schwannoma, meningioma, and ependymoma) must be accrued in Stage 1. Interim analysis will be performed after Stage 1 to determine the radiographic response rate (RR) for each tumor types. Subsequently, in stage 2, another 20 subjects will be accrued into the 2 baskets with the most promising early results. If the results are equally promising for more than 2 baskets, subjects will be allocated to the appropriate number of baskets.\n\nSUB-STUDY B (neratinib) Collaborator: National Comprehensive Cancer Network (NCCN) through a grant provided by Puma Biotechnology Drug Sub-study B will test the activity of neratinib for treatment of NF2-related tumors.\n\n* Neratinib is approved for the treatment of people with early stage HER2-overexpressed/amplified breast cancer following treatment with trastuzumab-based therapy. In preclinical models, neratinib has shown evidence of activity against models of NF2-deficient tumors.\n\n  \\- It is expected that 20 people will take part in the Neratinib Sub-study. A minimum of 2 subjects per tumor type (vestibular schwannoma, non-vestibular schwannoma, meningioma, and ependymoma) must be accrued. Analysis will be performed to determine the radiographic response rate (RR) for each tumor types.\n* A subset of 5 participants will be enrolled into the PET imaging biomarker study. These participants will have additional PET scans performed just prior to the first dose of neratinib and after starting the treatment (witin 24 to 72 hours).\n\nSUB-STUDY C (retifanlimab plus bevacizumab) Collaborator: Funded by the Children's Tumor Foundation (CTF) and supported, in part, by Incyte Corporation.\n\nDrug sub-study C will test the activity of retifanlimab and bevacizumab on NF2-related tumors.\n\n* Retifanlimab is a humanized immunoglobulin G4 monoclonal antibody that targets programmed cell death protein 1. Retifanlimab is approved for the treatment of metastatic or recurrent locally advanced Merkel cell carinoma in adults.\n* Bevacizumab is a vascular endothelial growth factor inhibitor. Bevacizumab is approved for the treatment of metastatic colorectal cancer, non-small cell lung cancer, and glioblastoma.\n* It is expected that 20 participants will take part in the retifanlimab plus bevacizumab sub-study. A minimum of 2 participants per tumor type (vestibular schwannoma, non-vestibular schwannoma, meningioma, and ependymoma) must be accrued. Interim analysis will be performed to determine the radiographic response rate (RR) for each tumor type. If indicated based on this analysis, and with the support of Incyte, another 20 participants will be accrued into the 2 baskets with the most promising early results. If the results are equally promising for more than 2 baskets, participants will be allocated to the appropriate number of baskets."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis Type 2",
+     "Vestibular Schwannoma",
+     "Non-vestibular Schwannoma",
+     "Meningioma",
+     "Ependymoma"
+    ],
+    "keywords": [
+     "neurofibromatosis type 2 (NF2)",
+     "vestibular schwannomas (VS)",
+     "non-vestibular schwannomas (non-VS)",
+     "meningioma",
+     "ependymoma"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "RANDOMIZED",
+     "interventionModel": "PARALLEL",
+     "interventionModelDescription": "The study is a platform-basket trial that includes a Master Protocol with embedded Drug Sub-studies. Currently, there are three drug sub-studies: sub-study A (brigatinib), sub-study B (neratinib), and sub-study C (retifanlimab plus bevacizumab). The overall number of arms is not fixed by design because the investigators include arm-dropping rules for futility and allow for the possibility of arm addition by amendment.",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 109,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Sub-study A (brigatinib) - CLOSED TO ENROLLMENT",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects treated in this arm will receive brigatinib 90 mg by mouth daily for 7 days and then increased to 180 mg by mouth daily if the drug is tolerated.",
+      "interventionNames": [
+       "Drug: Brigatinib"
+      ]
+     },
+     {
+      "label": "Sub-study B (neratinib)",
+      "type": "EXPERIMENTAL",
+      "description": "The first three participants treated in this arm will receive neratinib 200 mg mg by mouth daily. If these participants tolerate the medication well, subsequent participants will receive neratinib 240 mg by mouth daily.",
+      "interventionNames": [
+       "Drug: Neratinib"
+      ]
+     },
+     {
+      "label": "Experimental: sub-study C (retifanlimab plus bevacizumab)",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects on this arm will receive retifanlimab by IV infusion at a dose of 375 mg every 3 weeks on a continuous schedule for 48 weeks. Subjects will also receive bevacizumab by IV infusion at a dose of 7.5 mg/kg every 3 weeks on an intermittent schedule. One cycle last 42 days and the study will last for 52 total weeks (48 treatment weeks and 4 follow-up weeks).",
+      "interventionNames": [
+       "Drug: Retifanlimab",
+       "Drug: Bevacizumab"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "Brigatinib",
+      "description": "Oral daily per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Sub-study A (brigatinib) - CLOSED TO ENROLLMENT"
+      ],
+      "otherNames": [
+       "Alunbrig"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Neratinib",
+      "description": "Oral daily per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Sub-study B (neratinib)"
+      ],
+      "otherNames": [
+       "Nerlynx"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Retifanlimab",
+      "description": "Every 3 weeks by IV per predetermined dose in protocol.",
+      "armGroupLabels": [
+       "Experimental: sub-study C (retifanlimab plus bevacizumab)"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Bevacizumab",
+      "description": "Every 3 weeks by IV per predetermined dose in protocol.",
+      "armGroupLabels": [
+       "Experimental: sub-study C (retifanlimab plus bevacizumab)"
+      ],
+      "otherNames": [
+       "Avastin",
+       "MVASI"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Radiographic response rate (for each drug substudy)",
+      "description": "Radiographic response rates in target tumors according to tumor-associated criteria:\n\n* VS, non-VS, and meningiomas: Dombi criteria (2013)\n* Ependymomas: RECIST 1.12",
+      "timeFrame": "2 years"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Incidence of Treatment-Emergent Adverse Events [Safety and Tolerability",
+      "description": "Number of Participants with Treatment Emergent Adverse Events as Assessed CTCAE v5.0",
+      "timeFrame": "2 years"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Eligibility Specific For MASTER PROTOCOL:\n\nInclusion Criteria:\n\n\\- Patients must have a pathogenic variant in the NF2 gene (either in the germline or in two NF2-related tumors) OR a confirmed diagnosis of NF2 by fulfilling National Institute of Health (NIH) criteria or Manchester criteria:\n\nThe NIH criteria includes presence of:\n\n* Bilateral vestibular schwannomas, OR\n* First-degree relative with NF2 and EITHER unilateral eighth nerve mass OR two of the following: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity.\n\nThe Manchester criteria includes presence of:\n\n* Bilateral vestibular schwannomas, OR\n* First-degree relative with NF2 and EITHER unilateral eighth nerve mass OR two of the following: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity, OR\n* Unilateral vestibular schwannoma AND any two of: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity, OR\n* Multiple meningiomas (two or more) AND unilateral vestibular schwannoma OR any two of: schwannoma, glioma, neurofibroma, cataract.\n\nSubjects must have a target NF2-related tumor (VS, non-VS, meningioma, or ependymoma) with documented radiographic progression within the preceding 36 months of Master Study registration defined as either:\n\n* at least 20% increase in volume of enhancing tumor\n* at least 2 mm increase in greatest linear dimension of enhancing tumor\n\nParticipants must have measurable disease, defined as:\n\n* VS, non-VS, or meningioma target lesions that can be accurately measured as at least 1 ml by volumetric MRI scan or in at least one dimension as ≥10 mm with conventional MRI scan. See protocol for the evaluation of measurable disease\n* Ependymoma target lesions measurable linearly.\n\nParticipant must have a target NF2-related tumor with the following qualities:\n\n* Not amenable to surgery due to patient refusal or due to high risk for surgical complications (e.g., damage to nerve function). Participant must be ≥ 12 years of age on Day 1 of treatment. Life expectancy of greater than 1 year Karnofsky performance status ≥ 70 or ECOG PS 0 or 1 (see Appendix A). Ability to understand and the willingness to sign written informed consent and assent documents.\n* Must have established relationship with primary care physician and provide contact information\n\nExclusion Criteria:\n\n* Participants who have had chemotherapy within a minimum of 4 weeks prior to Master Study registration (or a minimum of 5 half-lives and resolution to baseline of toxicities unless there are irreversible toxicities from prior drug that do not influence risk of next drug).\n* Participants who have received radiation to the target tumor within the last 3 years prior to Master study registration.\n* Participants who are receiving any other investigational agents.\n* Participants with target or non-target nervous system tumors that, in the opinion of the treating investigator, are likely to require active treatment (including surgery) within 6 months of registration to the Master Study.\n* History of a different malignancy, unless (a) have been disease-free for at least 2 years and are deemed by the treating investigator to be at low risk for recurrence of that malignancy.\n* Uncontrolled intercurrent illness including, but not limited to, ongoing or active infection, symptomatic congestive heart failure, unstable angina pectoris, cardiac arrhythmia, or psychiatric illness/social situations that would limit compliance with study requirements.\n* Pregnant women are excluded from this study because the experimental agents may have the potential for teratogenic or abortifacient effects. Because there is an unknown but potential risk for adverse events in nursing infants secondary to treatment of the mother with these experimental agents, breastfeeding should be discontinued if the mother is treated.\n\nEligibility Criteria Specific to SUB-STUDY A (Brigatinib arm): CLOSED TO ENROLLMENT\n\nInclusion criteria\n\n* Participants must meet all eligibility criteria outlined in the Master Study\n* Participants must be willing and able to provide written informed consent/assent for the brigatinib arm of the INTUITT-NF2 trial.\n* Participant is ≥ 12 years of age and has body weight at least 40 kg on Day 1 of treatment.\n* Patient must be able to swallow pills.\n* Clinical laboratory values as specified below within 28 days before the first dose of study drug, as described in the protocol document:\n* Female patients participating in this study should avoid becoming pregnant, and male patients should avoid impregnating a female partner. Non-sterilized female patients of reproductive age group and male patients should use effective methods of contraception through defined periods during and after study treatment as specified below:\n\nFemale patients must meet 1 of the following:\n\n* Postmenopausal for at least 1 year before the screening visit, or\n* Surgically sterile, or\n* If they are of childbearing potential, agree to practice 2 effective methods of contraception from the time of signing of the informed consent form through 4 months after the last dose of study drug, or agree to completely abstain from heterosexual intercourse. Brigatinib may decrease effectiveness of hormonal contraceptives, therefore, women are recommended to use non-hormonal methods of contraception. Highly effective non-hormonal birth control for women of child bearing potential with male partners includes:\n\n  * Sexual abstinence (no sexual intercourse)\n  * Intrauterine device (IUD) or intrauterine system (IUS)\n  * Bilateral tubal ligation (both tubes tied)\n  * Vasectomized partner\n\nMale patients, even if surgically sterilized (i.e., status post-vasectomy) must agree to 1 of the following:\n\n\\- Practice effective barrier contraception during the entire study treatment period and through 4 months after the last dose of study drug, or completely abstain from heterosexual intercourse.\n\nExclusion criteria:\n\n* Female patients who are both lactating and breastfeeding or have a positive serum pregnancy test during the screening period or a positive urine pregnancy test on Day 1 before first dose of study drug (if applicable)\n* Any serious medical or psychiatric illness that could, in the investigator's opinion, potentially interfere with the completion of treatment according to this protocol\n* Treatment with any investigational products within 1 month or 5 half-lives (whichever is longer) before the first dose of study drug\n* Had major surgery within 30 days of the first dose of brigatinib. Minor surgical procedures such as catheter placement or minimally invasive biopsies are allowed.\n* Have significant, uncontrolled, or active cardiovascular disease (as outlined in the protocol):\n* Have uncontrolled hypertension (defined as an average systolic blood pressure \\>160 or an average diastolic blood pressure \\>100 for adults; for children: please refer to table in protocol\n\nEligibility Criteria Specific to SUB-STUDY B (Neratinib arm):\n\n* Participants must be willing and able to provide written informed consent/assent for the neratinib arm of the INTUITT-NF2 trial.\n* Participant must be ≥ 12 years of age and have body weight ≥ 40 kg on Day 1 of treatment.\n* Patient must be able to swallow pills.\n* Recovery (ie, to Grade 1 or baseline) from all clinically significant AEs related to prior therapies (excluding alopecia, neuropathy, and nail changes).\n* Clinical laboratory values as specified below within 14 days before the first dose of study drug:\n* ALT/aspartate aminotransferase (AST) ≤ 2.5 × institutional upper limit of normal (ULN);\n* Total serum bilirubin ≤ 1.5 × institutional ULN (\\<3.0 × institutional ULN for patients with Gilbert syndrome)\n* Estimated glomerular filtration rate (eGFR) ≥30 mL/min/1.73 m2, using the modification of diet in renal disease (MDRD) equation\n* Serum lipase ≤1.5 × institutional ULN\n* Absolute neutrophil count ≥1.5 × 109/L\n* Platelet count ≥75 × 109/L\n* Hemoglobin ≥9 g/dL\n* Left ventricular ejection fraction (LVEF) ≥50% measured by multiple-gated acquisition scan (MUGA) or echocardiogram (ECHO).\n* It is not known what effects neratinib has on human pregnancy or development of the embryo or fetus. Therefore, female patients participating in this study should avoid becoming pregnant, and male patients should avoid impregnating a female partner. Non-sterilized female patients of reproductive age group and male patients should use effective methods of contraception through defined periods during and after study treatment as specified below:\n\nFemale patients must meet 1 of the following:\n\n* Postmenopausal for at least 1 year before the screening visit, or\n* Surgically sterile, or\n* If they are of childbearing potential, agree to practice 2 effective methods of contraception from the time of signing of the informed consent form through 4 months after the last dose of study drug, or agree to completely abstain from heterosexual intercourse. Neratinib may decrease effectiveness of hormonal contraceptives, therefore, women are recommended to use non-hormonal methods of contraception. Highly effective non-hormonal birth control for women of child bearing potential with male partners includes:\n\n  * Sexual abstinence (no sexual intercourse)\n  * Intrauterine device (IUD) or intrauterine system (IUS)\n  * Bilateral tubal ligation (both tubes tied)\n  * Vasectomized partner\n\nMale patients, even if surgically sterilized (i.e., status post-vasectomy) must agree to 1 of the following:\n\n* Practice effective barrier contraception during the entire study treatment period and through 4 months after the last dose of study drug, or completely abstain from heterosexual intercourse.\n* Female patients must have negative β-human chorionic gonadotropin (hCG) pregnancy test for premenopausal women of reproductive capacity (those who are biologically capable of having children) and for women less than 12 months after menopause. \\[Women are considered postmenopausal if they are ≥12 months without menses, in the absence of endocrine or anti-endocrine therapies.\\]\n\nExclusion Criteria\n\n* Female patients who are both lactating and breastfeeding or have a positive serum pregnancy test during the screening period or a positive urine pregnancy test on Day 1 before first dose of study drug (if applicable)\n* Any serious medical or psychiatric illness that could, in the investigator's opinion, potentially interfere with the completion of treatment according to this protocol\n* Treatment with any investigational products within 28 days or 5 half-lives (whichever is longer) before the first dose of study drug\n* Had major surgery within 30 days of the first dose of neratinib. Minor surgical procedures such as catheter placement or minimally invasive biopsies are allowed.\n* Have significant, uncontrolled, or active cardiovascular disease, specifically including, but not restricted to:\n* Myocardial infarction within 6 months before the first dose of neratinib.\n* Unstable angina within 6 months before first dose of neratinib.\n* Congestive heart failure within 6 months before first dose of neratinib.\n* History of clinically significant atrial arrhythmia (including clinically significant bradyarrhythmia), as determined by the treating physician.\n* Any history of clinically significant ventricular arrhythmia.\n* Had a cerebrovascular accident or transient ischemic attack within 6 months before first dose of neratinib.\n* QTc interval \\>0.450 seconds (males) or \\>0.470 (females), or known history of QTc prolongation or Torsade de Pointes (TdP)\n* Have a known history of HIV infection. Testing is not required in the absence of history.\n* Have malabsorption syndrome or other GI illness that could affect oral absorption of neratinib. Note: This includes any predisposing chronic condition resulting in baseline grade 2 or higher diarrhea\n* History of severe allergic reactions or intolerability attributed to compounds of similar chemical or biologic composition to neratinib.\n* Have any condition or illness that, in the opinion of the investigator, would compromise patient safety or interfere with the evaluation of neratinib.\n* Concurrent use of enzyme-inducing antiepileptic drugs (EIAEDs), including phenytoin, carbamazepine, oxcarbazepine, fosphenytoin, phenobarbital, pentobarbital, or primidone\n* Received systemic treatment with certain cytochrome P-450 inhibitors or inducers within 14 days before enrollment.\n\nEnrollment Criteria Specific to SUB-STUDY C (retifanlimab plus bevacizumab arm):\n\nInclusion Criteria\n\n* Participants must be willing and able to provide written informed consent/assent for the retifanlimab-bevacizumab arm of the INTUITT-NF2 trial.\n* Participants must have a target NF2-related tumor (VS, non-VS, meningioma, or ependymoma) with documented radiographic progression within the preceding 36-months.\n* Age between 12 and 25 years on day 1 of treatment.\n* Life expectancy of greater than 1 year.\n* Participants must meet the following organ and marrow function as defined below:\n\n  1. Leukocytes ≥3000/mcL\n  2. Platelets ≥100,000/mcL\n  3. Total Bilirubin ≤ 1.5 institutional upper limit of normal (ULN), (\\<3.0 × institutional ULN for patients with Gilbert Syndrome)\n  4. AST(SGOT)/ALT(SGPT) ≤2.5 × institutional ULN\n  5. Urine Protein:Creatinine Ratio ≤ 1.9\n  6. Glomerular Filtration Rate (GFR) ≥30 mL/min/1.73 m2\n* Inhibition of the PD-1/PD-L1 pathway can lead to increased risk of immune-mediated rejection of the developing fetus resulting in fetal death. Therefore, female patients participating in this study should avoid becoming pregnant, and male patients should avoid impregnating a female partner. Non-sterilized female patients of reproductive age group and male patients should use effective methods of contraception through defined periods during and after study treatment as specified below:\n\nFemale patients must meet 1 of the following:\n\n* Postmenopausal, defined as ≥12 consecutive months of amenorrhea in the absence of endocrine or anti-endocrine therapy, for a minimum of 1 year prior to screening visit, or\n* Surgically sterile, or\n* If they are of childbearing potential, agree to practice 2 effective methods of contraception from the time of signing of the informed consent form through 4 months after the last dose of study drug, or agree to completely abstain from heterosexual intercourse. Highly effective non-hormonal birth control for women of childbearing potential with male partners may include:\n* Sexual abstinence (no sexual intercourse)\n* Intrauterine device (IUD) or intrauterine system (IUS)\n* Bilateral tubal ligation (both tubes tied)\n* Vasectomized partner Male patients, even if surgically sterilized (i.e., status post-vasectomy), must agree to 1 of the following:\n* Practice effective barrier contraception during the entire study treatment period and through 4 months after the last dose of study drug, or\n* Completely abstain from heterosexual intercourse.\n\nExclusion Criteria\n\n* History of allergic reactions or hypersensitivity attributed to compounds of similar chemical or biologic composition to retifanlimab or bevacizumab\n* Female patients who are both lactating and breastfeeding or have a positive serum pregnancy test during the screening period prior to registration.\n* Treatment with any investigational products or chemotherapy within 28 days or 5 half-lives (whichever is longer) before the first dose of study drug.\n* Treatment with bevacizumab or any PD-1/PD-L1 inhibitor within 180 days before the first dose of study drug.\n* Had major surgery within 30 days of the first dose of study drug. Minor surgical procedures such as catheter placement or minimally invasive biopsies are allowed.\n* Serious or non-healing wound, ulcer, or bone fracture.\n* History of abdominal fistula, gastrointestinal perforation or intra-abdominal abscess within 6 months prior to Day 1.\n* Imaging (CT or MRI) evidence of hemorrhage deemed significant by the treating physician (\\> grade 1). Subjects with significantly increased risk of CNS hemorrhage are not eligible.\n* Concurrent use of anti-coagulant drugs (not including prophylactic doses), history of coagulopathy, or evidence of bleeding diathesis or coagulopathy.\n* Participants who have not recovered from adverse events due to prior anti-cancer therapy (i.e., have residual toxicities \\> Grade 1) with the exception of alopecia.\n* Evidence of interstitial lung disease, history of interstitial lung disease, or active, noninfectious pneumonitis.\n* Immune related toxicity during prior checkpoint inhibitor therapy for which permanent discontinuation of therapy was recommended (per product label or consensus guidelines) or any immune-related toxicity requiring intensive or prolonged immunosuppression to manage (with the exception of endocrinopathy that is well controlled on replacement hormones).\n* Active autoimmune disease requiring systemic immunosuppression in excess of physiologic maintenance doses of corticosteroids (\\> 10 mg/day of prednisone or equivalent).\n\n  1. Physiologic corticosteroid replacement therapy at doses ≤ 10 mg/day of prednisone or equivalent for adrenal or pituitary insufficiency and in the absence of active autoimmune disease is permitted.\n  2. Participants with asthma that requires intermittent use of bronchodilators, inhaled corticosteroids, or local corticosteroid injections may participate.\n  3. Participants using topical, ocular, intra-articular, or intranasal corticosteroids (with minimal systemic absorption) may participate.\n  4. Brief courses of corticosteroids for prophylaxis (eg, contrast dye allergy) or study treatment-related standard premedications are permitted.\n* Active infections requiring systemic antibiotics or antifungal or antiviral treatment within 10 days before first dose of study treatment.\n* Has received a live vaccine within 28 days before the planned start of study treatment (with the exception of COVID-19 vaccines).\n\nNote: Examples of live vaccines include but are not limited to measles, mumps, rubella, varicella-zoster (chickenpox), yellow fever, rabies, BCG, and typhoid vaccines. Seasonal influenza vaccines for injection are generally killed-virus vaccines and are allowed; however, intranasal influenza vaccines are live, attenuated vaccines and are not allowed.\n\n* History of organ transplant, including allogeneic stem cell transplantation.\n* Clinically significant cardiovascular disease, such as:\n* Inadequately controlled HTN (defined as an average systolic blood pressure \\>160 or an average diastolic blood pressure \\> 100 for adult patients ≥ 21 years and as an average systolic BP \\> 130 or an average diastolic blood pressure \\>80 for pediatric patients 12-21 years) despite adequate treatment with medications. Patients with hypertension should be under treatment on study entry to control blood pressure.\n* History of CVA within 12 months of registration\n* Myocardial infarction or unstable angina within 12 months of registration\n* New York heart association grade II or greater congestive heart failure\n* Serious and inadequately controlled cardiac arrhythmia\n* Significant vascular disease (e.g., aortic aneurysm, history of aortic dissection)\n* Clinically significant peripheral vascular disease",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "12 Years",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Scott Plotkin, MD",
+      "role": "CONTACT",
+      "phone": "617-643-8992",
+      "email": "lmhibyan@mgb.org"
+     }
+    ],
+    "overallOfficials": [
+     {
+      "name": "Scott Plotkin, MD",
+      "affiliation": "Massachusetts General Hospital",
+      "role": "PRINCIPAL_INVESTIGATOR"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "UCLA Medical Center",
+      "status": "RECRUITING",
+      "city": "Los Angeles",
+      "state": "California",
+      "zip": "90095",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Phioanh (Leia) Nghiemphu, MD",
+        "role": "CONTACT",
+        "email": "PNghiemphu@mednet.ucla.edu"
+       },
+       {
+        "name": "Phioanh (Leia) Nghiemphu, MD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ],
+      "geoPoint": {
+       "lat": 34.05223,
+       "lon": -118.24368
+      }
+     },
+     {
+      "facility": "University of Miami",
+      "status": "RECRUITING",
+      "city": "Miami",
+      "state": "Florida",
+      "zip": "33136",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Christine Dinh, MD",
+        "role": "CONTACT",
+        "email": "CTDinh@med.miami.edu"
+       },
+       {
+        "name": "Christine Dinh, MD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ],
+      "geoPoint": {
+       "lat": 25.77427,
+       "lon": -80.19366
+      }
+     },
+     {
+      "facility": "Indiana University School of Medicine",
+      "status": "NOT_YET_RECRUITING",
+      "city": "Indianopolis",
+      "state": "Indiana",
+      "zip": "46202",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Steven Rhodes, MD, PhD",
+        "role": "CONTACT",
+        "email": "sdrhodes@iu.edu"
+       },
+       {
+        "name": "Steven Rhodes, MD, PhD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ]
+     },
+     {
+      "facility": "Johns Hopkins Hospital",
+      "status": "RECRUITING",
+      "city": "Baltimore",
+      "state": "Maryland",
+      "zip": "21287",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Jaishri Blakeley, MD",
+        "role": "CONTACT",
+        "email": "jblakel3@jhmi.edu"
+       },
+       {
+        "name": "Jaishri Blakeley, MD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.29038,
+       "lon": -76.61219
+      }
+     },
+     {
+      "facility": "Massachusetts General Hospital",
+      "status": "RECRUITING",
+      "city": "Boston",
+      "state": "Massachusetts",
+      "zip": "02115",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Scott Plotkin, MD",
+        "role": "CONTACT",
+        "phone": "(617) 724-8770",
+        "email": "splotkin@partners.org"
+       },
+       {
+        "name": "Scott Plokin, MD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ],
+      "geoPoint": {
+       "lat": 42.35843,
+       "lon": -71.05977
+      }
+     },
+     {
+      "facility": "New York University Langone Medical Center",
+      "status": "RECRUITING",
+      "city": "New York",
+      "state": "New York",
+      "zip": "10016",
+      "country": "United States",
+      "contacts": [
+       {
+        "name": "Kaleb Yohay, MD",
+        "role": "CONTACT",
+        "email": "Kaleb.Yohay@nyulangone.org"
+       },
+       {
+        "name": "Kaleb Yohay, MD",
+        "role": "PRINCIPAL_INVESTIGATOR"
+       }
+      ],
+      "geoPoint": {
+       "lat": 40.71427,
+       "lon": -74.00597
+      }
+     }
+    ]
+   },
+   "referencesModule": {
+    "references": [
+     {
+      "pmid": "38904277",
+      "type": "DERIVED",
+      "citation": "Plotkin SR, Yohay KH, Nghiemphu PL, Dinh CT, Babovic-Vuksanovic D, Merker VL, Bakker A, Fell G, Trippa L, Blakeley JO; INTUITT-NF2 Consortium. Brigatinib in NF2-Related Schwannomatosis with Progressive Tumors. N Engl J Med. 2024 Jun 27;390(24):2284-2294. doi: 10.1056/NEJMoa2400985. Epub 2024 Jun 21."
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "YES",
+    "description": "The Dana-Farber / Harvard Cancer Center encourages and supports the responsible and ethical sharing of data from clinical trials. De-identified participant data from the final research dataset used in the published manuscript may only be shared under the terms of a Data Use Agreement. Requests may be directed to Sponsor Investigator or designee. The protocol and statistical analysis plan will be made available on Clinicaltrials.gov only as required by federal regulation or as a condition of awards and agreements supporting the research.",
+    "infoTypes": [
+     "STUDY_PROTOCOL",
+     "SAP",
+     "ICF"
+    ],
+    "timeFrame": "Data can be shared no earlier than 1 year following the date of publication",
+    "accessCriteria": "MGH - Contact the Partners Innovations team at http://www.partners.org/innovation"
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT07707947",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT07707947",
+    "orgStudyIdInfo": {
+     "id": "CS-2025-07"
+    },
+    "organization": {
+     "fullName": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    },
+    "briefTitle": "Selumetinib for NF2-Related Schwannomatosis",
+    "officialTitle": "A Single-Center, Single-Arm, Phase II Study to Explore the Efficacy and Safety of MEK1/2 Inhibitor (MEKi) Selumetinib in the Treatment of Patients With NF2-Related Schwannomatosis",
+    "acronym": "ASSIST"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-10",
+    "overallStatus": "NOT_YET_RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2026-12-01",
+     "type": "ESTIMATED"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2028-12-31",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2028-12-31",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2026-07-03",
+    "studyFirstSubmitQcDate": "2026-07-14",
+    "studyFirstPostDateStruct": {
+     "date": "2026-07-16",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-10-26",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-10-28",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    },
+    "collaborators": [
+     {
+      "name": "AstraZeneca",
+      "class": "INDUSTRY"
+     }
+    ]
+   },
+   "oversightModule": {
+    "oversightHasDmc": true,
+    "isFdaRegulatedDrug": true,
+    "isFdaRegulatedDevice": false,
+    "isUsExport": true
+   },
+   "descriptionModule": {
+    "briefSummary": "The goal of this clinical trial is to evaluate the efficacy and safety of the MEK1/2 inhibitor selumetinib in treating patients with neurofibromatosis type 2-related schwannomatosis (NF2-SWN), including both adults and children with inoperable or progressive tumors.",
+    "detailedDescription": "NF2-related schwannomatosis (NF2-SWN) is a rare, autosomal dominant tumor predisposition syndrome characterized by bilateral vestibular schwannomas and multifocal schwannomas arising from cranial, spinal, and peripheral nerves, frequently leading to progressive hearing loss, neurological deficits, and substantial morbidity. This study will serve as a Substudy component of the \"Platform Research for Innovative Medicines in NF2-SWN (PRIME-NF2)\" initiative, conducting a single-center, single-arm Phase II clinical trial aimed at evaluating the efficacy and safety of selumetinib in treating NF2-SWN-associated tumors. The study will enroll 20 patients diagnosed with NF2-related schwannomatosis (NF2-SWN) who have at least one measurable and progressive vestibular schwannoma and are aged ≥3 years. The primary endpoints include: ① Imaging response rate for NF2-SWN-associated vestibular schwannomas, assessed by a reduction of ≥20% in volume according to the REiNs criteria; ② Hearing response rate, defined as an improvement in speech recognition rate exceeding the 95% threshold difference. Secondary endpoints involve quality-of-life assessment: all patients will undergo evaluation using the NF2-SWN-specific Quality of Life Scale (NFTI-QOL), with additional pain scoring using the Numerical Rating Scale-11 (NRS-11) for patients with NF2-SWN-related intraspinal space-occupying lesions. The exploratory endpoints included: ① Imaging response rates for other NF2-SWN-related tumors excluding NF2-SWN-associated vestibular schwannomas: for meningiomas (non-vestibular schwannomas), objective imaging response defined as a volume reduction ≥20% per the REiNs criteria; for ependymomas, objective imaging response defined as a maximum diameter reduction ≥30% per the RECIST 1.1 criteria; total tumor burden; and the TSPO-PET/MRI-defined immune phenotype (immune-enriched vs. immune-depleted) and its association with treatment response in NF2-SWN-associated vestibular schwannomas. This study will provide further clinical evidence for targeted therapy of NF2-SWN."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis Type 2",
+     "NF2",
+     "NF2-related Schwannomatosis",
+     "Meningioma",
+     "Ependymoma",
+     "Vestibular Schwannoma"
+    ],
+    "keywords": [
+     "NF2-SWN",
+     "Selumetinib"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "NA",
+     "interventionModel": "SINGLE_GROUP",
+     "interventionModelDescription": "Selumetinib will be administered at a dose of 25 mg/m²orally twice daily (BID),with a maximum single dose of 50 mg per administration.Doses will be calculated based on body surface area (BSA)and rounded to the nearest 5 mg increment.",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 20,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Selumetinib",
+      "type": "EXPERIMENTAL",
+      "description": "Selumetinib will be administered at a dose of 25 mg/m²orally twice daily (BID),with a maximum single dose of 50 mg per administration.Doses will be calculated based on body surface area (BSA)and rounded to the nearest 5 mg increment.",
+      "interventionNames": [
+       "Drug: Selumetinib"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "Selumetinib",
+      "description": "Selumetinib will be administered at a dose of 25 mg/m²orally twice daily (BID),with a maximum single dose of 50 mg per administration.Doses will be calculated based on body surface area (BSA)and rounded to the nearest 5 mg increment.",
+      "armGroupLabels": [
+       "Selumetinib"
+      ],
+      "otherNames": [
+       "KOSELUGO"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Objective Response Rate (ORR)in NF2-related vestibular schwannoma assessed according to the REiNS criteria",
+      "description": "Partial response is defined as the sum volume of VS decrease ≥20% compared to baseline, confirmed by a consecutive scan after 1 to 3 treatment cycles after the first response. Complete response is defined as disappearance of VS, confirmed by a consecutive scan after 1 to 3 treatment cycles after the first response;",
+      "timeFrame": "12 months"
+     },
+     {
+      "measure": "Hearing Response Rate Based on Word Recognition Score (WRS) in Target Vestibular Schwannoma",
+      "description": "Percentage of participants with WRS improvement exceeding the 95% critical difference from baseline in the ear associated with the target vestibular schwannoma.",
+      "timeFrame": "12 months"
+     },
+     {
+      "measure": "Pure Tone Average (PTA) Response Rate in Target Vestibular Schwannoma",
+      "description": "Percentage of participants with a PTA decrease of at least 10 dB from baseline in the ear associated with the target vestibular schwannoma.",
+      "timeFrame": "12 months"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Assess safety and tolerability especially for selumetinib",
+      "description": "Incidence and severity of treatment -adverse events of ocular toxicity and cardiac toxicity graded according to CTCAE v6.0",
+      "timeFrame": "From the first dose of study drug (Day 0) through 30 ± 3 days after the last dose administration."
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Inclusion Criteria:\n\n1. Patients must have a pathogenic variant in the NF2 gene (either in the germline or in two NF2-related tumors)OR a confirmed diagnosis of NF2 by fulfilling National Institute of Health (NIH)criteria or Manchester criteria:\n\n   The genetic test report should be issued by companies or hospitals with corresponding qualifications.\n\n   The NIH criteria includes presence of:\n   * Bilateral vestibular schwannomas, OR\n   * First-degree relative with NF2 and EITHER unilateral eighth nerve mass OR two of the following: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity.\n\n   The Manchester criteria includes presence of:\n   * Bilateral vestibular schwannomas, OR\n   * First-degree relative with NF2 and EITHER unilateral eighth nerve mass OR two of the following: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity, OR\n   * Unilateral vestibular schwannoma AND any two of: neurofibroma, meningioma, glioma, schwannoma, juvenile posterior subcapsular lenticular opacity,OR\n   * Multiple meningiomas (two or more)AND unilateral vestibular schwannoma OR\n   * any two of: schwannoma, glioma, neurofibroma, cataract.\n2. Subjects must have ≥1 measurable target vestibular schwannoma meeting all of the following conditions:\n\n   * Measurable on MRI with a minimum diameter ≥3 mm;\n   * Evidence of radiographic progression within the past 36 months according to REiNS criteria, OR documented clinical progression attributable to the target tumor (e.g., hearing decline, cranial nerve dysfunction).\n   * Subjects whose Word Recognition Score (WRS)ranging from 50%to 88%at the side of target vestibular schwannoma.\n3. The target tumor must be considered not amenable to surgery due to:\n\n   * High surgical risk (e.g., risk of neurological deficit), OR\n   * Patient refusal of surgery after adequate medical counseling.\n4. Male or female subjects aged ≥3 years at the time of informed consent.\n5. Adequate functional status\n\n   Subjects aged ≥16 years:\n   * Karnofsky Performance Status ≥70,OR\n   * ECOG Performance Status 0-1\n\n   Subjects aged \\<16 years:\n   * Lansky Performance Status ≥70\n   * Adequate organ and bone marrow function\n6. Laboratory values obtained within 28 days prior to enrollment must meet the following:\n\n   1. Hematologic function\n\n      * Hemoglobin ≥9.0 g/dL\n      * Absolute neutrophil count (ANC)≥1.5 ×10⁹/L\n      * Platelet count ≥100 ×10⁹/L\n   2. Hepatic function\n\n      * AST and ALT ≤2.5 ×ULN (≤2.0 ×ULN for pediatric subjects)\n      * Total bilirubin ≤ 1.5 ×ULN (≤3 ×ULN in subjects with documented Gilbert's syndrome)\n   3. Renal function\n\n      * Serum creatinine ≤1.5 ×ULN, OR\n      * Creatinine clearance ≥60 mL/min/1 .73 m²(age-and BSA-adjusted)\n   4. Cardiac function\n\n      * Left ventricular ejection fraction (LVEF)≥50%by echocardiography\n      * No clinically significant uncontrolled cardiac disease\n   5. Pulmonary function • Peripheral oxygen saturation ≥92%on room air\n7. Reproductive and contraception requirements\n\n   1. Females of childbearing potential\n\n      * Negative serum or urine pregnancy test prior to enrollment\n      * Must be postmenopausal ≥12 months, surgically sterile, or using a highly effective method of contraception throughout the study and for 3 months after the last dose\n      * Acceptable methods include:\n\n        * Hormonal contraception\n        * Intrauterine device (IUD)\n        * Long-acting reversible contraception\n        * Tubal ligation\n      * Oral contraception alone must be combined with a barrier method\n   2. Males • Must be surgically sterile or agree to use barrier contraception with permicide during treatment and for 3 months after the last dose.\n8. Subjects must be able to swallow selumetinib capsules intact.\n9. Written informed consent must be obtained:\n\n   * From the subject if capable of providing consent;\n   * From a legally acceptable representative for minors or subjects lacking full decision-making capacity.\n\nExclusion Criteria:\n\n1. Concurrent involvement in study conduct:the subject is an employee of the Sponsor, Investigator, or study site who is directly involved in the planning, conduct, or management of this clinical study.\n2. Participation in another interventional clinical trial with an investigational medicinal product, or receipt of an investigational agent within 28 days (or 5 half-lives if known and longer)prior to first dose.\n3. Prior anti-cancer systemic therapies or prior radiotherapy that, in the investigator's judgment, would confound safety or efficacy assessment, unless completed ≥28 days prior to first dose (longer washout required for agents with prolonged biologic effect as specified in protocol appendix). Subjects who received prior local therapy (surgery or localized radiotherapy)are eligible if recovery is complete and target lesion remains measurable.\n4. Evidence or high suspicion of malignant peripheral nerve sheath tumor (MPNST)or other active malignancy requiring systemic therapy (past malignancy is allowed only if disease-free for ≥2 years, except for adequately treated basal cell carcinoma or in situ carcinoma).\n5. Significant cardiac disease or ECG abnormalities:\n\n   * Resting QTcF \\>470 ms (adults)\\[\\>450 ms for pediatric thresholds as specified in protocol appendix\\], or clinically significant baseline prolongation per investigator/medical monitor.\n   * Clinically significant arrhythmia (symptomatic ventricular tachycardia, sustained ventricular tachycardia, uncontrolled atrial fibrillation). Subjects with well controlled atrial fibrillation may be considered after Medical Monitor review.\n   * Acute coronary syndrome within 6 months, unstable angina, symptomatic congestive heart failure NYHA class II-IV, or LVEF below institutional lower limit of normal (LLN)or \\<50%.\n6. Uncontrolled hypertension:systolic ≥140 mmHg or diastolic ≥90 mmHg despite optimal therapy (adult criteria);for pediatric subjects use age/height/gender percentiles per protocol appendix.\n7. Severe hepatic or renal impairment -e.g.,AST/ALT \\>5 ×ULN (or per protocol specified threshold for severe impairment), total bilirubin \\>3 ×ULN (unless Gilbert's syndrome).(See inclusion for minimum acceptable labs;exclude those with more severe dysfunction.)\n8. Ophthalmologic conditions:current or prior history of MEK-associated retinopathy / central serous retinopathy /retinal pigment epithelial detachment /retinal vein occlusion, or any active ocular condition judged by the investigator/ophthalmologist to increase the risk of serious ocular adverse events (e.g., uncontrolled glaucoma with elevated IOP and meaningful vision at risk). Subjects with stable, chronic ophthalmic findings that are not expected to worsen with MEK inhibition may be eligible after ophthalmology clearance.\n9. Known hypersensitivity to selumetinib or any excipients.\n10. Active, uncontrolled infection including:\n\n    * Positive HIV test (known HIV infection with uncontrolled disease or on unstable antiretroviral therapy that interacts with study drug)-no evidence AIDS and no contraindicating ART may be considered after Medical Monitor review.\n    * Active hepatitis B or C infection (HBsAg positive or HCV RNA positive). Subjects with resolved HBV (HBsAg negative, anti-HBc positive)may be eligible per local hepatology guidance and prophylaxis plan.\n11. Concomitant medications that:\n\n    * Are known to prolong QT interval and cannot be safely discontinued;OR\n    * Are strong CYP3A4 or CYP2C19 inducers/inhibitors that cannot be stopped and would significantly alter selumetinib exposure (refer to protocol drug-interaction appendix for permitted/forbidden lists).\n12. Gastrointestinal conditions that preclude reliable oral absorption (e.g., severe malabsorption, short bowel syndrome, recent (within 6 months)major intestinal resection)or inability to swallow intact capsules.\n13. Conditions requiring urgent neurosurgical intervention (e.g., symptomatic hydrocephalus requiring immediate shunting, life-threatening brainstem compression)-subjects requiring emergent neurosurgery are not eligible until stabilized and reevaluated.\n14. Prior organ transplantation (allogeneic)or ongoing immunosuppression that would confound safety assessment.\n15. Concomitant vitamin E†or other agents judged to have potential interaction with the study drug if they cannot be discontinued per protocol (e.g., vitamin E to be stopped ≥7 days before first dose if required by protocol).\n16. Pregnancy or breastfeeding at screening (positive pregnancy test). Female subjects of childbearing potential who are unwilling/unable to use acceptable contraception during the study and for the duration specified in the contraceptive guidance (see protocol)are excluded.\n17. Any other clinically significant medical, psychiatric, or social condition that, in the opinion of the investigator or Medical Monitor, would compromise subject safety or protocol compliance (including inability to undergo MRI, when MRI is required for tumor assessment).",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "3 Years",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Pinan Liu, PhD",
+      "role": "CONTACT",
+      "phone": "010-59976611",
+      "email": "pinanliu@ccmu.edu.cn"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "Beijing Tiantan Hospital, Capital Medical University",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100070",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Pinan Liu, PhD",
+        "role": "CONTACT",
+        "phone": "010-59976611",
+        "email": "pinanliu@ccmu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "NO",
+    "description": "Individual participant data will not be shared. This decision is based on: (1) the rare disease nature of NF2-SWN and small sample size (n=20), which increases re-identification risk even after de-identification; (2) protection of participant privacy and confidentiality as required by Chinese ethics regulations and the informed consent process; and (3) proprietary considerations of the study sponsor regarding investigational product data."
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT07708285",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT07708285",
+    "orgStudyIdInfo": {
+     "id": "HX-A-2026035"
+    },
+    "organization": {
+     "fullName": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    },
+    "briefTitle": "Luvometinib in Combination With Serplulimab for NF2-Related Tumors",
+    "officialTitle": "A Multicenter, Open-Label Study of Luvometinib in Combination With Serplulimab for the Treatment of NF2-Related Tumors"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-06",
+    "overallStatus": "NOT_YET_RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2026-07-31",
+     "type": "ESTIMATED"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2028-12-31",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2029-12-31",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2026-07-03",
+    "studyFirstSubmitQcDate": "2026-07-14",
+    "studyFirstPostDateStruct": {
+     "date": "2026-07-16",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-07-14",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-07-16",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "Beijing Tiantan Hospital",
+     "class": "OTHER"
+    }
+   },
+   "oversightModule": {
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "This is an investigator-initiated, exploratory, multicenter, open-label, single-arm clinical trial and a substudy of the Platform Research for Innovative Medicines in NF2-SWN (PRIME-NF2). The study aims to evaluate the safety, tolerability, and preliminary efficacy of luvometinib in combination with serplulimab in patients with NF2-related schwannomatosis (NF2-SWN) with progressive tumors.",
+    "detailedDescription": "NF2-related schwannomatosis (NF2-SWN) is a rare autosomal dominant disorder characterized by multiple central nervous system tumors, most commonly vestibular schwannomas and meningiomas. Although current treatments such as surgery and radiotherapy can provide disease control, they are not curative and are associated with cumulative neurological morbidity and potential risk of secondary malignancies. There remains a significant unmet need for effective systemic therapies.\n\nThis investigator-initiated study is conducted as a substudy within the Platform Research for Innovative Medicines in NF2-SWN (PRIME-NF2). The trial evaluates luvometinib in combination with serplulimab in patients with progressive NF2-SWN.\n\nLuvometinib (FCN-159) is a selective MEK1/2 inhibitor with antitumor activity in NF1-associated tumors. Serplulimab (HLX10) is an anti-PD-1 monoclonal antibody approved for multiple solid tumors. Preclinical evidence suggests that MEK inhibition may enhance tumor immunogenicity and synergize with immune checkpoint blockade.\n\nThe study aims to assess the safety, tolerability, and preliminary efficacy of this combination in NF2-SWN."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "NF2-related Schwannomatosis",
+     "NF2",
+     "Neurofibromatosis Type 2",
+     "Vestibular Schwannoma",
+     "Meningioma"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE1",
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "NA",
+     "interventionModel": "SINGLE_GROUP",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 30,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Luvometinib + Serplulimab",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects will receive luvometinib 8 mg by mouth once daily in combination with serplulimab 4.5 mg/kg intravenously every 3 weeks for up to 12 cycles (28 days per cycle).",
+      "interventionNames": [
+       "Drug: Luvometinib",
+       "Drug: Serplulimab"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "Luvometinib",
+      "description": "Oral once daily per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Luvometinib + Serplulimab"
+      ],
+      "otherNames": [
+       "FCN-159"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Serplulimab",
+      "description": "Intravenous infusion per predetermined dosage per protocol.",
+      "armGroupLabels": [
+       "Luvometinib + Serplulimab"
+      ],
+      "otherNames": [
+       "HLX10"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Objective Response Rate (ORR) or Hearing Response Rate (HRR)",
+      "description": "Vestibular schwannoma: HRR is defined as WRS improvement exceeding the 95% critical difference from baseline; if baseline WRS is \\<20%, HRR is defined as a PTA decrease of at least 10 dB.\n\nMeningioma: ORR is defined as at least a 20% reduction in target tumor volume from baseline.",
+      "timeFrame": "12 months"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Incidence of Adverse Events",
+      "description": "Percentage of participants who experience at least one adverse event. Adverse events will be coded and graded according to NCI CTCAE v5.0.",
+      "timeFrame": "From first dose through 30 days after last dose (up to 12 months)"
+     },
+     {
+      "measure": "Maximum Severity Grade of Adverse Events",
+      "description": "Maximum NCI CTCAE v5.0 grade of adverse events experienced by each participant during the reporting period.",
+      "timeFrame": "From first dose through 30 days after last dose (up to 12 months)"
+     },
+     {
+      "measure": "Incidence of Serious Adverse Events",
+      "description": "Percentage of participants who experience at least one serious adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose (up to 12 months)"
+     },
+     {
+      "measure": "Incidence of Dose Modifications",
+      "description": "Percentage of participants who require at least one dose modification due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose (up to 12 months)"
+     },
+     {
+      "measure": "Incidence of Treatment Interruptions",
+      "description": "Percentage of participants who require at least one treatment interruption due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     },
+     {
+      "measure": "Incidence of Treatment Discontinuations",
+      "description": "Percentage of participants who discontinue study treatment due to an adverse event.",
+      "timeFrame": "From first dose through 30 days after last dose."
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Inclusion Criteria:\n\n1. Participants must meet the diagnostic criteria for NF2-SWN.\n2. Presence of at least one measurable target tumor, either vestibular schwannoma or meningioma, with MRI-documented volumetric progression within the past 36 months or clinical symptom progression related to the target tumor.\n3. The target tumor is considered unsuitable for surgery because of high risk.\n4. Age \\>=18 years at the time of screening.\n5. KPS \\>=70 or ECOG performance status 0 or 1.\n6. Adequate organ function based on laboratory tests obtained within 14 days before screening.\n7. Participant must be able to understand the study and voluntarily sign informed consent.\n\nExclusion Criteria:\n\n1. Pregnant, planning to become pregnant, or currently breastfeeding.\n2. Participation in another interventional clinical trial within the past 4 weeks, or radiation therapy to target lesion(s) within the past 3 years.\n3. Severe adverse reactions or intolerable toxicity from prior immune checkpoint inhibitors or MEK inhibitors.\n4. Concomitant active malignancies, uncontrolled infections, or active autoimmune diseases.\n5. Severe cardiac, hepatic, renal, gastrointestinal, or ophthalmic diseases.\n6. Any other factor that may compromise participant safety or study integrity.",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "18 Years",
+    "stdAges": [
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   },
+   "contactsLocationsModule": {
+    "locations": [
+     {
+      "facility": "Xuanwu Hospital, Capital Medical University",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100053",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Hao Wu, MD, PhD",
+        "role": "CONTACT",
+        "phone": "+86 10-83922345",
+        "email": "wuhaospine@xwh.ccmu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "Beijing Tiantan Hospital, Capital Medical University",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100070",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Pinan Liu, MD, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 10-59976611",
+        "email": "pinanliu@ccmu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "Chinese PLA General Hospital",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100853",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Jun Zhang, MD, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 10-68182255",
+        "email": "junzhang301@163.com"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     },
+     {
+      "facility": "The First Hospital of Jilin University",
+      "city": "Changchun",
+      "state": "Jilin",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Yunqian Li, MD, PhD",
+        "role": "CONTACT",
+        "phone": "86+ 431-88782222",
+        "email": "yunqian@jlu.edu.cn"
+       }
+      ],
+      "geoPoint": {
+       "lat": 43.88,
+       "lon": 125.32278
+      }
+     },
+     {
+      "facility": "Shanghai General Hospital",
+      "city": "Shanghai",
+      "state": "Shanghai Municipality",
+      "zip": "200080",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Meiqing Lou, MD, PhD",
+        "role": "CONTACT",
+        "phone": "+86 21-63846590",
+        "email": "loumq68128@hotmail.com"
+       }
+      ],
+      "geoPoint": {
+       "lat": 31.22222,
+       "lon": 121.45806
+      }
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "NO"
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT07131722",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT07131722",
+    "orgStudyIdInfo": {
+     "id": "PRG-NF-001"
+    },
+    "organization": {
+     "fullName": "PRG Science & Technology Co., Ltd.",
+     "class": "INDUSTRY"
+    },
+    "briefTitle": "Study to Determine Optimal Dose, Evaluate the Efficacy and Safety of PRG-N-01 in Patients With Neurofibromatosis Type II",
+    "officialTitle": "An Open-Label, Dose-Finding, Phase 1/2a Study to Evaluate the Efficacy and Safety of PRG-N-01 in Patients With Neurofibromatosis Type II"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2025-08",
+    "overallStatus": "NOT_YET_RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2026-07",
+     "type": "ESTIMATED"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2028-07",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2028-07",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2025-07-01",
+    "studyFirstSubmitQcDate": "2025-08-12",
+    "studyFirstPostDateStruct": {
+     "date": "2025-08-20",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-01-21",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-01-23",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "PRG Science & Technology Co., Ltd.",
+     "class": "INDUSTRY"
+    }
+   },
+   "oversightModule": {
+    "oversightHasDmc": false,
+    "isFdaRegulatedDrug": true,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "The goal of this clinical trial is to learn if Trineumin(Code name:PRG-N-01) works to treat Neurofibromatosis Type II(NF2) in adults. It will also learn about the safety and tolerability and toxicity of PRG-N-01. The main questions it aims to answer are:\n\n* What dose was determined as the Maximum Tolerated Dose (MTD) of Trineumin?\n* What dose was explored as the optimal effective dose of Trineumin based on radiographic response?\n* Does Trineumin reduce tumor size or improve participants' quality of life, including hearing function?\n* What medical problems do participants have when taking Trineumin?\n\nParticipants will:\n\n* Take Trineumin every day for 96 weeks\n* Visit the clinic once 1, 4, 8, 12, 18week and every 12 weeks and for checkups and tests",
+    "detailedDescription": "This is an open-label, Phase 1/2a clinical study to evaluate the safety, tolerability, pharmacokinetics, and preliminary efficacy of Trineumin(Code name:PRG-N-01) in subjects with Neurofibromatosis Type II(NF2)-related tumors\n\nPhase 1 Subjects who voluntarily provide written informed consent will be screened according to predefined inclusion and exclusion criteria. The Phase 1 portion is designed to determine the maximum tolerated dose (MTD) and recommended Phase 2 dose (RP2D) of Trineumin.\n\nA total of six dose levels are planned. Dose escalation follows an accelerated titration design (ATD) for Cohort 1, a standard 3+3 design for Cohort 2, and a rolling six design for subsequent cohorts. Trineumin is administered orally once daily. Each subject is assigned to a cohort in the order of enrollment. The dose-limiting toxicity (DLT) observation period is 12 weeks following initial dosing. Subjects without DLT or who recover from DLT during this period may continue treatment.\n\nPhase 2a In the Phase 2a portion, eligible subjects who provide informed consent will be randomized to receive one of two selected doses of Trineumin orally once daily. Randomization is stratified based on predefined criteria."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis Type II",
+     "NF2"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE1",
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "RANDOMIZED",
+     "interventionModel": "SEQUENTIAL",
+     "interventionModelDescription": "Sequential Assignment, non-Randomized (Phase 1), then Parallel Assignment, Randomized (Phase 2a)",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 25,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Trineumin Dose Escalation Arm",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects receive Trineumin(Code: name: PRG-N-01) orally once daily across six sequential dose cohorts. Dose escalation follows an accelerated titration design (Cohort 1), a 3+3 design (Cohort 2), and a rolling 6 design thereafter. Dosing proceeds unless dose-limiting toxicities (DLTs) are observed.",
+      "interventionNames": [
+       "Drug: Trineumin"
+      ]
+     },
+     {
+      "label": "Trineumin Low Dose (Phase 2a)",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects receive Trineumin(Code: name: PRG-N-01) at the selected lower dose (e.g., RP2D or sub-RP2D level) once daily. Subjects are randomized in Phase 2a.",
+      "interventionNames": [
+       "Drug: Trineumin"
+      ]
+     },
+     {
+      "label": "Trineumin High Dose (Phase 2a)",
+      "type": "EXPERIMENTAL",
+      "description": "Subjects receive Trineumin(Code: name: PRG-N-01) at a higher dose once daily in Phase 2a. Subjects are randomized to this arm.",
+      "interventionNames": [
+       "Drug: Trineumin"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "Trineumin",
+      "description": "Trineumin(Code name: PRG-N-01) is administered orally once daily. The study includes six dose levels.\n\nDose escalation decisions are based on observed DLTs.",
+      "armGroupLabels": [
+       "Trineumin Dose Escalation Arm"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Trineumin",
+      "description": "Trineumin(Code name: PRG-N-01) is administered orally once daily at the lower dose selected from Phase 1 results.",
+      "armGroupLabels": [
+       "Trineumin Low Dose (Phase 2a)"
+      ]
+     },
+     {
+      "type": "DRUG",
+      "name": "Trineumin",
+      "description": "Trineumin(Code name: PRG-N-01) is administered orally once daily at the higher dose selected from Phase 1 results.",
+      "armGroupLabels": [
+       "Trineumin High Dose (Phase 2a)"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Phase 1_Incidence of Dose-Limiting Toxicities (DLTs)",
+      "description": "Incidence of DLTs will be assessed to determine the MTD and RP2D based on predefined criteria.",
+      "timeFrame": "Each treatment group at the 12-week time point after IP administration"
+     },
+     {
+      "measure": "Phase 1_Maximum Tolerated Dose (MTD)",
+      "description": "it determine the MTD based on predefined criteria.",
+      "timeFrame": "Each treatment group at the 12-week time point after IP administration"
+     },
+     {
+      "measure": "Phase 1_ Recommended Phase 2 Dose (RP2D)",
+      "description": "it determine the RP2D based on predefined criteria.",
+      "timeFrame": "Each treatment group at the 12-week time point after IP administration"
+     },
+     {
+      "measure": "Phase2a_Maximum tumor size change rate of Radiographic Tumor Response",
+      "description": "Based on best overall response (BOR), ORR, DOR, PFS, and changes in tumor size from baseline using up to 4 target lesions.",
+      "timeFrame": "From baseline excluding week 24 to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase2a_best overall response (BOR) of Radiographic Tumor Response",
+      "description": "Based on best overall response (BOR), ORR, DOR, PFS, and changes in tumor size from baseline using up to 4 target lesions.",
+      "timeFrame": "From baseline excluding week 24 to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase2a_Objective response rate (ORR) of Radiographic Tumor Response",
+      "description": "Based on best overall response (BOR), ORR, DOR, PFS, and changes in tumor size from baseline using up to 4 target lesions.",
+      "timeFrame": "From baseline excluding week 24 to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase2a_Duration of response (DOR) of Radiographic Tumor Response",
+      "description": "Based on best overall response (BOR), ORR, DOR, PFS, and changes in tumor size from baseline using up to 4 target lesions.",
+      "timeFrame": "From baseline excluding week 24 to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase2a_Progression-free survival (PFS) of Radiographic Tumor Response",
+      "description": "Based on best overall response (BOR), ORR, DOR, PFS, and changes in tumor size from baseline using up to 4 target lesions.",
+      "timeFrame": "From baseline excluding week 24 to week 96 at 12-week intervals"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Phase1_Progression-free survival (PFS) of Radiographic Tumor Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1_Duration of response (DOR) of Radiographic Tumor Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1_Objective response rate (ORR) of Radiographic Tumor Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1_best overall response (BOR) of Radiographic Tumor Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1_Maximum tumor size change rate of Radiographic Tumor Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1,2a_ Pure Tone Audiometry (PTA) in Functional Hearing Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1,2a_Word Recognition Score (WRS) in Functional Hearing Response",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1,2a_Change of NFTI-QOL scores in Quality of Life",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1,2a_Change of PAN-QOL scores in Quality of Life",
+      "timeFrame": "From baseline to week 96 at 12-week intervals"
+     },
+     {
+      "measure": "Phase1,2a_Incidence and Severity of Adverse Events",
+      "description": "adverse events will be recorded and graded according to CTCAE v5.0",
+      "timeFrame": "Up to 108 weeks"
+     }
+    ],
+    "otherOutcomes": [
+     {
+      "measure": "Phase2a_ Exploratory Analysis of Biomarker Expression in Blood",
+      "description": "Blood samples will be collected and stored during Phase 2a for exploratory analysis of biomarkers.",
+      "timeFrame": "Day 1,Week 12,Week 36"
+     },
+     {
+      "measure": "Phase 1,2a_ AUC last of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ AUCinf of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Cmax of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Tmax of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ CL/F of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Vd/F of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ t1/2 of Day1",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ AUCtau,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Cmax,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Cmin,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Cav,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ PTF (Peak-trough fluctuation) of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Tmax,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ CLss/F of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Vdss/F of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_t1/2,ss of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     },
+     {
+      "measure": "Phase 1,2a_ Accumulation ratio of Day 7",
+      "timeFrame": "Day 1, Day 7, and At every visit until week 96"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Inclusion Criteria:\n\n1. Male or female subjects aged 18 years or older at screening\n2. Subjects diagnosed with NF2 clinically or genetically, according to the I-NF-DC 2022 updated NF2 diagnostic criteria\n3. Subjects with tumors due to NF2 who require treatment if they meet one of more of the criteria below but cannot undergo surgical treatment due to high risk of side effects from surgery (e.g., damage to nerve function).\n\n(1) Subjects with progressive tumors (VS, non-VS, meningiomas, ependymomas) confirmed on MRI within 36 months prior to screening (2) Subjects with clinical symptoms (decreased function of affected nerves, such as hearing loss, uncontrolled pain, shortness of breath, difficulty swallowing, decreased motor function, and decreased gait) as judged by the investigator 4) Subjects with ECOG performance status 0 - 1 or Karnofsky performance status 70 or higher 5) Subjects who have appropriate hematological, liver, renal, and blood coagulation functions confirmed based on the following criteria at screening: 6) Subjects who have appropriate cardiac and pulmonary functions confirmed based on the following criteria at screening: 7) Subjects who agree to use sunscreen during the clinical study period. 8) Subjects (or the subject's legal representative) who voluntarily consent and provide written informed consent to participate in this clinical study.\n\n9\\) (Only for Phase 2a) Subjects with one or more measurable NF2-related tumors confirmed on MRI at screening\n\nExclusion Criteria:\n\n1\\) Subjects who have the following past or current medical history confirmed during screening:\n\n(1) Malignant tumor requiring treatment (chemotherapy or radiotherapy) or with disease progression within 2 years prior to screening (2) The following heart-related history\n\n* Uncontrolled hypertension at screening (DBP ≥100 mmHg or SBP ≥160 mmHg despite treatment)\n* Acute coronary syndrome (ACS) within 24 weeks of baseline, clinically significant arrhythmia, cardiomyopathy, unstable angina, NYHA II-IV heart failure, or severe valvular heart disease\n\n  1. Interstitial lung disease or pulmonary fibrosis\n  2. Cystitis or urinary obstruction within 12 weeks prior to screening\n  3. Blood coagulation disorder\n  4. Severe or active infectious disease requiring antibiotics, antivirals, etc. within 4 weeks prior to screening\n  5. Gastrointestinal disease that currently makes oral administration difficult or may affect absorption (e.g., celiac disease, Crohn's disease, intestinal resection)\n  6. Other diseases that are sufficient to affect the clinical study results at the investigator's discretion.\n\n  2\\) Subjects who have confirmed or need the following drug treatments:\n  1. Chemotherapy, immunotherapy, or myelosuppressive chemotherapy within 4 weeks prior to screening (but, within 6 weeks prior to screening for nitrosourea agents or mitomycin C)\n  2. Monoclonal antibody therapy within 12 weeks prior to screening (but, allowing if more than 3 half-lives have elapsed); stem cell transplantation (but, allowing if there is no evidence of active graft-versus-host disease and more than 12 weeks have elapsed since transplantation)\n  3. Other investigational drugs or devices within 4 weeks prior to screening\n  4. Corticosteroids such as prednisone and prednisolone within 1 week prior to screening (but, allowing if treated with low doses)\n  5. Substrate of strong inhibitor, inducer, or transporter (OCT2, MATE1, MATE2-K) of CYP enzymes (CYP2C8, CYP3A) (but, allowing only if more than 5 times the half-life from baseline has elapsed) 3) Subjects who performed a major surgery within 4 weeks prior to screening (but, allowing minor surgical procedures such as catheter replacement therapy and local biopsy).\n\n  4\\) Subjects who received radiation therapy for the purpose of treating tumors due to NF2 within 24 weeks prior to screening or who require total body irradiation during the clinical study period.\n\n  5\\) Subjects with prosthetics or orthopedic devices that may interfere with the volumetric analysis of target lesions via MRI.\n\n  6\\) Subjects with a known severe hypersensitivity to PRG-N-01 or a concomitant medication or the ingredients or a history of allergic reactions to compounds of similar chemical or biological composition.\n\n  7\\) Female subjects who are pregnant or breastfeeding 8) Women of childbearing potential or men who are unwilling to use an appropriate method of contraception from the date of written consent to 12 weeks after the last dose of PRG-N-01.\n\n  9\\) Other subjects who are deemed unsuitable for participation in this clinical study at the investigator's discretion",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "18 Years",
+    "stdAges": [
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT06553365",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT06553365",
+    "orgStudyIdInfo": {
+     "id": "FCN-159-IIT02"
+    },
+    "organization": {
+     "fullName": "Cancer Institute and Hospital, Chinese Academy of Medical Sciences",
+     "class": "OTHER"
+    },
+    "briefTitle": "Phase II Study of FCN-159 in NF2 Nerve Sheath Tumors",
+    "officialTitle": "An Open, Single-Arm Phase II Study Evaluating the Efficacy and Safety of FCN-159 in Selected NF2-associated Nerve Sheath Tumors"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2025-07",
+    "overallStatus": "RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2024-08-15",
+     "type": "ACTUAL"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2026-07-31",
+     "type": "ESTIMATED"
+    },
+    "completionDateStruct": {
+     "date": "2026-07-31",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2024-08-03",
+    "studyFirstSubmitQcDate": "2024-08-11",
+    "studyFirstPostDateStruct": {
+     "date": "2024-08-14",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2025-07-25",
+    "lastUpdatePostDateStruct": {
+     "date": "2025-07-29",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "Cancer Institute and Hospital, Chinese Academy of Medical Sciences",
+     "class": "OTHER"
+    }
+   },
+   "oversightModule": {
+    "oversightHasDmc": false,
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "The goal of this clinical trial is to evaluate the efficacy and safety of FCN-159 in patients with specific NF2-associated nerve sheath tumors.",
+    "detailedDescription": "1. A phase 2 single arm single center study, total 30 patients will be enrolled;\n2. To evaluate the safety and efficacy of FCN-159, a Mek inhibitor, to treat NF2; associated nerve sheath tumors, age≥16, including benign and malignant tumors;\n3. Primary endpoint: Objective response rate (ORR)；Secondary Outcome Measures： Clinical benefit rate (CBR)；24w WRS, OS et al.."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Nerve Sheath Tumor"
+    ],
+    "keywords": [
+     "MEK",
+     "NF2",
+     "nerve sheath tumor"
+    ]
+   },
+   "designModule": {
+    "studyType": "INTERVENTIONAL",
+    "phases": [
+     "PHASE2"
+    ],
+    "designInfo": {
+     "allocation": "NA",
+     "interventionModel": "SINGLE_GROUP",
+     "primaryPurpose": "TREATMENT",
+     "maskingInfo": {
+      "masking": "NONE"
+     }
+    },
+    "enrollmentInfo": {
+     "count": 30,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "FCN-159",
+      "type": "EXPERIMENTAL",
+      "description": "FCN-159 8mg qd po",
+      "interventionNames": [
+       "Drug: FCN-159"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "DRUG",
+      "name": "FCN-159",
+      "description": "FCN-159 8mg qd po",
+      "armGroupLabels": [
+       "FCN-159"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "Objective response rate (ORR) estimated by investigators",
+      "description": "Investigator-assessed objective mitigation rate ORR (Reponse evaluation in Nerufibromatosis and Schwannomatosis, REiNS criteria and RECIST 1.1 criteria, respectively)",
+      "timeFrame": "Every 4 cycles (each cycle is 28 days), assessed up to 2 years"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "Clinical benefit rate (CBR) estimated by investigators",
+      "description": "Clinical benefit rate CBR will be assessed by the investigator (REiNS criteria and RECIST 1.1 criteria respectively)",
+      "timeFrame": "Every 4 cycles (each cycle is 28 days), assessed up to 2 years"
+     },
+     {
+      "measure": "24-week word recognition score (WRS)",
+      "description": "Hearing response changes will be assessed in patients with hearing impairment (24-week word recognition scores and pure tone audiometry).",
+      "timeFrame": "up to 24 weeks"
+     },
+     {
+      "measure": "pain estimated by NRS",
+      "description": "Change in pain intensity score relative to baseline will be assessed according to NRS scale.",
+      "timeFrame": "Every 4 cycles (each cycle is 28 days), assessed up to 2 years"
+     },
+     {
+      "measure": "Duration of response (DOR) assessed by investigator",
+      "description": "Duration of response (DoR) is estimated by the investigators as the time from treatment initiation to disease progression or death in patients who achieve complete or partial response, using both RECIST V1.1 and REINS criteria.",
+      "timeFrame": "From date of treatment until the date of first documented progression or date of death from any cause, whichever came first, assessed up to 2 years"
+     },
+     {
+      "measure": "progression free survival (PFS) assessed by investigator",
+      "description": "PFS is estimated by the investigators as the time from treatment initiation to disease progression or death in patients, using both RECIST V1.1 and REINS criteria.",
+      "timeFrame": "From date of treatment until the date of first documented progression or date of death from any cause, whichever came first, assessed up to 2 years"
+     }
+    ],
+    "otherOutcomes": [
+     {
+      "measure": "life quality assessed by NFTI-QOL",
+      "description": "Change in quality of life scores relative to baseline will be assessed by Neurofibromatosis type 2 impact on quality of life (NFTI-QOL) score. The higher score means worse life quality.",
+      "timeFrame": "Every 4 cycles (each cycle is 28 days), assessed up to 2 years"
+     },
+     {
+      "measure": "Incidence of Treatment-Emergent Adverse Events as assessed by CTCAE 5.0",
+      "description": "Adverse events during treatment of FCN-159 will be assessed by the investigators accroding to CTCAE 5.0.",
+      "timeFrame": "During the intervention"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Inclusion Criteria:\n\n1. ≥16 years of age, regardless of gender.\n2. meet the revised 2022 diagnostic criteria for NF2-associated nerve sheath tumors or pathologically confirmed NF2-associated nerve sheath tumors.\n3. should meet one of the following criteria: 1) Incomplete surgical resection, or postoperative recurrence. 2) Systemic therapy is required as determined by the Investigator.\n4. the presence of a measurable lesion, as defined by REiNS or RECIST V1.1 criteria.\n5. Karnofsky physical status score of ≥70.\n6. the patient has adequate organ and bone marrow function.\n7. International Normalized Ratio (INR) and activated partial thromboplastin time (APTT) ≤ 1.5 x ULN.\n8. For patients of childbearing potential: During treatment and for at least 90 days after the last dose, patients should agree to use a highly effective method of contraception.\n9. avoid excessive sun exposure and be willing to use an adequate amount of sunscreen in anticipation of sun exposure.\n10. be able to understand and voluntarily sign a written informed consent form.\n\nExclusion Criteria:\n\n* Previously received one of the following treatments:\n\n  1. Pharmaceutical or biological therapy within 3 weeks or 5 half-lives prior to enrollment, whichever is longer.\n  2. Use of growth factors that promote platelet, red blood cell, or white blood cell count or function within 7 days prior to enrollment.\n  3. Patients who have received major surgery or anti-tumor immunotherapy within 4 weeks prior to enrollment.\n  4. Radiation therapy for nerve sheath tumors within 4 weeks prior to enrollment.\n  5. Dose adjustment for patients treated with dexamethasone or other corticosteroids within 1 week prior to enrollment.\n  6. Patients who have participated in another interventional clinical trial within 4 weeks prior to enrollment.\n  7. Prior treatment with Selumetinib or any other MEK 1/2 inhibitor. 2. history of or concurrent with other malignancies. 3. inability to undergo MRI and/or contraindications to MRI. 4. uncontrolled hypertension. 5. the presence of dysphagia, active gastrointestinal disease, malabsorption syndrome, or other condition that interferes with the absorption of the study medication.\n\n     6\\. previous or current retinal vascular disease. 7. interstitial pneumonitis 8. cardiac function or co-morbidities 9. Immediate family history of sudden cardiac death before age 50. 10.History of any acute neurological condition 11. with active bacterial, fungal or viral infections 12. known hypersensitivity to the study drug, other MEK1/2 inhibitors, or their excipients.",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "16 Years",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ]
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Ning Li, M.D.",
+      "role": "CONTACT",
+      "phone": "+86 135-5271-5820",
+      "email": "yalejiang@cicams.ac.cn"
+     }
+    ],
+    "overallOfficials": [
+     {
+      "name": "Shuhang wang, PhD",
+      "affiliation": "Cancer Institute and Hospital, Chinese Academy of Medical Sciences",
+      "role": "STUDY_DIRECTOR"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "Shuhang Wang",
+      "status": "RECRUITING",
+      "city": "Beijing",
+      "state": "Beijing Municipality",
+      "zip": "100021",
+      "country": "China",
+      "contacts": [
+       {
+        "name": "Shuhang Wang",
+        "role": "CONTACT",
+        "phone": "13581809307"
+       }
+      ],
+      "geoPoint": {
+       "lat": 39.9075,
+       "lon": 116.39723
+      }
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "NO",
+    "description": "the decision will be made after the primary analysis of results."
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT00598351",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT00598351",
+    "orgStudyIdInfo": {
+     "id": "080044"
+    },
+    "secondaryIdInfos": [
+     {
+      "id": "08-N-0044"
+     }
+    ],
+    "organization": {
+     "fullName": "National Institutes of Health Clinical Center (CC)",
+     "class": "NIH"
+    },
+    "briefTitle": "Natural History Study of Patients With Neurofibromatosis Type 2",
+    "officialTitle": "A Prospective Natural History Study of Patients With Neurofibromatosis Type 2 (NF2)."
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-02-18",
+    "overallStatus": "RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2008-03-21",
+     "type": "ACTUAL"
+    },
+    "studyFirstSubmitDate": "2008-01-10",
+    "studyFirstSubmitQcDate": "2008-01-10",
+    "studyFirstPostDateStruct": {
+     "date": "2008-01-21",
+     "type": "ESTIMATED"
+    },
+    "lastUpdateSubmitDate": "2026-10-15",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-10-16",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "National Institute of Neurological Disorders and Stroke (NINDS)",
+     "class": "NIH"
+    }
+   },
+   "oversightModule": {
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": "Objective\n\nWith this prospective natural experiment trial on neurofibromatosis type 2 (NF2) study, we hope to understand the factors leading to tumor progression and neurological disease burden in NF2.\n\nStudy Population\n\nA total of 269 participants, ages 8-75, with a clinical or genetic diagnosis of NF2 will participate in this study.\n\nDesign\n\nStudy participants will be evaluated with a thorough physical and neurologic examination upon enrollment. This initial outpatient evaluation will include magnetic resonance imaging with contrast of brain and spine and blood collection for research use. Participants with measurable hearing will have audiology assessment performed. Participants with untreated vestibular schwannomas will have vestibular assessment performed during the initial visit. Genetic studies performed outside will be acceptable as confirmation of NF2 in enrolled patients. If needed to confirm NF2 with genetic studies, or for research purpose, whole genome/whole exome sequencing may be performed on blood obtained from subjects enrolled in this study. All participants will be evaluated by a speech language pathologist.\n\nSubjects will be followed as outpatients for up to ten years, during which clinical, and radiologic evaluation will be performed annually. Auditory testing will be performed annually for participants with measurable hearing. Participants with initially untreated vestibular schwannomas will be followed annually with vestibular testing. Speech and swallowing reassessments will be repeated if worsening of speech or swallowing is reported. Blood will be collected at each visit for blood biomarker testing\n\nOutcome measures\n\nWe hope to understand the biologic basis for speech and swallowing dysfunction in patients with NF2. We will study and report the strength of association of MRI findings, clinical assessments cranial nerve deficits and speech/swallowing dysfunction. We hope to\n\nidentify imaging biomarkers of hearing loss in NF2. We will attempt to discover the mode of peripheral neuropathy in patients with NF2. Lastly, we will attempt to discover previously unknown serum biomarkers associated with high tumor burden in NF2.\n\n...",
+    "detailedDescription": "Objective\n\nWith this prospective natural history study on neurofibromatosis type 2 (NF2) study, we hope to understand the factors leading to tumor progression and neurological disease burden in NF2.\n\nStudy Population\n\nA total of 269 participants, ages 8-75, with a clinical or genetic diagnosis of NF2 will participate in this study.\n\nDesign\n\nStudy participants will be evaluated with a thorough physical and neurologic examination upon enrollment. This initial outpatient evaluation will include magnetic resonance imaging with contrast of brain and spine and blood collection for research use. Participants with measurable hearing will have audiology assessment performed during the initial visit. Participants with untreated vestibular schwannomas will have vestibular assessment performed during the initial visit. Genetic studies performed outside will be acceptable as confirmation of NF2 in enrolled patients. If needed to confirm NF2 with genetic studies, or for research purpose, whole genome/whole exome sequencing may be performed on blood obtained from subjects enrolled in this study. All participants will be evaluated by a speech language pathologist.\n\nSubjects will be followed as outpatients for up to ten years, during which clinical, and radiologic evaluation will be performed annually. Auditory testing will be performed annually for participants with measurable hearing. Participants with initially untreated vestibular schwannomas will be followed annually with vestibular testing. Speech and swallowing reassessments will be repeated if worsening of speech or swallowing is reported. Blood will be collected at each visit for blood biomarker testing\n\nOutcome measures\n\nWe hope to understand the biologic basis for speech and swallowing dysfunction in patients with NF2. We will study and report the strength of association of MRI findings, clinical assessments cranial nerve deficits and speech/swallowing dysfunction. We hope to\n\nidentify imaging biomarkers of hearing loss in NF2. We will attempt to discover the mode of peripheral neuropathy in patients with NF2. Lastly, we will attempt to discover previously unknown serum biomarkers associated with high tumor burden in NF2."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis"
+    ],
+    "keywords": [
+     "Meningioma",
+     "Ependymoma",
+     "Schwannoma",
+     "Spinal Cord Tumor",
+     "Vestibular Schwannoma",
+     "Natural History"
+    ]
+   },
+   "designModule": {
+    "studyType": "OBSERVATIONAL",
+    "designInfo": {
+     "observationalModel": "COHORT",
+     "timePerspective": "PROSPECTIVE"
+    },
+    "enrollmentInfo": {
+     "count": 269,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "Patients",
+      "description": "Patients must have the diagnosis of NF2 by established clinical criteria or genetic testing."
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "To determine the natural history (clinical and radiographic) of nervous system tumors in NF2",
+      "description": "Clinical Variables (longitudinal: measured annually for each subject)a. Subjective speech and swallowing dysfunction (binary)b. Spinal cord function:Modified ASIA Motor Scalec. Ambulatory status:modified McCormick grading scaled. Overall function:Karnofsky Performance Statuse. NFTI-QOLf. Functional Independence Measure scale MRI Variables (longitudinal: measured annually for each subject):a. Tumor volume (continuous variable) for VS tumors, meningiomas, other schwannomas, ependymomas, and Total tumor burden (number and volume). Specific growth rates of tumors.b. FLAIR hyper-intensity MRI Variables (cross-sectional: measured at baseline and as needed for each subject):c. MRI of Right Upper and Lower Extremity Laboratory testing variables (longitudinal:measured annually for each subject):a. Audiometry Laboratory testing variables (cross-sectional:measured at baseline and as needed for each subject)b. EMG/NCV study valuesc. Vestibular testing Covariate variable:a. Ageb. Sex",
+      "timeFrame": "annual for up to 10 years"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "To identify the underlying causes, and patterns of progression of speech and swallowing problems in patients with NF2",
+      "description": "Self-reported swallowing deficits (binary, yes vs no) based on the last Visit (cross-sectional data)",
+      "timeFrame": "Annual for up to 10 years"
+     },
+     {
+      "measure": "To identify imaging biomarkers of hearing loss in patients with NF2",
+      "description": "MRI Variables (longitudinal: measured annually for each subject):a. Tumor volume (continuous variable) for VS tumors, meningiomas, other schwannomas, ependymomas, and Total tumor burden(number and volume). Specific growth rates of tumors.b. FLAIR hyper-intensity MRI Variables (crosssectional: measured at baseline and as needed for each subject",
+      "timeFrame": "Annual for up to 10 years"
+     },
+     {
+      "measure": "To identify the etiology of peripheral neuropathy in patients with NF2",
+      "description": "MRI images of the Right upper extremity will be evaluated for the presence of peripheral nerve lesions at baseline. These imaging findings will be evaluated with respect to EMG/NCV results.",
+      "timeFrame": "Annual for up to 10 years"
+     },
+     {
+      "measure": "To identify serum biomarkers of NF2 disease progression",
+      "description": "determination of serum biomarker status and suspected biologic markers of disease progression using quantitative immunoassay or newer proteomic approaches",
+      "timeFrame": "Annual for up to 10 years"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "* INCLUSION CRITERIA:\n\nTo be eligible for entry into the study, candidates must meet all the following criteria:\n\n* Have the diagnosis of NF2 by established clinical criteria or genetic testing.\n* Be between the age of 8 and 75.\n* Have the capacity to undergo serial MRI scanning of the CNS without IV sedation.\n* Able to give informed consent, or have a parent able to provide informed consent if a child.\n\nEXCLUSION CRITERIA:\n\nCandidates will be excluded if they:\n\n* Have a clinically unstable condition that precludes serial clinical and imaging evaluation (i.e. Class 3 congestive heart failure, severe chronic renal insufficiency, severe chronic obstructive pulmonary disease).\n* Cannot have an MRI scan due to an allergy or relative contraindication to MRI contrast agents, prior surgery or implant that involves metal clips or wires, which might be expected to cause tissue damage or produce image artifacts such as pacemakers, stimulators, pumps, aneurysm clips, metallic prostheses, and artificial heart valves.\n* ABIs or cochlear implants are not approved by the NIH Radiology department for safe use on NIH scanners..\n* Have severe chronic renal insufficiency (glomerular filtration rate less than 30 mL/min/1.73 m2), hepatorenal syndrome or post-liver transplantation.\n* Are pregnant at time of intake visit (women of childbearing age will be tested with a urine pregnancy test).",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "8 Years",
+    "maximumAge": "75 Years",
+    "stdAges": [
+     "CHILD",
+     "ADULT",
+     "OLDER_ADULT"
+    ],
+    "studyPopulation": "subjects with a diagnosis of NF2 by established clinical criteria or genetic testing",
+    "samplingMethod": "NON_PROBABILITY_SAMPLE"
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Christina P Hayes, C.R.N.P.",
+      "role": "CONTACT",
+      "phone": "(301) 496-2921",
+      "email": "christi.hayes@nih.gov"
+     },
+     {
+      "name": "Prashant Chittiboina, M.D.",
+      "role": "CONTACT",
+      "phone": "(301) 496-2921",
+      "email": "prashant.chittiboina@nih.gov"
+     }
+    ],
+    "overallOfficials": [
+     {
+      "name": "Prashant Chittiboina, M.D.",
+      "affiliation": "National Institute of Neurological Disorders and Stroke (NINDS)",
+      "role": "PRINCIPAL_INVESTIGATOR"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "National Institutes of Health Clinical Center",
+      "status": "RECRUITING",
+      "city": "Bethesda",
+      "state": "Maryland",
+      "zip": "20892",
+      "country": "United States",
+      "geoPoint": {
+       "lat": 38.98067,
+       "lon": -77.10026
+      }
+     }
+    ]
+   },
+   "referencesModule": {
+    "seeAlsoLinks": [
+     {
+      "label": "NIH Clinical Center Detailed Web Page",
+      "url": "https://clinicalstudies.info.nih.gov/cgi/detail.cgi?A_2008-N-0044.html"
+     }
+    ]
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ },
+ {
+  "nct": "NCT03893643",
+  "case": {
+   "id": "PRAC-NF1",
+   "patient": {
+    "genotype": [
+     {
+      "gene": "NF1",
+      "transcript": "NM_001042492.3",
+      "variant_cdna": "c.3728T>C",
+      "variant_protein": "p.(Leu1243Pro)",
+      "zygosity": "heterozygous"
+     }
+    ],
+    "clinical_context": "Malignant Peripheral Nerve Sheath Tumor and Pheochromocytoma"
+   }
+  },
+  "protocol": {
+   "identificationModule": {
+    "nctId": "NCT03893643",
+    "orgStudyIdInfo": {
+     "id": "18-DERMATO-01"
+    },
+    "organization": {
+     "fullName": "Centre Hospitalier Universitaire de Nice",
+     "class": "OTHER"
+    },
+    "briefTitle": "Cutaneous and Mucosal Manifestations of Neurofribromatosis Type 2 in Children Under 15",
+    "officialTitle": "Multicentre Prospective Observational Study: Resentment of Mucocutaneous Manifestations and the Value of Dermatological Examination in the Early Detection of Type 2 Neurofibromatosis in Children Under 15 Years of Age"
+   },
+   "statusModule": {
+    "statusVerifiedDate": "2026-06",
+    "overallStatus": "RECRUITING",
+    "expandedAccessInfo": {
+     "hasExpandedAccess": false
+    },
+    "startDateStruct": {
+     "date": "2019-01-01",
+     "type": "ACTUAL"
+    },
+    "primaryCompletionDateStruct": {
+     "date": "2022-12-31",
+     "type": "ACTUAL"
+    },
+    "completionDateStruct": {
+     "date": "2027-06-25",
+     "type": "ESTIMATED"
+    },
+    "studyFirstSubmitDate": "2019-01-21",
+    "studyFirstSubmitQcDate": "2019-03-27",
+    "studyFirstPostDateStruct": {
+     "date": "2019-03-28",
+     "type": "ACTUAL"
+    },
+    "lastUpdateSubmitDate": "2026-06-25",
+    "lastUpdatePostDateStruct": {
+     "date": "2026-06-29",
+     "type": "ACTUAL"
+    }
+   },
+   "sponsorCollaboratorsModule": {
+    "responsibleParty": {
+     "type": "SPONSOR"
+    },
+    "leadSponsor": {
+     "name": "Centre Hospitalier Universitaire de Nice",
+     "class": "OTHER"
+    }
+   },
+   "oversightModule": {
+    "oversightHasDmc": false,
+    "isFdaRegulatedDrug": false,
+    "isFdaRegulatedDevice": false
+   },
+   "descriptionModule": {
+    "briefSummary": ".Neurofibromatosis type 2 is an inherently autosomal dominant genetic disease, but cases of mosaicism or de novo mutation are not uncommon. the prevalence is estimated at 1 / 60,000. the clinical presentation is based on the appearance of tumors in the central and peripheral nervous system. The current average age of diagnosis is around 25 to 30 years depending on the studies. Currently, the diagnostic criteria are based on the ENT, neurological and opthalmological manifestations of the disease. Cutaneous manifestations have been described in these patients. Except now, mucocutaneous manifestations of the disease are not taken into account for depisatage or diagnosis.\n\nThe purpose of this study would be to identify the different cutaneous and mucosal manifestations in a pediatric population under 15 years of age, and to analyze whether this might be of interest in early detection of the disease in association with other symptoms."
+   },
+   "conditionsModule": {
+    "conditions": [
+     "Neurofibromatosis 2",
+     "Dermatology/Skin - Other"
+    ]
+   },
+   "designModule": {
+    "studyType": "OBSERVATIONAL",
+    "patientRegistry": false,
+    "designInfo": {
+     "observationalModel": "COHORT",
+     "timePerspective": "PROSPECTIVE"
+    },
+    "enrollmentInfo": {
+     "count": 1000,
+     "type": "ESTIMATED"
+    }
+   },
+   "armsInterventionsModule": {
+    "armGroups": [
+     {
+      "label": "pediatric population",
+      "description": "Pediatric population aged 0 to 15 years with neurofibromatosis type 2",
+      "interventionNames": [
+       "Other: no intervention"
+      ]
+     }
+    ],
+    "interventions": [
+     {
+      "type": "OTHER",
+      "name": "no intervention",
+      "description": "no intervention in an observational study",
+      "armGroupLabels": [
+       "pediatric population"
+      ]
+     }
+    ]
+   },
+   "outcomesModule": {
+    "primaryOutcomes": [
+     {
+      "measure": "number of cutaneo-mucous lesions present in children with neurofibromatosis type 2",
+      "description": "number of cutaneo-mucous lesions obtain after complete dermatological clinical examination ; if possible take photographs for publication with the patient's consent ; histological results if cutaneous biopsies were performed outside the study",
+      "timeFrame": "3 years"
+     }
+    ],
+    "secondaryOutcomes": [
+     {
+      "measure": "number and type of neurological manifestations.",
+      "description": "number and type of neurological clinical data, clinical examination",
+      "timeFrame": "3 years"
+     },
+     {
+      "measure": "number and type of descriptioin of ENT manifestations.",
+      "description": "number and type of ENT clinical data, clinical examination",
+      "timeFrame": "3 years"
+     },
+     {
+      "measure": "number and type of ophthalmological manifestations.",
+      "description": "number and type of ophtalmologic clinical data, clinical examination",
+      "timeFrame": "3 years"
+     }
+    ]
+   },
+   "eligibilityModule": {
+    "eligibilityCriteria": "Inclusion Criteria:\n\n* age up to 15 years\n* diagnosis of neurofibromatosis type 2\n\nExclusion Criteria:\n\n* refusal to participate in the study\n* informed consent that can not be obtained because of a disability or difficulties with a - language barrier",
+    "healthyVolunteers": false,
+    "sex": "ALL",
+    "minimumAge": "0 Years",
+    "maximumAge": "15 Years",
+    "stdAges": [
+     "CHILD"
+    ],
+    "studyPopulation": "patients with neurofibromatosis type 2",
+    "samplingMethod": "NON_PROBABILITY_SAMPLE"
+   },
+   "contactsLocationsModule": {
+    "centralContacts": [
+     {
+      "name": "Sophie LEGOUPIL",
+      "role": "CONTACT",
+      "phone": "336 81818020",
+      "email": "sophie.legoupil@hotmail.fr"
+     },
+     {
+      "name": "Christine CHIAVERINI",
+      "role": "CONTACT",
+      "email": "chiaverini.c@chu-nice.fr"
+     }
+    ],
+    "locations": [
+     {
+      "facility": "Nice Hospital",
+      "status": "RECRUITING",
+      "city": "Nice",
+      "zip": "06000",
+      "country": "France",
+      "contacts": [
+       {
+        "name": "Sophie LEGOUPIL",
+        "role": "CONTACT",
+        "email": "legoupil.sophie@hotmail.fr"
+       },
+       {
+        "name": "Christine CHIAVERINI",
+        "role": "CONTACT",
+        "email": "chiaverini.c@chu-nice.fr"
+       }
+      ],
+      "geoPoint": {
+       "lat": 43.70313,
+       "lon": 7.26608
+      }
+     }
+    ]
+   },
+   "ipdSharingStatementModule": {
+    "ipdSharing": "NO"
+   }
+  },
+  "facts": {
+   "age_months": null,
+   "age_quote": null,
+   "sex": "unknown",
+   "sex_quote": null,
+   "sex_inferred": false,
+   "variants": [
+    {
+     "gene": "NF1",
+     "protein": "p.(Leu1243Pro)",
+     "class": "missense",
+     "zygosity": "heterozygous",
+     "quote": "NF1 c.3728T>C p.(Leu1243Pro) (heterozygous)"
+    }
+   ],
+   "present": [
+    {
+     "quote": "Pheochromocytoma",
+     "description": "Pheochromocytoma",
+     "alternatives": [
+      "Chromaffinoma",
+      "Adrenal medullary paraganglioma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0002666",
+     "label": "Pheochromocytoma",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    },
+    {
+     "quote": "Malignant Peripheral Nerve Sheath Tumor",
+     "description": "Malignant peripheral nerve sheath tumor",
+     "alternatives": [
+      "MPNST",
+      "Neurofibrosarcoma",
+      "Malignant schwannoma"
+     ],
+     "status": "present",
+     "presenting": false,
+     "hpo_id": "HP:0100697",
+     "label": "Malignant peripheral nerve sheath tumor",
+     "valid": true,
+     "reasons": [],
+     "checked": true,
+     "mapping": "exact HPO name match of the quote",
+     "votes": 3,
+     "merged_from": []
+    }
+   ],
+   "possible": [],
+   "excluded": []
+  }
+ }
+]

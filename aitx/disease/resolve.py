@@ -35,6 +35,7 @@ class Resources:
     assoc: dict[str, list[S.Assoc]]
     use_cache: bool = True
     orphanet_groups: set[str] = field(default_factory=set)
+    g2p: list[dict] = field(default_factory=list)
 
 
 def load_resources(genes: set[str], *, use_cache: bool = True) -> Resources:
@@ -50,7 +51,7 @@ def load_resources(genes: set[str], *, use_cache: bool = True) -> Resources:
         by_gene[a.gene].append(a)
     return Resources(files, S.load_mondo(files["mondo_sssom"]), S.load_mim2gene(files["omim_mim2gene"]), hpoa, ont,
                      S.load_genereviews(files["genereviews"]), dict(by_gene), use_cache,
-                     S.orphanet_groups(files["orphanet_genes"]))
+                     S.orphanet_groups(files["orphanet_genes"]), S.load_g2p(files["g2p"], genes))
 
 
 # ----------------------------------------------------------------- candidates
@@ -536,3 +537,104 @@ def confidence(sel: dict, chosen: dict, best_score: float | None) -> tuple[str, 
         level = max(0, level - 1)
         notes.append(f"conflict: phenotype score {s} trails the best candidate ({best_score})")
     return _CONF[level], notes
+
+
+def molecular_fit(variants: list[dict], records: list[dict], sex: str) -> dict:
+    """Screen disease-specific requirements without converting predictions into facts.
+
+    G2P records are alternative allelic/mechanistic routes, not conditions to AND.
+    A missing second allele or a restricted mutation set stays conditional.
+    """
+    paths = []
+    usable = [v for v in variants if v["status"] == "usable"]
+    conflicts = [v for v in variants if v["status"] == "conflicting"]
+    z = [v["effective_zygosity"] for v in variants]
+    for record in records:
+        req = record["allelic_requirement"]
+        if req == "biallelic_autosomal":
+            allelic = "compatible" if "homozygous" in z else "conditional"
+            why = ("reported homozygosity fits the allelic count; pathogenicity is separate" if allelic == "compatible"
+                   else "second pathogenic allele / trans phase not established; not an exclusion")
+        elif req == "monoallelic_autosomal":
+            allelic = "compatible" if "heterozygous" in z else "unknown"
+            why = "reported heterozygosity fits the allelic count" if allelic == "compatible" else "allelic fit not established"
+        elif req == "monoallelic_X_hemizygous":
+            allelic = "compatible" if "hemizygous" in z and sex == "male" else "unknown"
+            why = "reported male hemizygosity fits the allelic requirement" if allelic == "compatible" else "X hemizygous requirement not established"
+        else:
+            allelic, why = "unknown", "G2P allelic requirement has no implemented deterministic interpretation"
+        if not usable or conflicts:
+            allelic, why = "unknown", "Step 1 is missing, failed checks, or disagrees with the case input"
+        observations = []
+        for v in usable:
+            hypothesis = v["mechanism_hypothesis"]["hypothesis"]
+            mechanism = record["mechanism"]
+            # Only use the Step 1 hypothesis as a hypothesis; missense or NMD
+            # not_applicable does not establish preserved function or exclude LoF.
+            status = "unknown"
+            reason = "variant-specific functional mechanism is not established"
+            predicted_lof = hypothesis == "loss_of_function" and (
+                (v["variant_class"] in ("nonsense", "frameshift") and v["nmd_prediction"] == "likely_triggers")
+                or v["variant_class"] == "start_lost")
+            if predicted_lof and mechanism == "loss of function":
+                status = "predicted_compatible"
+                reason = "Step 1 predicts loss of function; not functional confirmation"
+            elif predicted_lof and mechanism in ("gain of function", "dominant negative"):
+                status = "prediction_tension"
+                reason = "Step 1 LoF prediction differs from the G2P mechanism; neither is a patient functional result"
+            if mechanism in ("undetermined", "unknown"):
+                reason = "G2P mechanism is undetermined; variant class cannot fill that gap"
+            observations.append({"variant": {k: v[k] for k in ("gene", "transcript", "variant_cdna")},
+                                 "variant_class": v["variant_class"], "nmd": v["nmd"],
+                                 "step1_hypothesis": v["mechanism_hypothesis"], "status": status,
+                                 "reason": reason, "source": v["source"]})
+        restricted = "restricted mutation set" in record["cross_cutting_modifier"].lower()
+        paths.append({"g2p_id": record["id"], "cite": record["cite"], "url": record["url"],
+                      "allelic_requirement": req, "allelic_fit": allelic, "allelic_reason": why,
+                      "disease_mechanism": record["mechanism"], "mechanism_support": record["mechanism_support"],
+                      "variant_consequence": record["variant_consequence"], "variant_types": record["variant_types"],
+                      "restricted_mutation_set": "membership_unknown" if restricted else "not_specified",
+                      "variant_assessments": observations,
+                      "status": "conditional", "reason": "allelic compatibility alone does not establish a disease-causing variant"})
+    return {"status": "conflicting" if conflicts else "conditional" if paths else "unknown",
+            "paths": paths, "step1_available": len(usable) == len(variants),
+            "reason": ("Step 1 and input conflict or sequence checks failed" if conflicts else
+                       "G2P routes require variant-level confirmation; predictions cannot select a unique subtype" if paths else
+                       "no directly matched G2P mechanism record; absence of evidence is not evidence against the candidate"),
+            "decision_use": "constrain diagnostic certainty; no score bonus or hard exclusion",
+            "pathogenicity_prediction": "unknown: Step 1 does not produce a pathogenicity predictor"}
+
+
+def molecular_selection(sel: dict, cands: list[dict]) -> dict:
+    """Molecular screening participates in the decision, not just the output ledger."""
+    if sel["id"] is None:
+        return sel
+    chosen = next(c for c in cands if c["key"] == sel["id"])
+    mol = chosen["molecular_assessment"]
+    out = dict(sel, reasons=list(sel["reasons"]))
+    out["reasons"].append("Molecular screening: " + mol["reason"])
+    for candidate in cands:
+        if candidate["excluded"] or candidate["gene"] != chosen["gene"]:
+            continue
+        for path in candidate["molecular_assessment"]["paths"]:
+            statuses = sorted({v["status"] for v in path["variant_assessments"]})
+            out["reasons"].append(
+                f"{candidate['label']} / {path['g2p_id']}: {path['allelic_requirement']} "
+                f"allelic fit={path['allelic_fit']}; {path['allelic_reason']}; "
+                f"G2P mechanism={path['disease_mechanism']} ({path['mechanism_support']}); "
+                f"variant mechanism={','.join(statuses) if statuses else 'unknown'}; "
+                f"restricted mutation set={path['restricted_mutation_set']}")
+    # A documented clinical diagnosis or variant-specific ClinVar evidence is
+    # independent of a missing in-silico mechanism. Preserve it unless input
+    # evidence actually conflicts. Predictions never become a diagnostic basis.
+    needs_confirmation = mol["status"] == "conflicting" or (
+        mol["status"] == "conditional" and sel["basis"] not in ("explicit", "clinvar"))
+    if needs_confirmation:
+        if out["status"] == "resolved":
+            out["status"] = "ambiguous"
+        out.pop("lead", None)
+        out["tied"] = list(dict.fromkeys([sel["id"], *sel.get("tied", []),
+                           *(c["key"] for c in cands if not c["excluded"] and c["compete"]
+                             and c["gene"] == chosen["gene"])]))
+        out["reasons"].append("Molecular conditions remain unconfirmed; retain competing candidates for review")
+    return out

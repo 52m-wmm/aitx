@@ -49,7 +49,8 @@ def record(led, study, branch, facts, case, answer, provenance, audits):
     for audit in audits:
         if audit['accepted']:
             conflict = audit['conflict']
-            add(conflict['trial_rule_quote'], 'exclusion', 'satisfies',
+            trial_quote = audit['verified_trial_rule_quote'] if 'verified_trial_rule_quote' in audit else conflict['trial_rule_quote']
+            add(trial_quote, 'exclusion', 'satisfies',
                 {'field': conflict['axis'], 'value': conflict['patient_fact_quote'],
                  'quote': conflict['patient_fact_quote'], 'step': '3b'},
                 audit['basis'], payload['trial_text'], provenance)

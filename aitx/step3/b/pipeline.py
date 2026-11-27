@@ -9,9 +9,9 @@ import copy
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from aitx.disease import extract as X, live as L
+from aitx.disease import extract as X
 from aitx.evidence import ledger as LG, patient_matching as E, trials as T
-from aitx.step3.b import rules, screening, records
+from aitx.step3.b import screening, records, search
 
 SECTION = 'clinical_trial_eligibility'
 
@@ -19,13 +19,15 @@ SECTION = 'clinical_trial_eligibility'
 def add_trials(led, case, step1, step2, use_cache=True):
     """One production route; code rejects known conflicts before any model call."""
     facts = E.facts(step1, step2)
+    # Reported variants are patient facts, independent of diagnosis/subtype certainty.
+    # Keep all reported genes: another branch's gene may satisfy a trial's target.
+    genes = list(dict.fromkeys(v['gene'] for v in facts['variants']))
     plans = {}
     for branch in [b for b in led.branches if b['diagnosis']]:
-        names = E.disease_names(branch, step2)
-        parents = L.mondo_parents(branch['id'], use_cache=use_cache) if branch['id'].startswith('MONDO:') else []
-        family = list(dict.fromkeys(label.split(' or ')[0] for _, label in parents[:1]))
-        genes = [branch['gene']] if rules.confirmed_target_gene(branch, case, step1, step2) else []
-        plan = screening.plan(names, family, facts['age_months'], facts['sex'], genes, use_cache=use_cache)
+        names, family, search_genes = search.branch_terms(branch, step1, step2)
+        plan = screening.plan(names, family, facts['age_months'], facts['sex'], genes,
+                              search_genes=search_genes, use_cache=use_cache)
+        screening.filter_relevance(plan, case, facts, names)
         when = min(s['queried_at'] for s in plan['searches'])
 
         def fetch(study):
@@ -89,6 +91,13 @@ def refresh_trials(previous: dict, case: dict, step1: dict, step2: dict) -> dict
     led.actions = list(frozen_actions)
     led.missing_information = [m for m in led.missing_information if m['asked_by'] != '3b']
     add_trials(led, case, step1, step2)
+    # Other sections are frozen during a 3b-only refresh. Keep their reciprocal
+    # links on the same returned trial; do not resurrect trials absent from search.
+    previous_links = {a['nct']: a['see_also'] for a in previous['actions']
+                      if a['section'] == SECTION and 'nct' in a and 'see_also' in a}
+    for action in led.actions:
+        if action['section'] == SECTION and action.get('nct') in previous_links:
+            action['see_also'] = copy.deepcopy(previous_links[action['nct']])
     result = led.to_dict()
     if [a for a in result['actions'] if a['section'] != SECTION] != frozen_actions:
         raise ValueError('A frozen non-3b action changed')

@@ -13,6 +13,50 @@ from aitx.step3.b import pipeline as P, screening as S
 REFERENCE = json.loads((Path(__file__).parent/'fixtures/step3b_screening_reference.json').read_text())
 
 
+def expected_with_new_search_metadata(specimen):
+    """Keep the frozen clinical assertions; only retrieval provenance changes."""
+    expected = copy.deepcopy(specimen['expected'])
+    queries = [
+        {'query.cond': '"Example disease"',
+         'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'},
+        {'query.term': ('"OTC gene" OR "OTC mutation" OR "OTC variant" OR "OTC deficiency" OR '
+                        '"gene OTC" OR "mutation in OTC" OR "mutations in OTC" OR '
+                        '"variant in OTC" OR "variants in OTC"'),
+         'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION'},
+    ]
+    for plan in expected['trial_searches'].values():
+        original = plan['searches'][0]
+        plan['searches'] = [dict(original, query=q) for q in queries]
+        plan['search_genes'] = ['OTC']
+        plan['gene'] = 'OTC'  # reported fact survives secondary/ambiguous branches
+    for action in expected['actions']:
+        if 'relevance' in action:
+            action['relevance'] = {'by': 'disease_family_or_gene_query', 'queries': queries}
+    for i, evidence in enumerate(expected['evidence']):
+        if evidence['kind'] == 'negative':
+            search = evidence['search']
+            replacement = LG.negative(
+                evidence['section'], evidence['applies_to'], database=search['database'],
+                endpoint=search['endpoint'], query='; '.join(str(q) for q in queries),
+                queried_at=search['queried_at'], n_results=search['n_results'],
+                response_count=search['n_results'], excluded=search['excluded'])
+            expected['evidence'][i] = replacement
+            for action in expected['actions']:
+                action['evidence_ids'] = [replacement['id'] if eid == evidence['id'] else eid
+                                          for eid in action['evidence_ids']]
+                action['provenance']['rules'] = [
+                    replacement['retrieved_by'] if rule == evidence['retrieved_by'] else rule
+                    for rule in action['provenance']['rules']]
+    if specimen['name'] == 'molecular':
+        action = expected['actions'][0]
+        reason = '疾病基因不匹配：试验明确要求 CPS1，病例已报告变异基因为 OTC；无其他适用基因队列，不推断未报告基因检测阴性。'
+        action['status_by_branch']['b0']['reason'] = reason
+        for req in action['requirements']:
+            if req['fact'] == 'molecular target':
+                req['note'] = reason
+    return expected
+
+
 def offline(monkeypatch, specimen, answer=None):
     def network_forbidden(*args, **kwargs):
         raise AssertionError('No network or paid model calls allowed')
@@ -43,7 +87,7 @@ def test_public_entry_matches_frozen_before_output(monkeypatch, specimen):
     original = copy.deepcopy(specimen)
     ledger = LG.Ledger('TEST', specimen['branches'])
     P.add_trials(ledger, specimen['case'], specimen['step1'], specimen['step2'])
-    assert ledger.to_dict() == specimen['expected']
+    assert ledger.to_dict() == expected_with_new_search_metadata(specimen)
     assert specimen == original
     for messages, sample, use_cache, params in calls:
         assert params == {'prompt_version': S.VERSION, 'call_params': S.PARAMS}
@@ -75,7 +119,7 @@ def test_refresh_keeps_other_sections_and_does_not_mutate_input(monkeypatch):
     assert previous['missing_information'][0] in updated['missing_information']
     assert updated['actions'][0] == previous['actions'][0]
     assert negative in updated['evidence']
-    assert updated['actions'][1:] == specimen['expected']['actions']
+    assert updated['actions'][1:] == expected_with_new_search_metadata(specimen)['actions']
 
 
 def test_model_response_missing_conflicts_stops_instead_of_empty_success(monkeypatch):
@@ -85,6 +129,59 @@ def test_model_response_missing_conflicts_stops_instead_of_empty_success(monkeyp
     with pytest.raises(KeyError, match='hard_conflicts'):
         P.add_trials(ledger, specimen['case'], specimen['step1'], specimen['step2'])
     assert ledger.actions == []
+
+
+def test_all_reported_genes_prevent_false_single_target_exclusion(monkeypatch):
+    specimen = copy.deepcopy(next(s for s in REFERENCE if s['name'] == 'molecular'))
+    specimen['step2']['primary']['status'] = 'ambiguous'
+    # The second reported gene matches the trial, even though this is the OTC branch.
+    specimen['pf']['variants'].append(dict(specimen['pf']['variants'][0],
+                                          gene='CPS1', quote='CPS1 reported variant'))
+    offline(monkeypatch, specimen)
+    ledger = LG.Ledger('TEST', specimen['branches'])
+    P.add_trials(ledger, specimen['case'], specimen['step1'], specimen['step2'])
+    assert ledger.actions[0]['status_by_branch']['b0']['status'] == 'conditional'
+
+
+@pytest.mark.parametrize('nct', ['NCT05432466', 'NCT05994664'])
+def test_col1a1_report_is_not_a_col3a1_negative_result(monkeypatch, tmp_path, nct):
+    from aitx import runmeta
+    root = Path(__file__).resolve().parents[1]
+    case = runmeta.find_case('PRAC-COL1A1')
+    step1 = json.loads((root/'out/step1/PRAC-COL1A1.json').read_text())
+    step2 = json.loads((root/'out/step2/PRAC-COL1A1.json').read_text())
+    saved = json.loads((root/'out/step3/PRAC-COL1A1.json').read_text())
+    action = next(a for a in saved['actions'] if a.get('nct') == nct)
+    study = T.flat({'protocolSection': action['protocolSection']})
+    facts = E.facts(step1, step2)
+    monkeypatch.setattr(S, 'REVIEW_DIR', tmp_path)
+    # Published deterministic exclusions need not retain a model answer.
+    from aitx.step3.b import rules
+    target = rules.single_target_conflict(study, ['COL1A1'])
+    conflict = {'axis': 'molecular', 'patient_fact_quote': 'COL1A1',
+                'trial_rule_quote': target['trial_rule_quote'],
+                'other_cohort_applicable': False,
+                'reason': 'Required disease gene differs from reported COL1A1.'}
+    audit = S.verify(S.sample(case, study), conflict, study, facts, ['COL1A1'])
+    assert audit['patient_quote_valid'] and audit['trial_quote_valid']
+    assert audit['accepted'] is True
+    assert audit['conflict'] == conflict
+    assert audit['reported_gene_evidence'] == [
+        {'gene': 'COL1A1', 'quote': facts['variants'][0]['quote'], 'step': 1}]
+    assert '不证明该基因检测阴性' in audit['gene_evidence_scope']
+
+
+def test_refresh_preserves_existing_reciprocal_links_without_changing_verdict(monkeypatch):
+    specimen = REFERENCE[0]
+    offline(monkeypatch, specimen)
+    previous = copy.deepcopy(specimen['expected'])
+    previous.update(report_context={}, branches_dropped=[])
+    links = [{'action_key': 'drug:rxcui:2054968', 'section': 'off_label_expanded_access'}]
+    previous['actions'][0]['see_also'] = links
+    updated = P.refresh_trials(previous, specimen['case'], specimen['step1'], specimen['step2'])
+    assert updated['actions'][0]['see_also'] == links
+    assert updated['actions'][0]['see_also'] is not links
+    assert updated['actions'][0]['status_by_branch'] == previous['actions'][0]['status_by_branch']
 
 
 @pytest.mark.parametrize('alternative,quote,axis,want', [

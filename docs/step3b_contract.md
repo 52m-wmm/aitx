@@ -1,13 +1,18 @@
 # Step 3b 当前架构（2026-11-25重构）
 
+2026-11-26 通用疾病基因排除规则：取消基因治疗/ASO及interventional类型限制；明确的全局疾病基因要求与全部患者报告基因不匹配，且没有其他适用队列时排除。普通治疗/安慰剂分组共享全局要求；独立或未明确范围的对照、健康人、亲属、其他基因/疾病路径仍保留复核。仅提及检测/取样、可选要求不能成为排除依据；ACMG/AMP标准不是另一种疾病路径。不推断未报告基因阴性。43专项测试通过，15例481项保存试验离线回放3状态变化及1措辞变化；未运行模型或发布页面。完整差异在out/step3b-general-gene-20261126/。
+
 **当前验收进度：3b架构整理完成，仅PRAC-OTC已完整缓存重跑并显示最新批次；尚未跑全病例。OTC为21项研究、7候选/14排除，15自检通过/1既有警告/0失败，新增模型调用0。不得将此次整理标为全病例验收完成。**
 
 当前只有一条生产链：**检索 → 完整上下文冲突初筛 → Python核验 → Ledger组装 → 缓存发布 → 页面读取**。
+
+2026-11-26更新：患者基因事实从Step1全部报告变异取得，不再受Step2诊断亚型ambiguous清空。下面历史记录中的“已确认genes”不再是当前取值方式。保留既有单一分子治疗靶点及队列范围核验，报告基因不表示其他基因阴性。分子冲突审计记录基因来源和该证据边界；明确要求确诊疾病的条件仍须诊断证据，不以报告变异替代。37专项测试通过，15例481项保存试验离线回放状态变化0，仅OTC一个依据措辞由已确诊改为已报告；正式输出未发布。详见out/step3b-gene-facts-20261126/README.md。
 没有另建legacy包，没有旧逐条条件映射入口。重构沿用原生产Conflict-Only行为，不宣称恢复旧映射器的全部条件解释能力。
 
 | 文件 | 职责 |
 |---|---|
 | `aitx/step3/b/pipeline.py` | 对外 `add_trials` / `refresh_trials`；上游事实、按分支检索、4并发模型请求、调用组装器；刷新冻结其他步骤 |
+| `aitx/step3/b/search.py` | 病名/同义词、显式疾病家族、基因补查的检索词构造 |
 | `aitx/step3/b/screening.py` | 检索计划、完整请求构造、原文/适用范围冲突核验；不写Ledger、不调用模型 |
 | `aitx/step3/b/rules.py` | 新流程实际使用的确定性规则；13个函数AST与改前一致，无模型调用 |
 | `aitx/step3/b/records.py` | 唯一试验落账实现；已核验冲突、未知项、证据与多分支合并 |
@@ -36,6 +41,45 @@
 
 审计：`out/step3b-rebuild-20261125/`，含改前账本快照、冻结对照、完整current对比输出、测试、文件保护哈希。
 current基线开工前已缺失，无法完成该项对比，不重建/升级基线。
+
+## 2026-11-25 检索词调整（尚未运行模型）
+
+用户批准删除机械父级扩展，按疾病名/同义词为主、基因为补充，保留相关疾病家族。`search.py`负责明确检索词；`pipeline.py`不再调用MONDO父级API，不再按编号取首项或泛化到器官系统/遗传方式大类。
+
+- 疾病标准名和全部已有完整同义词来自Step2；大小写/空白去重，短缩写（CF、PH1、EDS VIIA、cEDS等）不单独搜索。完整病名用带引号的短语逐个`query.cond`查询，防止名称内的词变成松散检索；不人为生成新同义词。
+- 家族名只来自下面的显式映射，不按前缀/编号/层级运行时猜测；无映射就不追加家族查询，不代表已证明不存在相关家族。每项均核对现有MONDO直接父级记录；OTC父级的两个并列名称拆成两项。新增病例的家族需明确补入映射。
+- 病例Step1实际报告、并与诊断分支对应的基因使用独立`query.term`查询；沿用现有`trials.gene_matches`的短符号区分，含数字或至少5字符的符号直接查询，其他短符号要求相邻词组（如`OTC mutation`、`mutation in OTC`、`OTC deficiency`）；不要求疾病查询与基因同时命中。不使用整条记录的词共同出现作为短基因符号消歧，避免OTC=非处方药与无关遗传词混合命中；相邻词组也不是语义或因果证明，仍可能命中体细胞/标志物/其他语境，检索命中只表示待筛选，不证明相关性或资格。`search_genes`与原用于分子排除的已确认`genes`分离，未确认因果关系不会因此被当成已确认。
+- 三种入口均由API限制RECRUITING/NOT_YET_RECRUITING/ENROLLING_BY_INVITATION，分页取完，按NCT去重。标准名/同义词、家族、基因依次检索；重复NCT优先保留前面的完整记录。逐研究保存实际命中的查询。未增加数量截断或新排除规则。
+- 模型Prompt、版本、参数、输入序列化和已有资格判定不变。相同病例/研究全文仍可命中原模型缓存；不同检索参数会使用不同HTTP缓存键。
+
+| 诊断MONDO | 显式保留的疾病家族 |
+|---|---|
+| MONDO:0009823 | primary hyperoxaluria |
+| MONDO:0013392 | autosomal recessive cerebellar ataxia |
+| MONDO:0007522 | Ehlers-Danlos syndrome |
+| MONDO:0020521 | Ehlers-Danlos syndrome, arthrochalasia type；COL1A1-related Ehlers-Danlos syndrome |
+| MONDO:0030854 | Ehlers-Danlos/osteogenesis imperfecta syndrome；COL1A1-related Ehlers-Danlos syndrome |
+| MONDO:0010679 | DMD-related muscular dystrophy |
+| MONDO:0010311 | DMD-related muscular dystrophy |
+| MONDO:0013509 | GRIN2B-related complex neurodevelopmental disorder；developmental and epileptic encephalopathy；DEE |
+| MONDO:0014505 | GRIN2B-related complex neurodevelopmental disorder；developmental and epileptic encephalopathy；DEE |
+| MONDO:0015004 | inherited dystonia |
+| MONDO:0018975 | neurofibromatosis |
+| MONDO:0010703 | urea cycle disorder；inherited hyperammonemia |
+| MONDO:0010478 | congenital disorder of glycosylation type II；disorder of multiple glycosylation |
+| MONDO:0020507 | leukoencephalopathy with vanishing white matter |
+| MONDO:0015519 | leukoencephalopathy with vanishing white matter |
+| MONDO:0015520 | leukoencephalopathy with vanishing white matter |
+| MONDO:0013891 | familial amyotrophic lateral sclerosis；amyotrophic lateral sclerosis；ALS |
+| MONDO:0008554 | familial thrombocytosis |
+
+来源逐项在`out/step3b-search-20261125/family-provenance.json`，含父级ID、原标签、OLS4 URL和缓存路径。本次仅检查缓存和报价，不发布新账本/页面结果；正式结果继续展示上次已保存批次。检索范围改变后，未来真实重跑仍须审阅结果变化，不能把本次测试当作医学验收。
+
+## 2026-11-26 用户指定的通用 ALS / DEE 召回补充
+
+PFN1分支明确加入`amyotrophic lateral sclerosis`与`ALS`；GRIN2B两分支明确加入`developmental and epileptic encephalopathy`与`DEE`。这是用户指定的检索范围补充，不声称所有新增词都是MONDO直接父级。原有具体病名、同义词、家族与基因查询保留，招募状态过滤和完整分页不变。
+
+ALS/DEE仅在显式家族列表中作为本次授权的短缩写例外，其他疾病短缩写策略不变。各词独立使用query.cond，无需同时命中PFN1/GRIN2B或familial。检索命中不等于资格通过；本次仅免费检索召回检查，不运行模型、不重写正式账本或页面候选状态。核验明细见out/step3b-recall-20261126/。
 
 ## 历史契约（旧逐条映射实现，供已保存结果追溯）
 
@@ -260,6 +304,14 @@ Step 2 主诊断已确定（resolved）、该分支基因带病人的变异、�
 - 沿用已批准的确诊门槛；未确诊、或没有匹配到任何已知诊断时，不默认满足。RKSC 的“do not have A, B, C …”排除标准，在已确诊所列之一时不成立，而不是新增缺失诊断。
 - ProRKS 的诊断选项、RKSC 的正反向诊断判断可由现有映射缓存直接重算，提示词不变。测试覆盖命中、未知、不相关诊断、明确要求同时满足、排除标准的反向情形。
 
+## 定向冲突采纳与初筛相关性（2026-11-26 用户批准，离线）
+
+保留引文/替代队列核验，新增明确合并症排除、同基因合子状态、明确非无义变异排除和遗传型豁免名单的有限支持。完整条款中的治疗/时间限制、未知单位、未知年龄性别不因此成为硬冲突。模型 reason 不是新的患者事实；不全面绕过核验。
+
+模型调用前检查登记疾病及入组范围：另一明确疾病基因、与病例未建立关系的肿瘤/活检、已报告血小板增多与血小板减少研究的方向互斥。相关性筛除留在 trial_searches.excluded，含患者背景、登记条件、纳入原文和URL，不写成患者其他疾病阴性。独立替代人群/未解析队列保持待核实。
+
+15例492项已存试验/回答离线重算：9项改判，33项相关性移出；61意见消解12、原正确3、缺信息保留7、未消解39。正式缓存/页面不刷，网络/新模型0。完整快照、逐项解释、current缺失报错及测试结果：out/step3b-targeted-20261126/README.md。未promote。
+
 ## 已满足的诊断队列不再依赖其他队列（2026-11-16 三次审阅）
 
 - 多个根级诊断队列各自带“one of the following”确认条件时，先在每个队列内判断必需项，再按满足其一合并队列，保留各队列完整原文与 all_of / any_of 判断。已有一个队列满足，其他队列的未知项不再挂到当前病人。显式要求并存疾病、没有诊断映射或缺确认资料时，不把未知默认成满足。
@@ -289,3 +341,31 @@ PHYOX7 的当前招募前言 under 6 years 与 7-year-old 冲突；正文历史 
 本人和亲属仅在官方组／队列说明明确为替代人群、病种对应且不存在强制同时满足的正文约束时，引用完整组说明并复用 Ledger alternative 逻辑。已满足本人队列不被未知亲属队列阻塞；共同排除条件仍可产生 fail。不能根据列表顺序、模型标签或患者本人病名猜测 OR。未来检索保留 ArmGroupLabel/ArmGroupDescription，缺组说明时不默认存在替代关系。正文提示词与旧模型票不变。
 
 Biobank 两例亲属行 pass→unknown，已有本人诊断队列仍 pass，添加明确来源的患者／亲属 alternatives；共同排除条款 unknown 保留，整项仍 conditional。209相关离线通过，对改前2详情、0状态变化；完整diff、快照和来源见 docs/experiments/step3b_biobank_subject_fix_20261123.md。基线未升级。
+
+
+## 明确人口队列的年龄/性别OR核验（2026-11-26，用户批准，离线）
+
+已有模型冲突引用有效且无其他适用队列声明时，识别明确人口组标题及母婴主体句，逐组核对已知年龄/性别；全部组冲突才排除整个试验。
+未知年龄/性别、未识别组、条件性限制、可能适用组不能丢弃。随机治疗组不视作替代人口。
+登记组描述支持更宽年龄路径时保留核实，避免正文较窄范围误排。
+审计包含全部队列，Ledger证据引用完整纳入原文；prompt和原答不改。
+支持格式之外继续保守核实，不宣称已解决所有自由文本队列。
+结果和完整current报错见out/step3b-cohort-20261126/README.md。
+
+
+## 跨疾病患者路径初筛（2026-11-26，用户批准，离线）
+
+NF2疾病名称、临床/遗传确诊路径与NF1区分；DPPM病种路径与泛DEE召回区分。
+登记疾病/标题需与患者入组要求共同支持，不以背景或排除条款命中判不相关。
+有已报告匹配基因、适用替代患者路径、已记录代谢证据或未解释患者组时保持核实。
+亲属/健康对照不自动证明患者疾病路径相关；移出患者疾病候选时保留辅助组原文和资格未知，不能宣称全研究不适用。
+原文及依据在trial_searches.excluded留痕。报告out/step3b-disease-scope-20261126/README.md；未发布正式页面。
+
+
+## 复杂条目保留Conditional（2026-11-26 用户决定）
+
+剩余GoF/LoF功能证据、外部主方案依赖、诊断/队列未确认、源文矛盾、单位与治疗时间缺失等，缺信息时合法保留Conditional，不追求通过增加逐条硬编码把它们全部排除。
+这是“待核实”的有效终态，不等于满足入组条件，也不再仅因尚不能自动排除而认定为程序缺陷。
+不覆盖独立已证实的硬冲突、不撤销已批准的疾病相关性筛除。不修改prompt、不新调模型。
+本次核对已有复杂项21项保持Conditional；OTC NCT07667387仍有既有CPS1疾病基因冲突，未用主方案歧义撤销该排除。
+核对记录out/step3b-complex-policy-20261126/verification.json；生产判定及正式页面未改。

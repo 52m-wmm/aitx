@@ -406,3 +406,65 @@ v2.4 实现时发现并修正的通用问题（由评测病例 AITX-40003/40004 
 ## "或"表述的表型为"可能存在"（2026-11-12 用户决定）
 引文前后是"normal / unaffected / typical / absent / none / no + or"一类的二选一表述（"development is normal or mildly delayed"）时，表型状态记为 `possible`（`possible_because` 记原文短语），由代码按原文判定。诊断排序仍按存在计；下游对应条目判"有条件"并列入缺失信息"finding stated only as possible"。测试 `tests/test_possible_findings.py`、`tests/test_established.py`。属放宽。
 
+
+## 2026-11-26 HPO 候选召回修复（离线，正式结果未刷新）
+
+先完成各票原始症状抽取，再分别映射。仅对已通过原文校验、原文片段逐字相同且 present/excluded 相同的症状，将其他票按原精确匹配规则命中的 HPO 术语补入词法检索候选。既有精确匹配（含多候选精确命中）路径不变；候选最多仍为 10 个，新增候选优先、旧候选相对顺序不变。候选记录 query_sources（抽样序号、描述、备选名称和精确命中方式）。没有病例、基因或目标术语特例。
+
+共享的只是候选，不共享已接受的映射或投票，不把一票复制为多数。系统提示词、逐票编号选择协议、HPO 投票和疾病选择规则不改；候选列表变化改变完整请求缓存键，旧编号回答不得移用。原始抽取独立，映射阶段的候选现已共享，因此不得将这三次映射宣传为完全独立的稳定性证据。
+
+18 个官方病例复用现有原答离线检查：16 例完整抽取与改前逐字段相同；AITX-40003 两票补入 Decreased body weight，AITX-40004 两票补入 Abnormal eye morphology（仅候选，不代表认可具体语义）。4 个新选择请求无缓存，真实映射未完成，不生成新诊断、不称修复后诊断仍歧义或已确定。正式结果、账本、缓存、基线均未更新。完整输入/输出和 diff：out/step2-hpo-mapping-20261126/。
+
+## 2026-11-26 第一轮临床事实重构（待人工审核）
+
+抽取入口 `aitx/disease/extract.py::extract` 改为一次结构化抽取（`step2-clinical-v6`），必要时再进行一次 HPO 候选选词。没有三票、多数聚合或父子术语多数覆盖；`n != 1` 明确报错。沿用现有缓存/费用记录、原文检查、年龄和起病换算、HPO 精确匹配及候选检索。删除跨样本查询共享；单项 alternatives 仍作为同义查询。
+
+原生事实保存在 `patient_facts.clinical`：
+
+- `phenotypes`：`present / absent / possible / unknown`，`scope=patient/general/unknown`；保留 quote、症状级 onset、severity、course、原回答 source_status、映射失败原因及冲突。`valid` 仅表示 HPO 映射是否通过，不表示临床确定性。
+- `facts`：原抽取的年龄、整体起病、性别、变异来源、家族史，逐项带状态/主体和原文。
+- `items`：diagnosis、demographic、history、treatment、lab、trial_status；保留原数字或逐字文本值、原单位、时间引用。缺单位保持 null，不调用检验解释或推断单位；空列表只表示没有记录。
+- `background`：百科/综述原句及主体说明；`source_text` 保存完整输入，`produced_by` 保存抽取调用来源。
+
+原下游接口继续使用五类 `patient_facts` 标量和 `phenotypes`：只有 scope=patient 且明确 present/absent 的、有效映射的表型进入兼容视图，absent 在该旧接口拼写为 excluded。possible、unknown、综述、主体未知、阳性/阴性冲突均不进入确定事实视图。旧视图保留 votes=1、merged_from=[] 仅为现有查看页字段兼容，不再执行投票。疾病召回、评分、裁决、Step3 代码未修改；新增完整事实不会自动替换 Step3 自己的 extra_facts。
+
+模型只承担文本语义抽取和非精确 HPO 选词。程序要求完整结构、正确状态/主体枚举和逐字原文；缺字段、无效引用、无效数值/单位、缺失/非法 HPO 选择均抛错停止，不填默认值掩盖格式失败。有效的 null 选词保留为未映射事实，不是阴性。主体分类仍取决于模型，一次观察不能证明所有混合文段均可靠。
+
+验收原答、原文对照、完整日志、改前快照和 status_diff 见 `out/step2-clinical-facts-20261126/`。正式输出与基线不刷新；current 基线在开工前已缺失，保留完整错误，不重建/promote。
+
+## 2026-11-27 第二轮 G2P 与 MICA B3（隔离验收，待审）
+
+直接 G2P 官方 CSV 加入现有 datasets/sources/Resources；按同基因及疾病 ID 挂接 candidates.g2p_evidence，顶层 g2p_records 保留未挂接记录。保留原始等位要求、机制及 inferred 等证据边界和来源，patient_variant_mechanism 为 unknown。不参与召回、权重或排除。
+
+评分入口要求原生 scope=patient、valid 且明确 present/absent；possible/unknown/general 不计阳性或阴性。B3=B1（明确频率0的单条阳性注释不参与匹配）+B2（仅精确或祖先—后代关系贡献）。其他 IC、分母、罚分、起病及权重/阈值不变。旧文档“possible按存在计”在此被取代。
+
+多个同层候选若仅靠 MICA 分差得出 resolved，保留排名但改为 ambiguous；同星 ClinVar 竞争亦适用，明确诊断/唯一候选路径不变。原20%比较阈值未调整。G2P不证明患者变异机制，MICA不单独确认诊断。
+
+四例复用第一轮临床抽取、固定原数据做 baseline/g2p-only/b3-only/combined 对照。完整候选、来源、判断差异、SVG及status_diff输出：out/step2-round2-20261127/README.md。正式结果/页面/基线不刷新；Step1、Step3及L1–L4未改。
+
+## 2026-11-27 第三轮 Step1 分子衔接（待审、未刷新正式输出）
+
+主流水线原已传Step1；独立step2_disease入口现复用runmeta加载Step1。按病例、基因、完整转录本和cDNA唯一匹配，缺字段/身份不符报错；合子状态/蛋白描述矛盾及Step1检查失败保留conflicting，不作为确定遗传事实。
+
+molecular_evidence区分reported/sequence_derived与predicted。Step1未提供致病性预测，明确unknown，不用pLDDT/RSA替代。合子状态进入既有遗传分层；molecular_assessment逐G2P记录核对等位要求、机制及restricted mutation set。错义及NMD not_applicable不能确证/排除LoF；截短+likely_triggers及Step1 LoF假设仅predicted_compatible。不同G2P记录是替代路径；缺第二等位、相位或受限集合成员证据保留条件。
+
+选择函数实际读取分子筛查：G2P条件未确认时，非明确临床诊断/非变异特异ClinVar路径不能仅靠遗传分层或唯一候选升级resolved，保留同基因竞争；输入分子矛盾亦阻止确定结论。临床诊断保留独立依据，不因机制尚未知直接否认。无新硬排除、无分数加权、不把预测改成证实。四例候选/分数/首位/状态不变，依据新增，详见out/step2-round3-20261127/README.md及完整diff。Step1分析、Step3及L1–L4未改。
+
+## 2026-11-27 第四轮 L1–L4 统一输出契约（待审核）
+
+`pipeline.run_case` 在现有选择、自检、证据列表完成后，调用 `output.build_layers(case, step1, out)` 写入同一Step2 JSON的 `layers`，版本 `step2-l1-l4-v1`。旧字段不删除，不另建跨步骤账本，不改Step3读取。纯组装不查网、不抽取、不评分、不裁决，禁止由输出层强行确定唯一亚型。
+
+- L1：完整原文、native clinical、旧patient_facts/phenotypes及来源、报告genotype、完整Step1及分子证据。旧抽取没有clinical时明确null并标legacy覆盖缺口，不补patient主体或四态。
+- L2：已有记录的大类候选、独立确证大类未知状态、患者原文诊断及完整原primary。疾病名字匹配保留为旧派生记录，不冒作已报告诊断；resolved明确是既有算法状态，不新增医学确证。无已存大类证据时不从基因/标签/首位推断。
+- L3：所有candidates及原not_supported完整保留，不仅输出primary.alternatives。支持/反对/待核实为原证据索引，保留每条原记录。零匹配/零扣分不当反证；机制预测张力标prediction而不是确定矛盾或新排除。
+- L4：NMD及机制假设、致病性预测缺口、G2P原始记录、逐候选机制路径/Orphanet提示。疾病层机制及inferred不变患者机制事实，后者仍unknown。
+
+所有内部ref以layers自身为JSON Pointer根；sources_manifest/evidence原引用完整保留。输出构造复制值，不修改输入或判断结果；没有新增运行时校验层。验收及完整中文四例结果：out/step2-round4-20261127/README.md。15常规+2定向离线通过组装一致性；原有PFN1/THPO MONDO warn保留。未升级13例旧临床抽取，未刷新正式基线。
+
+## 2026-11-27 ClinVar 三路召回与空缓存有效期（待审核）
+
+clinvar_lookup接收gene，完整转录本+cDNA、无版本转录本+cDNA、Gene+cDNA三路均执行，Variation ID合并去重后获取摘要。查询超过50条时分页，缺失/不完整响应报错，不能静默截断。原变异身份、CDS版本等价、P/LP过滤、疾病映射逻辑不改。查询元数据保存为clinvar[].searches，search_url仍保留首个完整转录本查询兼容字段。
+
+仅ClinVar ESearch空idlist缓存24小时有效，到期经原HTTP接口重新获取；非空ClinVar及其他数据源策略不变，http.py未改。OTC11010接受为cds_identical_version（Pathogenic，2星），161330为其他变异被拒。L3新增患者变异证据，L4机制unknown不因Pathogenic改变。
+
+第四轮17例冻结资源/临床/Step1回放：只有OTC新增可接受ClinVar支持；其他16例完整L1–L4不变，COL1A1扩展查询额外BMP1命中正确拒绝。17例分数、候选集合及primary不变。原共享缓存、正式输出/基线不刷新；回归原答及完整diff：out/clinvar-recall-fix-20261127/README.md。

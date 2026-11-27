@@ -48,6 +48,8 @@ class Dataset:
 
 
 DATASETS = {d.name: d for d in [
+    Dataset("g2p", "https://www.ebi.ac.uk/gene2phenotype/api/panel/all/download/",
+            "g2p.csv", "csv", 1000),
     Dataset("gencc", "https://search.thegencc.org/download/action/submissions-export-tsv",
             "gencc-submissions.tsv", "tsv", 20000, comment="", quoted=True),
     Dataset("clingen", "https://search.clinicalgenome.org/kb/gene-validity/download",
@@ -135,6 +137,10 @@ def count_rows(ds: Dataset, path: Path) -> int:
                     raise IntegrityError(f"{ds.name}: row {n + 2} has {len(row)} columns, header has {len(header)}")
                 n += 1
             return n
+        if ds.kind == "csv":
+            with path.open(newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                return sum(1 for row in reader)
         if ds.kind == "csv_clingen":
             rows = list(csv.reader(path.open(newline="", encoding="utf-8")))
             start = next(i for i, r in enumerate(rows) if r and r[0] == "GENE SYMBOL")

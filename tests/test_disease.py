@@ -206,21 +206,26 @@ def test_alternatives_widen_retrieval(ont):
     assert "HP:0000478" in [c["hpo_id"] for c in wide]
 
 
-def test_llm_only_picks_from_code_listed_candidates(ont, monkeypatch):
+@pytest.mark.parametrize("candidate", [None, 99])
+def test_llm_only_picks_from_code_listed_candidates(ont, monkeypatch, candidate):
     seen = {}
 
     def fake_chat(messages, k, use_cache):
         seen["prompt"] = messages[1]["content"]
-        return {"content": json.dumps({"choices": [{"feature": 1, "candidate": 1}, {"feature": 2, "candidate": 99}]}),
+        return {"content": json.dumps({"choices": [{"feature": 1, "candidate": 1}, {"feature": 2, "candidate": candidate}]}),
                 "served_model": "fake"}
     monkeypatch.setattr(X, "_cached_chat", fake_chat)
     ctx = "Child with focal seizures in infancy and eye findings."
     its = [X.check_item(item("focal seizures in infancy", "Focal seizures in infancy"), ctx),
            X.check_item(item("eye findings", "Ocular finding"), ctx)]
+    if candidate == 99:
+        with pytest.raises(ValueError, match="invalid HPO candidate"):
+            X.map_items(its, ctx, ont, 0, True)
+        return
     out = X.map_items(its, ctx, ont, 0, True)
     assert out[0]["valid"] and out[0]["hpo_id"] == out[0]["candidates"][0]["hpo_id"]
     assert out[0]["mapping"] == "LLM pick from retrieved candidates"
-    assert not out[1]["valid"]                         # candidate 99 is not on the list -> rejected
+    assert not out[1]["valid"]                         # explicit null means no mapping; not a patient negative
     assert "HP:" not in seen["prompt"]                  # ids are never shown to (or taken from) the LLM
 
 
@@ -230,29 +235,6 @@ def test_llm_can_answer_none(ont, monkeypatch):
     ctx = "Child with focal seizures in infancy."
     out = X.map_items([X.check_item(item("focal seizures in infancy", "Focal seizures in infancy"), ctx)], ctx, ont, 0, True)
     assert not out[0]["valid"] and "none of the candidates" in out[0]["reasons"][-1]
-
-
-def V(tid, status="present"):
-    return {"hpo_id": tid, "status": status, "valid": True, "quote": tid}
-
-
-def test_vote_merges_along_hierarchy(ont):
-    # Seizure / Focal-onset seizure / Seizure: the majority level is Seizure
-    kept, unstable = X.vote_terms([[V("HP:0001250")], [V("HP:0007359")], [V("HP:0001250")]], ont, 3)
-    assert [k["hpo_id"] for k in kept] == ["HP:0001250"] and kept[0]["merged_from"] == ["HP:0007359"]
-    assert unstable == []
-
-
-def test_vote_keeps_specific_level_when_majority_agrees(ont):
-    kept, _ = X.vote_terms([[V("HP:0007359")], [V("HP:0007359")], [V("HP:0001250")]], ont, 3)
-    assert [k["hpo_id"] for k in kept] == ["HP:0007359"]
-
-
-def test_vote_drops_minority_and_separates_status(ont):
-    kept, unstable = X.vote_terms([[V("HP:0001987"), V("HP:0001250", "excluded")],
-                                   [V("HP:0001250", "excluded")], [V("HP:0001263")]], ont, 3)
-    assert [(k["hpo_id"], k["status"]) for k in kept] == [("HP:0001250", "excluded")]
-    assert {u["hpo_id"] for u in unstable} == {"HP:0001987", "HP:0001263"}
 
 
 def test_presenting_symptom_onset_becomes_overall_onset():
@@ -408,12 +390,12 @@ def test_clinvar_exact_match_rejects_neighbour_and_haplotype(monkeypatch):
 
     def fake_get(url, **kw):
         if "esearch" in url:
-            body = {"esearchresult": {"idlist": [r["uid"] for r in recs]}}
+            body = {"esearchresult": {"count": str(len(recs)), "idlist": [r["uid"] for r in recs]}}
         else:
             body = {"result": {"uids": [r["uid"] for r in recs], **{r["uid"]: r for r in recs}}}
         return L.http.Fetched(url, json.dumps(body), 1, True)
     monkeypatch.setattr(L.http, "get", fake_get)
-    r = L.clinvar_lookup("NM_001378452.1", "c.100G>A")
+    r = L.clinvar_lookup("NM_001378452.1", "c.100G>A", gene="ITPR1")
     assert r.status == "found" and [x.vcv for x in r.records] == ["VCV000809404"]
     assert r.records[0].stars == 1 and r.records[0].traits[0]["generic"]
     assert len(r.rejected) == 2
@@ -757,32 +739,6 @@ def test_llm_requests_capped_by_semaphore(tmp_path, monkeypatch):
     [t.start() for t in ts]
     [t.join() for t in ts]
     assert peak[0] == 2                                   # parallel, but never more than the cap
-
-
-def test_samples_run_in_parallel_and_keep_sample_order(ont, monkeypatch):
-    import threading
-    import time as _t
-    running, peak, lock = [0], [0], threading.Lock()
-    ctx = "Child with focal seizures and hyperammonemia."
-    by_k = {0: "focal seizures", 1: "hyperammonemia", 2: "focal seizures"}
-
-    def fake_chat(messages, k, use_cache):
-        with lock:
-            running[0] += 1
-            peak[0] = max(peak[0], running[0])
-        _t.sleep(0.05 * (3 - k))                          # sample 0 finishes last
-        with lock:
-            running[0] -= 1
-        q = by_k[k]
-        return {"content": json.dumps({"phenotypes": [{"quote": q, "description": q, "status": "present"}],
-                                       "facts": {}}), "served_model": f"m{k}"}
-    monkeypatch.setattr(X, "_cached_chat", fake_chat)
-    out = X.extract(ctx, ont)
-    assert peak[0] == 3
-    assert [s["served_model"] for s in out["samples"]] == ["m0", "m1", "m2"]          # order = sample number
-    assert [s["terms"] for s in out["samples"]] == [[("HP:0007359", "present")], [("HP:0001987", "present")],
-                                                     [("HP:0007359", "present")]]
-    assert [p["hpo_id"] for p in out["phenotypes"]] == ["HP:0007359"]                  # 2 of 3 votes
 
 
 # ------------------------------------------- step 2 to-dos (2026-11-03): grouping, ranked-above count

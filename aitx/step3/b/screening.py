@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 from aitx.evidence import trials as T
-from aitx.step3.b import rules
+from aitx.step3.b import rules, search, guards, cohorts
 
 PROMPT = Path(__file__).with_name('screening_prompt.txt').read_text()
 VERSION = '3b-conflict-screen-v1'
@@ -66,17 +66,18 @@ def quote_checks(payload, conflict):
     }
 
 
-def verify(payload, conflict, study, facts, diagnosed_genes):
+def verify(payload, conflict, study, facts, patient_genes):
     """Quotes alone do not prove a conflict; require existing deterministic proof or a bound review."""
     proof = quote_checks(payload, conflict)
     axes = ('preamble_or_cohort', 'age_sex', 'molecular', 'clinical_history')
     if conflict['axis'] not in axes or type(conflict['other_cohort_applicable']) is not bool:
         raise ValueError('Invalid conflict schema')
     accepted = False
+    cohort_check = None
     basis = '证据或适用范围尚不能独立确认，保留人工复核'
     if all(proof.values()) and not conflict['other_cohort_applicable']:
         if conflict['axis'] == 'molecular':
-            target = rules.single_target_conflict(study, diagnosed_genes)
+            target = rules.single_target_conflict(study, patient_genes)
             accepted = (target is not None
                         and conflict['trial_rule_quote'] in target['trial_rule_quote']
                         and re.search(rf"\b{re.escape(target['target_gene'])}\b",
@@ -107,13 +108,50 @@ def verify(payload, conflict, study, facts, diagnosed_genes):
                         break
             if accepted:
                 basis = '已知年龄/性别与完整适用范围内的强制要求冲突'
+            cohort_check = cohorts.evaluate(study, facts)
+            if cohort_check is not None:
+                accepted = cohort_check['all_conflict']
+                basis = ('全部已识别招募队列均与患者已知年龄/性别冲突：' +
+                         '、'.join(p['label'] for p in cohort_check['populations']) if accepted else
+                         '至少一个招募队列未证实冲突，或登记范围存在差异，保留核实')
+        if not accepted:
+            patient = json.loads(payload['patient_text'])['patient']
+            supported = guards.core_conflict(study, facts, patient, conflict)
+            if supported:
+                accepted = True
+                basis = '采纳有原文及患者事实支持的核心冲突（' + supported + '）：' + conflict['reason']
         cached = REVIEW_DIR/(review_key(payload, conflict) + '.json')
         if not accepted and cached.exists():
             reviewed = json.loads(cached.read_text())
             if reviewed['payload'] != payload or reviewed['conflict'] != conflict:
                 raise ValueError('Review binding mismatch')
             accepted, basis = reviewed['accepted'], reviewed['basis']
-    return {**proof, 'conflict': conflict, 'accepted': accepted, 'basis': basis}
+    audit = {**proof, 'conflict': conflict, 'accepted': accepted, 'basis': basis}
+    if cohort_check is not None:
+        audit['cohort_check'] = cohort_check
+        if accepted and cohort_check['all_conflict']:
+            audit['verified_trial_rule_quote'] = cohort_check['trial_quote']
+    if conflict['axis'] == 'molecular':
+        audit['reported_gene_evidence'] = [
+            {'gene': v['gene'], 'quote': v['quote'], 'step': 1}
+            for v in facts['variants']]
+        audit['gene_evidence_scope'] = (
+            '已报告变异仅证明相应基因事实；与试验要求的基因不同，不证明该基因检测阴性。'
+            '按试验明确要求的疾病基因及队列范围核验，不限干预方式；其他冲突保留复核。')
+    return audit
+
+
+def filter_relevance(plan, case, facts, names):
+    """Filter both queues before model calls, retaining evidence in the search audit."""
+    for queue in ('analysed', 'ineligible'):
+        retained = []
+        for study in plan[queue]:
+            rejection = guards.relevance(study, case['patient'], facts, names)
+            if rejection is None:
+                retained.append(study)
+            else:
+                plan['excluded'].append(rejection)
+        plan[queue] = retained
 
 
 def prefilter(study, age, sex):
@@ -131,13 +169,13 @@ def prefilter(study, age, sex):
     return pre
 
 
-def plan(names, family, age, sex, genes, *, use_cache=True):
+def plan(names, family, age, sex, genes, *, search_genes=None, use_cache=True):
     """Search, deduplicate and separate code conflicts from studies needing model review."""
-    query_names = list(dict.fromkeys([names[0]] + family))
-    searches = [T.search({
-        'query.cond': name,
-        'filter.overallStatus': 'RECRUITING,NOT_YET_RECRUITING,ENROLLING_BY_INVITATION',
-    }, use_cache=use_cache) for name in query_names]
+    query_names = search.condition_names(names + family,
+        abbreviations=search.FAMILY_ABBREVIATIONS.intersection(family))
+    search_genes = genes if search_genes is None else search_genes
+    searches = [T.search(params, use_cache=use_cache)
+                for params in search.queries(names, family, search_genes)]
     seen = {s['nct']: s for response in reversed(searches) for s in response['studies']}
     analysed, ineligible, excluded = [], [], []
     for study in seen.values():
@@ -152,7 +190,9 @@ def plan(names, family, age, sex, genes, *, use_cache=True):
         target = rules.single_target_conflict(study, genes)
         entry = {
             **study, 'prefilter': pre, 'code_molecular_conflict': target,
-            'relevance': {'by': 'disease_or_family_query', 'name': query_names},
+            'relevance': {'by': 'disease_family_or_gene_query',
+                          'queries': [r['query'] for r in searches
+                                      if any(s['nct'] == study['nct'] for s in r['studies'])]},
             'specific': T.specific(study, names, genes[0] if genes else ''),
         }
         (ineligible if pre['result'] == 'fail' or bad_note or target else analysed).append(entry)
@@ -162,5 +202,5 @@ def plan(names, family, age, sex, genes, *, use_cache=True):
         'searches': [{k: v for k, v in s.items() if k != 'studies'} for s in searches],
         'n_unique': len(seen), 'analysed': analysed, 'ineligible': ineligible, 'excluded': excluded,
         'over_cap': [], 'n_closed_relevant': 0, 'closed_listed': [],
-        'parent_names': family, 'screening_method': VERSION,
+        'parent_names': family, 'search_genes': search_genes, 'screening_method': VERSION,
     }
